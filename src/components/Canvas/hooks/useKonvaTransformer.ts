@@ -13,6 +13,7 @@ import {
   positionDidMove,
   type BoundingBox,
 } from "../transformerGeometry";
+import { modelPositionFromRenderedTopLeft } from "../transformPosition";
 
 interface Options {
   transformerRef: React.RefObject<Konva.Transformer | null>;
@@ -151,14 +152,17 @@ export function useKonvaTransformer({
       sy,
       isCenterAnchored,
     );
-    const rawX = pxToDots(topLeft.x - objectsOffsetX, scale, dpmm);
-    const rawY = pxToDots(topLeft.y - labelOffsetY, scale, dpmm);
-    // Only apply snap to the position when the resize actually moved it
+    const renderedXDots = pxToDots(topLeft.x - objectsOffsetX, scale, dpmm);
+    const renderedYDots = pxToDots(topLeft.y - labelOffsetY, scale, dpmm);
+    // Invert per-type render offsets (e.g. QR's hardcoded +10 dot Y) so the
+    // stored model position matches what BarcodeObject.handleDragEnd produces.
+    const modelPos = modelPositionFromRenderedTopLeft(obj, renderedXDots, renderedYDots);
+    // Only apply snap when the resize actually moved the position
     // (e.g. dragging the top-left handle). Anchored-corner drags must keep
     // the original position so off-grid shapes don't snap as a side-effect.
     const pos = {
-      x: positionDidMove(rawX, obj.x) ? snap(rawX) : obj.x,
-      y: positionDidMove(rawY, obj.y) ? snap(rawY) : obj.y,
+      x: positionDidMove(modelPos.x, obj.x) ? snap(modelPos.x) : obj.x,
+      y: positionDidMove(modelPos.y, obj.y) ? snap(modelPos.y) : obj.y,
     };
     const commit = ObjectRegistry[obj.type]?.commitTransform;
     if (commit) {

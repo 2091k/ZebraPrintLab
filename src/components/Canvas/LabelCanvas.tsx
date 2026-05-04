@@ -621,6 +621,11 @@ export function LabelCanvas({
               onTransformStart={onTransformStart}
               boundBoxFunc={boundBoxFunc}
               onTransformEnd={onTransformEnd}
+              // Exclude selection stroke from the bbox; otherwise scale-aware
+              // stroke padding leaks into the resize math and produces sub-dot
+              // drift in node.x()/y() that surfaces as 1-dot ZPL coordinate
+              // jumps under pxToDots rounding.
+              ignoreStroke
             />
           </Layer>
 
