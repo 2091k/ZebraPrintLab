@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import bwipjs from "bwip-js/browser";
 import { Image as KImage, Group, Rect, Text } from "react-konva";
 import type Konva from "konva";
@@ -45,6 +45,18 @@ export function BarcodeObject({
 }: Props) {
   const groupRef = useRef<Konva.Group>(null);
   const textRef = useRef<Konva.Text>(null);
+
+  // Exclude the HRI text from the parent Group's getClientRect. This anchors
+  // the resize at the bar top (logmars: was anchoring at text top above bars)
+  // and keeps the Transformer's bbox tight around the bars, eliminating the
+  // (h + textArea)*sy vs h*sy + textArea discrepancy during drag.
+  const setTextRef = useCallback((node: Konva.Text | null) => {
+    textRef.current = node;
+    if (node) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (node as any).getSelfRect = () => ({ x: 0, y: 0, width: 0, height: 0 });
+    }
+  }, []);
 
   const opts = buildBwipOptions(obj, scale, dpmm);
   let barcodeCanvas: HTMLCanvasElement | null = null;
@@ -468,12 +480,16 @@ export function BarcodeObject({
         );
       };
 
-      // react-konva does not track imperatively-set scaleY, so we must clear
-      // it here. Otherwise the next drag inherits the previous inverse scale
-      // and the text renders distorted.
+      // react-konva does not track imperatively-set scaleY/y. Reset both here
+      // so the next drag starts clean. For logmars the JSX y is constant
+      // (-(textFontSize+aboveGap)), so without an explicit reset react-konva
+      // would not re-apply it on the post-commit render and the text would
+      // stay at its last drag-time y.
       const handleTransformEnd = () => {
         const txt = textRef.current;
-        if (txt) txt.scaleY(1);
+        if (!txt) return;
+        txt.scaleY(1);
+        txt.y(txtY);
       };
 
       return (
@@ -509,7 +525,7 @@ export function BarcodeObject({
             strokeWidth={isSelected ? 2 : 0}
           />
           <Text
-            ref={textRef}
+            ref={setTextRef}
             x={0}
             y={txtY}
             width={Math.max(w, 1)}
