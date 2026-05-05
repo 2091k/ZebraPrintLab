@@ -64,7 +64,12 @@ export function createBarcode1D(config: Barcode1DConfig): ObjectTypeDefinition<B
     commitTransform: config.heightLocked ? undefined : commitHeightTransform,
 
     toZPL: (obj: LabelObjectBase & { props: Barcode1DProps }) => {
-      const p = obj.props;
+      // Normalize printInterpretation for symbologies that have no HRI in ZPL
+      // (e.g. ^BR). This protects against legacy saved objects that still carry
+      // printInterpretation: true from emitting an out-of-spec interpretation flag.
+      const p = config.interpretationLocked
+        ? { ...obj.props, printInterpretation: false }
+        : obj.props;
       const byCmd = config.byRatio !== undefined
         ? `^BY${p.moduleWidth},${config.byRatio}`
         : `^BY${p.moduleWidth}`;
