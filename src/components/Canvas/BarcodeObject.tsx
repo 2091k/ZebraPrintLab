@@ -462,8 +462,6 @@ export function BarcodeObject({
         ? Math.max(dotsToPx(LOGMARS_TEXT_ABOVE_GAP_DOTS, scale, dpmm), 3)
         : textGap;
       const txtY = isTextAbove ? -(textFontSize + aboveGap) : Math.max(h, 1) + textGap;
-      const clipY = isTextAbove ? -(textFontSize + aboveGap) : 0;
-      const clipHeight = Math.max(h, 1) + textFontSize + aboveGap;
 
       // Counter-scale the human-readable text so it stays at constant pixel size
       // while bars stretch with the parent group's scaleY during a resize drag.
@@ -499,10 +497,6 @@ export function BarcodeObject({
           id={obj.id}
           x={x}
           y={y}
-          clipX={0}
-          clipY={clipY}
-          clipWidth={Math.max(w, 1)}
-          clipHeight={clipHeight}
           draggable
           onClick={(e) =>
             onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
