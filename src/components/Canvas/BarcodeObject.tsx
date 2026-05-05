@@ -428,6 +428,7 @@ export function BarcodeObject({
             imageSmoothingEnabled={false}
             stroke={isSelected ? "#6366f1" : undefined}
             strokeWidth={isSelected ? 2 : 0}
+            strokeScaleEnabled={false}
           />
           {textNodes}
         </Group>
@@ -523,6 +524,7 @@ export function BarcodeObject({
             imageSmoothingEnabled={false}
             stroke={isSelected ? "#6366f1" : undefined}
             strokeWidth={isSelected ? 2 : 0}
+            strokeScaleEnabled={false}
           />
           <Text
             ref={setTextRef}
@@ -552,6 +554,7 @@ export function BarcodeObject({
         imageSmoothingEnabled={false}
         stroke={isSelected ? "#6366f1" : undefined}
         strokeWidth={isSelected ? 2 : 0}
+        strokeScaleEnabled={false}
         draggable
         onClick={(e) =>
           onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
