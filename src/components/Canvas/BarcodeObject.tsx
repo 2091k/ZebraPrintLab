@@ -53,8 +53,7 @@ export function BarcodeObject({
   const setTextRef = useCallback((node: Konva.Text | null) => {
     textRef.current = node;
     if (node) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (node as any).getSelfRect = () => ({ x: 0, y: 0, width: 0, height: 0 });
+      node.getSelfRect = () => ({ x: 0, y: 0, width: 0, height: 0 });
     }
   }, []);
 
@@ -461,10 +460,16 @@ export function BarcodeObject({
       const aboveGap = isTextAbove
         ? Math.max(dotsToPx(LOGMARS_TEXT_ABOVE_GAP_DOTS, scale, dpmm), 3)
         : textGap;
-      const txtY = isTextAbove ? -(textFontSize + aboveGap) : Math.max(h, 1) + textGap;
+      // Local y for the HRI text. The /sy form keeps a constant *visual* offset
+      // when the group is being scaled (sy = 1 at rest, ≠ 1 during a drag).
+      const textLocalY = (sy: number) =>
+        isTextAbove
+          ? -(textFontSize + aboveGap) / sy
+          : Math.max(h, 1) + textGap / sy;
+      const txtY = textLocalY(1);
 
-      // Counter-scale the human-readable text so it stays at constant pixel size
-      // while bars stretch with the parent group's scaleY during a resize drag.
+      // Counter-scale the text so it stays at constant pixel size while the
+      // bars stretch with the parent group's scaleY during a resize drag.
       const handleTransform = () => {
         const grp = groupRef.current;
         const txt = textRef.current;
@@ -472,18 +477,13 @@ export function BarcodeObject({
         const sy = grp.scaleY();
         if (sy <= 0) return;
         txt.scaleY(1 / sy);
-        txt.y(
-          isTextAbove
-            ? -(textFontSize + aboveGap) / sy
-            : Math.max(h, 1) + textGap / sy,
-        );
+        txt.y(textLocalY(sy));
       };
 
       // react-konva does not track imperatively-set scaleY/y. Reset both here
-      // so the next drag starts clean. For logmars the JSX y is constant
-      // (-(textFontSize+aboveGap)), so without an explicit reset react-konva
-      // would not re-apply it on the post-commit render and the text would
-      // stay at its last drag-time y.
+      // so the next drag starts clean. For logmars the JSX y is constant, so
+      // without an explicit reset react-konva would not re-apply it on the
+      // post-commit render and the text would stay at its last drag-time y.
       const handleTransformEnd = () => {
         const txt = textRef.current;
         if (!txt) return;
