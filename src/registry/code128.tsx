@@ -2,6 +2,7 @@ import type { ObjectTypeDefinition } from '../types/ObjectType';
 import { useT } from '../lib/useT';
 import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos } from './zplHelpers';
+import { commitHeightTransform } from './transformHelpers';
 
 export interface Code128Props {
   content: string;
@@ -23,6 +24,8 @@ export const code128: ObjectTypeDefinition<Code128Props> = {
     checkDigit: false,
   },
   defaultSize: { width: 300, height: 120 },
+
+  commitTransform: commitHeightTransform,
 
   toZPL: (obj) => {
     const p = obj.props;

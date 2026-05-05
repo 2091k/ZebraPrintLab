@@ -2,6 +2,7 @@ import type { ObjectTypeDefinition, ObjectGroup, LabelObjectBase } from '../type
 import { useT } from '../lib/useT';
 import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos } from './zplHelpers';
+import { commitHeightTransform } from './transformHelpers';
 
 export interface Barcode1DProps {
   content: string;
@@ -29,6 +30,8 @@ interface Barcode1DConfig {
    * here ensures Labelary uses the same ratio as the canvas rendering.
    */
   byRatio?: number;
+  /** See {@link ObjectTypeDefinition.heightLocked}. */
+  heightLocked?: boolean;
 }
 
 interface BarcodeLocale {
@@ -53,10 +56,9 @@ export function createBarcode1D(config: Barcode1DConfig): ObjectTypeDefinition<B
       checkDigit: false,
     },
     defaultSize: { width: 300, height: 120 },
+    heightLocked: config.heightLocked,
 
-    commitTransform: (obj, { sy, snap }) => ({
-      height: Math.max(1, snap(Math.round(obj.props.height * sy))),
-    }),
+    commitTransform: config.heightLocked ? undefined : commitHeightTransform,
 
     toZPL: (obj: LabelObjectBase & { props: Barcode1DProps }) => {
       const p = obj.props;
@@ -95,6 +97,8 @@ export function createBarcode1D(config: Barcode1DConfig): ObjectTypeDefinition<B
               className={inputCls}
               value={p.height}
               min={1}
+              disabled={config.heightLocked}
+              readOnly={config.heightLocked}
               onChange={(e) => onChange({ height: Number(e.target.value) })}
             />
           </div>

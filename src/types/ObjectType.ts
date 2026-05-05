@@ -57,6 +57,13 @@ export interface ObjectTypeDefinition<P extends object = object> {
    * back to the model's top-left convention.
    */
   nodeOrigin?: 'center' | 'top-left';
+  /**
+   * True if the rendered height is fixed by the symbology spec rather than the
+   * `height` prop (e.g. GS1 Databar Omnidirectional). The transformer disables
+   * its height anchors and the properties panel renders the height input as
+   * read-only — both reflect that the value cannot influence the print output.
+   */
+  heightLocked?: boolean;
   toZPL: (obj: LabelObjectBase & { props: P }) => string;
   /**
    * Optional hook to enforce type-specific invariants on incoming changes

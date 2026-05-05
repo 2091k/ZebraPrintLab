@@ -2,6 +2,7 @@ import type { ObjectTypeDefinition } from '../types/ObjectType';
 import { useT } from '../lib/useT';
 import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos } from './zplHelpers';
+import { commitHeightTransform } from './transformHelpers';
 
 export interface Code39Props {
   content: string;
@@ -23,6 +24,8 @@ export const code39: ObjectTypeDefinition<Code39Props> = {
     checkDigit: false,
   },
   defaultSize: { width: 300, height: 120 },
+
+  commitTransform: commitHeightTransform,
 
   toZPL: (obj) => {
     const p = obj.props;

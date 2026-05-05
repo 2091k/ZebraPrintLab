@@ -2,6 +2,7 @@ import type { ObjectTypeDefinition } from '../types/ObjectType';
 import { useT } from '../lib/useT';
 import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos } from './zplHelpers';
+import { commitHeightTransform } from './transformHelpers';
 
 export interface Ean13Props {
   content: string;        // 12 digits — ZPL appends the check digit automatically
@@ -21,6 +22,8 @@ export const ean13: ObjectTypeDefinition<Ean13Props> = {
     printInterpretation: true,
   },
   defaultSize: { width: 300, height: 120 },
+
+  commitTransform: commitHeightTransform,
 
   toZPL: (obj) => {
     const p = obj.props;
