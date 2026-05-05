@@ -468,6 +468,14 @@ export function BarcodeObject({
         );
       };
 
+      // react-konva does not track imperatively-set scaleY, so we must clear
+      // it here. Otherwise the next drag inherits the previous inverse scale
+      // and the text renders distorted.
+      const handleTransformEnd = () => {
+        const txt = textRef.current;
+        if (txt) txt.scaleY(1);
+      };
+
       return (
         <Group
           ref={groupRef}
@@ -488,6 +496,7 @@ export function BarcodeObject({
           }
           onDragEnd={handleDragEnd}
           onTransform={handleTransform}
+          onTransformEnd={handleTransformEnd}
         >
           <KImage
             x={0}
