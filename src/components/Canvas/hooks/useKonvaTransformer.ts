@@ -190,7 +190,10 @@ export function useKonvaTransformer({
   }, [selectedIds, selectedTypesKey, selectedSignature, stageRef, transformerRef]);
 
   const resizeEnabled = selectedIds.length <= 1;
-  const singleType = objects.find((o) => o.id === selectedIds[0])?.type ?? "";
+  const singleType =
+    selectedIds.length === 1
+      ? objects.find((o) => o.id === selectedIds[0])?.type ?? ""
+      : "";
   const enabledAnchors: string[] | undefined =
     selectedIds.length > 1
       ? []
