@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import bwipjs from "bwip-js/browser";
 import { Image as KImage, Group, Rect, Text } from "react-konva";
 import type Konva from "konva";
@@ -43,6 +43,9 @@ export function BarcodeObject({
   onChange,
   snap,
 }: Props) {
+  const groupRef = useRef<Konva.Group>(null);
+  const textRef = useRef<Konva.Text>(null);
+
   const opts = buildBwipOptions(obj, scale, dpmm);
   let barcodeCanvas: HTMLCanvasElement | null = null;
   let errorMsg: string | null = null;
@@ -449,8 +452,25 @@ export function BarcodeObject({
       const clipY = isTextAbove ? -(textFontSize + aboveGap) : 0;
       const clipHeight = Math.max(h, 1) + textFontSize + aboveGap;
 
+      // Counter-scale the human-readable text so it stays at constant pixel size
+      // while bars stretch with the parent group's scaleY during a resize drag.
+      const handleTransform = () => {
+        const grp = groupRef.current;
+        const txt = textRef.current;
+        if (!grp || !txt) return;
+        const sy = grp.scaleY();
+        if (sy <= 0) return;
+        txt.scaleY(1 / sy);
+        txt.y(
+          isTextAbove
+            ? -(textFontSize + aboveGap) / sy
+            : Math.max(h, 1) + textGap / sy,
+        );
+      };
+
       return (
         <Group
+          ref={groupRef}
           id={obj.id}
           x={x}
           y={y}
@@ -467,6 +487,7 @@ export function BarcodeObject({
             e.target.position(snapPos(e.target.x(), e.target.y()))
           }
           onDragEnd={handleDragEnd}
+          onTransform={handleTransform}
         >
           <KImage
             x={0}
@@ -479,6 +500,7 @@ export function BarcodeObject({
             strokeWidth={isSelected ? 2 : 0}
           />
           <Text
+            ref={textRef}
             x={0}
             y={txtY}
             width={Math.max(w, 1)}
