@@ -147,6 +147,16 @@ export function useKonvaTransformer({
     .map((id) => objects.find((o) => o.id === id)?.type ?? "")
     .join(",");
 
+  // Signature of the selected objects' size-relevant state (position + props).
+  // Changes after commitTransform → forces the transformer to re-measure the
+  // attached node so its bounding box matches the new rendered size.
+  const selectedSignature = selectedIds
+    .map((id) => {
+      const o = objects.find((obj) => obj.id === id);
+      return o ? `${id}:${o.x}:${o.y}:${JSON.stringify(o.props)}` : id;
+    })
+    .join("|");
+
   useEffect(() => {
     if (!transformerRef.current || !stageRef.current) return;
     if (selectedIds.length === 0) {
@@ -167,10 +177,15 @@ export function useKonvaTransformer({
         .filter((n): n is Konva.Node => n != null);
       transformerRef.current.nodes(nodes);
     }
+    // Force a re-measure: after commitTransform the node's getClientRect has
+    // changed but the transformer caches its bounds from the last interaction.
+    transformerRef.current.forceUpdate();
   // selectedTypesKey encodes the type of every selected object — sufficient to
   // detect the line/non-line distinction that governs transformer attachment.
+  // selectedSignature triggers a re-measure when an object's size or position
+  // changes (e.g. after commitTransform finishes a resize).
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIds, selectedTypesKey, stageRef, transformerRef]);
+  }, [selectedIds, selectedTypesKey, selectedSignature, stageRef, transformerRef]);
 
   const resizeEnabled = selectedIds.length <= 1;
   const enabledAnchors: string[] | undefined =
