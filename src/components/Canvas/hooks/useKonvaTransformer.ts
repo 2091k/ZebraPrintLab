@@ -190,12 +190,15 @@ export function useKonvaTransformer({
   }, [selectedIds, selectedTypesKey, selectedSignature, stageRef, transformerRef]);
 
   const resizeEnabled = selectedIds.length <= 1;
+  const singleType = objects.find((o) => o.id === selectedIds[0])?.type ?? "";
   const enabledAnchors: string[] | undefined =
     selectedIds.length > 1
       ? []
-      : BARCODE_1D_TYPES.has(objects.find((o) => o.id === selectedIds[0])?.type ?? "")
-        ? ["top-center", "bottom-center"]
-        : undefined;
+      : ObjectRegistry[singleType]?.heightLocked
+        ? []
+        : BARCODE_1D_TYPES.has(singleType)
+          ? ["top-center", "bottom-center"]
+          : undefined;
   const isFreeResize = enabledAnchors === undefined;
 
   /** Reset all transform-time state. Idempotent; safe to call from any exit path. */

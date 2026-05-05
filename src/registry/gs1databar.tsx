@@ -8,6 +8,10 @@ export const gs1databar = createBarcode1D({
   hasCheckDigit: false,
   localeKey: "gs1databar",
   group: 'code-1d',
+  // GS1 Databar Omnidirectional has a symbology-fixed height; Zebra/Labelary
+  // ignore the ^BR height parameter for this variant. Disabling resize and the
+  // height input keeps the designer honest about what affects the print.
+  heightLocked: true,
   zplCommand: (p) => {
     // ^BR{orientation},{symbology},{magnification},{separator},{height},{segments}
     // symbology 1 = omnidirectional
