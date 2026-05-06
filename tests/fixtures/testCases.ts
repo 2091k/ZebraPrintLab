@@ -229,4 +229,34 @@ export const testCases: TestCase[] = [
     expected_bounds: { x: 100, y: 100, width: 90, height: 90 },
     image_ref: "barcode_datamatrix_rot_R.png",
   },
+  // Code39 (^B3) and EAN13 (^BE) use different param orders than Code128's
+  // ^BC, so cover them too. Bounds populated via measure_bbox.mjs.
+  {
+    id: "barcode_code39_rot_R",
+    zpl_input: "^XA^BY2^FO100,100^B3R,N,100,N,N^FDCODE39^FS^XZ",
+    expected_bounds: { x: 100, y: 100, width: 100, height: 254 },
+    image_ref: "barcode_code39_rot_R.png",
+  },
+  {
+    id: "barcode_code39_rot_B",
+    zpl_input: "^XA^BY2^FO100,100^B3B,N,100,N,N^FDCODE39^FS^XZ",
+    expected_bounds: { x: 100, y: 100, width: 100, height: 254 },
+    image_ref: "barcode_code39_rot_B.png",
+  },
+  // EAN13 has extended guard bars that extend past the bar-height baseline.
+  // After R rotation those guards sit LEFT of the FO anchor (ink at x=87 with
+  // FO=100), so the bbox starts to the left of obj.x. The B rotation keeps the
+  // ink within the FO-anchored corner.
+  {
+    id: "barcode_ean13_rot_R",
+    zpl_input: "^XA^BY2^FO100,100^BER,100,N,N^FD123456789012^FS^XZ",
+    expected_bounds: { x: 87, y: 100, width: 113, height: 190 },
+    image_ref: "barcode_ean13_rot_R.png",
+  },
+  {
+    id: "barcode_ean13_rot_B",
+    zpl_input: "^XA^BY2^FO100,100^BEB,100,N,N^FD123456789012^FS^XZ",
+    expected_bounds: { x: 100, y: 100, width: 113, height: 190 },
+    image_ref: "barcode_ean13_rot_B.png",
+  },
 ];
