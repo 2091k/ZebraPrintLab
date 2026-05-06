@@ -1,5 +1,6 @@
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import { ObjectRegistry } from "../../registry";
+import { stripZplCommandChars } from "../../registry/zplHelpers";
 import { dotsToMm, mmToDots } from "../../lib/coordinates";
 import {
   mmToUnit,
@@ -137,7 +138,7 @@ export function PropertiesPanel() {
             rows={2}
             value={obj.comment ?? ""}
             onChange={(e) =>
-              updateObject(obj.id, { comment: e.target.value || undefined })
+              updateObject(obj.id, { comment: stripZplCommandChars(e.target.value) || undefined })
             }
           />
         </div>
