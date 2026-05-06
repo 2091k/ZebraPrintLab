@@ -3,6 +3,9 @@ import { useT } from '../lib/useT';
 import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos, fdField } from './zplHelpers';
 import { commitHeightTransform } from './transformHelpers';
+import { filterContent, type ContentSpec } from './contentSpec';
+
+const code39Spec: ContentSpec = { charset: '0-9A-Za-z\\-. $/+%' };
 
 export interface Code39Props {
   content: string;
@@ -49,7 +52,7 @@ export const code39: ObjectTypeDefinition<Code39Props> = {
           <input
             className={inputCls}
             value={p.content}
-            onChange={(e) => onChange({ content: e.target.value })}
+            onChange={(e) => onChange({ content: filterContent(e.target.value, code39Spec) })}
           />
         </div>
 
