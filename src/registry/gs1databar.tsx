@@ -42,11 +42,11 @@ export const gs1databar: ObjectTypeDefinition<Gs1DatabarProps> = {
 
   toZPL: (obj: LabelObjectBase & { props: Gs1DatabarProps }) => {
     const p = obj.props;
-    // Segments must be even (2–22); only used by Expanded Stacked (7).
-    // Other symbologies require the field in the command but firmware ignores it.
-    const segs = p.symbology === 7 ? (p.segments ?? 22) : 2;
-    // ^BRo,s,m,sep,h,sg — height hardcoded 100 (firmware overrides for most variants)
-    return `^BY${p.moduleWidth}${fieldPos(obj)}^BR${p.rotation},${p.symbology},${p.moduleWidth},2,100,${segs}${fdField(p.content)}`;
+    // ^BRo,s,m,sep,h[,sg] — segments must only be present for Expanded Stacked (7).
+    // Including segments on sym 1–6 makes Labelary stack the symbol (wrong rendering).
+    const segs = p.symbology === 7 ? `,${p.segments ?? 22}` : '';
+    // Height hardcoded 100 (firmware overrides for most variants).
+    return `^BY${p.moduleWidth}${fieldPos(obj)}^BR${p.rotation},${p.symbology},${p.moduleWidth},2,100${segs}${fdField(p.content)}`;
   },
 
   PropertiesPanel: ({ obj, onChange }) => {
