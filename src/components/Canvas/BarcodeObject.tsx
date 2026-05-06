@@ -583,101 +583,167 @@ export function BarcodeObject({
 
     // ── Rotated 1D: text overlay rotated alongside the bars ──────────────
     if (showRotatedText) {
-      // Konva rotation=90 (CW): local (lx,ly) → screen (x0-ly, y0+lx).
-      //   Width (h) spans downward; height (fh) spans leftward.
-      //   → text RIGHT of barcode (x=[w+gap, w+gap+fh], y=[0,h]):
-      //     x0=w+gap+fh, y0=0
-      // Konva rotation=-90 (CCW): local (lx,ly) → screen (x0+ly, y0-lx).
-      //   Width (h) spans upward; height (fh) spans rightward.
-      //   → text LEFT of barcode (x=[-(gap+fh), -gap], y=[0,h]):
-      //     x0=-(gap+fh), y0=h
-      // Konva rotation=180: local (lx,ly) → screen (x0-lx, y0-ly).
-      //   Width (w) spans leftward; height (fh) spans upward.
-      //   → text ABOVE barcode (x=[0,w], y=[-(gap+fh), -gap]):
-      //     x0=w, y0=-gap
+      // Rotation math (Konva y-down, CW positive):
+      //   R  (rot=90):  local-x→screen-down, local-y→screen-left
+      //   B  (rot=-90): local-x→screen-up,   local-y→screen-right
+      //   I  (rot=180): local-x→screen-left,  local-y→screen-up
       //
-      // LOGMARS places text ABOVE bars in upright, so for quarter rotations
-      // its side is mirrored (LEFT↔RIGHT); for 180° it goes BELOW.
+      // Text "side" for 90°/270°: standard 1D text is below bars in upright,
+      //   so after 90°CW it's on the LEFT; after 270°CW on the RIGHT.
+      //   LOGMARS is mirrored (text above in upright → right for 90°, left for 270°).
       const isTextAbove = obj.type === "logmars";
+      // x-anchor for R/B (shared by all text nodes for a given rotation)
+      const sideX =
+        rotation === "R"
+          ? isTextAbove ? w + textGap + textFontSize : -textGap
+          : isTextAbove ? -(textGap + textFontSize) : w + textGap;
+      const tRot = rotation === "R" ? 90 : rotation === "I" ? 180 : -90;
 
+      // ── EAN/UPC: reproduce upright digit layout along the rotated axis ──
+      if (EAN_UPC_TYPES.has(obj.type)) {
+        const bwipSc = get1DBwipScale(moduleWidth, scale, dpmm);
+        // For I: encoding runs horizontally (canvas.width); for R/B: vertically (canvas.height)
+        const encDisplay = rotation === "I" ? w : h;
+        const encCanvas  = rotation === "I" ? barcodeCanvas.width : barcodeCanvas.height;
+        const layout = getEanUpcLayout(obj.type as EanUpcType, encDisplay, encCanvas, bwipSc);
+        const { xLeft, xRight, halfWidth: halfW } = layout;
+        const ldW = textFontSize * 1.2;
+
+        const tStyle = {
+          fontSize: textFontSize,
+          fontFamily: "'Courier New', monospace" as const,
+          wrap: "none" as const,
+          fill: "#000000",
+          listening: false,
+        };
+
+        // Position a text node at `encPos` from barcode start, spanning `size`.
+        // For R: encPos → screen-y downward from top (start=top).
+        // For B: encPos → screen-y upward from bottom (start=bottom), anchor = h - encPos.
+        // For I: encPos → screen-x leftward from right (start=right), anchor-x = w - encPos.
+        const node = (key: string, encPos: number, size: number, text: string) => {
+          const tx = rotation === "I" ? w - encPos : sideX;
+          const ty = rotation === "R" ? encPos : rotation === "B" ? h - encPos : -textGap;
+          return <Text key={key} x={tx} y={ty} rotation={tRot} width={Math.max(size, 1)} text={text} align="center" {...tStyle} />;
+        };
+
+        // Single digit floated BEFORE barcode start (outside the quiet zone).
+        const sysNode = (key: string, text: string) => {
+          // R: above top (y=-ldW); B: below bottom (y=h+ldW); I: right of barcode (x=w+ldW).
+          const tx = rotation === "I" ? w + ldW : sideX;
+          const ty = rotation === "R" ? -ldW : rotation === "B" ? h + ldW : -textGap;
+          return <Text key={key} x={tx} y={ty} rotation={tRot} width={Math.max(ldW, 1)} text={text} align="center" {...tStyle} />;
+        };
+
+        // Single digit floated AFTER barcode end (UPC-A/UPC-E check digit).
+        const trailNode = (key: string, text: string) => {
+          // R: below bottom (y≈encDisplay); B: above top (y≈h-encDisplay); I: left of x=0.
+          const tx = rotation === "I" ? -ldW : sideX;
+          const ty = rotation === "R" ? encDisplay : rotation === "B" ? h - encDisplay : -textGap;
+          return <Text key={key} x={tx} y={ty} rotation={tRot} width={Math.max(ldW, 1)} text={text} align="left" {...tStyle} />;
+        };
+
+        let eanNodes: React.ReactNode[] = [];
+
+        if (obj.type === "ean13") {
+          const d12 = rawContent.replace(/\D/g, "").slice(0, 12).padEnd(12, "0");
+          const all13 = d12 + eanCheckDigit(d12, 1, 3);
+          eanNodes = [
+            sysNode("sys", all13[0] ?? ""),
+            node("left", xLeft, halfW, all13.slice(1, 7)),
+            node("right", xRight, halfW, all13.slice(7, 13)),
+          ];
+        } else if (obj.type === "ean8") {
+          const d7 = rawContent.replace(/\D/g, "").slice(0, 7).padEnd(7, "0");
+          const all8 = d7 + eanCheckDigit(d7, 3, 1);
+          eanNodes = [
+            node("left", xLeft, halfW, all8.slice(0, 4)),
+            node("right", xRight, halfW, all8.slice(4, 8)),
+          ];
+        } else if (obj.type === "upca") {
+          const d11 = rawContent.replace(/\D/g, "").slice(0, 11).padEnd(11, "0");
+          const all12 = d11 + eanCheckDigit(d11, 3, 1);
+          eanNodes = [
+            sysNode("sys", all12[0] ?? ""),
+            node("left", xLeft, halfW, all12.slice(1, 6)),
+            node("right", xRight, halfW, all12.slice(6, 11)),
+            trailNode("trail", all12[11] ?? ""),
+          ];
+        } else if (obj.type === "upce") {
+          const d6 = rawContent.replace(/\D/g, "").slice(0, 6).padEnd(6, "0");
+          const [vA, vB, vC, vD, vE, vF] = d6.split("");
+          const fi = parseInt(vF ?? "0", 10);
+          let exp: string;
+          if (fi <= 2) exp = `0${vA}${vB}${vF}0000${vC}${vD}${vE}`;
+          else if (fi === 3) exp = `0${vA}${vB}${vC}00000${vD}${vE}`;
+          else if (fi === 4) exp = `0${vA}${vB}${vC}${vD}00000${vE}`;
+          else exp = `0${vA}${vB}${vC}${vD}${vE}${vF}0000`;
+          let ckSum = 0;
+          for (let i = 0; i < 11; i++)
+            ckSum += parseInt(exp[i] ?? "0", 10) * (i % 2 === 0 ? 3 : 1);
+          const ck = String((10 - (ckSum % 10)) % 10);
+          eanNodes = [
+            sysNode("sys", "0"),
+            node("mid", xLeft, halfW, d6),
+            trailNode("trail", ck),
+          ];
+        }
+
+        return (
+          <Group
+            id={obj.id} x={x} y={y} draggable
+            onClick={(e) => onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)}
+            onTap={() => onSelect(false)}
+            onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
+            onDragEnd={handleDragEnd}
+          >
+            <KImage x={0} y={0} image={barcodeCanvas}
+              width={Math.max(w, 1)} height={Math.max(h, 1)}
+              imageSmoothingEnabled={false}
+              stroke={isSelected ? "#6366f1" : undefined}
+              strokeWidth={isSelected ? 2 : 0}
+              strokeScaleEnabled={false}
+            />
+            {eanNodes}
+          </Group>
+        );
+      }
+
+      // ── Other 1D: single centered text string ────────────────────────────
       let txtX: number;
       let txtY: number;
-      let txtRot: number;
       let txtWidth: number;
 
       if (rotation === "R") {
-        // rot=90: (x0-ly, y0+lx) — fh spans LEFT, W spans DOWN
-        // Standard: text LEFT (below→left after 90°CW); LOGMARS: text RIGHT (above→right)
-        if (isTextAbove) {
-          txtX = w + textGap + textFontSize;
-        } else {
-          txtX = -textGap;
-        }
-        txtY = 0;
-        txtRot = 90;
-        txtWidth = h;
+        txtX = sideX; txtY = 0; txtWidth = h;
       } else if (rotation === "I") {
-        // rot=180: (x0-lx, y0-ly) — W spans LEFT, fh spans UP
-        // Standard: text ABOVE (below→above after 180°); LOGMARS: text BELOW (above→below)
         txtX = w;
-        if (isTextAbove) {
-          txtY = h + textGap + textFontSize;
-        } else {
-          txtY = -textGap;
-        }
-        txtRot = 180;
+        txtY = isTextAbove ? h + textGap + textFontSize : -textGap;
         txtWidth = w;
       } else {
-        // B (270° CW): rot=-90, (x0+ly, y0-lx) — fh spans RIGHT, W spans UP
-        // Standard: text RIGHT (below→right after 270°CW); LOGMARS: text LEFT (above→left)
-        if (isTextAbove) {
-          txtX = -(textGap + textFontSize);
-        } else {
-          txtX = w + textGap;
-        }
-        txtY = h;
-        txtRot = -90;
-        txtWidth = h;
+        txtX = sideX; txtY = h; txtWidth = h;
       }
 
       return (
         <Group
-          id={obj.id}
-          x={x}
-          y={y}
-          draggable
-          onClick={(e) =>
-            onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-          }
+          id={obj.id} x={x} y={y} draggable
+          onClick={(e) => onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)}
           onTap={() => onSelect(false)}
-          onDragMove={(e) =>
-            e.target.position(snapPos(e.target.x(), e.target.y()))
-          }
+          onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
           onDragEnd={handleDragEnd}
         >
-          <KImage
-            x={0}
-            y={0}
-            image={barcodeCanvas}
-            width={Math.max(w, 1)}
-            height={Math.max(h, 1)}
+          <KImage x={0} y={0} image={barcodeCanvas}
+            width={Math.max(w, 1)} height={Math.max(h, 1)}
             imageSmoothingEnabled={false}
             stroke={isSelected ? "#6366f1" : undefined}
             strokeWidth={isSelected ? 2 : 0}
             strokeScaleEnabled={false}
           />
           <Text
-            x={txtX}
-            y={txtY}
-            rotation={txtRot}
-            width={Math.max(txtWidth, 1)}
-            text={displayText}
-            fontSize={textFontSize}
+            x={txtX} y={txtY} rotation={tRot} width={Math.max(txtWidth, 1)}
+            text={displayText} fontSize={textFontSize}
             fontFamily="'Courier New', monospace"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
+            align="center" wrap="none" fill="#000000" listening={false}
           />
         </Group>
       );
