@@ -7,6 +7,10 @@ const FIXTURES_DIR = path.resolve(
   "tests/fixtures/labelary_images",
 );
 
+interface FixtureMapping {
+  test_cases: typeof testCases;
+}
+
 async function fetchLabelaryImage(zpl: string): Promise<Buffer> {
   // Use 8dpmm (203 dpi) and 4x4 inches as standard canvas dimensions
   const url = "http://api.labelary.com/v1/printers/8dpmm/labels/4x4/0/";
@@ -39,8 +43,7 @@ async function main() {
   // append entries for new test cases — never overwrite existing ones, since
   // testCases.ts may carry rounded/placeholder bounds that have been refined
   // by hand or via tests/scripts/measure_bbox.mjs.
-  interface Existing { test_cases: typeof testCases }
-  const existing: Existing = fs.existsSync(mappingFile)
+  const existing: FixtureMapping = fs.existsSync(mappingFile)
     ? JSON.parse(fs.readFileSync(mappingFile, "utf8"))
     : { test_cases: [] };
   const knownIds = new Set(existing.test_cases.map((c) => c.id));

@@ -91,6 +91,7 @@ describe("Labelary Sync - Canvas Dimension Logic", () => {
       // upright-shape assertions on bar height / module direction stop applying.
       const rotation = objectRotation(obj.props);
       const isQuarterRotated = rotation === "R" || rotation === "B";
+      const isEanUpc = ["ean13", "ean8", "upca", "upce"].includes(obj.type);
 
       // Verify visual position (top-left of the rendered bounding box in dots).
       // This mimics the positioning logic in BarcodeObject.tsx.
@@ -116,8 +117,7 @@ describe("Labelary Sync - Canvas Dimension Logic", () => {
       // symbol. Under R rotation those guards sit LEFT of the FO anchor, so
       // the bbox.x is below obj.x. The model still holds obj.x as FO, so the
       // strict x-equality check is dropped for rotated EAN/UPC.
-      const isEanUpcType = ["ean13", "ean8", "upca", "upce"].includes(obj.type);
-      if (!(isEanUpcType && isQuarterRotated)) {
+      if (!(isEanUpc && isQuarterRotated)) {
         expect(visualX).toBe(tc.expected_bounds.x);
       }
       expect(visualY).toBeCloseTo(tc.expected_bounds.y, 0);
@@ -125,7 +125,6 @@ describe("Labelary Sync - Canvas Dimension Logic", () => {
       expect(displaySize.w).toBeGreaterThan(0);
       expect(displaySize.h).toBeGreaterThan(0);
 
-      const isEanUpc = ["ean13", "ean8", "upca", "upce"].includes(obj.type);
       const is1DCode = [
         "code128",
         "code39",
