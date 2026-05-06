@@ -344,7 +344,9 @@ export function buildBwipOptions(
   }
 
   if (opts && rotation !== "N") {
-    opts.rotate = rotation;
+    // ZPL uses N/R/I/B (B = 270° CW). bwip-js uses N/R/I/L (L = 90° CCW =
+    // 270° CW). The other three letters mean the same thing in both.
+    opts.rotate = rotation === "B" ? "L" : rotation;
     // When the symbol is rotated we delegate HRI text to bwip-js (so it gets
     // rotated alongside the bars). The manual text overlays in BarcodeObject
     // assume an upright bitmap and do not rotate; gating them out is paired
@@ -364,6 +366,24 @@ export function getDisplaySize(
 ): { w: number; h: number } {
   if (!canvas) return { w: 0, h: 0 };
 
+  // For 90°/270° rotations, bwip-js produces a bitmap whose width and height
+  // are swapped relative to the upright form. Compute size as if upright (the
+  // existing per-symbology formulas all assume that), then swap at the end.
+  const rotation = objectRotation(obj.props);
+  const isQuarter = rotation === "R" || rotation === "B";
+  const uprightCanvas = isQuarter
+    ? ({ width: canvas.height, height: canvas.width } as HTMLCanvasElement)
+    : canvas;
+  const upright = getUprightDisplaySize(obj, uprightCanvas, scale, dpmm);
+  return isQuarter ? { w: upright.h, h: upright.w } : upright;
+}
+
+function getUprightDisplaySize(
+  obj: LabelObject,
+  canvas: HTMLCanvasElement,
+  scale: number,
+  dpmm: number,
+): { w: number; h: number } {
   // bwip-js at bwipSc=1 renders 1 extra pixel; at bwipSc>=2 it renders the exact module
   // count. The extraPx term corrects for this so formulas stay consistent across scales.
   switch (obj.type) {
