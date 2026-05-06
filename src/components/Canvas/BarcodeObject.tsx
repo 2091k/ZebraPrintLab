@@ -151,7 +151,11 @@ export function BarcodeObject({
     // Force-off when the symbology has no HRI in ZPL (e.g. GS1 Databar) — the
     // canvas must match the print output even if a legacy saved object still
     // carries printInterpretation: true.
+    // Manual HRI overlays only run for upright barcodes; when rotated, bwip-js
+    // bakes the text into the bitmap (see bwipHelpers).
+    const isUpright = ((obj.props as { rotation?: string }).rotation ?? "N") === "N";
     const printInterp =
+      isUpright &&
       !ObjectRegistry[obj.type]?.interpretationLocked &&
       !!(obj.props as { printInterpretation?: boolean }).printInterpretation;
     const moduleWidth =

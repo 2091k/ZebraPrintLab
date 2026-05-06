@@ -164,6 +164,12 @@ export function buildBwipOptions(
       ? get1DBwipScale(mw, renderScale, renderDpmm)
       : BWIP_SCALE;
 
+  // bwip-js takes the same N/R/I/B letters ZPL does for symbol orientation;
+  // emitting it post-build means the produced bitmap is already rotated and
+  // its dimensions are the post-rotation extents — no Konva-side rotation math
+  // needed.
+  const rotation = (obj.props as { rotation?: string }).rotation ?? "N";
+
   let opts: Record<string, unknown> | null = null;
 
   switch (obj.type) {
@@ -336,6 +342,16 @@ export function buildBwipOptions(
       return null;
   }
 
+  if (opts && rotation !== "N") {
+    opts.rotate = rotation;
+    // When the symbol is rotated we delegate HRI text to bwip-js (so it gets
+    // rotated alongside the bars). The manual text overlays in BarcodeObject
+    // assume an upright bitmap and do not rotate; gating them out is paired
+    // with this flag. For 'N' we keep the previous behaviour: manual overlays
+    // give pixel-perfect EAN/UPC labels and the LOGMARS-above placement.
+    const printInterp = !!(obj.props as { printInterpretation?: boolean }).printInterpretation;
+    if (printInterp) opts.includetext = true;
+  }
   return opts;
 }
 
