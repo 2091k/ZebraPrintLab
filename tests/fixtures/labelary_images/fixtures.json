@@ -310,7 +310,7 @@
     },
     {
       "id": "barcode_gs1databar_standard",
-      "zpl_input": "^XA^BY2^FO50,50^BRN,1,2,2,100,1^FD0112345678901^FS^XZ",
+      "zpl_input": "^XA^BY2^FO50,50^BRN,1,2,2,100,2^FD0112345678901^FS^XZ",
       "expected_bounds": {
         "x": 50,
         "y": 50,
