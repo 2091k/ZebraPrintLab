@@ -465,6 +465,28 @@ export function BarcodeObject({
         if (idx >= 0) sum += idx;
       }
       displayText = `${rawContent}${chars[sum % 43] ?? ""}`;
+    } else if (obj.type === "ean13") {
+      const d = rawContent.replace(/\D/g, "").slice(0, 12).padEnd(12, "0");
+      displayText = d + eanCheckDigit(d, 1, 3);
+    } else if (obj.type === "ean8") {
+      const d = rawContent.replace(/\D/g, "").slice(0, 7).padEnd(7, "0");
+      displayText = d + eanCheckDigit(d, 3, 1);
+    } else if (obj.type === "upca") {
+      const d = rawContent.replace(/\D/g, "").slice(0, 11).padEnd(11, "0");
+      displayText = d + eanCheckDigit(d, 3, 1);
+    } else if (obj.type === "upce") {
+      const digits6 = rawContent.replace(/\D/g, "").slice(0, 6).padEnd(6, "0");
+      const [vA, vB, vC, vD, vE, vF] = digits6.split("");
+      const fi = parseInt(vF ?? "0", 10);
+      let exp: string;
+      if (fi <= 2) exp = `0${vA}${vB}${vF}0000${vC}${vD}${vE}`;
+      else if (fi === 3) exp = `0${vA}${vB}${vC}00000${vD}${vE}`;
+      else if (fi === 4) exp = `0${vA}${vB}${vC}${vD}00000${vE}`;
+      else exp = `0${vA}${vB}${vC}${vD}${vE}${vF}0000`;
+      let ckSum = 0;
+      for (let i = 0; i < 11; i++)
+        ckSum += parseInt(exp[i] ?? "0", 10) * (i % 2 === 0 ? 3 : 1);
+      displayText = `0${digits6}${(10 - (ckSum % 10)) % 10}`;
     }
 
     if (showText) {
@@ -578,19 +600,18 @@ export function BarcodeObject({
 
       if (rotation === "R") {
         // rot=90: (x0-ly, y0+lx) — fh spans LEFT, W spans DOWN
-        // Standard: text RIGHT; LOGMARS: text LEFT
+        // Standard: text LEFT (below→left after 90°CW); LOGMARS: text RIGHT (above→right)
         if (isTextAbove) {
-          txtX = -textGap;           // left edge at x=-gap, fh extends further left
+          txtX = w + textGap + textFontSize;
         } else {
-          txtX = w + textGap + textFontSize; // right edge at x=w+gap+fh, text to the right
+          txtX = -textGap;
         }
         txtY = 0;
         txtRot = 90;
         txtWidth = h;
       } else if (rotation === "I") {
         // rot=180: (x0-lx, y0-ly) — W spans LEFT, fh spans UP
-        // Standard: text ABOVE (y=[-(gap+fh), -gap])
-        // LOGMARS:  text BELOW (y=[h+gap, h+gap+fh])
+        // Standard: text ABOVE (below→above after 180°); LOGMARS: text BELOW (above→below)
         txtX = w;
         if (isTextAbove) {
           txtY = h + textGap + textFontSize;
@@ -601,12 +622,11 @@ export function BarcodeObject({
         txtWidth = w;
       } else {
         // B (270° CW): rot=-90, (x0+ly, y0-lx) — fh spans RIGHT, W spans UP
-        // Standard: text LEFT (x=[-(gap+fh), -gap], y=[0,h]): x0=-(gap+fh), y0=h
-        // LOGMARS:  text RIGHT (x=[w+gap, w+gap+fh], y=[0,h]): x0=w+gap, y0=h
+        // Standard: text RIGHT (below→right after 270°CW); LOGMARS: text LEFT (above→left)
         if (isTextAbove) {
-          txtX = w + textGap;
-        } else {
           txtX = -(textGap + textFontSize);
+        } else {
+          txtX = w + textGap;
         }
         txtY = h;
         txtRot = -90;
