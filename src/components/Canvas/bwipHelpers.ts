@@ -347,13 +347,11 @@ export function buildBwipOptions(
     // ZPL uses N/R/I/B (B = 270° CW). bwip-js uses N/R/I/L (L = 90° CCW =
     // 270° CW). The other three letters mean the same thing in both.
     opts.rotate = rotation === "B" ? "L" : rotation;
-    // When the symbol is rotated we delegate HRI text to bwip-js (so it gets
-    // rotated alongside the bars). The manual text overlays in BarcodeObject
-    // assume an upright bitmap and do not rotate; gating them out is paired
-    // with this flag. For 'N' we keep the previous behaviour: manual overlays
-    // give pixel-perfect EAN/UPC labels and the LOGMARS-above placement.
-    const printInterp = !!(obj.props as { printInterpretation?: boolean }).printInterpretation;
-    if (printInterp) opts.includetext = true;
+    // HRI text is handled as a Konva overlay in BarcodeObject (same as for
+    // upright barcodes). Using bwip's includetext would embed text into the
+    // bitmap at bwip's internal scale, making the bitmap taller/wider than the
+    // bar-only dimensions that getDisplaySize computes — causing the KImage to
+    // stretch the bitmap incorrectly and appear blurry/distorted.
   }
   return opts;
 }

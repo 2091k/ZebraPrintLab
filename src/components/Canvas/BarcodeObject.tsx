@@ -152,13 +152,12 @@ export function BarcodeObject({
     // Force-off when the symbology has no HRI in ZPL (e.g. GS1 Databar) — the
     // canvas must match the print output even if a legacy saved object still
     // carries printInterpretation: true.
-    // Manual HRI overlays only run for upright barcodes; when rotated, bwip-js
-    // bakes the text into the bitmap (see bwipHelpers).
-    const isUpright = objectRotation(obj.props) === "N";
-    const printInterp =
-      isUpright &&
+    const rotation = objectRotation(obj.props);
+    const isUpright = rotation === "N";
+    const printInterpEnabled =
       !ObjectRegistry[obj.type]?.interpretationLocked &&
       !!(obj.props as { printInterpretation?: boolean }).printInterpretation;
+    const printInterp = isUpright && printInterpEnabled;
     const moduleWidth =
       (obj.props as { moduleWidth?: number }).moduleWidth ?? 2;
     const textFontSize = Math.max(dotsToPx(moduleWidth * 10, scale, dpmm), 6);
@@ -449,6 +448,14 @@ export function BarcodeObject({
 
     // ── Other 1D: separate Konva Text below bars ──────────────────────────
     const showText = BARCODE_1D_TYPES.has(obj.type) && printInterp;
+    // Rotated 1D (non-EAN/UPC): text overlay rotated to match the barcode.
+    // EAN/UPC rotated HRI is skipped (the digit layout is too complex to
+    // position correctly without a per-rotation coordinate transform).
+    const showRotatedText =
+      !isUpright &&
+      printInterpEnabled &&
+      BARCODE_1D_TYPES.has(obj.type) &&
+      !EAN_UPC_TYPES.has(obj.type);
 
     let displayText = rawContent;
     if (obj.type === "code39") {
@@ -536,6 +543,82 @@ export function BarcodeObject({
             x={0}
             y={txtY}
             width={Math.max(w, 1)}
+            text={displayText}
+            fontSize={textFontSize}
+            fontFamily="'Courier New', monospace"
+            align="center"
+            wrap="none"
+            fill="#000000"
+            listening={false}
+          />
+        </Group>
+      );
+    }
+
+    // ── Rotated 1D: text overlay rotated alongside the bars ──────────────
+    if (showRotatedText) {
+      // Compute text anchor and rotation so that the HRI appears in the same
+      // relative position as Zebra firmware would render it. In each case,
+      // Konva rotation is in degrees CW; the anchor is the top-left of the
+      // unrotated element (= the rotation pivot).
+      //   R (90° CW):  text to the right, extending downward (rot=90)
+      //   I (180°):    text above the barcode, upside-down (rot=180)
+      //   B (270° CW): text to the left, extending downward (rot=-90)
+      let txtX: number;
+      let txtY: number;
+      let txtRot: number;
+      let txtWidth: number;
+
+      if (rotation === "R") {
+        txtX = w + textGap;
+        txtY = 0;
+        txtRot = 90;
+        txtWidth = h;
+      } else if (rotation === "I") {
+        // Anchor at right edge, text renders leftward (180° flips x and y).
+        txtX = w;
+        txtY = -textGap;
+        txtRot = 180;
+        txtWidth = w;
+      } else {
+        // B (270° CW): anchor at bottom-left, text extends upward.
+        txtX = -textGap;
+        txtY = h;
+        txtRot = -90;
+        txtWidth = h;
+      }
+
+      return (
+        <Group
+          id={obj.id}
+          x={x}
+          y={y}
+          draggable
+          onClick={(e) =>
+            onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
+          }
+          onTap={() => onSelect(false)}
+          onDragMove={(e) =>
+            e.target.position(snapPos(e.target.x(), e.target.y()))
+          }
+          onDragEnd={handleDragEnd}
+        >
+          <KImage
+            x={0}
+            y={0}
+            image={barcodeCanvas}
+            width={Math.max(w, 1)}
+            height={Math.max(h, 1)}
+            imageSmoothingEnabled={false}
+            stroke={isSelected ? "#6366f1" : undefined}
+            strokeWidth={isSelected ? 2 : 0}
+            strokeScaleEnabled={false}
+          />
+          <Text
+            x={txtX}
+            y={txtY}
+            rotation={txtRot}
+            width={Math.max(txtWidth, 1)}
             text={displayText}
             fontSize={textFontSize}
             fontFamily="'Courier New', monospace"
