@@ -198,7 +198,7 @@ describe('parseZPL — ^FX comment', () => {
       '^XA^FXTop section^FO10,20^A0N,30,0^FDText^FS^XZ',
       8,
     );
-    expect(objects[0].comment).toBe('Top section');
+    expect(objects[0]?.comment).toBe('Top section');
   });
 
   it('joins consecutive ^FX lines with a newline', () => {
@@ -206,7 +206,7 @@ describe('parseZPL — ^FX comment', () => {
       '^XA^FXLine 1^FXLine 2^FO10,20^A0N,30,0^FDText^FS^XZ',
       8,
     );
-    expect(objects[0].comment).toBe('Line 1\nLine 2');
+    expect(objects[0]?.comment).toBe('Line 1\nLine 2');
   });
 
   it('does not bleed comments across ^XA boundaries', () => {
@@ -214,7 +214,7 @@ describe('parseZPL — ^FX comment', () => {
       '^XA^FXOnly first^XZ^XA^FO10,20^A0N,30,0^FDText^FS^XZ',
       8,
     );
-    expect(objects[0].comment).toBeUndefined();
+    expect(objects[0]?.comment).toBeUndefined();
   });
 
   it('does not reattach a consumed comment to a later object', () => {
@@ -222,8 +222,8 @@ describe('parseZPL — ^FX comment', () => {
       '^XA^FXOnly first^FO10,20^A0N,30,0^FDFirst^FS^FO10,60^A0N,30,0^FDSecond^FS^XZ',
       8,
     );
-    expect(objects[0].comment).toBe('Only first');
-    expect(objects[1].comment).toBeUndefined();
+    expect(objects[0]?.comment).toBe('Only first');
+    expect(objects[1]?.comment).toBeUndefined();
   });
 });
 
