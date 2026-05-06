@@ -10,6 +10,7 @@ import {
   buildBwipOptions,
   getDisplaySize,
   eanCheckDigit,
+  upceCheckDigit,
   get1DBwipScale,
   getEanUpcLayout,
   type EanUpcType,
@@ -345,23 +346,7 @@ export function BarcodeObject({
           .slice(0, 6)
           .padEnd(6, "0");
 
-        // Expand UPC-E to 11-digit UPC-A to compute check digit
-        const vA = digits6[0] ?? "0",
-          vB = digits6[1] ?? "0",
-          vC = digits6[2] ?? "0";
-        const vD = digits6[3] ?? "0",
-          vE = digits6[4] ?? "0",
-          vF = digits6[5] ?? "0";
-        const fi = parseInt(vF, 10);
-        let expanded11: string;
-        if (fi <= 2) expanded11 = `0${vA}${vB}${vF}0000${vC}${vD}${vE}`;
-        else if (fi === 3) expanded11 = `0${vA}${vB}${vC}00000${vD}${vE}`;
-        else if (fi === 4) expanded11 = `0${vA}${vB}${vC}${vD}00000${vE}`;
-        else expanded11 = `0${vA}${vB}${vC}${vD}${vE}${vF}0000`;
-        let ckSum = 0;
-        for (let i = 0; i < 11; i++)
-          ckSum += parseInt(expanded11[i] ?? "0", 10) * (i % 2 === 0 ? 3 : 1);
-        const checkDigit = String((10 - (ckSum % 10)) % 10);
+        const checkDigit = upceCheckDigit(digits6);
 
         // UPC-E: 6 digits centered over the data area (modules 3–44 of 51)
         const { xLeft: xMid, halfWidth: midW } = layout;
@@ -465,35 +450,6 @@ export function BarcodeObject({
         if (idx >= 0) sum += idx;
       }
       displayText = `${rawContent}${chars[sum % 43] ?? ""}`;
-    } else if (obj.type === "ean13") {
-      const d = rawContent.replace(/\D/g, "").slice(0, 12).padEnd(12, "0");
-      const ck = eanCheckDigit(d, 1, 3);
-      // "5  901234 123457" — system digit, 2 spaces, left 6, space, right 5 + check
-      displayText = `${d[0]}  ${d.slice(1, 7)} ${d.slice(7)}${ck}`;
-    } else if (obj.type === "ean8") {
-      const d = rawContent.replace(/\D/g, "").slice(0, 7).padEnd(7, "0");
-      const ck = eanCheckDigit(d, 3, 1);
-      // "5901 2345"
-      displayText = `${d.slice(0, 4)} ${d.slice(4)}${ck}`;
-    } else if (obj.type === "upca") {
-      const d = rawContent.replace(/\D/g, "").slice(0, 11).padEnd(11, "0");
-      const ck = eanCheckDigit(d, 3, 1);
-      // "1  23456 78901 6" — system digit, left 5, right 5, check digit
-      displayText = `${d[0]}  ${d.slice(1, 6)} ${d.slice(6)} ${ck}`;
-    } else if (obj.type === "upce") {
-      const digits6 = rawContent.replace(/\D/g, "").slice(0, 6).padEnd(6, "0");
-      const [vA, vB, vC, vD, vE, vF] = digits6.split("");
-      const fi = parseInt(vF ?? "0", 10);
-      let exp: string;
-      if (fi <= 2) exp = `0${vA}${vB}${vF}0000${vC}${vD}${vE}`;
-      else if (fi === 3) exp = `0${vA}${vB}${vC}00000${vD}${vE}`;
-      else if (fi === 4) exp = `0${vA}${vB}${vC}${vD}00000${vE}`;
-      else exp = `0${vA}${vB}${vC}${vD}${vE}${vF}0000`;
-      let ckSum = 0;
-      for (let i = 0; i < 11; i++)
-        ckSum += parseInt(exp[i] ?? "0", 10) * (i % 2 === 0 ? 3 : 1);
-      // "0  123456 7" — system 0, 6 data digits, check digit
-      displayText = `0  ${digits6} ${(10 - (ckSum % 10)) % 10}`;
     }
 
     if (showText) {
@@ -671,17 +627,7 @@ export function BarcodeObject({
           ];
         } else if (obj.type === "upce") {
           const d6 = rawContent.replace(/\D/g, "").slice(0, 6).padEnd(6, "0");
-          const [vA, vB, vC, vD, vE, vF] = d6.split("");
-          const fi = parseInt(vF ?? "0", 10);
-          let exp: string;
-          if (fi <= 2) exp = `0${vA}${vB}${vF}0000${vC}${vD}${vE}`;
-          else if (fi === 3) exp = `0${vA}${vB}${vC}00000${vD}${vE}`;
-          else if (fi === 4) exp = `0${vA}${vB}${vC}${vD}00000${vE}`;
-          else exp = `0${vA}${vB}${vC}${vD}${vE}${vF}0000`;
-          let ckSum = 0;
-          for (let i = 0; i < 11; i++)
-            ckSum += parseInt(exp[i] ?? "0", 10) * (i % 2 === 0 ? 3 : 1);
-          const ck = String((10 - (ckSum % 10)) % 10);
+          const ck = upceCheckDigit(d6);
           eanNodes = [
             sysNode("sys", "0"),
             node("mid", xLeft, halfW, d6),
