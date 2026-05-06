@@ -6,6 +6,16 @@ export function fieldPos(obj: LabelObjectBase): string {
   return `^${cmd}${obj.x},${obj.y}`;
 }
 
+/**
+ * Remove ZPL command/format prefixes from free-form text. `^FX` (comment) and
+ * other text-only contexts have no `^FH` escape mechanism, so these chars
+ * cannot be encoded — strip them so a stray `^` or `~` cannot terminate the
+ * surrounding command.
+ */
+export function stripZplCommandChars(s: string): string {
+  return s.replace(/[\^~]/g, '');
+}
+
 const FH_DELIM = '_';
 const NEEDS_FH = /[\^~]/;
 

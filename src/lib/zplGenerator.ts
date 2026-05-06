@@ -1,5 +1,6 @@
 import { mmToDots } from './coordinates';
 import { ObjectRegistry } from '../registry';
+import { stripZplCommandChars } from '../registry/zplHelpers';
 import type { LabelConfig } from '../types/ObjectType';
 import type { LabelObject } from '../registry';
 import type { Page } from '../store/labelStore';
@@ -29,9 +30,7 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   lines.push(...objects.map((obj) => {
     const zpl = ObjectRegistry[obj.type]?.toZPL(obj) ?? '';
     if (!obj.comment) return zpl;
-    // Strip ^ to prevent breaking ZPL structure inside the comment text
-    const safe = obj.comment.replace(/\^/g, '');
-    return `^FX${safe}\n${zpl}`;
+    return `^FX${stripZplCommandChars(obj.comment)}\n${zpl}`;
   }));
 
   if (label.printQuantity && label.printQuantity > 1) {
