@@ -122,6 +122,11 @@ describe("Labelary Sync - Canvas Dimension Logic", () => {
       const isStacked2D = ["pdf417", "micropdf417", "codablock"].includes(
         obj.type,
       );
+      // For 90°/270° rotated symbols the visible W and H are swapped, so the
+      // upright-shape assertions on bar height / module direction stop applying.
+      const rotation =
+        (obj.props as { rotation?: string }).rotation ?? "N";
+      const isQuarterRotated = rotation === "R" || rotation === "B";
       // LOGMARS spec places the human-readable line ABOVE the bars. Labelary's
       // bounding box for ^FO50,50 reports y=50 (bar top, not visual top), and
       // height includes the bar height plus a ~20 dot text-above zone reserved
@@ -145,7 +150,7 @@ describe("Labelary Sync - Canvas Dimension Logic", () => {
           tc.expected_bounds.height - EAN_TEXT_ZONE_DOTS,
           1,
         );
-      } else if (is1DCode) {
+      } else if (is1DCode && !isQuarterRotated) {
         expect(displaySize.h).toBe(
           (obj.props as { height: number }).height / 8,
         );

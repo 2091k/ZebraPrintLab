@@ -334,4 +334,46 @@ export const testModels: Record<string, LabelObject> = {
     rotation: 0,
     props: { content: "012345", height: 100, moduleWidth: 2, printInterpretation: false, checkDigit: false, rotation: "N" },
   },
+
+  // ── Rotation coverage ───────────────────────────────────────────────────
+  barcode_code128_rot_R: {
+    id: "rot1",
+    type: "code128",
+    x: 100,
+    y: 100,
+    rotation: 0,
+    props: { content: "123456", height: 100, moduleWidth: 2, printInterpretation: false, checkDigit: false, rotation: "R" },
+  },
+  barcode_code128_rot_I: {
+    id: "rot2",
+    type: "code128",
+    x: 100,
+    y: 100,
+    rotation: 0,
+    props: { content: "123456", height: 100, moduleWidth: 2, printInterpretation: false, checkDigit: false, rotation: "I" },
+  },
+  barcode_code128_rot_B: {
+    id: "rot3",
+    type: "code128",
+    x: 100,
+    y: 100,
+    rotation: 0,
+    props: { content: "123456", height: 100, moduleWidth: 2, printInterpretation: false, checkDigit: false, rotation: "B" },
+  },
+  barcode_qr_rot_R: {
+    id: "rot4",
+    type: "qrcode",
+    x: 100,
+    y: 100,
+    rotation: 0,
+    props: { content: "Hello World", magnification: 4, errorCorrection: "Q", rotation: "R" },
+  },
+  barcode_datamatrix_rot_R: {
+    id: "rot5",
+    type: "datamatrix",
+    x: 100,
+    y: 100,
+    rotation: 0,
+    props: { content: "DataMatrixTest", dimension: 5, quality: 200, rotation: "R" },
+  },
 };
