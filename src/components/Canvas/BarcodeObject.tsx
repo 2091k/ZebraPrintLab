@@ -448,14 +448,11 @@ export function BarcodeObject({
 
     // ── Other 1D: separate Konva Text below bars ──────────────────────────
     const showText = BARCODE_1D_TYPES.has(obj.type) && printInterp;
-    // Rotated 1D (non-EAN/UPC): text overlay rotated to match the barcode.
-    // EAN/UPC rotated HRI is skipped (the digit layout is too complex to
-    // position correctly without a per-rotation coordinate transform).
+    // Rotated 1D: text overlay rotated to match the barcode orientation.
     const showRotatedText =
       !isUpright &&
       printInterpEnabled &&
-      BARCODE_1D_TYPES.has(obj.type) &&
-      !EAN_UPC_TYPES.has(obj.type);
+      BARCODE_1D_TYPES.has(obj.type);
 
     let displayText = rawContent;
     if (obj.type === "code39") {
@@ -557,32 +554,60 @@ export function BarcodeObject({
 
     // ── Rotated 1D: text overlay rotated alongside the bars ──────────────
     if (showRotatedText) {
-      // Compute text anchor and rotation so that the HRI appears in the same
-      // relative position as Zebra firmware would render it. In each case,
-      // Konva rotation is in degrees CW; the anchor is the top-left of the
-      // unrotated element (= the rotation pivot).
-      //   R (90° CW):  text to the right, extending downward (rot=90)
-      //   I (180°):    text above the barcode, upside-down (rot=180)
-      //   B (270° CW): text to the left, extending downward (rot=-90)
+      // Konva rotation=90 (CW): local (lx,ly) → screen (x0-ly, y0+lx).
+      //   Width (h) spans downward; height (fh) spans leftward.
+      //   → text RIGHT of barcode (x=[w+gap, w+gap+fh], y=[0,h]):
+      //     x0=w+gap+fh, y0=0
+      // Konva rotation=-90 (CCW): local (lx,ly) → screen (x0+ly, y0-lx).
+      //   Width (h) spans upward; height (fh) spans rightward.
+      //   → text LEFT of barcode (x=[-(gap+fh), -gap], y=[0,h]):
+      //     x0=-(gap+fh), y0=h
+      // Konva rotation=180: local (lx,ly) → screen (x0-lx, y0-ly).
+      //   Width (w) spans leftward; height (fh) spans upward.
+      //   → text ABOVE barcode (x=[0,w], y=[-(gap+fh), -gap]):
+      //     x0=w, y0=-gap
+      //
+      // LOGMARS places text ABOVE bars in upright, so for quarter rotations
+      // its side is mirrored (LEFT↔RIGHT); for 180° it goes BELOW.
+      const isTextAbove = obj.type === "logmars";
+
       let txtX: number;
       let txtY: number;
       let txtRot: number;
       let txtWidth: number;
 
       if (rotation === "R") {
-        txtX = w + textGap;
+        // rot=90: (x0-ly, y0+lx) — fh spans LEFT, W spans DOWN
+        // Standard: text RIGHT; LOGMARS: text LEFT
+        if (isTextAbove) {
+          txtX = -textGap;           // left edge at x=-gap, fh extends further left
+        } else {
+          txtX = w + textGap + textFontSize; // right edge at x=w+gap+fh, text to the right
+        }
         txtY = 0;
         txtRot = 90;
         txtWidth = h;
       } else if (rotation === "I") {
-        // Anchor at right edge, text renders leftward (180° flips x and y).
+        // rot=180: (x0-lx, y0-ly) — W spans LEFT, fh spans UP
+        // Standard: text ABOVE (y=[-(gap+fh), -gap])
+        // LOGMARS:  text BELOW (y=[h+gap, h+gap+fh])
         txtX = w;
-        txtY = -textGap;
+        if (isTextAbove) {
+          txtY = h + textGap + textFontSize;
+        } else {
+          txtY = -textGap;
+        }
         txtRot = 180;
         txtWidth = w;
       } else {
-        // B (270° CW): anchor at bottom-left, text extends upward.
-        txtX = -textGap;
+        // B (270° CW): rot=-90, (x0+ly, y0-lx) — fh spans RIGHT, W spans UP
+        // Standard: text LEFT (x=[-(gap+fh), -gap], y=[0,h]): x0=-(gap+fh), y0=h
+        // LOGMARS:  text RIGHT (x=[w+gap, w+gap+fh], y=[0,h]): x0=w+gap, y0=h
+        if (isTextAbove) {
+          txtX = w + textGap;
+        } else {
+          txtX = -(textGap + textFontSize);
+        }
         txtY = h;
         txtRot = -90;
         txtWidth = h;
