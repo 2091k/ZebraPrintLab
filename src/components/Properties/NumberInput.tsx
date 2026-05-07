@@ -40,10 +40,13 @@ export function NumberInput({
         disabled={disabled}
         readOnly={readOnly}
         onChange={(e) => {
-          const next =
-            min !== undefined
-              ? clampMin(e.target.value, min)
-              : Number(e.target.value);
+          const raw = e.target.value;
+          let next = min !== undefined ? clampMin(raw, min) : Number(raw);
+          // Drop NaN before it corrupts the store. clampMin already returns
+          // `min` for unparsable input, so this only matters when `min` is
+          // undefined and the user pastes a non-numeric string.
+          if (isNaN(next)) return;
+          if (max !== undefined && next > max) next = max;
           onChange(next);
         }}
       />
