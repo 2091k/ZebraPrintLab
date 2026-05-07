@@ -5,6 +5,7 @@ import { fieldPos, fdField } from "./zplHelpers";
 import { commitStacked2DTransform } from "./transformHelpers";
 import { type ZplRotation } from "./rotation";
 import { RotationSelect } from "../components/Properties/RotationSelect";
+import { NumberInput } from "../components/Properties/NumberInput";
 
 export interface Pdf417Props {
   content: string;
@@ -59,56 +60,36 @@ export const pdf417: ObjectTypeDefinition<Pdf417Props> = {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{loc.rowHeight}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.rowHeight}
-              min={1}
-              onChange={(e) => onChange({ rowHeight: Number(e.target.value) })}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{loc.moduleWidth}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.moduleWidth}
-              min={1}
-              max={10}
-              onChange={(e) =>
-                onChange({ moduleWidth: Number(e.target.value) })
-              }
-            />
-          </div>
+          <NumberInput
+            label={loc.rowHeight}
+            value={p.rowHeight}
+            min={1}
+            onChange={(rowHeight) => onChange({ rowHeight })}
+          />
+          <NumberInput
+            label={loc.moduleWidth}
+            value={p.moduleWidth}
+            min={1}
+            max={10}
+            onChange={(moduleWidth) => onChange({ moduleWidth })}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{loc.securityLevel}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.securityLevel}
-              min={0}
-              max={8}
-              onChange={(e) =>
-                onChange({ securityLevel: Number(e.target.value) })
-              }
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{loc.columns}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.columns}
-              min={0}
-              max={30}
-              onChange={(e) => onChange({ columns: Number(e.target.value) })}
-            />
-          </div>
+          <NumberInput
+            label={loc.securityLevel}
+            value={p.securityLevel}
+            min={0}
+            max={8}
+            onChange={(securityLevel) => onChange({ securityLevel })}
+          />
+          <NumberInput
+            label={loc.columns}
+            value={p.columns}
+            min={0}
+            max={30}
+            onChange={(columns) => onChange({ columns })}
+          />
         </div>
 
         <RotationSelect value={p.rotation} onChange={(rotation) => onChange({ rotation })} />

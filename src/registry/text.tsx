@@ -5,6 +5,8 @@ import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos, fdField } from './zplHelpers';
 import { getFont, getAllFonts, loadFontFile } from '../lib/fontCache';
 import { useFontCacheVersion } from '../hooks/useFontCacheVersion';
+import { RotationSelect } from '../components/Properties/RotationSelect';
+import { NumberInput } from '../components/Properties/NumberInput';
 
 export interface TextProps {
   content: string;
@@ -132,41 +134,24 @@ export const text: ObjectTypeDefinition<TextProps> = {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{t.registry.text.fontHeight}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.fontHeight}
-              min={1}
-              onChange={(e) => onChange({ fontHeight: Number(e.target.value) })}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{t.registry.text.fontWidth}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.fontWidth}
-              min={0}
-              onChange={(e) => onChange({ fontWidth: Number(e.target.value) })}
-            />
-          </div>
+          <NumberInput
+            label={t.registry.text.fontHeight}
+            value={p.fontHeight}
+            min={1}
+            onChange={(fontHeight) => onChange({ fontHeight })}
+          />
+          <NumberInput
+            label={t.registry.text.fontWidth}
+            value={p.fontWidth}
+            min={0}
+            onChange={(fontWidth) => onChange({ fontWidth })}
+          />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.registry.text.rotation}</label>
-          <select
-            className={inputCls}
-            value={p.rotation}
-            onChange={(e) => onChange({ rotation: e.target.value as TextProps['rotation'] })}
-          >
-            <option value="N">{t.registry.text.rotationN}</option>
-            <option value="R">{t.registry.text.rotationR}</option>
-            <option value="I">{t.registry.text.rotationI}</option>
-            <option value="B">{t.registry.text.rotationB}</option>
-          </select>
-        </div>
+        <RotationSelect
+          value={p.rotation}
+          onChange={(rotation) => onChange({ rotation })}
+        />
 
         <label className="flex items-center gap-2 cursor-pointer">
           <input
@@ -194,26 +179,18 @@ export const text: ObjectTypeDefinition<TextProps> = {
         {!!p.blockWidth && (
           <>
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1">
-                <label className={labelCls}>{t.registry.text.blockWidth}</label>
-                <input
-                  type="number"
-                  className={inputCls}
-                  value={p.blockWidth}
-                  min={1}
-                  onChange={(e) => onChange({ blockWidth: Number(e.target.value) })}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className={labelCls}>{t.registry.text.blockLines}</label>
-                <input
-                  type="number"
-                  className={inputCls}
-                  value={p.blockLines ?? 1}
-                  min={1}
-                  onChange={(e) => onChange({ blockLines: Number(e.target.value) })}
-                />
-              </div>
+              <NumberInput
+                label={t.registry.text.blockWidth}
+                value={p.blockWidth}
+                min={1}
+                onChange={(blockWidth) => onChange({ blockWidth })}
+              />
+              <NumberInput
+                label={t.registry.text.blockLines}
+                value={p.blockLines ?? 1}
+                min={1}
+                onChange={(blockLines) => onChange({ blockLines })}
+              />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1">
@@ -229,15 +206,11 @@ export const text: ObjectTypeDefinition<TextProps> = {
                   <option value="J">{t.registry.text.justifyJ}</option>
                 </select>
               </div>
-              <div className="flex flex-col gap-1">
-                <label className={labelCls}>{t.registry.text.blockLineSpacing}</label>
-                <input
-                  type="number"
-                  className={inputCls}
-                  value={p.blockLineSpacing ?? 0}
-                  onChange={(e) => onChange({ blockLineSpacing: Number(e.target.value) })}
-                />
-              </div>
+              <NumberInput
+                label={t.registry.text.blockLineSpacing}
+                value={p.blockLineSpacing ?? 0}
+                onChange={(blockLineSpacing) => onChange({ blockLineSpacing })}
+              />
             </div>
           </>
         )}

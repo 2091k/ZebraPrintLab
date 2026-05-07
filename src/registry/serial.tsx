@@ -3,6 +3,8 @@ import { useT } from '../lib/useT';
 import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos } from './zplHelpers';
 import { filterContent, type ContentSpec } from './contentSpec';
+import { RotationSelect } from '../components/Properties/RotationSelect';
+import { NumberInput } from '../components/Properties/NumberInput';
 
 const serialSpec: ContentSpec = { charset: '0-9A-Za-z' };
 
@@ -54,54 +56,33 @@ export const serial: ObjectTypeDefinition<SerialProps> = {
               onChange={(e) => onChange({ content: filterContent(e.target.value, serialSpec) })}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{t.registry.serial.increment}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.increment}
-              min={1}
-              onChange={(e) => onChange({ increment: Number(e.target.value) })}
-            />
-          </div>
+          <NumberInput
+            label={t.registry.serial.increment}
+            value={p.increment}
+            min={1}
+            onChange={(increment) => onChange({ increment })}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{t.registry.serial.fontHeight}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.fontHeight}
-              min={1}
-              onChange={(e) => onChange({ fontHeight: Number(e.target.value) })}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{t.registry.serial.fontWidth}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.fontWidth}
-              min={0}
-              onChange={(e) => onChange({ fontWidth: Number(e.target.value) })}
-            />
-          </div>
+          <NumberInput
+            label={t.registry.serial.fontHeight}
+            value={p.fontHeight}
+            min={1}
+            onChange={(fontHeight) => onChange({ fontHeight })}
+          />
+          <NumberInput
+            label={t.registry.serial.fontWidth}
+            value={p.fontWidth}
+            min={0}
+            onChange={(fontWidth) => onChange({ fontWidth })}
+          />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.registry.serial.rotation}</label>
-          <select
-            className={inputCls}
-            value={p.rotation}
-            onChange={(e) => onChange({ rotation: e.target.value as SerialProps['rotation'] })}
-          >
-            <option value="N">{t.registry.text.rotationN}</option>
-            <option value="R">{t.registry.text.rotationR}</option>
-            <option value="I">{t.registry.text.rotationI}</option>
-            <option value="B">{t.registry.text.rotationB}</option>
-          </select>
-        </div>
+        <RotationSelect
+          value={p.rotation}
+          onChange={(rotation) => onChange({ rotation })}
+        />
 
         <div className="flex flex-col gap-1">
           <label className={labelCls}>{t.registry.serial.zplMode}</label>
