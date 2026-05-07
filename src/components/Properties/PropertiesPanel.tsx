@@ -481,8 +481,11 @@ function mergeDefaultFont(
   current: LabelConfig["defaultFont"],
   patch: { fontId?: string; height?: number },
 ): LabelConfig["defaultFont"] {
-  const fontId = patch.fontId ?? current?.fontId ?? "";
-  const height = patch.height ?? current?.height;
+  // `in` distinguishes "key absent from patch" (keep current value) from
+  // "key set to undefined" (user just cleared the input). `??` would conflate
+  // the two and silently keep the old value when the user clears a field.
+  const fontId = "fontId" in patch ? patch.fontId : current?.fontId;
+  const height = "height" in patch ? patch.height : current?.height;
   if (!fontId || height === undefined) return undefined;
   return { fontId, height };
 }
