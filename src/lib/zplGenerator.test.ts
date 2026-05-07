@@ -96,14 +96,19 @@ describe('generateZPL — printer params', () => {
     expect(zpl).toContain('^CF0,30');
   });
 
-  it('omits ^CF when defaultFontId is set without defaultFontHeight', () => {
-    expect(generateZPL({ ...BASE_LABEL, defaultFontId: '0' }, []))
-      .not.toContain('^CF');
+  it('emits ^CF{id} when only defaultFontId is set', () => {
+    const zpl = generateZPL({ ...BASE_LABEL, defaultFontId: '0' }, []);
+    expect(zpl).toContain('^CF0');
+    expect(zpl).not.toContain('^CF0,');
   });
 
-  it('omits ^CF when defaultFontHeight is set without defaultFontId', () => {
+  it('emits ^CF,{height} when only defaultFontHeight is set', () => {
     expect(generateZPL({ ...BASE_LABEL, defaultFontHeight: 30 }, []))
-      .not.toContain('^CF');
+      .toContain('^CF,30');
+  });
+
+  it('omits ^CF when neither defaultFont field is set', () => {
+    expect(generateZPL(BASE_LABEL, [])).not.toContain('^CF');
   });
 
   it('emits printer params in canonical header order before ^LS', () => {
@@ -237,5 +242,19 @@ describe('generateZPL — parse/generate roundtrip', () => {
     expect(labelConfig.printOrientation).toBe('I');
     expect(labelConfig.defaultFontId).toBe('0');
     expect(labelConfig.defaultFontHeight).toBe(30);
+  });
+
+  it('preserves partial ^CF (id only) through generate -> parse', () => {
+    const regenerated = generateZPL({ ...BASE_LABEL, defaultFontId: 'A' }, []);
+    const { labelConfig } = parseZPL(regenerated, BASE_LABEL.dpmm);
+    expect(labelConfig.defaultFontId).toBe('A');
+    expect(labelConfig.defaultFontHeight).toBeUndefined();
+  });
+
+  it('preserves partial ^CF (height only) through generate -> parse', () => {
+    const regenerated = generateZPL({ ...BASE_LABEL, defaultFontHeight: 25 }, []);
+    const { labelConfig } = parseZPL(regenerated, BASE_LABEL.dpmm);
+    expect(labelConfig.defaultFontId).toBeUndefined();
+    expect(labelConfig.defaultFontHeight).toBe(25);
   });
 });

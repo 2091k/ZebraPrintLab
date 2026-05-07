@@ -30,8 +30,14 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   // darkness=0 is a valid value (printer baseline), so check undefined explicitly.
   if (label.darkness !== undefined) lines.push(`^MD${label.darkness}`);
   if (label.printOrientation) lines.push(`^PO${label.printOrientation}`);
-  if (label.defaultFontId && label.defaultFontHeight !== undefined) {
-    lines.push(`^CF${label.defaultFontId},${label.defaultFontHeight}`);
+  // ^CF parameters are individually optional per Zebra spec: ^CF0 sets the
+  // font only, ^CF,30 sets the height only. Preserves round-trip fidelity
+  // when an imported label used a partial command.
+  if (label.defaultFontId || label.defaultFontHeight !== undefined) {
+    const id = label.defaultFontId ?? "";
+    const height =
+      label.defaultFontHeight !== undefined ? `,${label.defaultFontHeight}` : "";
+    lines.push(`^CF${id}${height}`);
   }
   if (label.labelShift) lines.push(`^LS${label.labelShift}`);
 
