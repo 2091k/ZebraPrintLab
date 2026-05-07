@@ -104,6 +104,9 @@ const hr = {
     propertiesTab: 'Svojstva',
     layersTab: 'Slojevi',
     fontsTab: 'Fontovi',
+    themeToggle: 'Promijeni temu',
+    themeLight: 'Svijetla tema',
+    themeDark: 'Tamna tema',
   },
 
   output: {

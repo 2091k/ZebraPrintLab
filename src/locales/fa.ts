@@ -104,6 +104,9 @@ const fa = {
     propertiesTab: 'ویژگی‌ها',
     layersTab: 'لایه‌ها',
     fontsTab: 'فونت‌ها',
+    themeToggle: 'تغییر تم',
+    themeLight: 'تم روشن',
+    themeDark: 'تم تیره',
   },
 
   output: {

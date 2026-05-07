@@ -104,6 +104,9 @@ const ar = {
     propertiesTab: 'الخصائص',
     layersTab: 'الطبقات',
     fontsTab: 'الخطوط',
+    themeToggle: 'تبديل المظهر',
+    themeLight: 'مظهر فاتح',
+    themeDark: 'مظهر داكن',
   },
 
   output: {

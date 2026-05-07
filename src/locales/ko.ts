@@ -104,6 +104,9 @@ const ko = {
     propertiesTab: '속성',
     layersTab: '레이어',
     fontsTab: '글꼴',
+    themeToggle: '테마 전환',
+    themeLight: '라이트 테마',
+    themeDark: '다크 테마',
   },
 
   output: {

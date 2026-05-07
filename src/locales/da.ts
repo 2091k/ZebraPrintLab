@@ -104,6 +104,9 @@ const da = {
     propertiesTab: 'Egenskaber',
     layersTab: 'Lag',
     fontsTab: 'Skrifttyper',
+    themeToggle: 'Skift tema',
+    themeLight: 'Lyst tema',
+    themeDark: 'Mørkt tema',
   },
 
   output: {

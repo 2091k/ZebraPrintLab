@@ -104,6 +104,9 @@ const sr = {
     propertiesTab: 'Својства',
     layersTab: 'Слојеви',
     fontsTab: 'Фонтови',
+    themeToggle: 'Промени тему',
+    themeLight: 'Светла тема',
+    themeDark: 'Тамна тема',
   },
 
   output: {

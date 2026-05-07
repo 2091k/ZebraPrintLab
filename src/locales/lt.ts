@@ -104,6 +104,9 @@ const lt = {
     propertiesTab: 'Savybės',
     layersTab: 'Sluoksniai',
     fontsTab: 'Šriftai',
+    themeToggle: 'Perjungti temą',
+    themeLight: 'Šviesi tema',
+    themeDark: 'Tamsi tema',
   },
 
   output: {

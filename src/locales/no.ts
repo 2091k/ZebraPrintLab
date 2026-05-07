@@ -104,6 +104,9 @@ const no = {
     propertiesTab: 'Egenskaper',
     layersTab: 'Lag',
     fontsTab: 'Skrifter',
+    themeToggle: 'Bytt tema',
+    themeLight: 'Lyst tema',
+    themeDark: 'Mørkt tema',
   },
 
   output: {

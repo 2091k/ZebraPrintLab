@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DndContext, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { ObjectPalette } from "./Palette/ObjectPalette";
 import { LabelCanvas } from "./Canvas/LabelCanvas";
@@ -27,6 +27,8 @@ import {
   PaperAirplaneIcon,
   GlobeAltIcon,
   XMarkIcon,
+  SunIcon,
+  MoonIcon,
 } from "@heroicons/react/16/solid";
 import { useLabelStore, useHistory } from "../store/labelStore";
 import { localeNames } from "../locales";
@@ -46,6 +48,14 @@ export function AppShell() {
   const addPage = useLabelStore((s) => s.addPage);
   const locale = useLabelStore((s) => s.locale);
   const setLocale = useLabelStore((s) => s.setLocale);
+  const theme = useLabelStore((s) => s.theme);
+  const setTheme = useLabelStore((s) => s.setTheme);
+
+  // Bridge the theme preference to <html data-theme> so the CSS variables in
+  // index.css pick it up.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
   const { undo, redo, pastStates, futureStates } = useHistory();
   const canvasSettings = useLabelStore((s) => s.canvasSettings);
   const setCanvasSettings = useLabelStore((s) => s.setCanvasSettings);
@@ -115,6 +125,19 @@ export function AppShell() {
           </button>
 
           <div className="w-px h-4 bg-border mx-1" />
+
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            title={theme === "dark" ? t.app.themeLight : t.app.themeDark}
+            aria-label={t.app.themeToggle}
+            className="p-1.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors"
+          >
+            {theme === "dark" ? (
+              <SunIcon className="w-3.5 h-3.5" />
+            ) : (
+              <MoonIcon className="w-3.5 h-3.5" />
+            )}
+          </button>
 
           <DropdownMenu
             label={<GlobeAltIcon className="w-3.5 h-3.5" />}

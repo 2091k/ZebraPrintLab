@@ -104,6 +104,9 @@ const he = {
     propertiesTab: 'מאפיינים',
     layersTab: 'שכבות',
     fontsTab: 'גופנים',
+    themeToggle: 'החלפת ערכת נושא',
+    themeLight: 'ערכת נושא בהירה',
+    themeDark: 'ערכת נושא כהה',
   },
 
   output: {

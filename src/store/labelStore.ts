@@ -30,6 +30,12 @@ function detectLocale(): LocaleCode {
   return (lang in locales ? lang : 'en') as LocaleCode;
 }
 
+function detectInitialTheme(): 'light' | 'dark' {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+}
+
 export interface CanvasSettings {
   showGrid: boolean;
   snapEnabled: boolean;
@@ -39,12 +45,17 @@ export interface CanvasSettings {
   viewRotation: ViewRotation;
 }
 
+export type ThemePreference = 'light' | 'dark';
+
 interface LabelState {
   label: LabelConfig;
   pages: Page[];
   currentPageIndex: number;
   selectedIds: string[];
   locale: LocaleCode;
+  /** UI theme. Initial value seeded from prefers-color-scheme; once toggled
+   *  the explicit choice persists. */
+  theme: ThemePreference;
   canvasSettings: CanvasSettings;
 
   clipboard: LabelObject[];
@@ -65,6 +76,7 @@ interface LabelState {
   removeSelectedObjects: () => void;
   setLabelConfig: (config: Partial<LabelConfig>) => void;
   setLocale: (locale: LocaleCode) => void;
+  setTheme: (theme: ThemePreference) => void;
   setCanvasSettings: (settings: Partial<CanvasSettings>) => void;
   loadDesign: (label: LabelConfig, pages: Page[]) => void;
   moveObjectForward: (id: string) => void;
@@ -127,6 +139,7 @@ export const useLabelStore = create<LabelState>()(
       pasteCount: 0,
       duplicateCount: 0,
       locale: detectLocale(),
+      theme: detectInitialTheme(),
       canvasSettings: { showGrid: false, snapEnabled: false, snapSizeMm: 1, zoom: 1, unit: 'mm', viewRotation: 0 },
 
       addObject: (type, position = { x: 50, y: 50 }) => {
@@ -347,6 +360,8 @@ export const useLabelStore = create<LabelState>()(
 
       setLocale: (locale) => set({ locale }),
 
+      setTheme: (theme) => set({ theme }),
+
       setCanvasSettings: (settings) =>
         set((state) => ({ canvasSettings: { ...state.canvasSettings, ...settings } })),
 
@@ -425,6 +440,7 @@ export const useLabelStore = create<LabelState>()(
         pages: state.pages,
         currentPageIndex: state.currentPageIndex,
         locale: state.locale,
+        theme: state.theme,
         canvasSettings: state.canvasSettings,
       }),
     }

@@ -104,6 +104,9 @@ const ro = {
     propertiesTab: 'Proprietăți',
     layersTab: 'Straturi',
     fontsTab: 'Fonturi',
+    themeToggle: 'Comutare temă',
+    themeLight: 'Temă luminoasă',
+    themeDark: 'Temă întunecată',
   },
 
   output: {

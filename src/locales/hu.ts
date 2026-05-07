@@ -104,6 +104,9 @@ const hu = {
     propertiesTab: 'Tulajdonságok',
     layersTab: 'Rétegek',
     fontsTab: 'Betűtípusok',
+    themeToggle: 'Téma váltása',
+    themeLight: 'Világos téma',
+    themeDark: 'Sötét téma',
   },
 
   output: {

@@ -104,6 +104,9 @@ const lv = {
     propertiesTab: 'Īpašības',
     layersTab: 'Slāņi',
     fontsTab: 'Fonti',
+    themeToggle: 'Pārslēgt motīvu',
+    themeLight: 'Gaišais motīvs',
+    themeDark: 'Tumšais motīvs',
   },
 
   output: {

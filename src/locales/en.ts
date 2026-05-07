@@ -104,6 +104,9 @@ const en = {
     propertiesTab: 'Properties',
     layersTab: 'Layers',
     fontsTab: 'Fonts',
+    themeToggle: 'Toggle theme',
+    themeLight: 'Light theme',
+    themeDark: 'Dark theme',
   },
 
   zebraPrint: {

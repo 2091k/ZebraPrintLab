@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useLabelStore } from '../store/labelStore';
 
 export interface CanvasColors {
   canvasBg: string;
@@ -40,16 +40,6 @@ export const LIGHT_COLORS: CanvasColors = {
 };
 
 export function useColorScheme(): CanvasColors {
-  const [isDark, setIsDark] = useState(
-    () => window.matchMedia('(prefers-color-scheme: dark)').matches,
-  );
-
-  useEffect(() => {
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
-
-  return isDark ? DARK_COLORS : LIGHT_COLORS;
+  const theme = useLabelStore((s) => s.theme);
+  return theme === 'dark' ? DARK_COLORS : LIGHT_COLORS;
 }

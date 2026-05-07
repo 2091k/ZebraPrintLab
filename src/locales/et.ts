@@ -104,6 +104,9 @@ const et = {
     propertiesTab: 'Omadused',
     layersTab: 'Kihid',
     fontsTab: 'Fondid',
+    themeToggle: 'Vaheta teemat',
+    themeLight: 'Hele teema',
+    themeDark: 'Tume teema',
   },
 
   output: {

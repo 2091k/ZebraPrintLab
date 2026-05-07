@@ -104,6 +104,9 @@ const el = {
     propertiesTab: 'Ιδιότητες',
     layersTab: 'Επίπεδα',
     fontsTab: 'Γραμματοσειρές',
+    themeToggle: 'Εναλλαγή θέματος',
+    themeLight: 'Ανοιχτό θέμα',
+    themeDark: 'Σκοτεινό θέμα',
   },
 
   output: {
