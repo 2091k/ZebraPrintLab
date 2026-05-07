@@ -8,7 +8,7 @@ import { RotationSelect } from "../components/Properties/RotationSelect";
 export interface AztecProps {
   content: string;
   magnification: number; // 1–10, module size in dots
-  ecLevel: number; // 0 = auto, 1–99 error correction percentage, 201–232 for layers
+  ecLevel: number; // 0=default, 1-99=error correction %, 101-104=compact, 201-232=full, 300=rune
   rotation: ZplRotation;
 }
 
