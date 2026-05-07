@@ -647,6 +647,11 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     CF(p) {
       cfHeight = int(p[1], cfHeight);
       cfWidth = int(p[2], cfWidth);
+      const fontId = (p[0] ?? "").trim();
+      const explicitHeight = parseInt(p[1] ?? "", 10);
+      if (fontId && !isNaN(explicitHeight) && explicitHeight > 0) {
+        labelConfig.defaultFont = { fontId, height: explicitHeight };
+      }
     },
 
     // ── Field-wide default rotation ─────────────────────────────────────────
@@ -1097,6 +1102,26 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       const shift = int(rest, 0);
       if (shift !== 0) labelConfig.labelShift = shift;
     },
+    PR(p) {
+      const speed = int(p[0], 0);
+      if (speed >= 2 && speed <= 14) labelConfig.printSpeed = speed;
+    },
+    MD(_, rest) {
+      // Direct parse: int() falls back to 0 on NaN, which would conflate
+      // "absent" with the valid darkness value 0.
+      const parsed = parseInt(rest, 10);
+      if (!isNaN(parsed) && parsed >= -30 && parsed <= 30) {
+        labelConfig.darkness = parsed;
+      }
+    },
+    MT(_, rest) {
+      const mt = (rest[0] ?? "").toUpperCase();
+      if (mt === "T" || mt === "D") labelConfig.mediaType = mt;
+    },
+    PO(_, rest) {
+      const po = (rest[0] ?? "").toUpperCase();
+      if (po === "N" || po === "I") labelConfig.printOrientation = po;
+    },
 
     // ── Browser-limit: printer-specific features ────────────────────────────
     CW: mkBrowserLimit("CW"), // font identifier — assigns alias to printer-resident font
@@ -1153,7 +1178,6 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     FE: noop, // field concatenation — appends data to current field
     FM: noop, // multiple field origin locations
     FP: noop, // field parameter — per-character text direction
-    MT: noop, // media type
     MN: noop, // media handling / notch tracking
     JA: noop, // applicator / configuration recall
     JM: noop, // darkness / print settings
@@ -1164,7 +1188,6 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     JR: noop, // restore factory defaults
     JS: noop, // change darkness
     JU: noop, // update firmware
-    PR: noop, // print rate / speed
     PM: noop, // part of message
     PP: noop, // presentation position
   };

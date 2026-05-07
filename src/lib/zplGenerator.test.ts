@@ -207,4 +207,22 @@ describe('generateZPL — parse/generate roundtrip', () => {
     expect(props(barcode).content).toBe('987654');
     expect(props(barcode).height).toBe(150);
   });
+
+  it('preserves printer params through generate -> parse', () => {
+    const label: LabelConfig = {
+      ...BASE_LABEL,
+      printSpeed: 8,
+      darkness: 0,
+      mediaType: 'D',
+      printOrientation: 'I',
+      defaultFont: { fontId: '0', height: 30 },
+    };
+    const regenerated = generateZPL(label, []);
+    const { labelConfig } = parseZPL(regenerated, BASE_LABEL.dpmm);
+    expect(labelConfig.printSpeed).toBe(8);
+    expect(labelConfig.darkness).toBe(0);
+    expect(labelConfig.mediaType).toBe('D');
+    expect(labelConfig.printOrientation).toBe('I');
+    expect(labelConfig.defaultFont).toEqual({ fontId: '0', height: 30 });
+  });
 });

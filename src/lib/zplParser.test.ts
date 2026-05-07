@@ -514,6 +514,44 @@ describe('parseZPL — ^MM and ^LS', () => {
   });
 });
 
+describe('parseZPL — printer params', () => {
+  it('parses ^PR print speed within range', () => {
+    const { labelConfig } = parseZPL('^XA^PR6^XZ', 8);
+    expect(labelConfig.printSpeed).toBe(6);
+  });
+
+  it('ignores ^PR with out-of-range value', () => {
+    const { labelConfig } = parseZPL('^XA^PR1^XZ', 8);
+    expect(labelConfig.printSpeed).toBeUndefined();
+  });
+
+  it('parses ^MD darkness including 0', () => {
+    expect(parseZPL('^XA^MD0^XZ', 8).labelConfig.darkness).toBe(0);
+    expect(parseZPL('^XA^MD15^XZ', 8).labelConfig.darkness).toBe(15);
+    expect(parseZPL('^XA^MD-10^XZ', 8).labelConfig.darkness).toBe(-10);
+  });
+
+  it('ignores ^MD outside the supported range', () => {
+    const { labelConfig } = parseZPL('^XA^MD99^XZ', 8);
+    expect(labelConfig.darkness).toBeUndefined();
+  });
+
+  it('parses ^MT media type', () => {
+    expect(parseZPL('^XA^MTT^XZ', 8).labelConfig.mediaType).toBe('T');
+    expect(parseZPL('^XA^MTD^XZ', 8).labelConfig.mediaType).toBe('D');
+  });
+
+  it('parses ^PO print orientation', () => {
+    expect(parseZPL('^XA^PON^XZ', 8).labelConfig.printOrientation).toBe('N');
+    expect(parseZPL('^XA^POI^XZ', 8).labelConfig.printOrientation).toBe('I');
+  });
+
+  it('parses ^CF default font with id and height', () => {
+    const { labelConfig } = parseZPL('^XA^CF0,40^XZ', 8);
+    expect(labelConfig.defaultFont).toEqual({ fontId: '0', height: 40 });
+  });
+});
+
 // ── edge cases ────────────────────────────────────────────────────────────────
 
 describe('parseZPL — edge cases', () => {
