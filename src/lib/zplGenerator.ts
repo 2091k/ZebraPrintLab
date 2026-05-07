@@ -25,6 +25,14 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   ];
 
   if (label.mediaMode) lines.push(`^MM${label.mediaMode}`);
+  if (label.mediaType) lines.push(`^MT${label.mediaType}`);
+  if (label.printSpeed !== undefined) lines.push(`^PR${label.printSpeed}`);
+  // darkness=0 is a valid value (printer baseline), so check undefined explicitly.
+  if (label.darkness !== undefined) lines.push(`^MD${label.darkness}`);
+  if (label.printOrientation) lines.push(`^PO${label.printOrientation}`);
+  if (label.defaultFont) {
+    lines.push(`^CF${label.defaultFont.fontId},${label.defaultFont.height}`);
+  }
   if (label.labelShift) lines.push(`^LS${label.labelShift}`);
 
   lines.push(...objects.map((obj) => {

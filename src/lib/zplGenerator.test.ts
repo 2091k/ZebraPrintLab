@@ -54,6 +54,72 @@ describe('generateZPL — structure', () => {
   });
 });
 
+describe('generateZPL — printer params', () => {
+  it('emits ^PR when printSpeed is set', () => {
+    const zpl = generateZPL({ ...BASE_LABEL, printSpeed: 6 }, []);
+    expect(zpl).toContain('^PR6');
+  });
+
+  it('omits ^PR when printSpeed is absent', () => {
+    expect(generateZPL(BASE_LABEL, [])).not.toContain('^PR');
+  });
+
+  it('emits ^MD for darkness boundaries including 0', () => {
+    expect(generateZPL({ ...BASE_LABEL, darkness: 0 }, [])).toContain('^MD0');
+    expect(generateZPL({ ...BASE_LABEL, darkness: 30 }, [])).toContain('^MD30');
+    expect(generateZPL({ ...BASE_LABEL, darkness: -30 }, [])).toContain('^MD-30');
+  });
+
+  it('omits ^MD when darkness is absent', () => {
+    expect(generateZPL(BASE_LABEL, [])).not.toContain('^MD');
+  });
+
+  it('emits ^MT for thermal transfer and direct thermal', () => {
+    expect(generateZPL({ ...BASE_LABEL, mediaType: 'T' }, [])).toContain('^MTT');
+    expect(generateZPL({ ...BASE_LABEL, mediaType: 'D' }, [])).toContain('^MTD');
+  });
+
+  it('emits ^PO for both orientations when explicitly set', () => {
+    expect(generateZPL({ ...BASE_LABEL, printOrientation: 'I' }, [])).toContain('^POI');
+    expect(generateZPL({ ...BASE_LABEL, printOrientation: 'N' }, [])).toContain('^PON');
+  });
+
+  it('omits ^PO when print orientation is absent', () => {
+    expect(generateZPL(BASE_LABEL, [])).not.toContain('^PO');
+  });
+
+  it('emits ^CF when defaultFont is set', () => {
+    const zpl = generateZPL(
+      { ...BASE_LABEL, defaultFont: { fontId: '0', height: 30 } },
+      [],
+    );
+    expect(zpl).toContain('^CF0,30');
+  });
+
+  it('emits printer params in canonical header order before ^LS', () => {
+    const zpl = generateZPL(
+      {
+        ...BASE_LABEL,
+        mediaMode: 'T',
+        mediaType: 'T',
+        printSpeed: 6,
+        darkness: 10,
+        printOrientation: 'I',
+        defaultFont: { fontId: '0', height: 30 },
+        labelShift: 5,
+      },
+      [],
+    );
+    const idx = (cmd: string) => zpl.indexOf(cmd);
+    expect(idx('^MMT')).toBeLessThan(idx('^MTT'));
+    expect(idx('^MTT')).toBeLessThan(idx('^PR6'));
+    expect(idx('^PR6')).toBeLessThan(idx('^MD10'));
+    expect(idx('^MD10')).toBeLessThan(idx('^POI'));
+    expect(idx('^POI')).toBeLessThan(idx('^CF0,30'));
+    expect(idx('^CF0,30')).toBeLessThan(idx('^LS5'));
+  });
+});
+
 describe('generateZPL — text object', () => {
   it('emits ^FO, ^A0 and ^FD for a text object', () => {
     const { objects } = parseZPL('^XA^FO10,20^A0N,30,0^FDHello^FS^XZ', 8);
