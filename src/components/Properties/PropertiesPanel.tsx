@@ -353,7 +353,136 @@ function LabelConfigPanel({
             }
           />
         </div>
+
+        <div className="border-t border-border" />
+
+        <p className={labelCls}>{t.label.printerSettingsHeading}</p>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.printSpeed}</label>
+          <input
+            type="number"
+            className={inputCls}
+            value={label.printSpeed ?? ""}
+            min={2}
+            max={14}
+            onChange={(e) =>
+              onUpdate({ printSpeed: parseIntOrUndef(e.target.value) })
+            }
+          />
+          <p className="text-[10px] text-muted">{t.label.printSpeedHint}</p>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.darkness}</label>
+          <input
+            type="number"
+            className={inputCls}
+            value={label.darkness ?? ""}
+            min={-30}
+            max={30}
+            onChange={(e) =>
+              onUpdate({ darkness: parseIntOrUndef(e.target.value) })
+            }
+          />
+          <p className="text-[10px] text-muted">{t.label.darknessHint}</p>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.mediaType}</label>
+          <select
+            className={inputCls}
+            value={label.mediaType ?? ""}
+            onChange={(e) =>
+              onUpdate({
+                mediaType:
+                  (e.target.value as LabelConfig["mediaType"]) || undefined,
+              })
+            }
+          >
+            <option value="">{t.label.presetCustom}</option>
+            <option value="T">{t.label.mediaTypeT}</option>
+            <option value="D">{t.label.mediaTypeD}</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.printOrientation}</label>
+          <select
+            className={inputCls}
+            value={label.printOrientation ?? ""}
+            onChange={(e) =>
+              onUpdate({
+                printOrientation:
+                  (e.target.value as LabelConfig["printOrientation"]) ||
+                  undefined,
+              })
+            }
+          >
+            <option value="">{t.label.presetCustom}</option>
+            <option value="N">{t.label.printOrientationN}</option>
+            <option value="I">{t.label.printOrientationI}</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.defaultFont}</label>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-muted">
+                {t.label.defaultFontId}
+              </label>
+              <input
+                type="text"
+                className={inputCls}
+                maxLength={2}
+                value={label.defaultFont?.fontId ?? ""}
+                onChange={(e) =>
+                  onUpdate({
+                    defaultFont: mergeDefaultFont(label.defaultFont, {
+                      fontId: e.target.value,
+                    }),
+                  })
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-muted">
+                {t.label.defaultFontHeight}
+              </label>
+              <input
+                type="number"
+                className={inputCls}
+                min={1}
+                value={label.defaultFont?.height ?? ""}
+                onChange={(e) =>
+                  onUpdate({
+                    defaultFont: mergeDefaultFont(label.defaultFont, {
+                      height: parseIntOrUndef(e.target.value),
+                    }),
+                  })
+                }
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
+}
+
+function parseIntOrUndef(raw: string): number | undefined {
+  if (raw.trim() === "") return undefined;
+  const n = parseInt(raw, 10);
+  return isNaN(n) ? undefined : n;
+}
+
+function mergeDefaultFont(
+  current: LabelConfig["defaultFont"],
+  patch: { fontId?: string; height?: number },
+): LabelConfig["defaultFont"] {
+  const fontId = patch.fontId ?? current?.fontId ?? "";
+  const height = patch.height ?? current?.height;
+  if (!fontId || height === undefined) return undefined;
+  return { fontId, height };
 }
