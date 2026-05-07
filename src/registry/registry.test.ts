@@ -170,6 +170,46 @@ describe('ellipse.toZPL', () => {
   });
 });
 
+// ── circle ────────────────────────────────────────────────────────────────────
+
+describe('circle.toZPL', () => {
+  const def = defined(ObjectRegistry['circle']);
+
+  it('emits ^GE with diameter for both axes', () => {
+    const zpl = def.toZPL(makeObj('circle', {
+      diameter: 80, thickness: 3, filled: false, color: 'B',
+    }));
+    expect(zpl).toContain('^GE80,80,3,B');
+  });
+
+  it('uses diameter as thickness when filled', () => {
+    const zpl = def.toZPL(makeObj('circle', {
+      diameter: 80, thickness: 3, filled: true, color: 'B',
+    }));
+    expect(zpl).toContain('^GE80,80,80,B');
+  });
+});
+
+describe('circle.commitTransform', () => {
+  const def = defined(ObjectRegistry['circle']);
+
+  it('uses the smaller scale axis to keep the circle inside the drag box', () => {
+    const result = def.commitTransform!(
+      makeObj('circle', { diameter: 100, thickness: 3, filled: false, color: 'B' }),
+      { sx: 2, sy: 1.5, snap: (n) => n, nodeHeight: 0, anchor: null },
+    );
+    expect(result).toEqual({ diameter: 150 });
+  });
+
+  it('clamps the diameter to at least 1', () => {
+    const result = def.commitTransform!(
+      makeObj('circle', { diameter: 100, thickness: 3, filled: false, color: 'B' }),
+      { sx: 0, sy: 0, snap: (n) => n, nodeHeight: 0, anchor: null },
+    );
+    expect(result).toEqual({ diameter: 1 });
+  });
+});
+
 // ── code128 ───────────────────────────────────────────────────────────────────
 
 describe('code128.toZPL', () => {
@@ -352,7 +392,7 @@ describe('ObjectRegistry', () => {
   const expectedTypes = [
     'text', 'code128', 'code39', 'ean13', 'upca', 'ean8', 'upce',
     'interleaved2of5', 'code93', 'qrcode', 'datamatrix', 'pdf417',
-    'box', 'ellipse', 'line', 'serial', 'image',
+    'box', 'ellipse', 'circle', 'line', 'serial', 'image',
   ];
 
   it('contains all expected object types', () => {

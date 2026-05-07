@@ -19,6 +19,7 @@ const sv = {
     datamatrix: 'DataMatrix',
     box: 'Rektangel',
     ellipse: 'Ellips',
+    circle: 'Cirkel',
     line: 'Linje',
     serial: 'Serienr.',
     image: 'Bild',
@@ -194,6 +195,14 @@ const sv = {
     ellipse: {
       width: 'Bredd (punkter)',
       height: 'Höjd (punkter)',
+      thickness: 'Kant (punkter)',
+      filled: 'Fylld',
+      color: 'Färg',
+      colorB: 'B — Svart',
+      colorW: 'W — Vit',
+    },
+    circle: {
+      diameter: 'Diameter (punkter)',
       thickness: 'Kant (punkter)',
       filled: 'Fylld',
       color: 'Färg',

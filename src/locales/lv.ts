@@ -19,6 +19,7 @@ const lv = {
     datamatrix: 'DataMatrix',
     box: 'Taisnstūris',
     ellipse: 'Elipse',
+    circle: 'Aplis',
     line: 'Līnija',
     serial: 'Sērijas nr.',
     image: 'Attēls',
@@ -199,6 +200,14 @@ const lv = {
       color: 'Krāsa',
       colorB: 'B — Melna',
       colorW: 'W — Balta',
+    },
+    circle: {
+      diameter: 'Diametrs (punkti)',
+      thickness: 'Apmale (punkti)',
+      filled: 'Aizpildīts',
+      color: 'Krāsa',
+      colorB: 'B — Melns',
+      colorW: 'W — Balts',
     },
     line: {
       angle: 'Leņķis (°)',

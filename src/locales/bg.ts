@@ -19,6 +19,7 @@ const bg = {
     datamatrix: 'DataMatrix',
     box: 'Правоъгълник',
     ellipse: 'Елипса',
+    circle: 'Кръг',
     line: 'Линия',
     serial: 'Сериен №',
     image: 'Изображение',
@@ -199,6 +200,14 @@ const bg = {
       color: 'Цвят',
       colorB: 'B — Черен',
       colorW: 'W — Бял',
+    },
+    circle: {
+      diameter: 'Диаметър (точки)',
+      thickness: 'Рамка (точки)',
+      filled: 'Запълнено',
+      color: 'Цвят',
+      colorB: 'B — Черно',
+      colorW: 'W — Бяло',
     },
     line: {
       angle: 'Ъгъл (°)',

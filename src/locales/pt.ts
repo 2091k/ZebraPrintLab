@@ -19,6 +19,7 @@ const pt = {
     datamatrix: 'DataMatrix',
     box: 'Retângulo',
     ellipse: 'Elipse',
+    circle: 'Círculo',
     line: 'Linha',
     serial: 'Série',
     image: 'Imagem',
@@ -194,6 +195,14 @@ const pt = {
     ellipse: {
       width: 'Largura (pontos)',
       height: 'Altura (pontos)',
+      thickness: 'Borda (pontos)',
+      filled: 'Preenchido',
+      color: 'Cor',
+      colorB: 'B — Preto',
+      colorW: 'W — Branco',
+    },
+    circle: {
+      diameter: 'Diâmetro (pontos)',
       thickness: 'Borda (pontos)',
       filled: 'Preenchido',
       color: 'Cor',

@@ -19,6 +19,7 @@ const lt = {
     datamatrix: 'DataMatrix',
     box: 'Stačiakampis',
     ellipse: 'Elipsė',
+    circle: 'Apskritimas',
     line: 'Linija',
     serial: 'Serijinis nr.',
     image: 'Vaizdas',
@@ -194,6 +195,14 @@ const lt = {
     ellipse: {
       width: 'Plotis (taškai)',
       height: 'Aukštis (taškai)',
+      thickness: 'Rėmelis (taškai)',
+      filled: 'Užpildytas',
+      color: 'Spalva',
+      colorB: 'B — Juoda',
+      colorW: 'W — Balta',
+    },
+    circle: {
+      diameter: 'Skersmuo (taškai)',
       thickness: 'Rėmelis (taškai)',
       filled: 'Užpildytas',
       color: 'Spalva',

@@ -19,6 +19,7 @@ const fr = {
     datamatrix: 'DataMatrix',
     box: 'Rectangle',
     ellipse: 'Ellipse',
+    circle: 'Cercle',
     line: 'Ligne',
     serial: 'Série',
     image: 'Image',
@@ -194,6 +195,14 @@ const fr = {
     ellipse: {
       width: 'Largeur (points)',
       height: 'Hauteur (points)',
+      thickness: 'Bordure (points)',
+      filled: 'Rempli',
+      color: 'Couleur',
+      colorB: 'B — Noir',
+      colorW: 'W — Blanc',
+    },
+    circle: {
+      diameter: 'Diamètre (points)',
       thickness: 'Bordure (points)',
       filled: 'Rempli',
       color: 'Couleur',

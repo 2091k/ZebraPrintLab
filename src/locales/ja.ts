@@ -19,6 +19,7 @@ const ja = {
     datamatrix: 'DataMatrix',
     box: '矩形',
     ellipse: '楕円',
+    circle: '円',
     line: '線',
     serial: 'シリアル',
     image: '画像',
@@ -194,6 +195,14 @@ const ja = {
     ellipse: {
       width: '幅 (ドット)',
       height: '高さ (ドット)',
+      thickness: '枠線 (ドット)',
+      filled: '塗りつぶし',
+      color: '色',
+      colorB: 'B — 黒',
+      colorW: 'W — 白',
+    },
+    circle: {
+      diameter: '直径 (ドット)',
       thickness: '枠線 (ドット)',
       filled: '塗りつぶし',
       color: '色',
