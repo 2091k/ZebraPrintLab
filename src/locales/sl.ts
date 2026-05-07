@@ -68,6 +68,7 @@ const sl = {
     mediaModeD: 'D — Rezalnik',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Zamik nalepke (dots)',
+    printerDefault: 'Privzeto tiskalnika',
     printerSettingsHeading: 'Nastavitve tiskalnika (izbirno)',
     printSpeed: 'Hitrost tiskanja (ips, 2-14)',
     printSpeedHint: 'Specifično za tiskalnik. Pustite prazno za privzeto vrednost.',

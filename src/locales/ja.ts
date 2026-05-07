@@ -68,6 +68,7 @@ const ja = {
     mediaModeD: 'D — カッター',
     mediaModeK: 'K — キオスク',
     labelShift: 'ラベルシフト (dots)',
+    printerDefault: 'プリンターの既定値',
     printerSettingsHeading: 'プリンター設定（オプション）',
     printSpeed: '印刷速度 (ips, 2-14)',
     printSpeedHint: 'プリンター固有。デフォルト値を使用するには空のままにします。',

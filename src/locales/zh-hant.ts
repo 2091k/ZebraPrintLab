@@ -68,6 +68,7 @@ const zhHant = {
     mediaModeD: 'D — 裁刀',
     mediaModeK: 'K — 自助終端',
     labelShift: '標籤偏移 (dots)',
+    printerDefault: '印表機預設值',
     printerSettingsHeading: '印表機設定（可選）',
     printSpeed: '列印速度 (ips, 2-14)',
     printSpeedHint: '與印表機相關。留空使用印表機預設值。',

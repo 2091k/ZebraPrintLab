@@ -68,6 +68,7 @@ const de = {
     mediaModeD: 'D — Cutter',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Label-Versatz (Punkte)',
+    printerDefault: 'Drucker-Standard',
     printerSettingsHeading: 'Druckereinstellungen (optional)',
     printSpeed: 'Druckgeschwindigkeit (ips, 2-14)',
     printSpeedHint: 'Druckerspezifisch. Leer lassen für Drucker-Standard.',

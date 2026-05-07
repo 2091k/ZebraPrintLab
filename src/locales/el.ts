@@ -68,6 +68,7 @@ const el = {
     mediaModeD: 'D — Κοπτικό',
     mediaModeK: 'K — Κιόσκι',
     labelShift: 'Μετατόπιση ετικέτας (dots)',
+    printerDefault: 'Προεπιλογή εκτυπωτή',
     printerSettingsHeading: 'Ρυθμίσεις εκτυπωτή (προαιρετικό)',
     printSpeed: 'Ταχύτητα εκτύπωσης (ips, 2-14)',
     printSpeedHint: 'Ειδικό για τον εκτυπωτή. Αφήστε κενό για την προεπιλογή.',

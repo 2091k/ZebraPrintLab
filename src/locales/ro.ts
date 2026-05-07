@@ -68,6 +68,7 @@ const ro = {
     mediaModeD: 'D — Cutter',
     mediaModeK: 'K — Chioșc',
     labelShift: 'Deplasare etichetă (dots)',
+    printerDefault: 'Implicit imprimantă',
     printerSettingsHeading: 'Setări imprimantă (opțional)',
     printSpeed: 'Viteza de imprimare (ips, 2-14)',
     printSpeedHint: 'Specific imprimantei. Lăsați gol pentru valoarea implicită.',

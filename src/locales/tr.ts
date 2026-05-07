@@ -68,6 +68,7 @@ const tr = {
     mediaModeD: 'D — Kesici',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Etiket kaydırma (dots)',
+    printerDefault: 'Yazıcı varsayılanı',
     printerSettingsHeading: 'Yazıcı ayarları (isteğe bağlı)',
     printSpeed: 'Yazdırma hızı (ips, 2-14)',
     printSpeedHint: 'Yazıcıya özel. Varsayılan için boş bırakın.',

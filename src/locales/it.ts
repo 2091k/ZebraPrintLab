@@ -68,6 +68,7 @@ const it = {
     mediaModeD: 'D — Cutter',
     mediaModeK: 'K — Chiosco',
     labelShift: 'Spostamento etichetta (dots)',
+    printerDefault: 'Predefinito stampante',
     printerSettingsHeading: 'Impostazioni stampante (opzionale)',
     printSpeed: 'Velocità di stampa (ips, 2-14)',
     printSpeedHint: 'Specifico per stampante. Lascia vuoto per usare il valore predefinito.',

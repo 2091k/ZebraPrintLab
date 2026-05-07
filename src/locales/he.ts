@@ -68,6 +68,7 @@ const he = {
     mediaModeD: 'D — חותך',
     mediaModeK: 'K — קיוסק',
     labelShift: 'הסטת תווית (dots)',
+    printerDefault: 'ברירת מחדל של המדפסת',
     printerSettingsHeading: 'הגדרות מדפסת (אופציונלי)',
     printSpeed: 'מהירות הדפסה (ips, 2-14)',
     printSpeedHint: 'ספציפי למדפסת. השאר ריק לערך ברירת המחדל.',

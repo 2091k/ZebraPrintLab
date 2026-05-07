@@ -68,6 +68,7 @@ const en = {
     mediaModeD: 'D — Cutter',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Label shift (dots)',
+    printerDefault: 'Printer default',
     printerSettingsHeading: 'Printer settings (optional)',
     printSpeed: 'Print speed (ips, 2-14)',
     printSpeedHint: 'Printer-specific. Leave empty to use the printer default.',

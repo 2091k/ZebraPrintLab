@@ -68,6 +68,7 @@ const pl = {
     mediaModeD: 'D — Cutter',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Przesunięcie etykiety (dots)',
+    printerDefault: 'Domyślne drukarki',
     printerSettingsHeading: 'Ustawienia drukarki (opcjonalne)',
     printSpeed: 'Prędkość drukowania (ips, 2-14)',
     printSpeedHint: 'Specyficzne dla drukarki. Pozostaw puste, aby użyć wartości domyślnej.',

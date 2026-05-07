@@ -68,6 +68,7 @@ const hu = {
     mediaModeD: 'D — Vágó',
     mediaModeK: 'K — Kioszk',
     labelShift: 'Címke eltolás (dots)',
+    printerDefault: 'Nyomtató alapértelmezett',
     printerSettingsHeading: 'Nyomtatóbeállítások (opcionális)',
     printSpeed: 'Nyomtatási sebesség (ips, 2-14)',
     printSpeedHint: 'Nyomtatófüggő. Hagyja üresen a nyomtató alapértelmezett értékéhez.',

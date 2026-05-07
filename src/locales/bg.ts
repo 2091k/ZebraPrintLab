@@ -68,6 +68,7 @@ const bg = {
     mediaModeD: 'D — Резач',
     mediaModeK: 'K — Киоск',
     labelShift: 'Отместване на етикета (dots)',
+    printerDefault: 'По подразбиране на принтера',
     printerSettingsHeading: 'Настройки на принтера (по избор)',
     printSpeed: 'Скорост на печат (ips, 2-14)',
     printSpeedHint: 'Специфично за принтера. Оставете празно за стойност по подразбиране.',

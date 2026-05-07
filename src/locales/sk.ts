@@ -68,6 +68,7 @@ const sk = {
     mediaModeD: 'D — Rezačka',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Posun štítka (dots)',
+    printerDefault: 'Predvolené tlačiarne',
     printerSettingsHeading: 'Nastavenia tlačiarne (voliteľné)',
     printSpeed: 'Rýchlosť tlače (ips, 2-14)',
     printSpeedHint: 'Špecifické pre tlačiareň. Ponechajte prázdne pre predvolenú hodnotu.',

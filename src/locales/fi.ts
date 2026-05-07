@@ -68,6 +68,7 @@ const fi = {
     mediaModeD: 'D — Leikkuri',
     mediaModeK: 'K — Kioski',
     labelShift: 'Tarrasiirtymä (dots)',
+    printerDefault: 'Tulostimen oletus',
     printerSettingsHeading: 'Tulostimen asetukset (valinnainen)',
     printSpeed: 'Tulostusnopeus (ips, 2-14)',
     printSpeedHint: 'Tulostinkohtainen. Jätä tyhjäksi käyttääksesi oletusarvoa.',

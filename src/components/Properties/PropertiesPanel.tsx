@@ -316,7 +316,7 @@ function LabelConfigPanel({
               })
             }
           >
-            <option value="">{t.label.presetCustom}</option>
+            <option value="">{t.label.printerDefault}</option>
             <option value="T">{t.label.mediaModeT}</option>
             <option value="V">{t.label.mediaModeV}</option>
             <option value="D">{t.label.mediaModeD}</option>
@@ -400,7 +400,7 @@ function LabelConfigPanel({
               })
             }
           >
-            <option value="">{t.label.presetCustom}</option>
+            <option value="">{t.label.printerDefault}</option>
             <option value="T">{t.label.mediaTypeT}</option>
             <option value="D">{t.label.mediaTypeD}</option>
           </select>
@@ -419,7 +419,7 @@ function LabelConfigPanel({
               })
             }
           >
-            <option value="">{t.label.presetCustom}</option>
+            <option value="">{t.label.printerDefault}</option>
             <option value="N">{t.label.printOrientationN}</option>
             <option value="I">{t.label.printOrientationI}</option>
           </select>

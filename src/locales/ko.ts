@@ -68,6 +68,7 @@ const ko = {
     mediaModeD: 'D — 커터',
     mediaModeK: 'K — 키오스크',
     labelShift: '라벨 이동 (dots)',
+    printerDefault: '프린터 기본값',
     printerSettingsHeading: '프린터 설정 (선택 사항)',
     printSpeed: '인쇄 속도 (ips, 2-14)',
     printSpeedHint: '프린터별로 다릅니다. 기본값을 사용하려면 비워 두세요.',

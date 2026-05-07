@@ -68,6 +68,7 @@ const lv = {
     mediaModeD: 'D — Griezējs',
     mediaModeK: 'K — Kiosks',
     labelShift: 'Etiķetes nobīde (dots)',
+    printerDefault: 'Printera noklusējums',
     printerSettingsHeading: 'Printera iestatījumi (neobligāti)',
     printSpeed: 'Drukāšanas ātrums (ips, 2-14)',
     printSpeedHint: 'Atkarīgs no printera. Atstājiet tukšu, lai izmantotu noklusējumu.',

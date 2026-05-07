@@ -68,6 +68,7 @@ const lt = {
     mediaModeD: 'D — Pjaustuvas',
     mediaModeK: 'K — Kioskas',
     labelShift: 'Etiketės poslinkis (dots)',
+    printerDefault: 'Spausdintuvo numatytasis',
     printerSettingsHeading: 'Spausdintuvo nustatymai (neprivaloma)',
     printSpeed: 'Spausdinimo greitis (ips, 2-14)',
     printSpeedHint: 'Priklauso nuo spausdintuvo. Palikite tuščią numatytąjai reikšmei.',

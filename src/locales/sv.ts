@@ -68,6 +68,7 @@ const sv = {
     mediaModeD: 'D — Skärare',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Etikettförskjutning (dots)',
+    printerDefault: 'Skrivarens standard',
     printerSettingsHeading: 'Skrivarinställningar (valfritt)',
     printSpeed: 'Utskriftshastighet (ips, 2-14)',
     printSpeedHint: 'Skrivarspecifik. Lämna tom för skrivarens standardvärde.',

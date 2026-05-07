@@ -68,6 +68,7 @@ const nl = {
     mediaModeD: 'D — Snijder',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Etiketverschuiving (dots)',
+    printerDefault: 'Printerstandaard',
     printerSettingsHeading: 'Printerinstellingen (optioneel)',
     printSpeed: 'Afdruksnelheid (ips, 2-14)',
     printSpeedHint: 'Printerspecifiek. Laat leeg om de standaardwaarde te gebruiken.',

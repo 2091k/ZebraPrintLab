@@ -68,6 +68,7 @@ const sr = {
     mediaModeD: 'D — Секач',
     mediaModeK: 'K — Киоск',
     labelShift: 'Померај етикете (dots)',
+    printerDefault: 'Подразумевано за штампач',
     printerSettingsHeading: 'Подешавања штампача (опционално)',
     printSpeed: 'Брзина штампе (ips, 2-14)',
     printSpeedHint: 'Специфично за штампач. Оставите празно за подразумевану вредност.',

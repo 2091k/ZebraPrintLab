@@ -68,6 +68,7 @@ const no = {
     mediaModeD: 'D — Kutter',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Etikettforskyvning (dots)',
+    printerDefault: 'Skriverens standard',
     printerSettingsHeading: 'Skriverinnstillinger (valgfritt)',
     printSpeed: 'Utskriftshastighet (ips, 2-14)',
     printSpeedHint: 'Skriverspesifikk. La stå tom for skriverens standardverdi.',

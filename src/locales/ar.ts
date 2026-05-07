@@ -68,6 +68,7 @@ const ar = {
     mediaModeD: 'D — قاطع',
     mediaModeK: 'K — كشك',
     labelShift: 'إزاحة الملصق (dots)',
+    printerDefault: 'الإعداد الافتراضي للطابعة',
     printerSettingsHeading: 'إعدادات الطابعة (اختياري)',
     printSpeed: 'سرعة الطباعة (ips، 2-14)',
     printSpeedHint: 'خاص بالطابعة. اتركه فارغًا لاستخدام القيمة الافتراضية.',

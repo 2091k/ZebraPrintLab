@@ -68,6 +68,7 @@ const es = {
     mediaModeD: 'D — Cutter',
     mediaModeK: 'K — Kiosco',
     labelShift: 'Desplazamiento de etiqueta (dots)',
+    printerDefault: 'Predeterminado de la impresora',
     printerSettingsHeading: 'Ajustes de impresora (opcional)',
     printSpeed: 'Velocidad de impresión (ips, 2-14)',
     printSpeedHint: 'Específico de la impresora. Dejar vacío para usar el valor predeterminado.',

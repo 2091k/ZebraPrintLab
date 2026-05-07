@@ -68,6 +68,7 @@ const fa = {
     mediaModeD: 'D — برش',
     mediaModeK: 'K — کیوسک',
     labelShift: 'جابجایی برچسب (dots)',
+    printerDefault: 'پیش‌فرض چاپگر',
     printerSettingsHeading: 'تنظیمات چاپگر (اختیاری)',
     printSpeed: 'سرعت چاپ (ips, 2-14)',
     printSpeedHint: 'مختص چاپگر. برای استفاده از پیش‌فرض خالی بگذارید.',

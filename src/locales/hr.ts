@@ -68,6 +68,7 @@ const hr = {
     mediaModeD: 'D — Rezač',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Pomak naljepnice (dots)',
+    printerDefault: 'Zadano za pisač',
     printerSettingsHeading: 'Postavke pisača (neobavezno)',
     printSpeed: 'Brzina ispisa (ips, 2-14)',
     printSpeedHint: 'Specifično za pisač. Ostavite prazno za zadanu vrijednost.',

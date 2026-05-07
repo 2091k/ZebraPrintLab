@@ -68,6 +68,7 @@ const et = {
     mediaModeD: 'D — Lõikur',
     mediaModeK: 'K — Kiosk',
     labelShift: 'Etiketi nihe (dots)',
+    printerDefault: 'Printeri vaikeväärtus',
     printerSettingsHeading: 'Printeri sätted (valikuline)',
     printSpeed: 'Trükikiirus (ips, 2-14)',
     printSpeedHint: 'Printerispetsiifiline. Vaikeväärtuse kasutamiseks jäta tühjaks.',

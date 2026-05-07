@@ -68,6 +68,7 @@ const zhHans = {
     mediaModeD: 'D — 切刀',
     mediaModeK: 'K — 自助终端',
     labelShift: '标签偏移 (dots)',
+    printerDefault: '打印机默认值',
     printerSettingsHeading: '打印机设置（可选）',
     printSpeed: '打印速度 (ips, 2-14)',
     printSpeedHint: '与打印机相关。留空使用打印机默认值。',

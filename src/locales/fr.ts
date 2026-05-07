@@ -68,6 +68,7 @@ const fr = {
     mediaModeD: 'D — Cutter',
     mediaModeK: 'K — Kiosque',
     labelShift: 'Décalage d\'étiquette (dots)',
+    printerDefault: 'Valeur par défaut de l\'imprimante',
     printerSettingsHeading: 'Paramètres d\'imprimante (facultatif)',
     printSpeed: 'Vitesse d\'impression (ips, 2-14)',
     printSpeedHint: 'Spécifique à l\'imprimante. Laisser vide pour la valeur par défaut.',
