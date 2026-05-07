@@ -1,3 +1,4 @@
+import { InformationCircleIcon } from "@heroicons/react/16/solid";
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import { ObjectRegistry } from "../../registry";
 import { stripZplCommandChars } from "../../registry/zplHelpers";
@@ -12,6 +13,7 @@ import {
 import type { Unit } from "../../lib/units";
 import { useT } from "../../lib/useT";
 import { parseIntOrUndef } from "../../lib/inputParse";
+import { CollapsibleSection } from "../ui/CollapsibleSection";
 import { inputCls, labelCls } from "./styles";
 import type { LabelConfig } from "../../types/ObjectType";
 
@@ -303,8 +305,10 @@ function LabelConfigPanel({
           </select>
         </div>
 
-        <div className="border-t border-border" />
-
+        <CollapsibleSection
+          id="label-output"
+          title={t.label.outputHeading}
+        >
         <div className="flex flex-col gap-1">
           <label className={labelCls}>{t.label.mediaMode}</label>
           <select
@@ -354,13 +358,21 @@ function LabelConfigPanel({
             }
           />
         </div>
+        </CollapsibleSection>
 
-        <div className="border-t border-border" />
-
-        <p className={labelCls}>{t.label.printerSettingsHeading}</p>
-
+        <CollapsibleSection
+          id="label-printer-settings"
+          title={t.label.printerSettingsHeading}
+          defaultOpen={false}
+        >
         <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.label.printSpeed}</label>
+          <label className={labelCls}>
+            {t.label.printSpeed}
+            <InformationCircleIcon
+              className="w-3.5 h-3.5 ml-1 inline-block align-text-bottom text-muted cursor-help"
+              title={t.label.printSpeedHint}
+            />
+          </label>
           <input
             type="number"
             className={inputCls}
@@ -371,11 +383,16 @@ function LabelConfigPanel({
               onUpdate({ printSpeed: parseIntOrUndef(e.target.value) })
             }
           />
-          <p className="text-[10px] text-muted">{t.label.printSpeedHint}</p>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.label.darkness}</label>
+          <label className={labelCls}>
+            {t.label.darkness}
+            <InformationCircleIcon
+              className="w-3.5 h-3.5 ml-1 inline-block align-text-bottom text-muted cursor-help"
+              title={t.label.darknessHint}
+            />
+          </label>
           <input
             type="number"
             className={inputCls}
@@ -386,7 +403,6 @@ function LabelConfigPanel({
               onUpdate({ darkness: parseIntOrUndef(e.target.value) })
             }
           />
-          <p className="text-[10px] text-muted">{t.label.darknessHint}</p>
         </div>
 
         <div className="flex flex-col gap-1">
@@ -461,6 +477,7 @@ function LabelConfigPanel({
             </div>
           </div>
         </div>
+        </CollapsibleSection>
       </div>
     </div>
   );

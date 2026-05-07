@@ -6,6 +6,7 @@ import { useT } from '../../lib/useT';
 import { useLabelStore } from '../../store/labelStore';
 import { mmToDots } from '../../lib/coordinates';
 import { DragHandleIcon } from '../ui/DragHandleIcon';
+import { CollapsibleSection } from '../ui/CollapsibleSection';
 import type { PaletteDragData } from '../../dnd/types';
 
 interface PaletteEntryProps {
@@ -67,14 +68,15 @@ export function ObjectPalette() {
         );
         if (entries.length === 0) return null;
         return (
-          <div key={group.key} className="flex flex-col gap-0.5">
-            <p className="font-mono text-[10px] font-medium text-muted uppercase tracking-widest px-1 pt-1 pb-1.5">
-              {t.palette[group.labelKey]}
-            </p>
+          <CollapsibleSection
+            key={group.key}
+            id={`palette-${group.key}`}
+            title={t.palette[group.labelKey]}
+          >
             {entries.map(([type, def]) => (
               <PaletteEntry key={type} type={type} def={def} />
             ))}
-          </div>
+          </CollapsibleSection>
         );
       })}
     </div>
