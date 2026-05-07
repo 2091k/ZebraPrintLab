@@ -22,6 +22,11 @@ import {
   type SnapRect,
 } from "../../../lib/snapGuides";
 
+/** Minimum bounding-box edge length during a resize, in stage pixels. Below
+ *  this the user is presumed to have flicked past the object and we keep the
+ *  previous box rather than collapsing it to a sliver. */
+const MIN_RESIZE_BOX_PX = 10;
+
 /** Pack a Konva clientRect into the SnapRect shape used by snap helpers. */
 function toSnapRect(id: string, rect: { x: number; y: number; width: number; height: number }): SnapRect {
   return { id, x: rect.x, y: rect.y, width: rect.width, height: rect.height };
@@ -231,7 +236,9 @@ export function useKonvaTransformer({
   };
 
   const boundBoxFunc = (oldBox: BoundingBox, newBox: BoundingBox): BoundingBox => {
-    if (newBox.width < 10 || newBox.height < 10) return oldBox;
+    if (newBox.width < MIN_RESIZE_BOX_PX || newBox.height < MIN_RESIZE_BOX_PX) {
+      return oldBox;
+    }
     if (isUniformScale) newBox = forceSquareBox(oldBox, newBox);
     const dotPx = scale / dpmm;
     let bbox = applyHeightSnap(oldBox, newBox, dotPx, transformAnchorRef.current);

@@ -103,8 +103,7 @@ export const BARCODE_1D_TYPES = new Set([
 
 export const STACKED_2D_TYPES = new Set(['pdf417', 'micropdf417', 'codablock']);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ObjectRegistry: Record<string, ObjectTypeDefinition<any>> = {
+export const ObjectRegistry: Record<string, ObjectTypeDefinition> = {
   // text
   text,
   // code-1d (frequency order)
