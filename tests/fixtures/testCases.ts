@@ -80,7 +80,7 @@ export const testCases: TestCase[] = [
   },
   {
     id: "barcode_aztec_standard",
-    zpl_input: "^XA^FO50,50^B0N,4,N,N,N,N^FDAztec123^FS^XZ",
+    zpl_input: "^XA^FO50,50^B0N,4,N,0^FDAztec123^FS^XZ",
     expected_bounds: { x: 50, y: 50, width: 100, height: 100 },
     image_ref: "barcode_aztec_standard.png",
   },

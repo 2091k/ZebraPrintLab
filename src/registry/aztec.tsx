@@ -8,7 +8,7 @@ import { RotationSelect } from "../components/Properties/RotationSelect";
 export interface AztecProps {
   content: string;
   magnification: number; // 1–10, module size in dots
-  ecLevel: number; // 0 = auto, 1–99 error correction percentage, 201–232 for layers
+  ecLevel: number; // 0=default, 1-99=error correction %, 101-104=compact, 201-232=full, 300=rune
   rotation: ZplRotation;
 }
 
@@ -26,11 +26,12 @@ export const aztec: ObjectTypeDefinition<AztecProps> = {
 
   toZPL: (obj) => {
     const p = obj.props;
-    // ^B0{orientation},{magnification},{ecic},{menuSymbol},{numberOfSymbols},{structuredID}
-    // Also ^BO (alternate) — we use ^B0 as canonical
+    // ^B0 a,b,c,d,e,f,g = orientation, magnification, ecic, errorControl,
+    // menuSymbol, numberOfSymbols, structuredID. ecLevel=0 is Zebra's
+    // documented default for errorControl, so emitting it as-is is valid.
     return [
       fieldPos(obj),
-      `^B0${p.rotation},${p.magnification},N,N,N,N`,
+      `^B0${p.rotation},${p.magnification},N,${p.ecLevel}`,
       fdField(p.content),
     ].join("");
   },
