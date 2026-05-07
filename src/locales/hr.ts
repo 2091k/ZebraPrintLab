@@ -19,6 +19,7 @@ const hr = {
     datamatrix: 'DataMatrix',
     box: 'Pravokutnik',
     ellipse: 'Elipsa',
+    circle: 'Krug',
     line: 'Linija',
     serial: 'Serijski br.',
     image: 'Slika',
@@ -199,6 +200,14 @@ const hr = {
       color: 'Boja',
       colorB: 'B — Crna',
       colorW: 'W — Bijela',
+    },
+    circle: {
+      diameter: 'Promjer (točke)',
+      thickness: 'Obrub (točke)',
+      filled: 'Ispunjeno',
+      color: 'Boja',
+      colorB: 'B — Crno',
+      colorW: 'W — Bijelo',
     },
     line: {
       angle: 'Kut (°)',

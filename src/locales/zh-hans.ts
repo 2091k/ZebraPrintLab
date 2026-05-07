@@ -19,6 +19,7 @@ const zhHans = {
     datamatrix: 'DataMatrix',
     box: '矩形',
     ellipse: '椭圆',
+    circle: '圆',
     line: '线条',
     serial: '序列号',
     image: '图片',
@@ -194,6 +195,14 @@ const zhHans = {
     ellipse: {
       width: '宽度 (点)',
       height: '高度 (点)',
+      thickness: '边框 (点)',
+      filled: '填充',
+      color: '颜色',
+      colorB: 'B — 黑色',
+      colorW: 'W — 白色',
+    },
+    circle: {
+      diameter: '直径 (点)',
       thickness: '边框 (点)',
       filled: '填充',
       color: '颜色',

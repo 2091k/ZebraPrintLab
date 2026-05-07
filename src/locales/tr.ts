@@ -19,6 +19,7 @@ const tr = {
     datamatrix: 'DataMatrix',
     box: 'Dikdörtgen',
     ellipse: 'Elips',
+    circle: 'Daire',
     line: 'Çizgi',
     serial: 'Seri No',
     image: 'Görsel',
@@ -194,6 +195,14 @@ const tr = {
     ellipse: {
       width: 'Genişlik (nokta)',
       height: 'Yükseklik (nokta)',
+      thickness: 'Kenarlık (nokta)',
+      filled: 'Dolu',
+      color: 'Renk',
+      colorB: 'B — Siyah',
+      colorW: 'W — Beyaz',
+    },
+    circle: {
+      diameter: 'Çap (nokta)',
       thickness: 'Kenarlık (nokta)',
       filled: 'Dolu',
       color: 'Renk',

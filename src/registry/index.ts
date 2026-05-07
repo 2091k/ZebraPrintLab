@@ -15,6 +15,8 @@ import { box } from './box.tsx';
 import type { BoxProps } from './box.tsx';
 import { ellipse } from './ellipse.tsx';
 import type { EllipseProps } from './ellipse.tsx';
+import { circle } from './circle.tsx';
+import type { CircleProps } from './circle.tsx';
 import { line } from './line.tsx';
 import type { LineProps } from './line.tsx';
 import { serial } from './serial.tsx';
@@ -69,6 +71,7 @@ export type LabelObject =
   | (LabelObjectBase & { type: 'datamatrix'; props: DataMatrixProps })
   | (LabelObjectBase & { type: 'box'; props: BoxProps })
   | (LabelObjectBase & { type: 'ellipse'; props: EllipseProps })
+  | (LabelObjectBase & { type: 'circle'; props: CircleProps })
   | (LabelObjectBase & { type: 'line'; props: LineProps })
   | (LabelObjectBase & { type: 'serial'; props: SerialProps })
   | (LabelObjectBase & { type: 'image'; props: ImageProps })
@@ -134,6 +137,7 @@ export const ObjectRegistry: Record<string, ObjectTypeDefinition<any>> = {
   // shape
   box,
   ellipse,
+  circle,
   line,
   serial,
   image,

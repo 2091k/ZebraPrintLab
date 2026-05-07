@@ -19,6 +19,7 @@ const fa = {
     datamatrix: 'DataMatrix',
     box: 'مستطیل',
     ellipse: 'بیضی',
+    circle: 'دایره',
     line: 'خط',
     serial: 'شماره سریال',
     image: 'تصویر',
@@ -198,6 +199,14 @@ const fa = {
       filled: 'پر شده',
       color: 'رنگ',
       colorB: 'B — مشکی',
+      colorW: 'W — سفید',
+    },
+    circle: {
+      diameter: 'قطر (نقطه)',
+      thickness: 'حاشیه (نقطه)',
+      filled: 'پر شده',
+      color: 'رنگ',
+      colorB: 'B — سیاه',
       colorW: 'W — سفید',
     },
     line: {

@@ -19,6 +19,7 @@ const sr = {
     datamatrix: 'DataMatrix',
     box: 'Правоугаоник',
     ellipse: 'Елипса',
+    circle: 'Круг',
     line: 'Линија',
     serial: 'Серијски бр.',
     image: 'Слика',
@@ -199,6 +200,14 @@ const sr = {
       color: 'Boja',
       colorB: 'B — Crna',
       colorW: 'W — Bela',
+    },
+    circle: {
+      diameter: 'Пречник (тачке)',
+      thickness: 'Оквир (тачке)',
+      filled: 'Испуњено',
+      color: 'Боја',
+      colorB: 'B — Црна',
+      colorW: 'W — Бела',
     },
     line: {
       angle: 'Ugao (°)',

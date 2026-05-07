@@ -19,6 +19,7 @@ const de = {
     datamatrix: 'DataMatrix',
     box: 'Box',
     ellipse: 'Ellipse',
+    circle: 'Kreis',
     line: 'Linie',
     serial: 'Seriennummer',
     image: 'Bild',
@@ -214,6 +215,14 @@ const de = {
     ellipse: {
       width: 'Breite (Punkte)',
       height: 'Höhe (Punkte)',
+      thickness: 'Rahmen (Punkte)',
+      filled: 'Gefüllt',
+      color: 'Farbe',
+      colorB: 'B — Schwarz',
+      colorW: 'W — Weiß',
+    },
+    circle: {
+      diameter: 'Durchmesser (Punkte)',
       thickness: 'Rahmen (Punkte)',
       filled: 'Gefüllt',
       color: 'Farbe',

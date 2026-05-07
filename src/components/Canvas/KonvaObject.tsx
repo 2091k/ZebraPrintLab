@@ -668,5 +668,44 @@ function KonvaObjectInner({
     );
   }
 
+  if (obj.type === "circle") {
+    const p = obj.props;
+    const r = dotsToPx(p.diameter, scale, dpmm) / 2;
+    const stroke = p.color === "B" ? "#000000" : "#cccccc";
+    const strokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 0.5);
+    const fill = p.filled
+      ? p.color === "B"
+        ? "#000000"
+        : "#ffffff"
+      : "transparent";
+    return (
+      <Circle
+        id={obj.id}
+        x={x + r}
+        y={y + r}
+        radius={r}
+        stroke={isSelected ? "#6366f1" : stroke}
+        strokeWidth={isSelected ? Math.max(strokeWidth, 1.5) : strokeWidth}
+        strokeScaleEnabled={false}
+        fill={fill}
+        draggable
+        onClick={(e) =>
+          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
+        }
+        onTap={() => onSelect(false)}
+        onDragMove={(e) => {
+          const snapped = snapPos(e.target.x() - r, e.target.y() - r);
+          e.target.position({ x: snapped.x + r, y: snapped.y + r });
+        }}
+        onDragEnd={(e) => {
+          onChange({
+            x: pxToDots(e.target.x() - r - offsetX, scale, dpmm),
+            y: pxToDots(e.target.y() - r - offsetY, scale, dpmm),
+          });
+        }}
+      />
+    );
+  }
+
   return null;
 }
