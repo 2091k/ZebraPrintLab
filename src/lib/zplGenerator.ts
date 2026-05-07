@@ -30,8 +30,8 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   // darkness=0 is a valid value (printer baseline), so check undefined explicitly.
   if (label.darkness !== undefined) lines.push(`^MD${label.darkness}`);
   if (label.printOrientation) lines.push(`^PO${label.printOrientation}`);
-  if (label.defaultFont) {
-    lines.push(`^CF${label.defaultFont.fontId},${label.defaultFont.height}`);
+  if (label.defaultFontId && label.defaultFontHeight !== undefined) {
+    lines.push(`^CF${label.defaultFontId},${label.defaultFontHeight}`);
   }
   if (label.labelShift) lines.push(`^LS${label.labelShift}`);
 

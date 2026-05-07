@@ -88,12 +88,22 @@ describe('generateZPL — printer params', () => {
     expect(generateZPL(BASE_LABEL, [])).not.toContain('^PO');
   });
 
-  it('emits ^CF when defaultFont is set', () => {
+  it('emits ^CF when both defaultFontId and defaultFontHeight are set', () => {
     const zpl = generateZPL(
-      { ...BASE_LABEL, defaultFont: { fontId: '0', height: 30 } },
+      { ...BASE_LABEL, defaultFontId: '0', defaultFontHeight: 30 },
       [],
     );
     expect(zpl).toContain('^CF0,30');
+  });
+
+  it('omits ^CF when defaultFontId is set without defaultFontHeight', () => {
+    expect(generateZPL({ ...BASE_LABEL, defaultFontId: '0' }, []))
+      .not.toContain('^CF');
+  });
+
+  it('omits ^CF when defaultFontHeight is set without defaultFontId', () => {
+    expect(generateZPL({ ...BASE_LABEL, defaultFontHeight: 30 }, []))
+      .not.toContain('^CF');
   });
 
   it('emits printer params in canonical header order before ^LS', () => {
@@ -105,7 +115,8 @@ describe('generateZPL — printer params', () => {
         printSpeed: 6,
         darkness: 10,
         printOrientation: 'I',
-        defaultFont: { fontId: '0', height: 30 },
+        defaultFontId: '0',
+        defaultFontHeight: 30,
         labelShift: 5,
       },
       [],
@@ -215,7 +226,8 @@ describe('generateZPL — parse/generate roundtrip', () => {
       darkness: 0,
       mediaType: 'D',
       printOrientation: 'I',
-      defaultFont: { fontId: '0', height: 30 },
+      defaultFontId: '0',
+      defaultFontHeight: 30,
     };
     const regenerated = generateZPL(label, []);
     const { labelConfig } = parseZPL(regenerated, BASE_LABEL.dpmm);
@@ -223,6 +235,7 @@ describe('generateZPL — parse/generate roundtrip', () => {
     expect(labelConfig.darkness).toBe(0);
     expect(labelConfig.mediaType).toBe('D');
     expect(labelConfig.printOrientation).toBe('I');
-    expect(labelConfig.defaultFont).toEqual({ fontId: '0', height: 30 });
+    expect(labelConfig.defaultFontId).toBe('0');
+    expect(labelConfig.defaultFontHeight).toBe(30);
   });
 });

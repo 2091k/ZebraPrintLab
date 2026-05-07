@@ -436,13 +436,9 @@ function LabelConfigPanel({
                 type="text"
                 className={inputCls}
                 maxLength={2}
-                value={label.defaultFont?.fontId ?? ""}
+                value={label.defaultFontId ?? ""}
                 onChange={(e) =>
-                  onUpdate({
-                    defaultFont: mergeDefaultFont(label.defaultFont, {
-                      fontId: e.target.value,
-                    }),
-                  })
+                  onUpdate({ defaultFontId: e.target.value || undefined })
                 }
               />
             </div>
@@ -454,12 +450,10 @@ function LabelConfigPanel({
                 type="number"
                 className={inputCls}
                 min={1}
-                value={label.defaultFont?.height ?? ""}
+                value={label.defaultFontHeight ?? ""}
                 onChange={(e) =>
                   onUpdate({
-                    defaultFont: mergeDefaultFont(label.defaultFont, {
-                      height: parseIntOrUndef(e.target.value),
-                    }),
+                    defaultFontHeight: parseIntOrUndef(e.target.value),
                   })
                 }
               />
@@ -475,17 +469,4 @@ function parseIntOrUndef(raw: string): number | undefined {
   if (raw.trim() === "") return undefined;
   const n = parseInt(raw, 10);
   return isNaN(n) ? undefined : n;
-}
-
-function mergeDefaultFont(
-  current: LabelConfig["defaultFont"],
-  patch: { fontId?: string; height?: number },
-): LabelConfig["defaultFont"] {
-  // `in` distinguishes "key absent from patch" (keep current value) from
-  // "key set to undefined" (user just cleared the input). `??` would conflate
-  // the two and silently keep the old value when the user clears a field.
-  const fontId = "fontId" in patch ? patch.fontId : current?.fontId;
-  const height = "height" in patch ? patch.height : current?.height;
-  if (!fontId || height === undefined) return undefined;
-  return { fontId, height };
 }

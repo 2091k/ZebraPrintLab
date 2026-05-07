@@ -546,9 +546,10 @@ describe('parseZPL — printer params', () => {
     expect(parseZPL('^XA^POI^XZ', 8).labelConfig.printOrientation).toBe('I');
   });
 
-  it('parses ^CF default font with id and height', () => {
+  it('parses ^CF into defaultFontId and defaultFontHeight', () => {
     const { labelConfig } = parseZPL('^XA^CF0,40^XZ', 8);
-    expect(labelConfig.defaultFont).toEqual({ fontId: '0', height: 40 });
+    expect(labelConfig.defaultFontId).toBe('0');
+    expect(labelConfig.defaultFontHeight).toBe(40);
   });
 });
 

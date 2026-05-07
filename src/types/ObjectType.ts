@@ -12,12 +12,8 @@ export const labelConfigSchema = z.object({
   darkness: z.number().int().min(-30).max(30).optional(),
   mediaType: z.enum(['T', 'D']).optional(),
   printOrientation: z.enum(['N', 'I']).optional(),
-  defaultFont: z
-    .object({
-      fontId: z.string().min(1),
-      height: z.number().int().positive(),
-    })
-    .optional(),
+  defaultFontId: z.string().min(1).optional(),
+  defaultFontHeight: z.number().int().positive().optional(),
 });
 
 export type LabelConfig = z.infer<typeof labelConfigSchema>;
