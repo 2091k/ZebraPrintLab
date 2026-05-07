@@ -5,6 +5,7 @@ import { fieldPos, fdField } from './zplHelpers';
 import { commitHeightTransform } from './transformHelpers';
 import { type ZplRotation } from './rotation';
 import { RotationSelect } from '../components/Properties/RotationSelect';
+import { NumberInput } from '../components/Properties/NumberInput';
 
 export interface Code128Props {
   content: string;
@@ -57,28 +58,20 @@ export const code128: ObjectTypeDefinition<Code128Props> = {
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.registry.code128.height}</label>
-          <input
-            type="number"
-            className={inputCls}
-            value={p.height}
-            min={1}
-            onChange={(e) => onChange({ height: Number(e.target.value) })}
-          />
-        </div>
+        <NumberInput
+          label={t.registry.code128.height}
+          value={p.height}
+          min={1}
+          onChange={(height) => onChange({ height })}
+        />
 
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.registry.code128.moduleWidth}</label>
-          <input
-            type="number"
-            className={inputCls}
-            value={p.moduleWidth}
-            min={1}
-            max={10}
-            onChange={(e) => onChange({ moduleWidth: Number(e.target.value) })}
-          />
-        </div>
+        <NumberInput
+          label={t.registry.code128.moduleWidth}
+          value={p.moduleWidth}
+          min={1}
+          max={10}
+          onChange={(moduleWidth) => onChange({ moduleWidth })}
+        />
 
         <div className="flex flex-col gap-2">
           <label className="flex items-center gap-2 cursor-pointer">

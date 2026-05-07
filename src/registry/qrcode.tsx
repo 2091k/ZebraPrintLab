@@ -5,6 +5,7 @@ import { fieldPos, fdField } from './zplHelpers';
 import { clamp } from './transformHelpers';
 import { type ZplRotation } from './rotation';
 import { RotationSelect } from '../components/Properties/RotationSelect';
+import { NumberInput } from '../components/Properties/NumberInput';
 
 export interface QrCodeProps {
   content: string;
@@ -63,17 +64,13 @@ export const qrcode: ObjectTypeDefinition<QrCodeProps> = {
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.registry.qrcode.magnification}</label>
-          <input
-            type="number"
-            className={inputCls}
-            value={p.magnification}
-            min={1}
-            max={10}
-            onChange={(e) => onChange({ magnification: Number(e.target.value) })}
-          />
-        </div>
+        <NumberInput
+          label={t.registry.qrcode.magnification}
+          value={p.magnification}
+          min={1}
+          max={10}
+          onChange={(magnification) => onChange({ magnification })}
+        />
 
         <div className="flex flex-col gap-1">
           <label className={labelCls}>{t.registry.qrcode.errorCorrection}</label>

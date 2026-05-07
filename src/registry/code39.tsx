@@ -6,6 +6,7 @@ import { commitHeightTransform } from './transformHelpers';
 import { filterContent, type ContentSpec } from './contentSpec';
 import { type ZplRotation } from './rotation';
 import { RotationSelect } from '../components/Properties/RotationSelect';
+import { NumberInput } from '../components/Properties/NumberInput';
 
 const code39Spec: ContentSpec = { charset: '0-9A-Za-z\\-. $/+%' };
 
@@ -60,28 +61,20 @@ export const code39: ObjectTypeDefinition<Code39Props> = {
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.registry.code39.height}</label>
-          <input
-            type="number"
-            className={inputCls}
-            value={p.height}
-            min={1}
-            onChange={(e) => onChange({ height: Number(e.target.value) })}
-          />
-        </div>
+        <NumberInput
+          label={t.registry.code39.height}
+          value={p.height}
+          min={1}
+          onChange={(height) => onChange({ height })}
+        />
 
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.registry.code39.moduleWidth}</label>
-          <input
-            type="number"
-            className={inputCls}
-            value={p.moduleWidth}
-            min={1}
-            max={10}
-            onChange={(e) => onChange({ moduleWidth: Number(e.target.value) })}
-          />
-        </div>
+        <NumberInput
+          label={t.registry.code39.moduleWidth}
+          value={p.moduleWidth}
+          min={1}
+          max={10}
+          onChange={(moduleWidth) => onChange({ moduleWidth })}
+        />
 
         <div className="flex flex-col gap-2">
           <label className="flex items-center gap-2 cursor-pointer">

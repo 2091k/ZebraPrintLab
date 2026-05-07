@@ -4,6 +4,7 @@ import { inputCls, labelCls } from "../components/Properties/styles";
 import { fieldPos, fdField } from "./zplHelpers";
 import { type ZplRotation } from "./rotation";
 import { RotationSelect } from "../components/Properties/RotationSelect";
+import { NumberInput } from "../components/Properties/NumberInput";
 
 export interface AztecProps {
   content: string;
@@ -51,31 +52,21 @@ export const aztec: ObjectTypeDefinition<AztecProps> = {
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{loc.magnification}</label>
-          <input
-            type="number"
-            className={inputCls}
-            value={p.magnification}
-            min={1}
-            max={10}
-            onChange={(e) =>
-              onChange({ magnification: Number(e.target.value) })
-            }
-          />
-        </div>
+        <NumberInput
+          label={loc.magnification}
+          value={p.magnification}
+          min={1}
+          max={10}
+          onChange={(magnification) => onChange({ magnification })}
+        />
 
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{loc.ecLevel}</label>
-          <input
-            type="number"
-            className={inputCls}
-            value={p.ecLevel}
-            min={0}
-            max={232}
-            onChange={(e) => onChange({ ecLevel: Number(e.target.value) })}
-          />
-        </div>
+        <NumberInput
+          label={loc.ecLevel}
+          value={p.ecLevel}
+          min={0}
+          max={232}
+          onChange={(ecLevel) => onChange({ ecLevel })}
+        />
 
         <RotationSelect value={p.rotation} onChange={(rotation) => onChange({ rotation })} />
       </div>

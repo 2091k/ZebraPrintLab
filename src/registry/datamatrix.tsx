@@ -5,6 +5,7 @@ import { fieldPos, fdField } from './zplHelpers';
 import { clamp } from './transformHelpers';
 import { type ZplRotation } from './rotation';
 import { RotationSelect } from '../components/Properties/RotationSelect';
+import { NumberInput } from '../components/Properties/NumberInput';
 
 export interface DataMatrixProps {
   content: string;
@@ -52,17 +53,13 @@ export const datamatrix: ObjectTypeDefinition<DataMatrixProps> = {
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.registry.datamatrix.dimension}</label>
-          <input
-            type="number"
-            className={inputCls}
-            value={p.dimension}
-            min={1}
-            max={12}
-            onChange={(e) => onChange({ dimension: Number(e.target.value) })}
-          />
-        </div>
+        <NumberInput
+          label={t.registry.datamatrix.dimension}
+          value={p.dimension}
+          min={1}
+          max={12}
+          onChange={(dimension) => onChange({ dimension })}
+        />
 
         <div className="flex flex-col gap-1">
           <label className={labelCls}>{t.registry.datamatrix.quality}</label>

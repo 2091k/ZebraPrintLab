@@ -6,6 +6,7 @@ import { commitHeightTransform } from './transformHelpers';
 import { filterContent, type ContentSpec } from './contentSpec';
 import { type ZplRotation } from './rotation';
 import { RotationSelect } from '../components/Properties/RotationSelect';
+import { NumberInput } from '../components/Properties/NumberInput';
 
 export interface Barcode1DProps {
   content: string;
@@ -104,30 +105,22 @@ export function createBarcode1D(config: Barcode1DConfig): ObjectTypeDefinition<B
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{loc.height}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.height}
-              min={1}
-              disabled={config.heightLocked}
-              readOnly={config.heightLocked}
-              onChange={(e) => onChange({ height: Number(e.target.value) })}
-            />
-          </div>
+          <NumberInput
+            label={loc.height}
+            value={p.height}
+            min={1}
+            disabled={config.heightLocked}
+            readOnly={config.heightLocked}
+            onChange={(height) => onChange({ height })}
+          />
 
-          <div className="flex flex-col gap-1">
-            <label className={labelCls}>{loc.moduleWidth}</label>
-            <input
-              type="number"
-              className={inputCls}
-              value={p.moduleWidth}
-              min={1}
-              max={10}
-              onChange={(e) => onChange({ moduleWidth: Number(e.target.value) })}
-            />
-          </div>
+          <NumberInput
+            label={loc.moduleWidth}
+            value={p.moduleWidth}
+            min={1}
+            max={10}
+            onChange={(moduleWidth) => onChange({ moduleWidth })}
+          />
 
           {!config.interpretationLocked && (
             <label className="flex items-center gap-2 cursor-pointer">
