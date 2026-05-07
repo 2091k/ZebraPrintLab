@@ -21,6 +21,7 @@ import { Ruler, RULER_SIZE } from "./Ruler";
 import { ObjectRegistry } from "../../registry";
 import type { LabelObject } from "../../registry";
 import { useColorScheme } from "../../lib/useColorScheme";
+import { useT } from "../../lib/useT";
 import { useCanvasPanZoom } from "./hooks/useCanvasPanZoom";
 import { useCanvasLasso } from "./hooks/useCanvasLasso";
 import { useKonvaTransformer } from "./hooks/useKonvaTransformer";
@@ -83,6 +84,7 @@ export function LabelCanvas({
   }, []);
 
   const colors = useColorScheme();
+  const t = useT();
 
   const {
     label,
@@ -458,6 +460,12 @@ export function LabelCanvas({
       onMouseLeave={handleMouseUp}
     >
       <PaginationControl />
+
+      {label.printOrientation === "I" && (
+        <div className="absolute top-3 right-3 z-10 bg-surface border border-border rounded px-2 py-0.5 text-[10px] font-mono text-muted">
+          {t.label.printOrientationIndicator}
+        </div>
+      )}
 
       {/* Bottom-right controls: view options + zoom */}
       <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 bg-surface border border-border rounded px-1 py-0.5">

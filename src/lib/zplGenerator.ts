@@ -25,6 +25,20 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   ];
 
   if (label.mediaMode) lines.push(`^MM${label.mediaMode}`);
+  if (label.mediaType) lines.push(`^MT${label.mediaType}`);
+  if (label.printSpeed !== undefined) lines.push(`^PR${label.printSpeed}`);
+  // darkness=0 is a valid value (printer baseline), so check undefined explicitly.
+  if (label.darkness !== undefined) lines.push(`^MD${label.darkness}`);
+  if (label.printOrientation) lines.push(`^PO${label.printOrientation}`);
+  // ^CF parameters are individually optional per Zebra spec: ^CF0 sets the
+  // font only, ^CF,30 sets the height only. Preserves round-trip fidelity
+  // when an imported label used a partial command.
+  if (label.defaultFontId || label.defaultFontHeight !== undefined) {
+    const id = label.defaultFontId ?? "";
+    const height =
+      label.defaultFontHeight !== undefined ? `,${label.defaultFontHeight}` : "";
+    lines.push(`^CF${id}${height}`);
+  }
   if (label.labelShift) lines.push(`^LS${label.labelShift}`);
 
   lines.push(...objects.map((obj) => {

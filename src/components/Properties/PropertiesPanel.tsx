@@ -316,7 +316,7 @@ function LabelConfigPanel({
               })
             }
           >
-            <option value="">{t.label.presetCustom}</option>
+            <option value="">{t.label.printerDefault}</option>
             <option value="T">{t.label.mediaModeT}</option>
             <option value="V">{t.label.mediaModeV}</option>
             <option value="D">{t.label.mediaModeD}</option>
@@ -353,7 +353,120 @@ function LabelConfigPanel({
             }
           />
         </div>
+
+        <div className="border-t border-border" />
+
+        <p className={labelCls}>{t.label.printerSettingsHeading}</p>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.printSpeed}</label>
+          <input
+            type="number"
+            className={inputCls}
+            value={label.printSpeed ?? ""}
+            min={2}
+            max={14}
+            onChange={(e) =>
+              onUpdate({ printSpeed: parseIntOrUndef(e.target.value) })
+            }
+          />
+          <p className="text-[10px] text-muted">{t.label.printSpeedHint}</p>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.darkness}</label>
+          <input
+            type="number"
+            className={inputCls}
+            value={label.darkness ?? ""}
+            min={-30}
+            max={30}
+            onChange={(e) =>
+              onUpdate({ darkness: parseIntOrUndef(e.target.value) })
+            }
+          />
+          <p className="text-[10px] text-muted">{t.label.darknessHint}</p>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.mediaType}</label>
+          <select
+            className={inputCls}
+            value={label.mediaType ?? ""}
+            onChange={(e) =>
+              onUpdate({
+                mediaType:
+                  (e.target.value as LabelConfig["mediaType"]) || undefined,
+              })
+            }
+          >
+            <option value="">{t.label.printerDefault}</option>
+            <option value="T">{t.label.mediaTypeT}</option>
+            <option value="D">{t.label.mediaTypeD}</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.printOrientation}</label>
+          <select
+            className={inputCls}
+            value={label.printOrientation ?? ""}
+            onChange={(e) =>
+              onUpdate({
+                printOrientation:
+                  (e.target.value as LabelConfig["printOrientation"]) ||
+                  undefined,
+              })
+            }
+          >
+            <option value="">{t.label.printerDefault}</option>
+            <option value="N">{t.label.printOrientationN}</option>
+            <option value="I">{t.label.printOrientationI}</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.defaultFont}</label>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-muted">
+                {t.label.defaultFontId}
+              </label>
+              <input
+                type="text"
+                className={inputCls}
+                maxLength={2}
+                value={label.defaultFontId ?? ""}
+                onChange={(e) =>
+                  onUpdate({ defaultFontId: e.target.value || undefined })
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-muted">
+                {t.label.defaultFontHeight}
+              </label>
+              <input
+                type="number"
+                className={inputCls}
+                min={1}
+                value={label.defaultFontHeight ?? ""}
+                onChange={(e) =>
+                  onUpdate({
+                    defaultFontHeight: parseIntOrUndef(e.target.value),
+                  })
+                }
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
+}
+
+function parseIntOrUndef(raw: string): number | undefined {
+  if (raw.trim() === "") return undefined;
+  const n = parseInt(raw, 10);
+  return isNaN(n) ? undefined : n;
 }
