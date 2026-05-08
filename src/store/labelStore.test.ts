@@ -12,7 +12,6 @@ function reset() {
     selectedIds: [],
     clipboard: [],
     pasteCount: 0,
-    duplicateCount: 0,
     canvasSettings: {
       showGrid: false,
       snapEnabled: false,
@@ -134,6 +133,43 @@ describe('duplicateObject', () => {
   it('does nothing for a nonexistent id', () => {
     state().addObject('text');
     state().duplicateObject('fake-id');
+    expect(objs()).toHaveLength(1);
+  });
+});
+
+// ── duplicateSelectedObjects ──────────────────────────────────────────────────
+
+describe('duplicateSelectedObjects', () => {
+  it('staggers consecutive duplicates linearly (+20 from current selection)', () => {
+    state().addObject('text', { x: 100, y: 100 });
+    state().selectObject(defined(objs()[0]).id);
+
+    state().duplicateSelectedObjects();
+    state().duplicateSelectedObjects();
+    state().duplicateSelectedObjects();
+
+    expect(objs()).toHaveLength(4);
+    // Selection follows the new copy each time, so the offsets compound
+    // linearly: 100, 120, 140, 160 — never quadratic.
+    expect(objs().map((o) => o.x)).toEqual([100, 120, 140, 160]);
+    expect(objs().map((o) => o.y)).toEqual([100, 120, 140, 160]);
+  });
+
+  it('selects only the new copies', () => {
+    state().addObject('text');
+    state().addObject('text');
+    state().selectObjects(objs().map((o) => o.id));
+
+    state().duplicateSelectedObjects();
+
+    expect(state().selectedIds).toHaveLength(2);
+    expect(state().selectedIds).toEqual([objs()[2]!.id, objs()[3]!.id]);
+  });
+
+  it('is a no-op when nothing is selected', () => {
+    state().addObject('text');
+    state().selectObject(null);
+    state().duplicateSelectedObjects();
     expect(objs()).toHaveLength(1);
   });
 });

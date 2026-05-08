@@ -76,7 +76,6 @@ interface LabelState {
 
   clipboard: LabelObject[];
   pasteCount: number;
-  duplicateCount: number;
 
   addObject: (type: string, position?: { x: number; y: number }) => void;
   updateObject: (id: string, changes: ObjectChanges) => void;
@@ -131,10 +130,12 @@ function updateCurrentObjects(
   };
 }
 
-/** Stagger duplicate / paste offsets so consecutive copies don't overlap.
- *  Multiplied by the running count so the Nth copy lands N×offset from the
- *  source. 20 dots ≈ 2.5 mm at 8dpmm — large enough to be visible without
- *  pushing copies off-canvas. */
+/** Base offset (in dots) used to stagger duplicate / paste copies so they
+ *  don't sit exactly on top of the source. 20 dots ≈ 2.5 mm at 8dpmm —
+ *  visible without pushing copies off-canvas. duplicateObject and
+ *  duplicateSelectedObjects apply it as a constant (the selection follows
+ *  the new copy, so subsequent duplicates stagger naturally); pasteObjects
+ *  multiplies it by pasteCount because the clipboard source stays put. */
 const DUPLICATE_OFFSET_DOTS = 20;
 
 function migrateLegacy(persistedState: unknown, version: number): unknown {
@@ -167,7 +168,6 @@ export const useLabelStore = create<LabelState>()(
       selectedIds: [],
       clipboard: [],
       pasteCount: 0,
-      duplicateCount: 0,
       locale: detectLocale(),
       theme: detectInitialTheme(),
       thirdParty: thirdPartyDefaults(),
@@ -238,17 +238,19 @@ export const useLabelStore = create<LabelState>()(
         set((state) => {
           if (state.selectedIds.length === 0) return {};
           const objs = currentObjects(state);
-          const duplicateCount = state.duplicateCount + 1;
-          const offset = duplicateCount * DUPLICATE_OFFSET_DOTS;
           const copies: LabelObject[] = state.selectedIds.flatMap((id) => {
             const src = objs.find((o) => o.id === id);
             if (!src) return [];
-            return [{ ...src, id: crypto.randomUUID(), x: src.x + offset, y: src.y + offset } as LabelObject];
+            return [{
+              ...src,
+              id: crypto.randomUUID(),
+              x: src.x + DUPLICATE_OFFSET_DOTS,
+              y: src.y + DUPLICATE_OFFSET_DOTS,
+            } as LabelObject];
           });
           return {
             ...updateCurrentObjects(state, (curr) => [...curr, ...copies]),
             selectedIds: copies.map((c) => c.id),
-            duplicateCount,
           };
         }),
 
@@ -286,8 +288,8 @@ export const useLabelStore = create<LabelState>()(
           const same =
             state.selectedIds.length === next.length &&
             state.selectedIds[0] === next[0];
-          if (same && state.duplicateCount === 0) return {};
-          return { selectedIds: next, duplicateCount: 0 };
+          if (same) return {};
+          return { selectedIds: next };
         }),
 
       toggleSelectObject: (id) =>
@@ -302,8 +304,8 @@ export const useLabelStore = create<LabelState>()(
           const same =
             state.selectedIds.length === ids.length &&
             state.selectedIds.every((id, i) => id === ids[i]);
-          if (same && state.duplicateCount === 0) return {};
-          return { selectedIds: ids, duplicateCount: 0 };
+          if (same) return {};
+          return { selectedIds: ids };
         }),
 
       removeSelectedObjects: () =>
