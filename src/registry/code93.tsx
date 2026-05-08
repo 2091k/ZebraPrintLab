@@ -6,7 +6,7 @@ export const code93 = createBarcode1D({
   icon: '|93|',
   defaultContent: 'CODE93',
   hasCheckDigit: true,
-  localeKey: 'code93',
+  locale: (t) => t.registry.code93,
   group: 'code-1d',
   zplCommand: (p) => {
     const interp = p.printInterpretation ? 'Y' : 'N';

@@ -6,7 +6,7 @@ export const codabar = createBarcode1D({
   icon: "CBA",
   defaultContent: "A12345A",
   hasCheckDigit: true,
-  localeKey: "codabar",
+  locale: (t) => t.registry.codabar,
   group: 'code-1d',
   contentSpec: { charset: '0-9A-Da-d\\-$:/.+' },
   zplCommand: (p) => {

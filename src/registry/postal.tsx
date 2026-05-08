@@ -6,7 +6,7 @@ export const postal = createBarcode1D({
   icon: "✉Z",
   defaultContent: "12345",
   hasCheckDigit: false,
-  localeKey: "postal",
+  locale: (t) => t.registry.postal,
   group: 'code-postal',
   contentSpec: { charset: '0-9' },
   zplCommand: (p) => {

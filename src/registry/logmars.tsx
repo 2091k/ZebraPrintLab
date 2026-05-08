@@ -6,7 +6,7 @@ export const logmars = createBarcode1D({
   icon: "LOG",
   defaultContent: "LOGMARS1",
   hasCheckDigit: false,
-  localeKey: "logmars",
+  locale: (t) => t.registry.logmars,
   group: 'code-1d',
   contentSpec: { charset: '0-9A-Za-z\\-. $/+%' },
   zplCommand: (p) => {

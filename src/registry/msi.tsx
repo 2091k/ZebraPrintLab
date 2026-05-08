@@ -6,7 +6,7 @@ export const msi = createBarcode1D({
   icon: "MSI",
   defaultContent: "12345678",
   hasCheckDigit: true,
-  localeKey: "msi",
+  locale: (t) => t.registry.msi,
   group: 'code-1d',
   contentSpec: { charset: '0-9' },
   // MSI standard specifies a 2:1 wide:narrow ratio, which bwip-js hardcodes

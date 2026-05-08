@@ -1,7 +1,7 @@
 import { useLabelStore } from '../store/labelStore';
-import { locales } from '../locales';
+import { locales, type Translations } from '../locales';
 
-export function useT() {
+export function useT(): Translations {
   const locale = useLabelStore((s) => s.locale);
   return locales[locale];
 }

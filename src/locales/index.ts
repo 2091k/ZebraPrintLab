@@ -78,6 +78,11 @@ export const locales = {
 
 export type LocaleCode = keyof typeof locales;
 
+/** Shape of a single locale dictionary, derived from the registered locales.
+ *  Use this when a non-React module needs the translation type without
+ *  pulling in the useT hook. */
+export type Translations = (typeof locales)[LocaleCode];
+
 export const localeNames: Record<LocaleCode, string> = {
   en: 'English',
   de: 'Deutsch',

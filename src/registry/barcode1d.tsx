@@ -1,5 +1,6 @@
 import type { ObjectTypeDefinition, ObjectGroup, LabelObjectBase } from '../types/ObjectType';
 import { useT } from '../lib/useT';
+import type { Translations } from '../locales';
 import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos, fdField } from './zplHelpers';
 import { commitHeightTransform } from './transformHelpers';
@@ -24,8 +25,10 @@ interface Barcode1DConfig {
   hasCheckDigit: boolean;
   /** Build the ZPL barcode command (e.g. `^BUN,100,Y,N,N`). */
   zplCommand: (p: Barcode1DProps) => string;
-  /** Locale key under `t.registry[localeKey]`. Must match en.ts shape. */
-  localeKey: string;
+  /** Per-symbology locale block selector — TS verifies the returned shape
+   *  conforms to BarcodeLocale at every call site, so a missing or renamed
+   *  `t.registry.<key>` is a compile error rather than a runtime undefined. */
+  locale: (t: Translations) => BarcodeLocale;
   group: ObjectGroup;
   /**
    * Explicit wide-to-narrow ratio for the ^BY command.
@@ -90,7 +93,7 @@ export function createBarcode1D(config: Barcode1DConfig): ObjectTypeDefinition<B
 
     PropertiesPanel: ({ obj, onChange }) => {
       const t = useT();
-      const loc = (t.registry as unknown as Record<string, BarcodeLocale>)[config.localeKey] ?? {} as BarcodeLocale;
+      const loc = config.locale(t);
       const p = obj.props;
       return (
         <div className="flex flex-col gap-3">
