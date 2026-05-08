@@ -6,7 +6,7 @@ export const interleaved2of5 = createBarcode1D({
   icon: 'I25',
   defaultContent: '12345678',
   hasCheckDigit: true,
-  localeKey: 'interleaved2of5',
+  locale: (t) => t.registry.interleaved2of5,
   group: 'code-1d',
   contentSpec: { charset: '0-9' },
   zplCommand: (p) => {

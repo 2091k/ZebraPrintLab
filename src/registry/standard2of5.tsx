@@ -6,7 +6,7 @@ export const standard2of5 = createBarcode1D({
   icon: "S25",
   defaultContent: "12345678",
   hasCheckDigit: false,
-  localeKey: "standard2of5",
+  locale: (t) => t.registry.standard2of5,
   group: 'code-1d',
   contentSpec: { charset: '0-9' },
   zplCommand: (p) => {

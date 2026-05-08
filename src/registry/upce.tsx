@@ -6,7 +6,7 @@ export const upce = createBarcode1D({
   icon: 'UPE',
   defaultContent: '012345',
   hasCheckDigit: false,
-  localeKey: 'upce',
+  locale: (t) => t.registry.upce,
   group: 'code-1d',
   contentSpec: { charset: '0-9', maxLength: 6 },
   zplCommand: (p) => {

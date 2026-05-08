@@ -6,7 +6,7 @@ export const plessey = createBarcode1D({
   icon: "PLS",
   defaultContent: "12345678",
   hasCheckDigit: true,
-  localeKey: "plessey",
+  locale: (t) => t.registry.plessey,
   group: 'code-1d',
   contentSpec: { charset: '0-9A-Fa-f' },
   // Plessey uses 2:1 wide:narrow ratio (same as MSI); override ZPL default of 3.0

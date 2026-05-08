@@ -6,7 +6,7 @@ export const planet = createBarcode1D({
   icon: "✉P",
   defaultContent: "12345678901",
   hasCheckDigit: false,
-  localeKey: "planet",
+  locale: (t) => t.registry.planet,
   group: 'code-postal',
   contentSpec: { charset: '0-9' },
   zplCommand: (p) => {
