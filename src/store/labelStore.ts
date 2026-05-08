@@ -139,17 +139,20 @@ function updateCurrentObjects(
 const DUPLICATE_OFFSET_DOTS = 20;
 
 /** Build offset copies of objects identified by `ids`. Missing ids are
- *  silently dropped. Used by duplicateObject (single id) and
- *  duplicateSelectedObjects (current selection). */
+ *  silently dropped. Props are shallow-cloned to match the pattern in
+ *  copySelectedObjects — even though no current code path mutates props,
+ *  sharing the reference would be a hidden trap for future contributors. */
 function buildOffsetCopies(objs: LabelObject[], ids: readonly string[]): LabelObject[] {
+  const byId = new Map(objs.map((o) => [o.id, o]));
   return ids.flatMap((id) => {
-    const src = objs.find((o) => o.id === id);
+    const src = byId.get(id);
     if (!src) return [];
     return [{
       ...src,
       id: crypto.randomUUID(),
       x: src.x + DUPLICATE_OFFSET_DOTS,
       y: src.y + DUPLICATE_OFFSET_DOTS,
+      props: { ...src.props },
     } as LabelObject];
   });
 }
