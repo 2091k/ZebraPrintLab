@@ -10,10 +10,8 @@ import { NumberInput } from "../components/Properties/NumberInput";
 const MAGNIFICATION_MIN = 1;
 const MAGNIFICATION_MAX = 10;
 const EC_LEVEL_MIN = 0;
-// Aztec ecLevel domain is discontinuous: 0=default, 1-99=ECC%, 101-104=compact,
-// 201-232=full, 300=Rune. NumberInput only enforces a single max, so use the
-// highest valid value (300) and rely on the user / spec for the gaps. Catches
-// at least the previous regression where Rune was unreachable.
+// NumberInput can't express the discontinuous AztecProps domain — use the
+// highest valid value (Rune = 300) as the upper bound.
 const EC_LEVEL_MAX = 300;
 
 export interface AztecProps {
