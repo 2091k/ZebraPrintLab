@@ -1,5 +1,6 @@
 import type { ObjectTypeDefinition, ObjectGroup, LabelObjectBase } from '../types/ObjectType';
 import { useT } from '../lib/useT';
+import type { Translations } from '../locales';
 import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos, fdField } from './zplHelpers';
 import { commitHeightTransform } from './transformHelpers';
@@ -7,8 +8,6 @@ import { filterContent, type ContentSpec } from './contentSpec';
 import { type ZplRotation } from './rotation';
 import { RotationSelect } from '../components/Properties/RotationSelect';
 import { NumberInput } from '../components/Properties/NumberInput';
-
-type Translations = ReturnType<typeof useT>;
 
 export interface Barcode1DProps {
   content: string;
