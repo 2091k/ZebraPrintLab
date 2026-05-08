@@ -49,6 +49,8 @@ const sr = {
     x: 'X',
     y: 'Y',
     comment: 'Коментар',
+    multipleSelectedFmt: 'Изабрано објеката: {n}',
+    multipleSelectedHint: 'стрелицама померај',
   },
 
   label: {

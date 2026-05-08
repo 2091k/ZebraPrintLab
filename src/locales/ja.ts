@@ -49,6 +49,8 @@ const ja = {
     x: 'X',
     y: 'Y',
     comment: 'コメント',
+    multipleSelectedFmt: '{n} 個のオブジェクトが選択されました',
+    multipleSelectedHint: '矢印キーで移動',
   },
 
   label: {

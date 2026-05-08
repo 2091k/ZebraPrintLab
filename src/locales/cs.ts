@@ -49,6 +49,8 @@ const cs = {
     x: 'X',
     y: 'Y',
     comment: 'Komentář',
+    multipleSelectedFmt: 'Vybráno objektů: {n}',
+    multipleSelectedHint: 'šipkami posunete',
   },
 
   label: {

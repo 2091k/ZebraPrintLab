@@ -49,6 +49,8 @@ const hr = {
     x: 'X',
     y: 'Y',
     comment: 'Komentar',
+    multipleSelectedFmt: 'Odabrano objekata: {n}',
+    multipleSelectedHint: 'strelicama pomičeš',
   },
 
   label: {

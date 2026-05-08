@@ -49,6 +49,8 @@ const pl = {
     x: 'X',
     y: 'Y',
     comment: 'Komentarz',
+    multipleSelectedFmt: 'Wybrano obiektów: {n}',
+    multipleSelectedHint: 'strzałki przesuwają',
   },
 
   label: {

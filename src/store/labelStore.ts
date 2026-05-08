@@ -76,7 +76,6 @@ interface LabelState {
 
   clipboard: LabelObject[];
   pasteCount: number;
-  duplicateCount: number;
 
   addObject: (type: string, position?: { x: number; y: number }) => void;
   updateObject: (id: string, changes: ObjectChanges) => void;
@@ -131,6 +130,33 @@ function updateCurrentObjects(
   };
 }
 
+/** Base offset (in dots) used to stagger duplicate / paste copies so they
+ *  don't sit exactly on top of the source. 20 dots ≈ 2.5 mm at 8dpmm —
+ *  visible without pushing copies off-canvas. duplicateObject and
+ *  duplicateSelectedObjects apply it as a constant (the selection follows
+ *  the new copy, so subsequent duplicates stagger naturally); pasteObjects
+ *  multiplies it by pasteCount because the clipboard source stays put. */
+const DUPLICATE_OFFSET_DOTS = 20;
+
+/** Build offset copies of objects identified by `ids`. Missing ids are
+ *  silently dropped. Props are shallow-cloned to match the pattern in
+ *  copySelectedObjects — even though no current code path mutates props,
+ *  sharing the reference would be a hidden trap for future contributors. */
+function buildOffsetCopies(objs: LabelObject[], ids: readonly string[]): LabelObject[] {
+  const byId = new Map(objs.map((o) => [o.id, o]));
+  return ids.flatMap((id) => {
+    const src = byId.get(id);
+    if (!src) return [];
+    return [{
+      ...src,
+      id: crypto.randomUUID(),
+      x: src.x + DUPLICATE_OFFSET_DOTS,
+      y: src.y + DUPLICATE_OFFSET_DOTS,
+      props: { ...src.props },
+    } as LabelObject];
+  });
+}
+
 function migrateLegacy(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
   let s = persistedState as Record<string, unknown>;
@@ -161,7 +187,6 @@ export const useLabelStore = create<LabelState>()(
       selectedIds: [],
       clipboard: [],
       pasteCount: 0,
-      duplicateCount: 0,
       locale: detectLocale(),
       theme: detectInitialTheme(),
       thirdParty: thirdPartyDefaults(),
@@ -213,36 +238,21 @@ export const useLabelStore = create<LabelState>()(
 
       duplicateObject: (id) =>
         set((state) => {
-          const objs = currentObjects(state);
-          const src = objs.find((o) => o.id === id);
-          if (!src) return {};
-          const copy: LabelObject = {
-            ...src,
-            id: crypto.randomUUID(),
-            x: src.x + 20,
-            y: src.y + 20,
-          };
+          const copies = buildOffsetCopies(currentObjects(state), [id]);
+          if (copies.length === 0) return {};
           return {
-            ...updateCurrentObjects(state, (curr) => [...curr, copy]),
-            selectedIds: [copy.id],
+            ...updateCurrentObjects(state, (curr) => [...curr, ...copies]),
+            selectedIds: copies.map((c) => c.id),
           };
         }),
 
       duplicateSelectedObjects: () =>
         set((state) => {
           if (state.selectedIds.length === 0) return {};
-          const objs = currentObjects(state);
-          const duplicateCount = state.duplicateCount + 1;
-          const offset = duplicateCount * 20;
-          const copies: LabelObject[] = state.selectedIds.flatMap((id) => {
-            const src = objs.find((o) => o.id === id);
-            if (!src) return [];
-            return [{ ...src, id: crypto.randomUUID(), x: src.x + offset, y: src.y + offset } as LabelObject];
-          });
+          const copies = buildOffsetCopies(currentObjects(state), state.selectedIds);
           return {
             ...updateCurrentObjects(state, (curr) => [...curr, ...copies]),
             selectedIds: copies.map((c) => c.id),
-            duplicateCount,
           };
         }),
 
@@ -260,7 +270,7 @@ export const useLabelStore = create<LabelState>()(
         set((state) => {
           if (state.clipboard.length === 0) return {};
           const pasteCount = state.pasteCount + 1;
-          const offset = pasteCount * 20;
+          const offset = pasteCount * DUPLICATE_OFFSET_DOTS;
           const copies: LabelObject[] = state.clipboard.map((src) => ({
             ...src,
             id: crypto.randomUUID(),
@@ -280,8 +290,8 @@ export const useLabelStore = create<LabelState>()(
           const same =
             state.selectedIds.length === next.length &&
             state.selectedIds[0] === next[0];
-          if (same && state.duplicateCount === 0) return {};
-          return { selectedIds: next, duplicateCount: 0 };
+          if (same) return {};
+          return { selectedIds: next };
         }),
 
       toggleSelectObject: (id) =>
@@ -296,8 +306,8 @@ export const useLabelStore = create<LabelState>()(
           const same =
             state.selectedIds.length === ids.length &&
             state.selectedIds.every((id, i) => id === ids[i]);
-          if (same && state.duplicateCount === 0) return {};
-          return { selectedIds: ids, duplicateCount: 0 };
+          if (same) return {};
+          return { selectedIds: ids };
         }),
 
       removeSelectedObjects: () =>

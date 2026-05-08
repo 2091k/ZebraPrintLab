@@ -49,6 +49,8 @@ const ar = {
     x: 'X',
     y: 'Y',
     comment: 'تعليق',
+    multipleSelectedFmt: '{n} عناصر مختارة',
+    multipleSelectedHint: 'استخدم أسهم الاتجاه للتحريك',
   },
 
   label: {

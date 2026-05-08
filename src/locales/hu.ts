@@ -49,6 +49,8 @@ const hu = {
     x: 'X',
     y: 'Y',
     comment: 'Megjegyzés',
+    multipleSelectedFmt: '{n} objektum kijelölve',
+    multipleSelectedHint: 'nyilakkal mozgasd',
   },
 
   label: {

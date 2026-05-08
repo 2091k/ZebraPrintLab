@@ -49,6 +49,8 @@ const pt = {
     x: 'X',
     y: 'Y',
     comment: 'Comentário',
+    multipleSelectedFmt: '{n} objetos selecionados',
+    multipleSelectedHint: 'setas para mover',
   },
 
   label: {

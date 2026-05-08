@@ -49,6 +49,8 @@ const sl = {
     x: 'X',
     y: 'Y',
     comment: 'Komentar',
+    multipleSelectedFmt: 'Izbranih objektov: {n}',
+    multipleSelectedHint: 's puščicami premikaš',
   },
 
   label: {

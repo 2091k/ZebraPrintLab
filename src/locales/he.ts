@@ -49,6 +49,8 @@ const he = {
     x: 'X',
     y: 'Y',
     comment: 'הערה',
+    multipleSelectedFmt: '{n} פריטים נבחרו',
+    multipleSelectedHint: 'מקשי החצים מזיזים',
   },
 
   label: {

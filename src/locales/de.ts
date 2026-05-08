@@ -49,6 +49,8 @@ const de = {
     x: 'X',
     y: 'Y',
     comment: 'Kommentar',
+    multipleSelectedFmt: '{n} Objekte ausgewählt',
+    multipleSelectedHint: 'Pfeiltasten zum Verschieben',
   },
 
   label: {

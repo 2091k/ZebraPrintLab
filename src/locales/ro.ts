@@ -49,6 +49,8 @@ const ro = {
     x: 'X',
     y: 'Y',
     comment: 'Comentariu',
+    multipleSelectedFmt: '{n} obiecte selectate',
+    multipleSelectedHint: 'săgeți pentru mutare',
   },
 
   label: {

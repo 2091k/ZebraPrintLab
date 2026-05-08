@@ -49,6 +49,8 @@ const ko = {
     x: 'X',
     y: 'Y',
     comment: '설명',
+    multipleSelectedFmt: '{n}개 항목 선택됨',
+    multipleSelectedHint: '화살표 키로 이동',
   },
 
   label: {

@@ -49,6 +49,8 @@ const sk = {
     x: 'X',
     y: 'Y',
     comment: 'Komentár',
+    multipleSelectedFmt: 'Vybraných objektov: {n}',
+    multipleSelectedHint: 'šípkami posuniete',
   },
 
   label: {
