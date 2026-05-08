@@ -119,7 +119,6 @@ const nl = {
     unavailable: 'Niet beschikbaar',
     previewEmpty: 'Voorbeeld verschijnt\nna wijzigingen',
     previewProvider: 'Voorbeeld via api.labelary.com',
-    previewDisabled: 'Voorbeeld uitgeschakeld.',
     previewNoticeTitle: 'Privacymelding',
     previewNoticeBody: 'De voorbeeldweergave wordt gegenereerd door de externe dienst api.labelary.com. De volledige ZPL van het label, inclusief gevoelige gegevens, wordt verzonden.',
     previewNoticePrivacyLink: 'Privacy-informatie van Labelary',

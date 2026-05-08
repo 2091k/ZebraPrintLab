@@ -119,7 +119,6 @@ const fa = {
     unavailable: 'در دسترس نیست',
     previewEmpty: 'پیش‌نمایش پس از\nتغییرات نمایش داده می‌شود',
     previewProvider: 'پیش‌نمایش از طریق api.labelary.com',
-    previewDisabled: 'پیش‌نمایش غیرفعال است.',
     previewNoticeTitle: 'اطلاعیه حریم خصوصی',
     previewNoticeBody: 'پیش‌نمایش توسط سرویس خارجی api.labelary.com تولید می‌شود. ZPL کامل برچسب، شامل داده‌های حساس، از طریق شبکه ارسال می‌شود.',
     previewNoticePrivacyLink: 'اطلاعات حریم خصوصی Labelary',

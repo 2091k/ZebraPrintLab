@@ -119,7 +119,6 @@ const lv = {
     unavailable: 'Nav pieejams',
     previewEmpty: 'Priekšskatījums parādās\npēc izmaiņām',
     previewProvider: 'Priekšskatījums caur api.labelary.com',
-    previewDisabled: 'Priekšskatījums ir atspējots.',
     previewNoticeTitle: 'Paziņojums par privātumu',
     previewNoticeBody: 'Priekšskatījumu ģenerē ārējais pakalpojums api.labelary.com. Visa etiķetes ZPL, tostarp sensitīvi dati, tiek sūtīta tīklā.',
     previewNoticePrivacyLink: 'Labelary privātuma informācija',

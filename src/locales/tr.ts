@@ -119,7 +119,6 @@ const tr = {
     unavailable: 'Kullanılamıyor',
     previewEmpty: 'Önizleme değişikliklerden\nsonra görüntülenir',
     previewProvider: 'api.labelary.com üzerinden önizleme',
-    previewDisabled: 'Önizleme devre dışı.',
     previewNoticeTitle: 'Gizlilik bildirimi',
     previewNoticeBody: 'Önizleme, harici api.labelary.com hizmeti tarafından oluşturulur. Hassas veriler dahil etiketin tamamı ZPL olarak ağ üzerinden gönderilir.',
     previewNoticePrivacyLink: 'Labelary gizlilik bilgileri',

@@ -119,7 +119,6 @@ const fr = {
     unavailable: 'Indisponible',
     previewEmpty: "L'aperçu apparaît\naprès les modifications",
     previewProvider: 'Aperçu via api.labelary.com',
-    previewDisabled: 'Aperçu désactivé.',
     previewNoticeTitle: 'Avis de confidentialité',
     previewNoticeBody: 'Le rendu de l\'aperçu est effectué par le service externe api.labelary.com. Le ZPL complet de l\'étiquette, y compris toute donnée sensible, est envoyé sur le réseau.',
     previewNoticePrivacyLink: 'Informations sur la confidentialité de Labelary',

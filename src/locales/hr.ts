@@ -119,7 +119,6 @@ const hr = {
     unavailable: 'Nedostupno',
     previewEmpty: 'Pregled se prikazuje\nnakon promjena',
     previewProvider: 'Pregled putem api.labelary.com',
-    previewDisabled: 'Pregled je onemogućen.',
     previewNoticeTitle: 'Obavijest o privatnosti',
     previewNoticeBody: 'Pregled generira vanjska usluga api.labelary.com. Cijeli ZPL naljepnice, uključujući osjetljive podatke, šalje se putem mreže.',
     previewNoticePrivacyLink: 'Informacije o privatnosti Labelary',

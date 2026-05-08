@@ -119,7 +119,6 @@ const no = {
     unavailable: 'Utilgjengelig',
     previewEmpty: 'Forhåndsvisning vises\netter endringer',
     previewProvider: 'Forhåndsvisning via api.labelary.com',
-    previewDisabled: 'Forhåndsvisning er deaktivert.',
     previewNoticeTitle: 'Personvernmelding',
     previewNoticeBody: 'Forhåndsvisningen genereres av den eksterne tjenesten api.labelary.com. Hele etikettens ZPL, inkludert sensitive data, sendes over nettverket.',
     previewNoticePrivacyLink: 'Labelary personverninformasjon',

@@ -15,14 +15,13 @@ export function LabelPreviewModal({ onClose }: Props) {
   const t = useT();
   const label = useLabelStore((s) => s.label);
   const objects = useCurrentObjects();
-  const labelaryEnabled = useLabelStore((s) => s.thirdParty.labelary);
   const noticeAcknowledged = useLabelStore((s) => s.labelaryNoticeAcknowledged);
   const acknowledgeLabelaryNotice = useLabelStore((s) => s.acknowledgeLabelaryNotice);
 
-  // Notice gates the network call: until the user dismisses the first-run
-  // privacy hint we render the notice instead of contacting Labelary.
-  const showNotice = labelaryEnabled && !noticeAcknowledged;
-  const canFetch = labelaryEnabled && noticeAcknowledged;
+  // The modal entry point is hidden when the labelary gate is off
+  // (see ZPLOutput), so reaching this component means the gate is on.
+  // The first-run notice gates the network call until acknowledged.
+  const canFetch = noticeAcknowledged;
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +80,7 @@ export function LabelPreviewModal({ onClose }: Props) {
             viewport so small previews are still centered. */}
         <div className="flex-1 overflow-auto bg-bg min-h-24 min-w-48">
           <div className="min-h-full min-w-full flex items-center justify-center p-4">
-            {showNotice && (
+            {!noticeAcknowledged && (
               <div className="flex flex-col gap-3 max-w-80 text-center font-mono text-[10px] text-muted leading-relaxed">
                 <span className="text-text uppercase tracking-widest">{t.output.previewNoticeTitle}</span>
                 <span>{t.output.previewNoticeBody}</span>
@@ -100,11 +99,6 @@ export function LabelPreviewModal({ onClose }: Props) {
                   {t.output.previewNoticeAcknowledge}
                 </button>
               </div>
-            )}
-            {!labelaryEnabled && (
-              <span className="font-mono text-[10px] text-muted leading-relaxed text-center max-w-64">
-                {t.output.previewDisabled}
-              </span>
             )}
             {canFetch && loading && (
               <span className="font-mono text-[10px] text-muted animate-pulse">{t.output.loading}</span>
@@ -131,18 +125,16 @@ export function LabelPreviewModal({ onClose }: Props) {
           </div>
         </div>
 
-        {labelaryEnabled && (
-          <div className="px-3 py-1 border-t border-border-2 shrink-0 text-center">
-            <a
-              href="https://labelary.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="font-mono text-[9px] text-muted hover:text-accent transition-colors"
-            >
-              {t.output.previewProvider}
-            </a>
-          </div>
-        )}
+        <div className="px-3 py-1 border-t border-border-2 shrink-0 text-center">
+          <a
+            href="https://labelary.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="font-mono text-[9px] text-muted hover:text-accent transition-colors"
+          >
+            {t.output.previewProvider}
+          </a>
+        </div>
       </div>
     </div>
   );

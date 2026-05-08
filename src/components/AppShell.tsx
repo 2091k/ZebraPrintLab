@@ -50,6 +50,7 @@ export function AppShell() {
   const setLocale = useLabelStore((s) => s.setLocale);
   const theme = useLabelStore((s) => s.theme);
   const setTheme = useLabelStore((s) => s.setTheme);
+  const labelaryEnabled = useLabelStore((s) => s.thirdParty.labelary);
 
   // Bridge the theme preference to <html data-theme> so the CSS variables in
   // index.css pick it up.
@@ -201,13 +202,15 @@ export function AppShell() {
               {t.app.saveDesign}
             </DropdownItem>
             <DropdownSeparator />
-            <DropdownItem
-              icon={PrinterIcon}
-              onClick={handlePrint}
-              disabled={!hasObjects}
-            >
-              {t.app.print}
-            </DropdownItem>
+            {labelaryEnabled && (
+              <DropdownItem
+                icon={PrinterIcon}
+                onClick={handlePrint}
+                disabled={!hasObjects}
+              >
+                {t.app.print}
+              </DropdownItem>
+            )}
             <DropdownItem
               icon={PaperAirplaneIcon}
               onClick={openZebraPrint}

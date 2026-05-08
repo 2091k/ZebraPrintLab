@@ -119,7 +119,6 @@ const sv = {
     unavailable: 'Ej tillgänglig',
     previewEmpty: 'Förhandsvisning visas\nefter ändringar',
     previewProvider: 'Förhandsgranskning via api.labelary.com',
-    previewDisabled: 'Förhandsgranskning är inaktiverad.',
     previewNoticeTitle: 'Integritetsmeddelande',
     previewNoticeBody: 'Förhandsgranskningen renderas av den externa tjänsten api.labelary.com. Hela etikettens ZPL, inklusive känsliga data, skickas över nätverket.',
     previewNoticePrivacyLink: 'Labelarys integritetsinformation',

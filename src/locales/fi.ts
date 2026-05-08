@@ -119,7 +119,6 @@ const fi = {
     unavailable: 'Ei saatavilla',
     previewEmpty: 'Esikatselu näkyy\nmuutosten jälkeen',
     previewProvider: 'Esikatselu palvelusta api.labelary.com',
-    previewDisabled: 'Esikatselu on poistettu käytöstä.',
     previewNoticeTitle: 'Tietosuojailmoitus',
     previewNoticeBody: 'Esikatselun tuottaa ulkoinen palvelu api.labelary.com. Etiketin koko ZPL, mukaan lukien arkaluonteiset tiedot, lähetetään verkon yli.',
     previewNoticePrivacyLink: 'Labelary-tietosuojatiedot',

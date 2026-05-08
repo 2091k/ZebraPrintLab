@@ -119,7 +119,6 @@ const ja = {
     unavailable: '利用不可',
     previewEmpty: '変更後にプレビューが\n表示されます',
     previewProvider: 'api.labelary.com 経由のプレビュー',
-    previewDisabled: 'プレビューは無効です。',
     previewNoticeTitle: 'プライバシーに関する通知',
     previewNoticeBody: 'プレビューは外部サービス api.labelary.com で生成されます。機密データを含むラベル全体の ZPL がネットワーク経由で送信されます。',
     previewNoticePrivacyLink: 'Labelary のプライバシー情報',

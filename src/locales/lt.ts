@@ -119,7 +119,6 @@ const lt = {
     unavailable: 'Nepasiekiama',
     previewEmpty: 'Peržiūra rodoma\npo pakeitimų',
     previewProvider: 'Peržiūra per api.labelary.com',
-    previewDisabled: 'Peržiūra išjungta.',
     previewNoticeTitle: 'Privatumo pranešimas',
     previewNoticeBody: 'Peržiūrą generuoja išorinė paslauga api.labelary.com. Visa etiketės ZPL, įskaitant jautrius duomenis, siunčiama tinklu.',
     previewNoticePrivacyLink: 'Labelary privatumo informacija',

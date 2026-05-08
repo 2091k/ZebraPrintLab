@@ -119,7 +119,6 @@ const hu = {
     unavailable: 'Nem elérhető',
     previewEmpty: 'Az előnézet megjelenik\nmódosítás után',
     previewProvider: 'Előnézet az api.labelary.com útján',
-    previewDisabled: 'Az előnézet ki van kapcsolva.',
     previewNoticeTitle: 'Adatvédelmi tájékoztató',
     previewNoticeBody: 'Az előnézetet a külső api.labelary.com szolgáltatás készíti. A címke teljes ZPL-je, beleértve a bizalmas adatokat is, hálózaton keresztül kerül elküldésre.',
     previewNoticePrivacyLink: 'Labelary adatvédelmi tájékoztató',

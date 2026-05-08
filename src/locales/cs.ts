@@ -119,7 +119,6 @@ const cs = {
     unavailable: 'Nedostupné',
     previewEmpty: 'Náhled se zobrazí\npo úpravách',
     previewProvider: 'Náhled přes api.labelary.com',
-    previewDisabled: 'Náhled je vypnutý.',
     previewNoticeTitle: 'Upozornění na ochranu údajů',
     previewNoticeBody: 'Náhled se generuje pomocí externí služby api.labelary.com. Celý ZPL štítku, včetně citlivých údajů, je odesílán přes síť.',
     previewNoticePrivacyLink: 'Informace o ochraně údajů Labelary',
