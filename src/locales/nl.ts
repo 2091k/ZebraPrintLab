@@ -49,6 +49,8 @@ const nl = {
     x: 'X',
     y: 'Y',
     comment: 'Opmerking',
+    multipleSelectedFmt: '{n} objecten geselecteerd',
+    multipleSelectedHint: 'pijltoetsen om te verplaatsen',
   },
 
   label: {

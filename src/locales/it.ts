@@ -49,6 +49,8 @@ const it = {
     x: 'X',
     y: 'Y',
     comment: 'Commento',
+    multipleSelectedFmt: '{n} oggetti selezionati',
+    multipleSelectedHint: 'frecce per spostare',
   },
 
   label: {

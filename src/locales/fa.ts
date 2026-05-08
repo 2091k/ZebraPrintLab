@@ -49,6 +49,8 @@ const fa = {
     x: 'X',
     y: 'Y',
     comment: 'توضیح',
+    multipleSelectedFmt: '{n} مورد انتخاب شده',
+    multipleSelectedHint: 'با کلیدهای جهت‌دار جابه‌جا کنید',
   },
 
   label: {

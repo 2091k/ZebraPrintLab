@@ -49,6 +49,8 @@ const da = {
     x: 'X',
     y: 'Y',
     comment: 'Kommentar',
+    multipleSelectedFmt: '{n} objekter valgt',
+    multipleSelectedHint: 'piletaster flytter',
   },
 
   label: {

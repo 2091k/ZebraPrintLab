@@ -49,6 +49,8 @@ const et = {
     x: 'X',
     y: 'Y',
     comment: 'Kommentaar',
+    multipleSelectedFmt: '{n} objekti valitud',
+    multipleSelectedHint: 'nooltega liigutad',
   },
 
   label: {

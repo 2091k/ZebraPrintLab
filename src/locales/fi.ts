@@ -49,6 +49,8 @@ const fi = {
     x: 'X',
     y: 'Y',
     comment: 'Kommentti',
+    multipleSelectedFmt: '{n} objektia valittu',
+    multipleSelectedHint: 'nuolinäppäimillä siirrät',
   },
 
   label: {

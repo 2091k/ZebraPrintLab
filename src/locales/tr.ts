@@ -49,6 +49,8 @@ const tr = {
     x: 'X',
     y: 'Y',
     comment: 'Yorum',
+    multipleSelectedFmt: '{n} nesne seçildi',
+    multipleSelectedHint: 'oklarla taşı',
   },
 
   label: {

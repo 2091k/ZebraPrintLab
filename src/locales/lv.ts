@@ -49,6 +49,8 @@ const lv = {
     x: 'X',
     y: 'Y',
     comment: 'Komentārs',
+    multipleSelectedFmt: 'Atlasīti {n} objekti',
+    multipleSelectedHint: 'ar bultiņām pārvietot',
   },
 
   label: {

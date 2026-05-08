@@ -49,6 +49,8 @@ const en = {
     x: 'X',
     y: 'Y',
     comment: 'Comment',
+    multipleSelectedFmt: '{n} objects selected',
+    multipleSelectedHint: 'use arrow keys to move',
   },
 
   label: {

@@ -49,6 +49,8 @@ const lt = {
     x: 'X',
     y: 'Y',
     comment: 'Komentaras',
+    multipleSelectedFmt: 'Pasirinkta objektų: {n}',
+    multipleSelectedHint: 'rodyklėmis perkeli',
   },
 
   label: {

@@ -37,11 +37,11 @@ export function PropertiesPanel() {
         <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
           <span className="font-mono text-xs text-accent">▣</span>
           <span className="text-xs font-medium text-text">
-            {selectedIds.length} objects selected
+            {t.properties.multipleSelectedFmt.replace('{n}', String(selectedIds.length))}
           </span>
         </div>
         <p className="px-3 py-3 text-xs text-muted">
-          {t.properties.x} / {t.properties.y}: use arrow keys to move
+          {t.properties.x} / {t.properties.y}: {t.properties.multipleSelectedHint}
         </p>
       </div>
     );

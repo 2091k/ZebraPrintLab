@@ -49,6 +49,8 @@ const sv = {
     x: 'X',
     y: 'Y',
     comment: 'Kommentar',
+    multipleSelectedFmt: '{n} objekt markerade',
+    multipleSelectedHint: 'pilar för att flytta',
   },
 
   label: {

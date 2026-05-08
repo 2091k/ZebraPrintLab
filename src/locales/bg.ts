@@ -49,6 +49,8 @@ const bg = {
     x: 'X',
     y: 'Y',
     comment: 'Коментар',
+    multipleSelectedFmt: 'Избрани обекти: {n}',
+    multipleSelectedHint: 'със стрелките местиш',
   },
 
   label: {

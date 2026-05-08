@@ -49,6 +49,8 @@ const fr = {
     x: 'X',
     y: 'Y',
     comment: 'Commentaire',
+    multipleSelectedFmt: '{n} objets sélectionnés',
+    multipleSelectedHint: 'flèches pour déplacer',
   },
 
   label: {

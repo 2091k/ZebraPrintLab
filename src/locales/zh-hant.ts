@@ -49,6 +49,8 @@ const zhHant = {
     x: 'X',
     y: 'Y',
     comment: '備註',
+    multipleSelectedFmt: '已選擇 {n} 個物件',
+    multipleSelectedHint: '方向鍵移動',
   },
 
   label: {

@@ -49,6 +49,8 @@ const el = {
     x: 'X',
     y: 'Y',
     comment: 'Σχόλιο',
+    multipleSelectedFmt: '{n} αντικείμενα επιλέχθηκαν',
+    multipleSelectedHint: 'τα βέλη μετακινούν',
   },
 
   label: {
