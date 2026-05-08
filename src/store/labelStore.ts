@@ -470,7 +470,10 @@ export const useLabelStore = create<LabelState>()(
         currentPageIndex: state.currentPageIndex,
         locale: state.locale,
         theme: state.theme,
-        thirdParty: state.thirdParty,
+        // thirdParty intentionally NOT persisted: until a settings UI lets
+        // users explicitly opt in/out, the build-time env (VITE_THIRD_PARTY_*)
+        // is authoritative on every load. Persisting now would freeze the
+        // first run's env value and quietly defeat later build flips.
         labelaryNoticeAcknowledged: state.labelaryNoticeAcknowledged,
         canvasSettings: state.canvasSettings,
       }),
