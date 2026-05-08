@@ -118,6 +118,12 @@ const da = {
     loading: 'Indlæser…',
     unavailable: 'Ikke tilgængelig',
     previewEmpty: 'Forhåndsvisning vises\nefter ændringer',
+    previewProvider: 'Forhåndsvisning via api.labelary.com',
+    previewDisabled: 'Forhåndsvisning er deaktiveret.',
+    previewNoticeTitle: 'Privatlivsmeddelelse',
+    previewNoticeBody: 'Forhåndsvisningen genereres af den eksterne tjeneste api.labelary.com. Hele etikettens ZPL, inklusive følsomme data, sendes over netværket.',
+    previewNoticePrivacyLink: 'Labelary-privatlivsoplysninger',
+    previewNoticeAcknowledge: 'Forstået, fortsæt',
   },
 
   registry: {

@@ -118,6 +118,12 @@ const el = {
     loading: 'Φόρτωση…',
     unavailable: 'Μη διαθέσιμο',
     previewEmpty: 'Η προεπισκόπηση εμφανίζεται\nμετά τις αλλαγές',
+    previewProvider: 'Προεπισκόπηση μέσω api.labelary.com',
+    previewDisabled: 'Η προεπισκόπηση είναι απενεργοποιημένη.',
+    previewNoticeTitle: 'Ειδοποίηση απορρήτου',
+    previewNoticeBody: 'Η προεπισκόπηση δημιουργείται από την εξωτερική υπηρεσία api.labelary.com. Ολόκληρο το ZPL της ετικέτας, συμπεριλαμβανομένων ευαίσθητων δεδομένων, αποστέλλεται μέσω δικτύου.',
+    previewNoticePrivacyLink: 'Πληροφορίες απορρήτου Labelary',
+    previewNoticeAcknowledge: 'Κατάλαβα, συνέχεια',
   },
 
   registry: {
