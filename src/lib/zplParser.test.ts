@@ -257,6 +257,69 @@ describe('parseZPL — ^FH hex escape', () => {
     const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_41BC^FS^XZ', 8);
     expect(props(objects[0]).content).toBe('ABC');
   });
+
+  it('decodes UTF-8 multibyte escapes (German umlauts)', () => {
+    // _C3_A4 = ä, _C3_B6 = ö, _C3_BC = ü
+    const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_C3_A4_C3_B6_C3_BC^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('äöü');
+  });
+
+  it('decodes UTF-8 multibyte escapes (Nordic)', () => {
+    // _C3_A6 = æ, _C3_B8 = ø, _C3_A5 = å
+    const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_C3_A6_C3_B8_C3_A5^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('æøå');
+  });
+
+  it('decodes 3-byte UTF-8 escapes (Euro sign)', () => {
+    // _E2_82_AC = €
+    const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_E2_82_AC^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('€');
+  });
+
+  it('decodes mixed ASCII and UTF-8 escapes in one field', () => {
+    // _48 = H, _69 = i, then ä
+    const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_48_69 _C3_A4^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('Hi ä');
+  });
+
+  it('replaces invalid UTF-8 byte sequences with U+FFFD', () => {
+    // _C3 alone is a truncated 2-byte sequence
+    const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_C3^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('�');
+  });
+
+  it('decodes ^CI27 (Windows-1252) single-byte escapes', () => {
+    // _E4 = 0xE4 = ä in CP1252 (in UTF-8 this would be invalid → U+FFFD)
+    const { objects } = parseZPL('^XA^CI27^FH_^FO0,0^A0N,30,0^FD_E4_F6_FC^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('äöü');
+  });
+
+  it('switches encoding mid-label on ^CI', () => {
+    // first field UTF-8 (default), second field CP1252
+    const zpl =
+      '^XA^FH_^FO0,0^A0N,30,0^FD_C3_A4^FS' +
+      '^CI27^FH_^FO0,50^A0N,30,0^FD_E4^FS^XZ';
+    const { objects } = parseZPL(zpl, 8);
+    expect(props(objects[0]).content).toBe('ä');
+    expect(props(objects[1]).content).toBe('ä');
+  });
+
+  it('reports unsupported ^CI N as partial import', () => {
+    // ^CI50 is not a real Zebra encoding — falls back to UTF-8 default
+    const { importReport } = parseZPL('^XA^CI50^FH_^FO0,0^A0N,30,0^FDx^FS^XZ', 8);
+    expect(importReport.partial).toContain('^CI50');
+  });
+
+  it('resets decoder to UTF-8 default on unsupported ^CI', () => {
+    // After ^CI27 sets CP1252, an unknown ^CI50 must fall back to UTF-8
+    // (not keep CP1252) so behaviour is predictable.
+    const zpl =
+      '^XA^CI27^FH_^FO0,0^A0N,30,0^FD_E4^FS' +
+      '^CI50^FH_^FO0,50^A0N,30,0^FD_C3_A4^FS^XZ';
+    const { objects } = parseZPL(zpl, 8);
+    expect(props(objects[0]).content).toBe('ä');  // CP1252
+    expect(props(objects[1]).content).toBe('ä');  // UTF-8 (after reset)
+  });
 });
 
 // ── ^FB field block ───────────────────────────────────────────────────────────
