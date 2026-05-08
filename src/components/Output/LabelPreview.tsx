@@ -47,6 +47,9 @@ export function LabelPreviewModal({ onClose }: Props) {
       cancelled = true;
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     };
+    // `label` and the generated ZPL are intentionally captured once at mount
+    // (via zplRef): the preview should reflect the snapshot the user saw when
+    // they opened the modal, not refetch when the canvas changes underneath.
   }, [canFetch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDownloadFallback = () => {

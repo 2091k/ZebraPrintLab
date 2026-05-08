@@ -51,6 +51,7 @@ export function AppShell() {
   const theme = useLabelStore((s) => s.theme);
   const setTheme = useLabelStore((s) => s.setTheme);
   const labelaryEnabled = useLabelStore((s) => s.thirdParty.labelary);
+  const labelaryNoticeAcknowledged = useLabelStore((s) => s.labelaryNoticeAcknowledged);
 
   // Bridge the theme preference to <html data-theme> so the CSS variables in
   // index.css pick it up.
@@ -202,7 +203,12 @@ export function AppShell() {
               {t.app.saveDesign}
             </DropdownItem>
             <DropdownSeparator />
-            {labelaryEnabled && (
+            {/* Print also routes through Labelary, so it shares the gate.
+                Until the user has seen the privacy notice (only shown via the
+                Preview modal), we hide Print so the very first Labelary call
+                cannot bypass the disclosure. After acknowledgement Print stays
+                available permanently. */}
+            {labelaryEnabled && labelaryNoticeAcknowledged && (
               <DropdownItem
                 icon={PrinterIcon}
                 onClick={handlePrint}
