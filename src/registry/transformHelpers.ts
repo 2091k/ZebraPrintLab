@@ -13,7 +13,7 @@ export function clamp(min: number, max: number, value: number): number {
  */
 export function commitUniformScaleTransform<
   K extends string,
-  P extends Record<K, number>,
+  P extends Record<K, number> = Record<K, number>,
 >(propName: K, min: number, max: number) {
   return (obj: LabelObjectBase & { props: P }, ctx: TransformContext): Partial<P> => {
     const next = clamp(min, max, Math.round(obj.props[propName] * Math.min(ctx.sx, ctx.sy)));
