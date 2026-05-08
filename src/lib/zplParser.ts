@@ -90,15 +90,38 @@ function makeObj(
 }
 
 /**
- * Decode ^FH hex escapes: replaces runs of {delimiter}XX with the UTF-8 string
- * for the byte sequence XX XX … . The generator emits ^CI28 (UTF-8), so a single
- * non-ASCII glyph spans multiple escape pairs (e.g. `_C3_A4` → `ä`). Decoding
- * pair-by-pair via fromCharCode would yield mojibake; we collect contiguous
- * pairs into a Uint8Array and run TextDecoder on the whole run. Invalid byte
- * sequences are replaced with U+FFFD by the decoder's default behaviour.
+ * Map a ^CI N parameter to a TextDecoder label. Most labels printed by this
+ * app use ^CI28 (UTF-8); ^CI27 is Windows-1252 (Zebra default for many EU
+ * setups); legacy ^CI0..13 are 7-bit-ASCII-compatible code-page variants for
+ * which Windows-1252 is a safe superset for the purposes of `^FH` decoding.
+ * Unsupported encodings (multi-byte UTF-16/32 variants, code page 850, …)
+ * fall back to UTF-8 with the command surfaced via importReport.partial.
  */
-const fhDecoder = new TextDecoder("utf-8");
-function decodeFH(text: string, delimiter: string): string {
+function ciToEncoding(n: number): { label: string; supported: boolean } {
+  if (n === 28) return { label: "utf-8", supported: true };
+  if (n === 27) return { label: "windows-1252", supported: true };
+  if (n >= 0 && n <= 13) return { label: "windows-1252", supported: true };
+  return { label: "utf-8", supported: false };
+}
+
+const decoderCache = new Map<string, TextDecoder>();
+function getDecoder(label: string): TextDecoder {
+  let dec = decoderCache.get(label);
+  if (!dec) {
+    dec = new TextDecoder(label);
+    decoderCache.set(label, dec);
+  }
+  return dec;
+}
+
+/**
+ * Decode ^FH hex escapes: replaces runs of {delimiter}XX with the string for
+ * the byte sequence XX XX … under the active ^CI encoding. A single non-ASCII
+ * glyph may span multiple escape pairs (e.g. `_C3_A4` → `ä` under UTF-8), so
+ * we collect contiguous pairs into a Uint8Array and run one TextDecoder pass
+ * per run. Invalid byte sequences become U+FFFD (decoder default).
+ */
+function decodeFH(text: string, delimiter: string, decoder: TextDecoder): string {
   const escaped = delimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const runRe = new RegExp(`(?:${escaped}[0-9A-Fa-f]{2})+`, "g");
   const stride = delimiter.length + 2;
@@ -107,7 +130,7 @@ function decodeFH(text: string, delimiter: string): string {
     for (let i = 0, b = 0; i < run.length; i += stride, b++) {
       bytes[b] = parseInt(run.slice(i + delimiter.length, i + stride), 16);
     }
-    return fhDecoder.decode(bytes);
+    return decoder.decode(bytes);
   });
 }
 
@@ -256,6 +279,11 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
   let fhActive = false;
   let fhDelimiter = "_";
 
+  // ^CI state (character set / encoding for ^FH byte decoding). Default UTF-8
+  // matches our generator output; legacy ZPL using ^CI27 / ^CI0..13 sets a
+  // single-byte decoder before ^FH escapes are processed.
+  let fhDecoder = getDecoder("utf-8");
+
   // ^FT vs ^FO: store position type so we can reproduce exactly in re-export.
   let positionIsFT = false;
 
@@ -299,7 +327,7 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
 
   const flushField = () => {
     if (!fieldType || pendingFD === null) return;
-    const content = fhActive ? decodeFH(pendingFD, fhDelimiter) : pendingFD;
+    const content = fhActive ? decodeFH(pendingFD, fhDelimiter, fhDecoder) : pendingFD;
     const posType: "FT" | "FO" = positionIsFT ? "FT" : "FO";
     const comment = takeComment();
 
@@ -1184,9 +1212,17 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     // assembled text reaches the next field object as one multi-line comment.
     FX: appendComment,
 
+    // ^CI N: character set / encoding for ^FH byte decoding. Mapped to a
+    // TextDecoder; unsupported variants (UTF-16/32, code page 850) keep the
+    // current decoder and surface as a partial import.
+    CI: (p) => {
+      const enc = ciToEncoding(int(p[0]));
+      if (enc.supported) fhDecoder = getDecoder(enc.label);
+      else partialCmds.add(`^CI${int(p[0])}`);
+    },
+
     // These commands carry no canvas-design information and are silently
     // discarded so they do not pollute importReport.unknown.
-    CI: noop, // character set encoding (^CI28 = UTF-8 is the browser default)
     FN: noop, // field number — variable data placeholder (template feature)
     FV: noop, // field variable — supplies data for ^FN at print time
     FC: noop, // field clock — inserts date/time (requires printer RTC)

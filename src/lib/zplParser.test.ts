@@ -287,6 +287,28 @@ describe('parseZPL — ^FH hex escape', () => {
     const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_C3^FS^XZ', 8);
     expect(props(objects[0]).content).toBe('�');
   });
+
+  it('decodes ^CI27 (Windows-1252) single-byte escapes', () => {
+    // _E4 = 0xE4 = ä in CP1252 (in UTF-8 this would be invalid → U+FFFD)
+    const { objects } = parseZPL('^XA^CI27^FH_^FO0,0^A0N,30,0^FD_E4_F6_FC^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('äöü');
+  });
+
+  it('switches encoding mid-label on ^CI', () => {
+    // first field UTF-8 (default), second field CP1252
+    const zpl =
+      '^XA^FH_^FO0,0^A0N,30,0^FD_C3_A4^FS' +
+      '^CI27^FH_^FO0,50^A0N,30,0^FD_E4^FS^XZ';
+    const { objects } = parseZPL(zpl, 8);
+    expect(props(objects[0]).content).toBe('ä');
+    expect(props(objects[1]).content).toBe('ä');
+  });
+
+  it('reports unsupported ^CI N as partial import', () => {
+    // ^CI50 is not a real Zebra encoding — falls back to current decoder
+    const { importReport } = parseZPL('^XA^CI50^FH_^FO0,0^A0N,30,0^FDx^FS^XZ', 8);
+    expect(importReport.partial).toContain('^CI50');
+  });
 });
 
 // ── ^FB field block ───────────────────────────────────────────────────────────
