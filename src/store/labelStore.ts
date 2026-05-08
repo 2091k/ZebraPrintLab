@@ -138,6 +138,22 @@ function updateCurrentObjects(
  *  multiplies it by pasteCount because the clipboard source stays put. */
 const DUPLICATE_OFFSET_DOTS = 20;
 
+/** Build offset copies of objects identified by `ids`. Missing ids are
+ *  silently dropped. Used by duplicateObject (single id) and
+ *  duplicateSelectedObjects (current selection). */
+function buildOffsetCopies(objs: LabelObject[], ids: readonly string[]): LabelObject[] {
+  return ids.flatMap((id) => {
+    const src = objs.find((o) => o.id === id);
+    if (!src) return [];
+    return [{
+      ...src,
+      id: crypto.randomUUID(),
+      x: src.x + DUPLICATE_OFFSET_DOTS,
+      y: src.y + DUPLICATE_OFFSET_DOTS,
+    } as LabelObject];
+  });
+}
+
 function migrateLegacy(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
   let s = persistedState as Record<string, unknown>;
@@ -219,35 +235,18 @@ export const useLabelStore = create<LabelState>()(
 
       duplicateObject: (id) =>
         set((state) => {
-          const objs = currentObjects(state);
-          const src = objs.find((o) => o.id === id);
-          if (!src) return {};
-          const copy: LabelObject = {
-            ...src,
-            id: crypto.randomUUID(),
-            x: src.x + DUPLICATE_OFFSET_DOTS,
-            y: src.y + DUPLICATE_OFFSET_DOTS,
-          };
+          const copies = buildOffsetCopies(currentObjects(state), [id]);
+          if (copies.length === 0) return {};
           return {
-            ...updateCurrentObjects(state, (curr) => [...curr, copy]),
-            selectedIds: [copy.id],
+            ...updateCurrentObjects(state, (curr) => [...curr, ...copies]),
+            selectedIds: copies.map((c) => c.id),
           };
         }),
 
       duplicateSelectedObjects: () =>
         set((state) => {
           if (state.selectedIds.length === 0) return {};
-          const objs = currentObjects(state);
-          const copies: LabelObject[] = state.selectedIds.flatMap((id) => {
-            const src = objs.find((o) => o.id === id);
-            if (!src) return [];
-            return [{
-              ...src,
-              id: crypto.randomUUID(),
-              x: src.x + DUPLICATE_OFFSET_DOTS,
-              y: src.y + DUPLICATE_OFFSET_DOTS,
-            } as LabelObject];
-          });
+          const copies = buildOffsetCopies(currentObjects(state), state.selectedIds);
           return {
             ...updateCurrentObjects(state, (curr) => [...curr, ...copies]),
             selectedIds: copies.map((c) => c.id),
