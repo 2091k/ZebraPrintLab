@@ -131,6 +131,12 @@ function updateCurrentObjects(
   };
 }
 
+/** Stagger duplicate / paste offsets so consecutive copies don't overlap.
+ *  Multiplied by the running count so the Nth copy lands N×offset from the
+ *  source. 20 dots ≈ 2.5 mm at 8dpmm — large enough to be visible without
+ *  pushing copies off-canvas. */
+const DUPLICATE_OFFSET_DOTS = 20;
+
 function migrateLegacy(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
   let s = persistedState as Record<string, unknown>;
@@ -219,8 +225,8 @@ export const useLabelStore = create<LabelState>()(
           const copy: LabelObject = {
             ...src,
             id: crypto.randomUUID(),
-            x: src.x + 20,
-            y: src.y + 20,
+            x: src.x + DUPLICATE_OFFSET_DOTS,
+            y: src.y + DUPLICATE_OFFSET_DOTS,
           };
           return {
             ...updateCurrentObjects(state, (curr) => [...curr, copy]),
@@ -233,7 +239,7 @@ export const useLabelStore = create<LabelState>()(
           if (state.selectedIds.length === 0) return {};
           const objs = currentObjects(state);
           const duplicateCount = state.duplicateCount + 1;
-          const offset = duplicateCount * 20;
+          const offset = duplicateCount * DUPLICATE_OFFSET_DOTS;
           const copies: LabelObject[] = state.selectedIds.flatMap((id) => {
             const src = objs.find((o) => o.id === id);
             if (!src) return [];
@@ -260,7 +266,7 @@ export const useLabelStore = create<LabelState>()(
         set((state) => {
           if (state.clipboard.length === 0) return {};
           const pasteCount = state.pasteCount + 1;
-          const offset = pasteCount * 20;
+          const offset = pasteCount * DUPLICATE_OFFSET_DOTS;
           const copies: LabelObject[] = state.clipboard.map((src) => ({
             ...src,
             id: crypto.randomUUID(),
