@@ -89,12 +89,23 @@ function makeObj(
   } as unknown as LabelObject;
 }
 
-/** Decode ^FH hex escapes: replaces {delimiter}XX with the character for hex XX */
+/**
+ * Decode ^FH hex escapes: replaces runs of {delimiter}XX with the UTF-8 string
+ * for the byte sequence XX XX … . The generator emits ^CI28 (UTF-8), so a single
+ * non-ASCII glyph spans multiple escape pairs (e.g. `_C3_A4` → `ä`). Decoding
+ * pair-by-pair via fromCharCode would yield mojibake; we collect contiguous
+ * pairs into a Uint8Array and run TextDecoder on the whole run. Invalid byte
+ * sequences are replaced with U+FFFD by the decoder's default behaviour.
+ */
+const fhDecoder = new TextDecoder("utf-8");
 function decodeFH(text: string, delimiter: string): string {
   const escaped = delimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return text.replace(new RegExp(`${escaped}([0-9A-Fa-f]{2})`, "g"), (_, hex) =>
-    String.fromCharCode(parseInt(hex, 16)),
-  );
+  const runRe = new RegExp(`(?:${escaped}[0-9A-Fa-f]{2})+`, "g");
+  return text.replace(runRe, (run) => {
+    const pairRe = new RegExp(`${escaped}([0-9A-Fa-f]{2})`, "g");
+    const bytes = Array.from(run.matchAll(pairRe), ([, hex]) => parseInt(hex ?? "0", 16));
+    return fhDecoder.decode(new Uint8Array(bytes));
+  });
 }
 
 /**

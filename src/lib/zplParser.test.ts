@@ -257,6 +257,36 @@ describe('parseZPL — ^FH hex escape', () => {
     const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_41BC^FS^XZ', 8);
     expect(props(objects[0]).content).toBe('ABC');
   });
+
+  it('decodes UTF-8 multibyte escapes (German umlauts)', () => {
+    // _C3_A4 = ä, _C3_B6 = ö, _C3_BC = ü
+    const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_C3_A4_C3_B6_C3_BC^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('äöü');
+  });
+
+  it('decodes UTF-8 multibyte escapes (Nordic)', () => {
+    // _C3_A6 = æ, _C3_B8 = ø, _C3_A5 = å
+    const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_C3_A6_C3_B8_C3_A5^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('æøå');
+  });
+
+  it('decodes 3-byte UTF-8 escapes (Euro sign)', () => {
+    // _E2_82_AC = €
+    const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_E2_82_AC^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('€');
+  });
+
+  it('decodes mixed ASCII and UTF-8 escapes in one field', () => {
+    // _48 = H, _69 = i, then ä
+    const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_48_69 _C3_A4^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('Hi ä');
+  });
+
+  it('replaces invalid UTF-8 byte sequences with U+FFFD', () => {
+    // _C3 alone is a truncated 2-byte sequence
+    const { objects } = parseZPL('^XA^FH_^FO0,0^A0N,30,0^FD_C3^FS^XZ', 8);
+    expect(props(objects[0]).content).toBe('�');
+  });
 });
 
 // ── ^FB field block ───────────────────────────────────────────────────────────
