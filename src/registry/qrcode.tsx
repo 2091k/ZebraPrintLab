@@ -12,7 +12,7 @@ const MAGNIFICATION_MAX = 10;
 
 export interface QrCodeProps {
   content: string;
-  magnification: number;       // dot size per module, range MAGNIFICATION_MIN..MAX
+  magnification: number;       // dot size per module
   errorCorrection: 'H' | 'Q' | 'M' | 'L';
   rotation: ZplRotation;
 }

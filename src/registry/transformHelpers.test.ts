@@ -12,7 +12,7 @@ const obj = (mag: number): LabelObjectBase & { props: Sample } => ({
 });
 
 describe('commitUniformScaleTransform', () => {
-  const handler = commitUniformScaleTransform<'magnification', Sample>('magnification', 1, 10);
+  const handler = commitUniformScaleTransform('magnification', 1, 10);
 
   it('scales by min(sx, sy) so non-uniform drags stay inside the box', () => {
     expect(handler(obj(4), ctx(2, 1.5))).toEqual({ magnification: 6 });

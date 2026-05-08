@@ -14,7 +14,7 @@ const EC_LEVEL_MAX = 232;
 
 export interface AztecProps {
   content: string;
-  magnification: number; // module size in dots, range MAGNIFICATION_MIN..MAX
+  magnification: number; // module size in dots
   ecLevel: number; // 0=default, 1-99=error correction %, 101-104=compact, 201-232=full, 300=rune
   rotation: ZplRotation;
 }

@@ -12,7 +12,7 @@ const DIMENSION_MAX = 12;
 
 export interface DataMatrixProps {
   content: string;
-  dimension: number;   // module size in dots, range DIMENSION_MIN..MAX
+  dimension: number;   // module size in dots
   quality: 0 | 50 | 80 | 140 | 200;  // 0 = auto
   rotation: ZplRotation;
 }
