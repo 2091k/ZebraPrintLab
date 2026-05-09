@@ -539,8 +539,15 @@ function getUprightDisplaySize(
       // bwip-js renders most non-stacked variants at the omni (33-module)
       // height regardless of the actual symbology, so trusting `ch` would
       // overstate the height for sym 2/5/6 and understate it for sym 4.
-      // Use the spec-defined module count instead. Sym 7 (Expanded Stacked)
-      // is segments-dependent and falls back to the bwip-natural height.
+      // Use the spec-defined module count instead.
+      //
+      // Sym 7 (Expanded Stacked) cannot be Labelary-cross-validated:
+      // bwip-js needs the (AI)data parens-AI input format, Zebra ^BR sym 7
+      // silently rejects that input and renders an empty PNG, so neither
+      // direction can produce a shared ground truth. The bwip-natural
+      // canvas height is used as a best-effort approximation; the rendered
+      // size therefore matches what the user sees in bwip's preview but
+      // is not guaranteed to match Zebra firmware's actual print output.
       const specModules = GS1_DATABAR_SPEC_HEIGHT_MODULES[obj.props.symbology];
       const h = specModules !== undefined
         ? specModules * modulePx

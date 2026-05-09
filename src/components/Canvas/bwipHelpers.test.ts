@@ -129,6 +129,41 @@ describe("rotation pipeline", () => {
   });
 });
 
+describe("getDisplaySize gs1databar sym 7 fallback", () => {
+  // Sym 7 (Expanded Stacked) cannot be Labelary-cross-validated due to a
+  // parens-AI input-format mismatch between bwip-js and Zebra firmware.
+  // The implementation falls back to bwip-natural canvas height. This test
+  // pins that behavior — any change must be intentional and accompanied
+  // by a documented strategy for the missing ground truth.
+  it("derives height from canvas dims (bwip-natural), not from a spec table", () => {
+    const obj: LabelObject = {
+      id: "1",
+      type: "gs1databar",
+      x: 0,
+      y: 0,
+      rotation: 0,
+      props: {
+        content: "0112345678901231",
+        moduleWidth: 2,
+        symbology: 7,
+        segments: 22,
+        rotation: "N",
+      },
+    };
+    // Canvas height varies per content+segments; we use a representative
+    // value that bwip-js produced for a 16-char content at default
+    // segments. The exact pixel size isn't load-bearing — what matters is
+    // the formula, which derives from `ch`.
+    const ch = 73;
+    const cw = 100;
+    const fakeCanvas = { width: cw, height: ch } as HTMLCanvasElement;
+    const result = getDisplaySize(obj, fakeCanvas, 1, 8);
+    // bwipSc = max(1, round(dotsToPx(2, 1, 8))) = round(0.25) = 1; modulePx = 0.25
+    // h = (ch / 1) * 0.25 = 18.25
+    expect(result.h).toBeCloseTo(18.25, 2);
+  });
+});
+
 describe("getDisplaySize coverage (ZPL-first policy)", () => {
   // Static parse of bwipHelpers.ts: every barcode type registered via BCID
   // must have an explicit `case "type":` in getUprightDisplaySize, otherwise
