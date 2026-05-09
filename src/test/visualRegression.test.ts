@@ -71,20 +71,11 @@ describe("Visual Regression - bwip-js vs Labelary", () => {
       // case above.
       "barcode_qr_rot_R",
       "barcode_datamatrix_rot_R",
-      // EAN/UPC and LOGMARS now report a ZPL-correct bbox that includes the
-      // firmware-reserved text zone (13 dots below for EAN/UPC, 20 dots above
-      // for LOGMARS). The bwip-js bitmap is just the bars and gets vertically
-      // stretched to fill the bbox, so the visual diff exceeds tolerance until
-      // the renderer is split to draw the bitmap at bar height inside the
-      // larger bbox. Tracked as Phase-3 follow-up.
-      "barcode_ean13_standard",
+      // Rotated EAN/UPC: barH/barTopPx are not yet rotation-aware in
+      // getDisplaySize, so the bitmap still stretches under R/B rotation.
+      // Upright EAN/UPC and LOGMARS now render at correct bar height.
       "barcode_ean13_rot_B",
       "barcode_ean13_rot_R",
-      "barcode_ean8_standard",
-      "barcode_upca_standard",
-      "barcode_upce_standard",
-      "barcode_logmars_standard",
-      "barcode_logmars_with_text",
     ];
 
     const testFn = failingTests.includes(tc.id) ? it.skip : it;
@@ -136,7 +127,15 @@ describe("Visual Regression - bwip-js vs Labelary", () => {
       // Zebra firmware renders ^FO-positioned QR codes with a +10 dot Y offset.
       // Match production BarcodeObject.tsx behaviour.
       const drawY = obj.type === "qrcode" ? obj.y + QR_FO_Y_OFFSET_DOTS : obj.y;
-      ctx.drawImage(bwipImage, obj.x, drawY, displaySize.w, displaySize.h);
+      // Bitmap fills only the bar sub-rectangle of the bbox; the text-zone
+      // padding stays empty so the bars render at their true height.
+      ctx.drawImage(
+        bwipImage,
+        obj.x,
+        drawY + displaySize.barTopPx,
+        displaySize.w,
+        displaySize.barH,
+      );
 
       // 4. Compare with Labelary ref
       const labelaryRef = PNG.sync.read(fs.readFileSync(fixturePath));

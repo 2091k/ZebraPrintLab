@@ -412,13 +412,33 @@ export function buildBwipOptions(
   return opts;
 }
 
+/**
+ * Display size of a barcode bbox in pixels.
+ *
+ *  `w` × `h` is the full footprint Zebra firmware reserves on the print —
+ *  this includes any text zone that may sit above or below the bars. The
+ *  bars themselves occupy a sub-rectangle of that bbox: `barH` tall, offset
+ *  from the top by `barTopPx` (zero for EAN/UPC where the text zone is
+ *  below; non-zero for LOGMARS where the text zone is above).
+ *
+ *  Renderers should draw the bwip-js bitmap inside the bar sub-rectangle so
+ *  the bars appear at their true height, while the Konva Group / hit area
+ *  spans the full bbox so selection-handles match the printed footprint.
+ */
+export interface BarcodeDisplaySize {
+  w: number;
+  h: number;
+  barH: number;
+  barTopPx: number;
+}
+
 export function getDisplaySize(
   obj: LabelObject,
   canvas: HTMLCanvasElement,
   scale: number,
   dpmm: number,
-): { w: number; h: number } {
-  if (!canvas) return { w: 0, h: 0 };
+): BarcodeDisplaySize {
+  if (!canvas) return { w: 0, h: 0, barH: 0, barTopPx: 0 };
 
   // For 90°/270° rotations, bwip-js produces a bitmap whose width and height
   // are swapped relative to the upright form. Compute size as if upright (the
@@ -428,7 +448,33 @@ export function getDisplaySize(
   const cw = isQuarter ? canvas.height : canvas.width;
   const ch = isQuarter ? canvas.width : canvas.height;
   const upright = getUprightDisplaySize(obj, cw, ch, scale, dpmm);
-  return isQuarter ? { w: upright.h, h: upright.w } : upright;
+
+  // Bar sub-rectangle within the bbox. Defaults to the full post-rotation
+  // bbox (no text-zone offset); upright EAN/UPC and LOGMARS override below.
+  // Rotated and inverted EAN/LOGMARS still stretch to fill the bbox until
+  // the renderer grows rotation-aware bar offsets.
+  let barH = isQuarter ? upright.w : upright.h;
+  // For both EAN/UPC and LOGMARS the reserved text zone extends below
+  // the bars (Labelary's bbox y == bar top, height == barH + textZone),
+  // so the bitmap always anchors at the top of the bbox. Kept as a
+  // named constant in case rotation-aware variants need a non-zero offset.
+  const barTopPx = 0;
+  if (rotation === "N") {
+    if (obj.type === "ean13" || obj.type === "ean8" ||
+        obj.type === "upca"  || obj.type === "upce") {
+      // 13-dot text zone sits below the bars; bars start at the top of the bbox.
+      barH = upright.h - dotsToPx(EAN_TEXT_ZONE_DOTS, scale, dpmm);
+    } else if (obj.type === "logmars") {
+      // Spec places the human-readable line above the bars, but Labelary's
+      // bbox extends 20 dots downward from bar-top (not upward). Bars stay
+      // at the top of the bbox; the reserved zone is the 20-dot strip below.
+      barH = upright.h - dotsToPx(LOGMARS_TEXT_ZONE_DOTS, scale, dpmm);
+    }
+  }
+
+  return isQuarter
+    ? { w: upright.h, h: upright.w, barH, barTopPx }
+    : { w: upright.w, h: upright.h, barH, barTopPx };
 }
 
 function getUprightDisplaySize(

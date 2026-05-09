@@ -71,10 +71,14 @@ export function BarcodeObject({
 
   let displayW = 0;
   let displayH = 0;
+  let barH = 0;
+  let barTopPx = 0;
   if (barcodeCanvas) {
     const size = getDisplaySize(obj, barcodeCanvas, scale, dpmm);
     displayW = size.w;
     displayH = size.h;
+    barH = size.barH;
+    barTopPx = size.barTopPx;
   }
 
   // Apply ^FT baseline correction (same logic as KonvaObjectInner)
@@ -143,6 +147,11 @@ export function BarcodeObject({
   if (barcodeCanvas) {
     const w = displayW;
     const h = displayH;
+    // Bitmap is drawn at the bar sub-rectangle of the bbox so the bars
+    // render at their true height. The text-zone padding (above/below
+    // depending on type) stays empty inside the bbox.
+    const bh = Math.max(barH, 1);
+    const btY = barTopPx;
     // Force-off when the symbology has no HRI in ZPL (e.g. GS1 Databar) — the
     // canvas must match the print output even if a legacy saved object still
     // carries printInterpretation: true.
@@ -396,10 +405,10 @@ export function BarcodeObject({
         >
           <KImage
             x={0}
-            y={0}
+            y={btY}
             image={barcodeCanvas}
             width={Math.max(w, 1)}
-            height={Math.max(h, 1)}
+            height={bh}
             imageSmoothingEnabled={false}
             stroke={isSelected ? "#6366f1" : undefined}
             strokeWidth={isSelected ? 2 : 0}
@@ -490,10 +499,10 @@ export function BarcodeObject({
         >
           <KImage
             x={0}
-            y={0}
+            y={btY}
             image={barcodeCanvas}
             width={Math.max(w, 1)}
-            height={Math.max(h, 1)}
+            height={bh}
             imageSmoothingEnabled={false}
             stroke={isSelected ? "#6366f1" : undefined}
             strokeWidth={isSelected ? 2 : 0}
@@ -645,8 +654,8 @@ export function BarcodeObject({
           onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
           onDragEnd={handleDragEnd}
         >
-          <KImage x={0} y={0} image={barcodeCanvas}
-            width={Math.max(w, 1)} height={Math.max(h, 1)}
+          <KImage x={0} y={btY} image={barcodeCanvas}
+            width={Math.max(w, 1)} height={bh}
             imageSmoothingEnabled={false}
             stroke={isSelected ? "#6366f1" : undefined}
             strokeWidth={isSelected ? 2 : 0}
@@ -657,18 +666,16 @@ export function BarcodeObject({
       );
     }
 
+    // Default path. Wrapped in a Group so the bbox spans the full footprint
+    // (including any text zone reserved by firmware) while the bitmap
+    // renders only at the bar sub-rectangle. An invisible Rect at the full
+    // bbox dimensions keeps Group.getClientRect aligned with displayH even
+    // when btY > 0 or bh < h.
     return (
-      <KImage
+      <Group
         id={obj.id}
         x={x}
         y={y}
-        image={barcodeCanvas}
-        width={Math.max(w, 1)}
-        height={Math.max(h, 1)}
-        imageSmoothingEnabled={false}
-        stroke={isSelected ? "#6366f1" : undefined}
-        strokeWidth={isSelected ? 2 : 0}
-        strokeScaleEnabled={false}
         draggable
         onClick={(e) =>
           onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
@@ -676,7 +683,27 @@ export function BarcodeObject({
         onTap={() => onSelect(false)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
-      />
+      >
+        <Rect
+          x={0}
+          y={0}
+          width={Math.max(w, 1)}
+          height={Math.max(h, 1)}
+          fill="transparent"
+          listening={false}
+        />
+        <KImage
+          x={0}
+          y={btY}
+          image={barcodeCanvas}
+          width={Math.max(w, 1)}
+          height={bh}
+          imageSmoothingEnabled={false}
+          stroke={isSelected ? "#6366f1" : undefined}
+          strokeWidth={isSelected ? 2 : 0}
+          strokeScaleEnabled={false}
+        />
+      </Group>
     );
   }
 
