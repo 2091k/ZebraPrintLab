@@ -2,10 +2,9 @@ import React, { useCallback, useRef } from "react";
 import bwipjs from "bwip-js/browser";
 import { Image as KImage, Group, Rect, Text } from "react-konva";
 import type Konva from "konva";
-import type { LabelObject } from "../../registry";
 import { BARCODE_1D_TYPES, ObjectRegistry } from "../../registry";
-import type { ObjectChanges } from "../../store/labelStore";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
+import type { KonvaObjectProps } from "./konvaObjectProps";
 import {
   buildBwipOptions,
   getDisplaySize,
@@ -23,17 +22,6 @@ import {
   EAN_UPC_TYPES,
 } from "./bwipConstants";
 
-interface Props {
-  obj: LabelObject;
-  scale: number;
-  dpmm: number;
-  offsetX: number;
-  offsetY: number;
-  isSelected: boolean;
-  onSelect: (addToSelection: boolean) => void;
-  onChange: (changes: ObjectChanges) => void;
-  snap: (dots: number) => number;
-}
 export function BarcodeObject({
   obj,
   scale,
@@ -44,7 +32,7 @@ export function BarcodeObject({
   onSelect,
   onChange,
   snap,
-}: Props) {
+}: KonvaObjectProps) {
   const groupRef = useRef<Konva.Group>(null);
   const textRef = useRef<Konva.Text>(null);
 
