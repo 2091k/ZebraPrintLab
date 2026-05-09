@@ -117,7 +117,7 @@ export function AppShell() {
             disabled={!canUndo}
             title={`${t.app.undo} (${kbd('Z')})`}
             aria-label={t.app.undo}
-            className="p-1.5 rounded text-muted hover:text-text hover:bg-surface-2 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 rounded text-muted hover:text-text hover:bg-border disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >
             <ArrowUturnLeftIcon className="w-3.5 h-3.5" />
           </button>
@@ -126,7 +126,7 @@ export function AppShell() {
             disabled={!canRedo}
             title={`${t.app.redo} (${kbd('Z', { shift: true })})`}
             aria-label={t.app.redo}
-            className="p-1.5 rounded text-muted hover:text-text hover:bg-surface-2 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 rounded text-muted hover:text-text hover:bg-border disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >
             <ArrowUturnRightIcon className="w-3.5 h-3.5" />
           </button>
@@ -137,7 +137,7 @@ export function AppShell() {
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             title={theme === "dark" ? t.app.themeLight : t.app.themeDark}
             aria-label={t.app.themeToggle}
-            className="p-1.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors"
+            className="p-1.5 rounded text-muted hover:text-text hover:bg-border transition-colors"
           >
             {theme === "dark" ? (
               <SunIcon className="w-3.5 h-3.5" />
@@ -168,7 +168,7 @@ export function AppShell() {
             target="_blank"
             rel="noopener noreferrer"
             title="GitHub"
-            className="p-1.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors"
+            className="p-1.5 rounded text-muted hover:text-text hover:bg-border transition-colors"
           >
             <GitHubIcon className="w-3.5 h-3.5" />
           </a>
