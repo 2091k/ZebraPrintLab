@@ -416,10 +416,11 @@ export function buildBwipOptions(
  * Display size of a barcode bbox in pixels.
  *
  *  `w` × `h` is the full footprint Zebra firmware reserves on the print —
- *  this includes any text zone that may sit above or below the bars. The
- *  bars themselves occupy a sub-rectangle of that bbox: `barH` tall, offset
- *  from the top by `barTopPx` (zero for EAN/UPC where the text zone is
- *  below; non-zero for LOGMARS where the text zone is above).
+ *  this includes any text zone that may sit on one side of the bars. The
+ *  bars themselves occupy a sub-rectangle described by
+ *  `(barLeftPx, barTopPx, barW, barH)`. For symbologies without a text
+ *  zone or for rotations the text zone hasn't been mapped onto, the bar
+ *  rect equals the full bbox.
  *
  *  Renderers should draw the bwip-js bitmap inside the bar sub-rectangle so
  *  the bars appear at their true height, while the Konva Group / hit area
@@ -428,7 +429,9 @@ export function buildBwipOptions(
 export interface BarcodeDisplaySize {
   w: number;
   h: number;
+  barW: number;
   barH: number;
+  barLeftPx: number;
   barTopPx: number;
 }
 
@@ -438,7 +441,9 @@ export function getDisplaySize(
   scale: number,
   dpmm: number,
 ): BarcodeDisplaySize {
-  if (!canvas) return { w: 0, h: 0, barH: 0, barTopPx: 0 };
+  if (!canvas) {
+    return { w: 0, h: 0, barW: 0, barH: 0, barLeftPx: 0, barTopPx: 0 };
+  }
 
   // For 90°/270° rotations, bwip-js produces a bitmap whose width and height
   // are swapped relative to the upright form. Compute size as if upright (the
@@ -449,32 +454,41 @@ export function getDisplaySize(
   const ch = isQuarter ? canvas.width : canvas.height;
   const upright = getUprightDisplaySize(obj, cw, ch, scale, dpmm);
 
-  // Bar sub-rectangle within the bbox. Defaults to the full post-rotation
-  // bbox (no text-zone offset); upright EAN/UPC and LOGMARS override below.
-  // Rotated and inverted EAN/LOGMARS still stretch to fill the bbox until
-  // the renderer grows rotation-aware bar offsets.
-  let barH = isQuarter ? upright.w : upright.h;
-  // For both EAN/UPC and LOGMARS the reserved text zone extends below
-  // the bars (Labelary's bbox y == bar top, height == barH + textZone),
-  // so the bitmap always anchors at the top of the bbox. Kept as a
-  // named constant in case rotation-aware variants need a non-zero offset.
-  const barTopPx = 0;
-  if (rotation === "N") {
-    if (obj.type === "ean13" || obj.type === "ean8" ||
-        obj.type === "upca"  || obj.type === "upce") {
-      // 13-dot text zone sits below the bars; bars start at the top of the bbox.
-      barH = upright.h - dotsToPx(EAN_TEXT_ZONE_DOTS, scale, dpmm);
-    } else if (obj.type === "logmars") {
-      // Spec places the human-readable line above the bars, but Labelary's
-      // bbox extends 20 dots downward from bar-top (not upward). Bars stay
-      // at the top of the bbox; the reserved zone is the 20-dot strip below.
-      barH = upright.h - dotsToPx(LOGMARS_TEXT_ZONE_DOTS, scale, dpmm);
+  // Bbox after rotation.
+  const w = isQuarter ? upright.h : upright.w;
+  const h = isQuarter ? upright.w : upright.h;
+
+  // Find this object's text-zone reservation (in upright orientation, on the
+  // "below" side of the bars per Labelary's bbox). Zero for symbologies
+  // without a reserved zone.
+  let textZonePx = 0;
+  if (obj.type === "ean13" || obj.type === "ean8" ||
+      obj.type === "upca"  || obj.type === "upce") {
+    textZonePx = dotsToPx(EAN_TEXT_ZONE_DOTS, scale, dpmm);
+  } else if (obj.type === "logmars") {
+    textZonePx = dotsToPx(LOGMARS_TEXT_ZONE_DOTS, scale, dpmm);
+  }
+
+  // Map the upright "below the bars" zone onto the rotated bbox: it travels
+  // around the rectangle as the symbol rotates.
+  //   N (0°)   text zone at bottom → barTopPx=0,           barH = h - textZonePx
+  //   R (90°)  text zone at left   → barLeftPx=textZonePx, barW = w - textZonePx
+  //   I (180°) text zone at top    → barTopPx=textZonePx,  barH = h - textZonePx
+  //   B (270°) text zone at right  → barLeftPx=0,          barW = w - textZonePx
+  let barTopPx = 0;
+  let barLeftPx = 0;
+  let barW = w;
+  let barH = h;
+  if (textZonePx > 0) {
+    switch (rotation) {
+      case "N": barH = h - textZonePx; break;
+      case "R": barLeftPx = textZonePx; barW = w - textZonePx; break;
+      case "I": barTopPx = textZonePx; barH = h - textZonePx; break;
+      case "B": barW = w - textZonePx; break;
     }
   }
 
-  return isQuarter
-    ? { w: upright.h, h: upright.w, barH, barTopPx }
-    : { w: upright.w, h: upright.h, barH, barTopPx };
+  return { w, h, barW, barH, barLeftPx, barTopPx };
 }
 
 function getUprightDisplaySize(

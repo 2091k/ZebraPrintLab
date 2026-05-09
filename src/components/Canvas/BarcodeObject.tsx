@@ -71,22 +71,29 @@ export function BarcodeObject({
 
   let displayW = 0;
   let displayH = 0;
+  let barW = 0;
   let barH = 0;
+  let barLeftPx = 0;
   let barTopPx = 0;
   if (barcodeCanvas) {
     const size = getDisplaySize(obj, barcodeCanvas, scale, dpmm);
     displayW = size.w;
     displayH = size.h;
+    barW = size.barW;
     barH = size.barH;
+    barLeftPx = size.barLeftPx;
     barTopPx = size.barTopPx;
   }
 
-  // Apply ^FT baseline correction (same logic as KonvaObjectInner)
+  // Apply ^FT baseline correction (same logic as KonvaObjectInner). The
+  // FT origin sits at the bar baseline (bar bottom in upright), so we
+  // shift up by barH — not displayH — because the text zone extends
+  // BELOW the baseline, not into the bars.
   const displayX = obj.x;
   let displayY = obj.y;
   if (obj.positionType === "FT") {
     if (barcodeCanvas) {
-      displayY -= pxToDots(displayH, scale, dpmm);
+      displayY -= pxToDots(barH, scale, dpmm);
     } else if (BARCODE_1D_TYPES.has(obj.type)) {
       displayY -= (obj.props as { height: number }).height;
     }
@@ -106,8 +113,12 @@ export function BarcodeObject({
     displayY += QR_FO_Y_OFFSET_DOTS;
   }
 
-  const x = offsetX + dotsToPx(displayX, scale, dpmm);
-  const y = offsetY + dotsToPx(displayY, scale, dpmm);
+  // Bars draw at FO; bbox top-left shifts by (-barLeftPx, -barTopPx)
+  // when the text zone extends LEFT/ABOVE the bars (rotated EAN/UPC,
+  // inverted EAN/UPC/LOGMARS). The Konva Group is positioned at bbox
+  // top-left and KImage offsets back to land bars at FO.
+  const x = offsetX + dotsToPx(displayX, scale, dpmm) - barLeftPx;
+  const y = offsetY + dotsToPx(displayY, scale, dpmm) - barTopPx;
 
   const snapPos = (sx: number, sy: number) => ({
     x:
@@ -123,10 +134,15 @@ export function BarcodeObject({
   };
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-    let finalY = pxToDots(e.target.y() - offsetY, scale, dpmm);
+    // Group origin is at bbox top-left; FO/FT semantics are anchored at
+    // the bars, so we recover the saved coords by adding back the bbox
+    // shift (barLeftPx/barTopPx, in pixels) before converting to dots.
+    const finalX = pxToDots(e.target.x() + barLeftPx - offsetX, scale, dpmm);
+    let finalY = pxToDots(e.target.y() + barTopPx - offsetY, scale, dpmm);
     if (obj.positionType === "FT") {
+      // FT baseline = bar bottom, not bbox bottom — add barH only.
       if (barcodeCanvas) {
-        finalY += pxToDots(displayH, scale, dpmm);
+        finalY += pxToDots(barH, scale, dpmm);
       } else if (BARCODE_1D_TYPES.has(obj.type)) {
         finalY += (obj.props as { height: number }).height;
       }
@@ -138,19 +154,18 @@ export function BarcodeObject({
     } else if (obj.type === "qrcode") {
       finalY -= QR_FO_Y_OFFSET_DOTS;
     }
-    onChange({
-      x: pxToDots(e.target.x() - offsetX, scale, dpmm),
-      y: finalY,
-    });
+    onChange({ x: finalX, y: finalY });
   };
 
   if (barcodeCanvas) {
     const w = displayW;
     const h = displayH;
     // Bitmap is drawn at the bar sub-rectangle of the bbox so the bars
-    // render at their true height. The text-zone padding (above/below
-    // depending on type) stays empty inside the bbox.
+    // render at their true height. The text-zone padding (which side
+    // depends on rotation) stays empty inside the bbox.
+    const bw = Math.max(barW, 1);
     const bh = Math.max(barH, 1);
+    const btX = barLeftPx;
     const btY = barTopPx;
     // Force-off when the symbology has no HRI in ZPL (e.g. GS1 Databar) — the
     // canvas must match the print output even if a legacy saved object still
@@ -404,10 +419,10 @@ export function BarcodeObject({
           onDragEnd={handleDragEnd}
         >
           <KImage
-            x={0}
+            x={btX}
             y={btY}
             image={barcodeCanvas}
-            width={Math.max(w, 1)}
+            width={bw}
             height={bh}
             imageSmoothingEnabled={false}
             stroke={isSelected ? "#6366f1" : undefined}
@@ -498,10 +513,10 @@ export function BarcodeObject({
           onTransformEnd={handleTransformEnd}
         >
           <KImage
-            x={0}
+            x={btX}
             y={btY}
             image={barcodeCanvas}
-            width={Math.max(w, 1)}
+            width={bw}
             height={bh}
             imageSmoothingEnabled={false}
             stroke={isSelected ? "#6366f1" : undefined}
@@ -654,8 +669,8 @@ export function BarcodeObject({
           onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
           onDragEnd={handleDragEnd}
         >
-          <KImage x={0} y={btY} image={barcodeCanvas}
-            width={Math.max(w, 1)} height={bh}
+          <KImage x={btX} y={btY} image={barcodeCanvas}
+            width={bw} height={bh}
             imageSmoothingEnabled={false}
             stroke={isSelected ? "#6366f1" : undefined}
             strokeWidth={isSelected ? 2 : 0}
@@ -693,10 +708,10 @@ export function BarcodeObject({
           listening={false}
         />
         <KImage
-          x={0}
+          x={btX}
           y={btY}
           image={barcodeCanvas}
-          width={Math.max(w, 1)}
+          width={bw}
           height={bh}
           imageSmoothingEnabled={false}
           stroke={isSelected ? "#6366f1" : undefined}
