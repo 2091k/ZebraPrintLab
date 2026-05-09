@@ -4,6 +4,8 @@
  * so they survive page reloads.
  */
 
+import { hydrateLocalStoragePrefix, safeLocalStorageSet } from "./localStorageBucket";
+
 export interface CachedImage {
   id: string;
   name: string;
@@ -25,17 +27,9 @@ export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
 const cache = new Map<string, CachedImage>();
 
-// Hydrate from localStorage on module load
-for (let i = 0; i < localStorage.length; i++) {
-  const key = localStorage.key(i);
-  if (!key?.startsWith(LS_PREFIX)) continue;
-  try {
-    const entry = JSON.parse(localStorage.getItem(key) ?? 'null') as CachedImage;
-    cache.set(entry.id, entry);
-  } catch {
-    // ignore corrupt entries
-  }
-}
+hydrateLocalStoragePrefix<CachedImage>(LS_PREFIX, (entry) => {
+  cache.set(entry.id, entry);
+});
 
 export function getImage(id: string): CachedImage | undefined {
   return cache.get(id);
@@ -47,11 +41,7 @@ export function getAllImages(): CachedImage[] {
 
 export function putImage(img: CachedImage): void {
   cache.set(img.id, img);
-  try {
-    localStorage.setItem(LS_PREFIX + img.id, JSON.stringify(img));
-  } catch {
-    // localStorage full — image stays in memory only
-  }
+  safeLocalStorageSet(LS_PREFIX + img.id, JSON.stringify(img));
 }
 
 export function removeImage(id: string): void {

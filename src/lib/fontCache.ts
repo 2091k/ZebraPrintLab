@@ -5,6 +5,8 @@
  * so Konva (canvas) can render text using it.
  */
 
+import { hydrateLocalStoragePrefix, safeLocalStorageSet } from "./localStorageBucket";
+
 export interface CachedFont {
   id: string;
   /** Original printer filename e.g. "ARIAL.TTF" (uppercased for lookup) */
@@ -52,19 +54,11 @@ async function registerFontFace(entry: CachedFont): Promise<void> {
   }
 }
 
-// Hydrate from localStorage on module load
-for (let i = 0; i < localStorage.length; i++) {
-  const key = localStorage.key(i);
-  if (!key?.startsWith(LS_PREFIX)) continue;
-  try {
-    const entry = JSON.parse(localStorage.getItem(key) ?? 'null') as CachedFont;
-    cache.set(entry.name, entry);
-    // Re-register fonts asynchronously — canvas renders after React mounts
-    void registerFontFace(entry);
-  } catch {
-    // ignore corrupt entries
-  }
-}
+hydrateLocalStoragePrefix<CachedFont>(LS_PREFIX, (entry) => {
+  cache.set(entry.name, entry);
+  // Re-register asynchronously — canvas renders after React mounts.
+  void registerFontFace(entry);
+});
 
 /** Look up a cached font by printer filename (case-insensitive). */
 export function getFont(printerName: string): CachedFont | undefined {
@@ -97,11 +91,7 @@ export async function loadFontFile(file: File, printerName: string): Promise<Cac
       const fontFamily = printerNameToFamily(name);
       const entry: CachedFont = { id: crypto.randomUUID(), name, dataUrl, fontFamily };
       cache.set(name, entry);
-      try {
-        localStorage.setItem(LS_PREFIX + name, JSON.stringify(entry));
-      } catch {
-        // localStorage full — font stays in memory only
-      }
+      safeLocalStorageSet(LS_PREFIX + name, JSON.stringify(entry));
       await registerFontFace(entry);
       notify();
       resolve(entry);
