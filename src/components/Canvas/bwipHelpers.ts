@@ -24,6 +24,7 @@ import {
 } from "../../lib/gs1";
 import {
   EAN_TEXT_ZONE_DOTS,
+  GS1_DATABAR_SPEC_HEIGHT_MODULES,
   LOGMARS_TEXT_ZONE_DOTS,
   MICROPDF417_QUIET_ZONE_ROWS,
 } from "./bwipConstants";
@@ -475,10 +476,15 @@ function getUprightDisplaySize(
       const modulePx = dotsToPx(obj.props.moduleWidth, scale, dpmm);
       const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
       const w = (cw / bwipSc) * modulePx;
-      // Height is symbol-standard fixed (not the ZPL height param).
-      // paddingheight:2 in buildBwipOptions adds the quiet-zone rows so
-      // ch already reflects the correct total height.
-      const h = (ch / bwipSc) * modulePx;
+      // bwip-js renders most non-stacked variants at the omni (33-module)
+      // height regardless of the actual symbology, so trusting `ch` would
+      // overstate the height for sym 2/5/6 and understate it for sym 4.
+      // Use the spec-defined module count instead. Sym 7 (Expanded Stacked)
+      // is segments-dependent and falls back to the bwip-natural height.
+      const specModules = GS1_DATABAR_SPEC_HEIGHT_MODULES[obj.props.symbology];
+      const h = specModules !== undefined
+        ? specModules * modulePx
+        : (ch / bwipSc) * modulePx;
       return { w, h };
     }
     case "code128": {
