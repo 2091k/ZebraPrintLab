@@ -51,6 +51,7 @@ const no = {
     comment: 'Kommentar',
     multipleSelectedFmt: '{n} objekter valgt',
     multipleSelectedHint: 'piltaster flytter',
+    visualApproxHint: 'Visuell gjengivelse er omtrentlig; dimensjonene samsvarer med ZPL-utskriften',
   },
 
   label: {

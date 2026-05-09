@@ -51,6 +51,7 @@ const sr = {
     comment: 'Коментар',
     multipleSelectedFmt: 'Изабрано објеката: {n}',
     multipleSelectedHint: 'стрелицама померај',
+    visualApproxHint: 'Визуелни приказ је приближан; димензије одговарају ZPL отиску',
   },
 
   label: {

@@ -51,6 +51,7 @@ const he = {
     comment: 'הערה',
     multipleSelectedFmt: '{n} פריטים נבחרו',
     multipleSelectedHint: 'מקשי החצים מזיזים',
+    visualApproxHint: 'התצוגה החזותית מקורבת; הממדים תואמים את הדפסת ה-ZPL',
   },
 
   label: {

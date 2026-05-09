@@ -51,6 +51,7 @@ const ar = {
     comment: 'تعليق',
     multipleSelectedFmt: '{n} عناصر مختارة',
     multipleSelectedHint: 'استخدم أسهم الاتجاه للتحريك',
+    visualApproxHint: 'العرض المرئي تقريبي؛ الأبعاد تطابق طباعة ZPL',
   },
 
   label: {

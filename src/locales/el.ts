@@ -51,6 +51,7 @@ const el = {
     comment: 'Σχόλιο',
     multipleSelectedFmt: '{n} αντικείμενα επιλέχθηκαν',
     multipleSelectedHint: 'τα βέλη μετακινούν',
+    visualApproxHint: 'Η οπτική απόδοση είναι κατά προσέγγιση· οι διαστάσεις αντιστοιχούν στην εκτύπωση ZPL',
   },
 
   label: {

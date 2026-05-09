@@ -51,6 +51,7 @@ const zhHant = {
     comment: '備註',
     multipleSelectedFmt: '已選擇 {n} 個物件',
     multipleSelectedHint: '方向鍵移動',
+    visualApproxHint: '視覺呈現為近似值；尺寸與 ZPL 列印輸出一致',
   },
 
   label: {

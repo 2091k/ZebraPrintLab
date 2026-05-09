@@ -51,6 +51,7 @@ const ro = {
     comment: 'Comentariu',
     multipleSelectedFmt: '{n} obiecte selectate',
     multipleSelectedHint: 'săgeți pentru mutare',
+    visualApproxHint: 'Randarea vizuală este aproximativă; dimensiunile corespund tipăririi ZPL',
   },
 
   label: {

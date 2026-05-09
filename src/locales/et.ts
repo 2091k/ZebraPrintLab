@@ -51,6 +51,7 @@ const et = {
     comment: 'Kommentaar',
     multipleSelectedFmt: '{n} objekti valitud',
     multipleSelectedHint: 'nooltega liigutad',
+    visualApproxHint: 'Visuaalne kuva on ligikaudne; mõõtmed vastavad ZPL-väljatrükile',
   },
 
   label: {
