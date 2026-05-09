@@ -51,6 +51,7 @@ const hr = {
     comment: 'Komentar',
     multipleSelectedFmt: 'Odabrano objekata: {n}',
     multipleSelectedHint: 'strelicama pomičeš',
+    visualApproxHint: 'Vizualni prikaz je približan; dimenzije odgovaraju ZPL ispisu',
   },
 
   label: {

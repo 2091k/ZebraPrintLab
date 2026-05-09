@@ -51,6 +51,7 @@ const nl = {
     comment: 'Opmerking',
     multipleSelectedFmt: '{n} objecten geselecteerd',
     multipleSelectedHint: 'pijltoetsen om te verplaatsen',
+    visualApproxHint: 'Visuele weergave bij benadering; afmetingen komen overeen met de ZPL-afdruk',
   },
 
   label: {

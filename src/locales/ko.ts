@@ -51,6 +51,7 @@ const ko = {
     comment: '설명',
     multipleSelectedFmt: '{n}개 항목 선택됨',
     multipleSelectedHint: '화살표 키로 이동',
+    visualApproxHint: '시각적 표시는 근사치이며, 치수는 ZPL 인쇄와 일치합니다',
   },
 
   label: {

@@ -51,6 +51,7 @@ const sk = {
     comment: 'Komentár',
     multipleSelectedFmt: 'Vybraných objektov: {n}',
     multipleSelectedHint: 'šípkami posuniete',
+    visualApproxHint: 'Vizuálne zobrazenie je približné; rozmery zodpovedajú tlači ZPL',
   },
 
   label: {

@@ -51,6 +51,7 @@ const fi = {
     comment: 'Kommentti',
     multipleSelectedFmt: '{n} objektia valittu',
     multipleSelectedHint: 'nuolinäppäimillä siirrät',
+    visualApproxHint: 'Visuaalinen esitys on likimääräinen; mitat vastaavat ZPL-tulostetta',
   },
 
   label: {

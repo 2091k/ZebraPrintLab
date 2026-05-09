@@ -51,6 +51,7 @@ const tr = {
     comment: 'Yorum',
     multipleSelectedFmt: '{n} nesne seçildi',
     multipleSelectedHint: 'oklarla taşı',
+    visualApproxHint: 'Görsel render yaklaşıktır; boyutlar ZPL çıktısıyla eşleşir',
   },
 
   label: {

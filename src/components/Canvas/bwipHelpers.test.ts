@@ -1,4 +1,7 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import { buildBwipOptions, getDisplaySize, getEanUpcLayout } from "./bwipHelpers";
 import type { LabelObject } from "../../registry";
 
@@ -123,5 +126,94 @@ describe("rotation pipeline", () => {
     const upright = getDisplaySize(baseCode128("N"), fakeCanvas, 1, 8);
     const inverted = getDisplaySize(baseCode128("I"), fakeCanvas, 1, 8);
     expect(inverted).toEqual(upright);
+  });
+});
+
+describe("getDisplaySize gs1databar sym 7 fallback", () => {
+  // Sym 7 (Expanded Stacked) cannot be Labelary-cross-validated due to a
+  // parens-AI input-format mismatch between bwip-js and Zebra firmware.
+  // The implementation falls back to bwip-natural canvas height. This test
+  // pins that behavior — any change must be intentional and accompanied
+  // by a documented strategy for the missing ground truth.
+  it("derives height from canvas dims (bwip-natural), not from a spec table", () => {
+    const obj: LabelObject = {
+      id: "1",
+      type: "gs1databar",
+      x: 0,
+      y: 0,
+      rotation: 0,
+      props: {
+        content: "0112345678901231",
+        moduleWidth: 2,
+        symbology: 7,
+        segments: 22,
+        rotation: "N",
+      },
+    };
+    // Canvas height varies per content+segments; we use a representative
+    // value that bwip-js produced for a 16-char content at default
+    // segments. The exact pixel size isn't load-bearing — what matters is
+    // the formula, which derives from `ch`.
+    const ch = 73;
+    const cw = 100;
+    const fakeCanvas = { width: cw, height: ch } as HTMLCanvasElement;
+    const result = getDisplaySize(obj, fakeCanvas, 1, 8);
+    // bwipSc = max(1, round(dotsToPx(2, 1, 8))) = round(0.25) = 1; modulePx = 0.25
+    // h = (ch / 1) * 0.25 = 18.25
+    expect(result.h).toBeCloseTo(18.25, 2);
+  });
+});
+
+describe("buildBwipOptions gs1databar Expanded fallback", () => {
+  // AI 01 + 11 numeric digits is not a valid GTIN-14 element string. Zebra
+  // firmware emits General Compaction (~149 modules) rather than Method 1
+  // padding. We route bwip-js through `(99)` so the rendered width matches.
+  const obj = (content: string): LabelObject => ({
+    id: "1",
+    type: "gs1databar",
+    x: 0,
+    y: 0,
+    rotation: 0,
+    props: {
+      content,
+      moduleWidth: 2,
+      symbology: 6,
+      segments: 22,
+      rotation: "N",
+    },
+  });
+
+  it("re-routes AI 01 + 11-digit fragment through (99) wrap", () => {
+    const opts = buildBwipOptions(obj("0112345678901"), 1, 8);
+    expect(opts?.text).toBe("(99)0112345678901");
+  });
+
+  it("keeps valid AI 01 GTIN-14 input on the standard wrap path", () => {
+    const opts = buildBwipOptions(obj("0112345678901231"), 1, 8);
+    expect(opts?.text).toBe("(01)12345678901231");
+  });
+});
+
+describe("getDisplaySize coverage (ZPL-first policy)", () => {
+  // Static parse of bwipHelpers.ts: every barcode type registered via BCID
+  // must have an explicit `case "type":` in getUprightDisplaySize, otherwise
+  // the default fallback returns bwip-natural pixels and silently violates
+  // the ZPL-first sizing policy.
+  it("every BCID-registered type has an explicit case (no silent default)", () => {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const src = readFileSync(resolve(here, "bwipHelpers.ts"), "utf-8");
+
+    const bcidBlock = /const BCID:[^=]*=\s*\{([\s\S]*?)\};/.exec(src);
+    expect(bcidBlock, "BCID literal not found in source").toBeTruthy();
+    const bcidKeys = [...(bcidBlock?.[1] ?? "").matchAll(/^\s*(\w+):\s*"/gm)]
+      .map((m) => m[1] ?? "");
+
+    const fnBlock = /function getUprightDisplaySize\([\s\S]*?^\}/m.exec(src);
+    expect(fnBlock, "getUprightDisplaySize body not found").toBeTruthy();
+    const caseLabels = [...(fnBlock?.[0] ?? "").matchAll(/case "(\w+)":/g)]
+      .map((m) => m[1] ?? "");
+
+    const missing = bcidKeys.filter((k) => !caseLabels.includes(k));
+    expect(missing, `Missing explicit case for: ${missing.join(", ")}`).toEqual([]);
   });
 });

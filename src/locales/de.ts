@@ -51,6 +51,7 @@ const de = {
     comment: 'Kommentar',
     multipleSelectedFmt: '{n} Objekte ausgewählt',
     multipleSelectedHint: 'Pfeiltasten zum Verschieben',
+    visualApproxHint: 'Visuelle Darstellung näherungsweise; Maße entsprechen dem ZPL-Druck',
   },
 
   label: {

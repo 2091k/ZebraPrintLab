@@ -51,6 +51,7 @@ const zhHans = {
     comment: '备注',
     multipleSelectedFmt: '已选择 {n} 个对象',
     multipleSelectedHint: '方向键移动',
+    visualApproxHint: '视觉渲染为近似值；尺寸与 ZPL 打印输出一致',
   },
 
   label: {

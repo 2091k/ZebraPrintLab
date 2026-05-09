@@ -51,6 +51,7 @@ const ja = {
     comment: 'コメント',
     multipleSelectedFmt: '{n} 個のオブジェクトが選択されました',
     multipleSelectedHint: '矢印キーで移動',
+    visualApproxHint: '視覚的表示は概略です。寸法は ZPL 印刷と一致します',
   },
 
   label: {

@@ -122,7 +122,22 @@ describe("Visual Regression - bwip-js vs Labelary", () => {
       // Zebra firmware renders ^FO-positioned QR codes with a +10 dot Y offset.
       // Match production BarcodeObject.tsx behaviour.
       const drawY = obj.type === "qrcode" ? obj.y + QR_FO_Y_OFFSET_DOTS : obj.y;
-      ctx.drawImage(bwipImage, obj.x, drawY, displaySize.w, displaySize.h);
+      // Bars draw at FO; bbox extends in the text-zone direction without
+      // shifting the bar pattern. barLeftPx/barTopPx describe where the
+      // bars sit inside the bbox, but the bitmap itself anchors at obj.x/y.
+      // bitmapCrop excludes any internal padding rows (e.g. GS1 DataBar's
+      // paddingheight) so bars fill the full bar sub-rectangle.
+      const crop = displaySize.bitmapCrop ?? {
+        x: 0,
+        y: 0,
+        width: bwipImage.width,
+        height: bwipImage.height,
+      };
+      ctx.drawImage(
+        bwipImage,
+        crop.x, crop.y, crop.width, crop.height,
+        obj.x, drawY, displaySize.barW, displaySize.barH,
+      );
 
       // 4. Compare with Labelary ref
       const labelaryRef = PNG.sync.read(fs.readFileSync(fixturePath));

@@ -1,3 +1,17 @@
+/**
+ * ZPL-FIRST SIZING POLICY
+ *
+ * The designer is a layout tool, not a scanner. `getDisplaySize` maps the
+ * bwip-js intrinsic canvas size to the ZPL-correct display pixels so the
+ * displayed bbox matches what Zebra firmware will print. Bar patterns may
+ * look slightly distorted because bwip-js' rendering algorithm differs.
+ *
+ * Per-symbology rationale (especially for the deliberately-not-corrected
+ * cases code93, code11, plessey) is in the inline comments at each `case`
+ * block in getUprightDisplaySize. The static-parse test in
+ * bwipHelpers.test.ts ensures every BCID-registered type has a case.
+ */
+
 import type { LabelObject } from "../../registry";
 import type { Gs1DatabarProps } from "../../registry/gs1databar";
 import { objectRotation } from "../../registry/rotation";
@@ -8,7 +22,36 @@ import {
   gtin14WithCheck,
   wrapGs1AIs,
 } from "../../lib/gs1";
-import { MICROPDF417_QUIET_ZONE_ROWS } from "./bwipConstants";
+import {
+  CODE11_QUIET_ZONE_DELTA_MODULES,
+  CODE93_QUIET_ZONE_DELTA_MODULES,
+  EAN_TEXT_ZONE_DOTS,
+  GS1_DATABAR_SPEC_HEIGHT_MODULES,
+  LOGMARS_TEXT_ZONE_DOTS,
+  MICROPDF417_QUIET_ZONE_ROWS,
+  PLESSEY_BWIP_TO_ZEBRA_WIDTH_RATIO,
+} from "./bwipConstants";
+
+/**
+ * AI 01 followed by exactly 11 numeric digits (13 chars total) is not a valid
+ * GTIN-14 element string. Zebra firmware does NOT pad it to Method 1; it falls
+ * back to General Compaction (~149 modules at 8dpmm). bwip-js with `(01)<padded>`
+ * would force Method 1 (~133 modules), so we re-route through `(99)` to get
+ * General Compaction encoding too. Empirical cutoff (probed against Labelary).
+ */
+function isAi01ElevenDigitFragment(content: string): boolean {
+  return /^01\d{11}$/.test(content);
+}
+
+/**
+ * Bwip-js text for GS1 DataBar Expanded — wraps raw AI input in parens and
+ * routes the empirically-known length-mismatch case (AI 01 + 11 digits) through
+ * `(99)` so the rendered bitmap width matches Zebra firmware's print output.
+ */
+function gs1ExpandedBwipText(content: string): string {
+  if (isAi01ElevenDigitFragment(content)) return `(99)${content}`;
+  return wrapGs1AIs(content);
+}
 
 const GS1_DATABAR_BCID: Record<Gs1DatabarProps["symbology"], string> = {
   1: "databaromni",
@@ -285,7 +328,7 @@ export function buildBwipOptions(
       // bwip-js needs (AI)data parens; canonical model stores raw digits.
       // Sym 1–5 require AI 01 + valid 14-digit GTIN with correct check.
       const text = isExpanded
-        ? wrapGs1AIs(p.content)
+        ? gs1ExpandedBwipText(p.content)
         : `(01)${gtin14WithCheck(p.content)}`;
       opts = {
         bcid: GS1_DATABAR_BCID[sym],
@@ -393,13 +436,58 @@ export function buildBwipOptions(
   return opts;
 }
 
+/**
+ * Display size of a barcode bbox in pixels.
+ *
+ *  `w` × `h` is the full footprint Zebra firmware reserves on the print —
+ *  this includes any text zone that may sit on one side of the bars. The
+ *  bars themselves occupy a sub-rectangle described by
+ *  `(barLeftPx, barTopPx, barW, barH)`. For symbologies without a text
+ *  zone or for rotations the text zone hasn't been mapped onto, the bar
+ *  rect equals the full bbox.
+ *
+ *  Renderers should draw the bwip-js bitmap inside the bar sub-rectangle so
+ *  the bars appear at their true height, while the Konva Group / hit area
+ *  spans the full bbox so selection-handles match the printed footprint.
+ */
+export interface BarcodeDisplaySize {
+  w: number;
+  h: number;
+  barW: number;
+  barH: number;
+  barLeftPx: number;
+  barTopPx: number;
+  /** Sub-rect of the bwip-js canvas to render (in source pixel coords).
+   *  Lets the renderer skip bwip's internal padding, e.g. the
+   *  paddingheight pad on GS1 DataBar that would otherwise leave the
+   *  bars proportionally shorter than the firmware-reserved bbox.
+   *  Undefined = use the full canvas. */
+  bitmapCrop?: { x: number; y: number; width: number; height: number };
+}
+
+/** Firmware-reserved text-zone height in dots, keyed by symbology. The
+ *  zone sits below the bars in upright orientation; rotation maps it to
+ *  another side of the bbox in getDisplaySize. Types not listed have no
+ *  reserved zone. */
+const TEXT_ZONE_DOTS_BY_TYPE: Partial<Record<LabelObject["type"], number>> = {
+  ean13: EAN_TEXT_ZONE_DOTS,
+  ean8: EAN_TEXT_ZONE_DOTS,
+  upca: EAN_TEXT_ZONE_DOTS,
+  upce: EAN_TEXT_ZONE_DOTS,
+  logmars: LOGMARS_TEXT_ZONE_DOTS,
+};
+
 export function getDisplaySize(
   obj: LabelObject,
   canvas: HTMLCanvasElement,
   scale: number,
   dpmm: number,
-): { w: number; h: number } {
-  if (!canvas) return { w: 0, h: 0 };
+): BarcodeDisplaySize {
+  if (!canvas) {
+    return {
+      w: 0, h: 0, barW: 0, barH: 0, barLeftPx: 0, barTopPx: 0,
+    };
+  }
 
   // For 90°/270° rotations, bwip-js produces a bitmap whose width and height
   // are swapped relative to the upright form. Compute size as if upright (the
@@ -409,7 +497,56 @@ export function getDisplaySize(
   const cw = isQuarter ? canvas.height : canvas.width;
   const ch = isQuarter ? canvas.width : canvas.height;
   const upright = getUprightDisplaySize(obj, cw, ch, scale, dpmm);
-  return isQuarter ? { w: upright.h, h: upright.w } : upright;
+
+  // Bbox after rotation.
+  const w = isQuarter ? upright.h : upright.w;
+  const h = isQuarter ? upright.w : upright.h;
+
+  // Text-zone reservation in upright orientation, on the "below" side of
+  // the bars per Labelary's bbox. Zero for symbologies without one.
+  const textZoneDots = TEXT_ZONE_DOTS_BY_TYPE[obj.type] ?? 0;
+  const textZonePx = dotsToPx(textZoneDots, scale, dpmm);
+
+  // Map the upright "below the bars" zone onto the rotated bbox: it travels
+  // around the rectangle as the symbol rotates.
+  //   N (0°)   text zone at bottom → barTopPx=0,           barH = h - textZonePx
+  //   R (90°)  text zone at left   → barLeftPx=textZonePx, barW = w - textZonePx
+  //   I (180°) text zone at top    → barTopPx=textZonePx,  barH = h - textZonePx
+  //   B (270°) text zone at right  → barLeftPx=0,          barW = w - textZonePx
+  let barTopPx = 0;
+  let barLeftPx = 0;
+  let barW = w;
+  let barH = h;
+  if (textZonePx > 0) {
+    switch (rotation) {
+      case "N": barH = h - textZonePx; break;
+      case "R": barLeftPx = textZonePx; barW = w - textZonePx; break;
+      case "I": barTopPx = textZonePx; barH = h - textZonePx; break;
+      case "B": barW = w - textZonePx; break;
+    }
+  }
+
+  // GS1 DataBar opts include `paddingheight: 2`, which adds whitespace
+  // rows on top and bottom of the bwip canvas. Without cropping them out,
+  // the bitmap drawn at displayH leaves the bars proportionally shorter
+  // than the spec-correct height. Zebra firmware fills the full reserved
+  // height with bars; mirror that by cropping the source bitmap to the
+  // bar-only rows.
+  let bitmapCrop: BarcodeDisplaySize["bitmapCrop"];
+  if (obj.type === "gs1databar") {
+    const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
+    const padPx = 2 * bwipSc; // paddingheight=2 × bwip scale per side
+    if (canvas.height > 2 * padPx) {
+      bitmapCrop = {
+        x: 0,
+        y: padPx,
+        width: canvas.width,
+        height: canvas.height - 2 * padPx,
+      };
+    }
+  }
+
+  return { w, h, barW, barH, barLeftPx, barTopPx, bitmapCrop };
 }
 
 function getUprightDisplaySize(
@@ -424,20 +561,31 @@ function getUprightDisplaySize(
   switch (obj.type) {
     case "code93":
     case "code11": {
-      // bwip-js renders a narrower quiet zone than Zebra firmware.
-      // Correcting to the Labelary width would stretch bars; return the bwip-natural size.
+      // bwip-js uses a narrower quiet zone than Zebra firmware. The
+      // shortfall is content-independent — a fixed module count per
+      // symbology — so we add it to the bwip module count to recover
+      // the ZPL-correct print width. The bitmap stretches ~10-25% to
+      // fill the wider bbox; bars look slightly broader than the
+      // printed output but dimensions match.
+      const delta = obj.type === "code93"
+        ? CODE93_QUIET_ZONE_DELTA_MODULES
+        : CODE11_QUIET_ZONE_DELTA_MODULES;
       const modulePx = dotsToPx(obj.props.moduleWidth, scale, dpmm);
       const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
-      const w = (cw / bwipSc) * modulePx;
+      const w = ((cw / bwipSc) + delta) * modulePx;
       const h = dotsToPx(obj.props.height, scale, dpmm);
       return { w, h };
     }
     case "plessey": {
-      // bwip-js uses a different bar encoding algorithm than Zebra firmware.
-      // Width is approximate; the visual regression is skipped for this type.
+      // bwip-js uses a fundamentally different bar encoding from Zebra
+      // ^BP — bwip renders ~67% wider than Zebra for the same content.
+      // Both encodings grow linearly with content, so a constant ratio
+      // suffices. The bitmap squeezes to ~60% of its intrinsic width;
+      // bars look compressed but the printed footprint matches.
       const modulePx = dotsToPx(obj.props.moduleWidth, scale, dpmm);
       const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
-      const w = (cw / bwipSc) * modulePx;
+      const w =
+        (cw / bwipSc) * modulePx * PLESSEY_BWIP_TO_ZEBRA_WIDTH_RATIO;
       const h = dotsToPx(obj.props.height, scale, dpmm);
       return { w, h };
     }
@@ -457,10 +605,22 @@ function getUprightDisplaySize(
       const modulePx = dotsToPx(obj.props.moduleWidth, scale, dpmm);
       const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
       const w = (cw / bwipSc) * modulePx;
-      // Height is symbol-standard fixed (not the ZPL height param).
-      // paddingheight:2 in buildBwipOptions adds the quiet-zone rows so
-      // ch already reflects the correct total height.
-      const h = (ch / bwipSc) * modulePx;
+      // bwip-js renders most non-stacked variants at the omni (33-module)
+      // height regardless of the actual symbology, so trusting `ch` would
+      // overstate the height for sym 2/5/6 and understate it for sym 4.
+      // Use the spec-defined module count instead.
+      //
+      // Sym 7 (Expanded Stacked) cannot be Labelary-cross-validated:
+      // bwip-js needs the (AI)data parens-AI input format, Zebra ^BR sym 7
+      // silently rejects that input and renders an empty PNG, so neither
+      // direction can produce a shared ground truth. The bwip-natural
+      // canvas height is used as a best-effort approximation; the rendered
+      // size therefore matches what the user sees in bwip's preview but
+      // is not guaranteed to match Zebra firmware's actual print output.
+      const specModules = GS1_DATABAR_SPEC_HEIGHT_MODULES[obj.props.symbology];
+      const h = specModules !== undefined
+        ? specModules * modulePx
+        : (ch / bwipSc) * modulePx;
       return { w, h };
     }
     case "code128": {
@@ -474,15 +634,29 @@ function getUprightDisplaySize(
     case "ean8":
     case "upca":
     case "upce": {
+      // EAN/UPC reserves a 13-dot text zone below the bars in firmware,
+      // even when printInterpretation=N. Include it in the bbox so the
+      // selection footprint matches the printed extent.
       const modulePx = dotsToPx(obj.props.moduleWidth, scale, dpmm);
       const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
       const extraPx = bwipSc === 1 ? 1 : 0;
       const w = ((cw - extraPx) / bwipSc) * modulePx;
-      const h = dotsToPx(obj.props.height, scale, dpmm);
+      const h = dotsToPx(obj.props.height + EAN_TEXT_ZONE_DOTS, scale, dpmm);
+      return { w, h };
+    }
+    case "logmars": {
+      // LOGMARS reserves a text zone above the bars (per spec) regardless of
+      // printInterpretation. Include LOGMARS_TEXT_ZONE_DOTS so the bbox
+      // matches the firmware footprint; bwip's bitmap covers only the bar
+      // portion and is rendered at the bottom of the bbox.
+      const modulePx = dotsToPx(obj.props.moduleWidth, scale, dpmm);
+      const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
+      const extraPx = bwipSc === 1 ? 1 : 0;
+      const w = ((cw - extraPx) / bwipSc) * modulePx;
+      const h = dotsToPx(obj.props.height + LOGMARS_TEXT_ZONE_DOTS, scale, dpmm);
       return { w, h };
     }
     case "code39":
-    case "logmars":
     case "interleaved2of5":
     case "industrial2of5":
     case "standard2of5":

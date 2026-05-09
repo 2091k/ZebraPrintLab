@@ -51,6 +51,7 @@ const cs = {
     comment: 'Komentář',
     multipleSelectedFmt: 'Vybráno objektů: {n}',
     multipleSelectedHint: 'šipkami posunete',
+    visualApproxHint: 'Vizuální zobrazení je přibližné; rozměry odpovídají tisku ZPL',
   },
 
   label: {

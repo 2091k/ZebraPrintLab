@@ -51,6 +51,7 @@ const hu = {
     comment: 'Megjegyzés',
     multipleSelectedFmt: '{n} objektum kijelölve',
     multipleSelectedHint: 'nyilakkal mozgasd',
+    visualApproxHint: 'A vizuális megjelenítés közelítő; a méretek megegyeznek a ZPL nyomtatással',
   },
 
   label: {

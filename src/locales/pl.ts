@@ -51,6 +51,7 @@ const pl = {
     comment: 'Komentarz',
     multipleSelectedFmt: 'Wybrano obiektów: {n}',
     multipleSelectedHint: 'strzałki przesuwają',
+    visualApproxHint: 'Renderowanie wizualne jest przybliżone; wymiary odpowiadają wydrukowi ZPL',
   },
 
   label: {

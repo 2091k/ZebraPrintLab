@@ -51,6 +51,7 @@ const fr = {
     comment: 'Commentaire',
     multipleSelectedFmt: '{n} objets sélectionnés',
     multipleSelectedHint: 'flèches pour déplacer',
+    visualApproxHint: 'Rendu visuel approximatif ; les dimensions correspondent à l\'impression ZPL',
   },
 
   label: {

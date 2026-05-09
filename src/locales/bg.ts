@@ -51,6 +51,7 @@ const bg = {
     comment: 'Коментар',
     multipleSelectedFmt: 'Избрани обекти: {n}',
     multipleSelectedHint: 'със стрелките местиш',
+    visualApproxHint: 'Визуалното изобразяване е приблизително; размерите съответстват на ZPL отпечатъка',
   },
 
   label: {

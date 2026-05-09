@@ -6,7 +6,6 @@ import {
   buildBwipOptions,
   getDisplaySize,
 } from "../components/Canvas/bwipHelpers";
-import { EAN_TEXT_ZONE_DOTS } from "../components/Canvas/bwipConstants";
 import { ObjectRegistry } from "../registry";
 import { objectRotation } from "../registry/rotation";
 import { defined } from "./helpers";
@@ -134,35 +133,22 @@ describe("Labelary Sync - Canvas Dimension Logic", () => {
       const isStacked2D = ["pdf417", "micropdf417", "codablock"].includes(
         obj.type,
       );
-      // LOGMARS spec places the human-readable line ABOVE the bars. Labelary's
-      // bounding box for ^FO50,50 reports y=50 (bar top, not visual top), and
-      // height includes the bar height plus a ~20 dot text-above zone reserved
-      // even when printInterpretation=N. getDisplaySize returns only the bar
-      // height, so the strict height check is skipped for LOGMARS.
-      const hasLogmarsTextZone = obj.type === "logmars";
-      // bwip-natural display size diverges from the Labelary reference for these types
-      // (quiet zone narrower than Zebra, or fundamentally different bar structure).
-      // The strict bounds check is skipped; ZPL generation is still verified above.
-      const hasBwipSizeMismatch = [
-        "code93", "code11",                  // quiet zone narrower than Zebra
-        "plessey",                           // different bar encoding algorithm
-      ].includes(obj.type);
-      // GS1 Databar variants 2–7 use intrinsic heights that bwip-js maps differently
-      // than Zebra firmware. Width agrees, height diverges. Sym 1 (Omnidirectional)
-      // matches and is checked strictly; the others get ZPL-only validation.
-      const isGs1NonOmni = obj.type === "gs1databar" && obj.props.symbology !== 1;
+      // LOGMARS and EAN/UPC have firmware-reserved text zones now included
+      // in getDisplaySize's bbox, so they pass the strict height check below.
+      // No remaining bwip-vs-Zebra width mismatches at the bbox level —
+      // code93/code11 add a fixed quiet-zone delta in getDisplaySize, and
+      // plessey applies an empirical width ratio. The bitmap inside still
+      // looks visually distorted (kept as a known limitation in
+      // visualRegression.test.ts), but the bbox dimensions now match.
+      const hasBwipSizeMismatch = false;
+      // GS1 Databar variant 7 (Expanded Stacked) is segments-dependent; bwip-natural
+      // height differs from spec and we don't yet have a per-segment formula.
+      const isGs1Sym7 = obj.type === "gs1databar" && obj.props.symbology === 7;
 
       if (isEanUpc && !isQuarterRotated) {
-        // Known discrepancy: Labelary reserves barHeight + EAN_TEXT_ZONE_DOTS (13 dots)
-        // even with printInterpretation=N. getDisplaySize intentionally returns only the
-        // bar height because the text zone is blank whitespace — bwip does not render it.
-        // expected_bounds.height in fixtures reflects the true Labelary value (barHeight+13).
-        // Under quarter rotation the text zone rotates onto the horizontal axis, so the
-        // bbox height already equals the bar length; the subtraction would be wrong.
-        expect(displaySize.h * 8).toBeCloseTo(
-          tc.expected_bounds.height - EAN_TEXT_ZONE_DOTS,
-          1,
-        );
+        // EAN_TEXT_ZONE_DOTS (13) is now included in getDisplaySize, so the
+        // bbox height matches expected_bounds.height directly.
+        expect(displaySize.h * 8).toBeCloseTo(tc.expected_bounds.height, 1);
       } else if (is1DCode && !isQuarterRotated) {
         expect(displaySize.h).toBe(
           (obj.props as { height: number }).height / 8,
@@ -186,17 +172,10 @@ describe("Labelary Sync - Canvas Dimension Logic", () => {
       // Excluded types:
       //   codablock — bwip-js uses different encoding parameters than Zebra firmware.
       //   hasBwipSizeMismatch — bwip-natural size diverges from Labelary (see above).
-      // EAN/UPC and logmars heights are excluded — see isEanUpc/hasLogmarsTextZone above.
-      if (obj.type !== "codablock" && !hasBwipSizeMismatch && !isGs1NonOmni) {
-        // Quarter-rotated EAN/UPC moves the EAN_TEXT_ZONE_DOTS guard extension
-        // onto the width axis instead of the height axis, mirroring the upright
-        // height adjustment.
-        const widthAdjust = isEanUpc && isQuarterRotated ? EAN_TEXT_ZONE_DOTS : 0;
-        expect(displaySize.w * 8).toBeCloseTo(
-          tc.expected_bounds.width - widthAdjust,
-          1,
-        );
-        if (!isEanUpc && !hasLogmarsTextZone) {
+      //   isGs1Sym7 — GS1 Expanded Stacked height is segments-dependent.
+      if (obj.type !== "codablock" && !hasBwipSizeMismatch && !isGs1Sym7) {
+        expect(displaySize.w * 8).toBeCloseTo(tc.expected_bounds.width, 1);
+        if (!isEanUpc) {
           expect(displaySize.h * 8).toBeCloseTo(tc.expected_bounds.height, 1);
         }
       }

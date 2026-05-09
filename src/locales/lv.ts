@@ -51,6 +51,7 @@ const lv = {
     comment: 'Komentārs',
     multipleSelectedFmt: 'Atlasīti {n} objekti',
     multipleSelectedHint: 'ar bultiņām pārvietot',
+    visualApproxHint: 'Vizuālais attēlojums ir aptuvens; izmēri atbilst ZPL izdrukai',
   },
 
   label: {

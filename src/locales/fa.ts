@@ -51,6 +51,7 @@ const fa = {
     comment: 'توضیح',
     multipleSelectedFmt: '{n} مورد انتخاب شده',
     multipleSelectedHint: 'با کلیدهای جهت‌دار جابه‌جا کنید',
+    visualApproxHint: 'نمایش بصری تقریبی است؛ ابعاد با چاپ ZPL مطابقت دارد',
   },
 
   label: {

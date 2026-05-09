@@ -51,6 +51,7 @@ const pt = {
     comment: 'Comentário',
     multipleSelectedFmt: '{n} objetos selecionados',
     multipleSelectedHint: 'setas para mover',
+    visualApproxHint: 'Renderização visual aproximada; as dimensões correspondem à impressão ZPL',
   },
 
   label: {

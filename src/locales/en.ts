@@ -51,6 +51,7 @@ const en = {
     comment: 'Comment',
     multipleSelectedFmt: '{n} objects selected',
     multipleSelectedHint: 'use arrow keys to move',
+    visualApproxHint: 'Visual rendering approximate; dimensions match the ZPL print',
   },
 
   label: {

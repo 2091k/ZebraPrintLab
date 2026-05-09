@@ -51,6 +51,7 @@ const sv = {
     comment: 'Kommentar',
     multipleSelectedFmt: '{n} objekt markerade',
     multipleSelectedHint: 'pilar för att flytta',
+    visualApproxHint: 'Visuell återgivning är ungefärlig; måtten matchar ZPL-utskriften',
   },
 
   label: {

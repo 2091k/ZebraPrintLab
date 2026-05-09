@@ -51,6 +51,7 @@ const sl = {
     comment: 'Komentar',
     multipleSelectedFmt: 'Izbranih objektov: {n}',
     multipleSelectedHint: 's puščicami premikaš',
+    visualApproxHint: 'Vizualni prikaz je približen; mere se ujemajo s tiskom ZPL',
   },
 
   label: {

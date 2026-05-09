@@ -1,6 +1,7 @@
 import { InformationCircleIcon } from "@heroicons/react/16/solid";
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import { ObjectRegistry } from "../../registry";
+import { BWIP_VISUAL_APPROX_TYPES } from "../Canvas/bwipConstants";
 import { stripZplCommandChars } from "../../registry/zplHelpers";
 import { dotsToMm, mmToDots } from "../../lib/coordinates";
 import {
@@ -73,6 +74,12 @@ export function PropertiesPanel() {
         <span className="text-xs font-medium text-text">
           {(t.types as Record<string, string>)[obj.type] ?? definition?.label}
         </span>
+        {BWIP_VISUAL_APPROX_TYPES.has(obj.type) && (
+          <InformationCircleIcon
+            className="w-3.5 h-3.5 text-muted/60 cursor-help"
+            title={t.properties.visualApproxHint}
+          />
+        )}
         <span className="font-mono text-[10px] text-muted ml-auto truncate">
           {obj.id.slice(0, 8)}
         </span>
