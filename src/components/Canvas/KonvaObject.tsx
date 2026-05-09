@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getFontFamily } from "../../lib/fontCache";
 import { useFontCacheVersion } from "../../hooks/useFontCacheVersion";
 import {
@@ -246,11 +246,18 @@ function ImageObject({
   const y = offsetY + dotsToPx(obj.y, scale, dpmm);
 
   const [htmlImg, setHtmlImg] = useState<HTMLImageElement | null>(null);
+  // Reset the cached HTMLImageElement during render when the source changes,
+  // instead of inside an effect. The "set state during render on prop change"
+  // pattern is the official React workaround for what would otherwise be a
+  // setState-in-effect anti-pattern. The next render observes prevDataUrl
+  // already updated, so this does not loop.
+  const prevDataUrlRef = useRef<string | undefined>(cached?.dataUrl);
+  if (prevDataUrlRef.current !== cached?.dataUrl) {
+    prevDataUrlRef.current = cached?.dataUrl;
+    setHtmlImg(null);
+  }
   useEffect(() => {
-    if (!cached) {
-      setHtmlImg(null); // eslint-disable-line react-hooks/set-state-in-effect
-      return;
-    }
+    if (!cached) return;
     let active = true;
     const img = new window.Image();
     img.src = cached.dataUrl;
@@ -260,7 +267,7 @@ function ImageObject({
     return () => {
       active = false;
     };
-  }, [cached?.dataUrl, cached]);
+  }, [cached]);
 
   const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
     onChange({
