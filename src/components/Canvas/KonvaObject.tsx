@@ -376,7 +376,7 @@ function KonvaObjectInner({
   let displayY = obj.y;
   if (obj.positionType === "FT") {
     if (obj.type === "text" || obj.type === "serial") {
-      const p = obj.props as { fontHeight: number; rotation: string };
+      const p = obj.props;
       // ^FT places the origin at the baseline of the first character.
       // The Konva anchor point after rotation sits at a different corner
       // of the visual bounding box than the ZPL FT baseline origin:
@@ -402,7 +402,7 @@ function KonvaObjectInner({
   // Konva rotates text around its top-left corner, but ZPL's ^FO anchor
   // shifts with rotation. 15 dots is an empirically determined fixed offset.
   if (obj.type === "text" || obj.type === "serial") {
-    const p = obj.props as { fontHeight: number; rotation: string };
+    const p = obj.props;
     const ROTATION_OFFSET = 15; // dots — empirical canvas/ZPL alignment correction
     if (p.rotation === "I") {
       displayY -= ROTATION_OFFSET;
@@ -435,7 +435,7 @@ function KonvaObjectInner({
     let finalY = pxToDots(e.target.y() - offsetY, scale, dpmm);
 
     if (obj.type === "text" || obj.type === "serial") {
-      const p = obj.props as { fontHeight: number; rotation: string };
+      const p = obj.props;
       const ROTATION_OFFSET = 15;
       if (p.rotation === "I") {
         finalY += ROTATION_OFFSET;
@@ -451,7 +451,7 @@ function KonvaObjectInner({
     // instead of the ZPL baseline coordinate, causing a vertical jump on re-render.
     if (obj.positionType === "FT") {
       if (obj.type === "text" || obj.type === "serial") {
-        const p = obj.props as { fontHeight: number; rotation: string };
+        const p = obj.props;
         const renderedH = p.fontHeight / 1.3;
         if (p.rotation === "N") {
           finalY += p.fontHeight;
