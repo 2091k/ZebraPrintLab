@@ -306,9 +306,12 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
           screenDy,
           viewRotation,
         );
+        // Round to integer dots — matches the `mmToDots` convention used by
+        // PropertiesPanel inputs and keeps the store's x/y invariant so ZPL
+        // emit doesn't see fractional coordinates.
         const pxPerDot = scale / label.dpmm;
-        const dxDots = layoutDx / pxPerDot;
-        const dyDots = layoutDy / pxPerDot;
+        const dxDots = Math.round(layoutDx / pxPerDot);
+        const dyDots = Math.round(layoutDy / pxPerDot);
 
         const updates = ids.flatMap((id) => {
           const obj = objs.find((o) => o.id === id);
