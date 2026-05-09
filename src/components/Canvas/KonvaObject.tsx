@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getFontFamily } from "../../lib/fontCache";
 import { useFontCacheVersion } from "../../hooks/useFontCacheVersion";
 import {
@@ -246,11 +246,18 @@ function ImageObject({
   const y = offsetY + dotsToPx(obj.y, scale, dpmm);
 
   const [htmlImg, setHtmlImg] = useState<HTMLImageElement | null>(null);
+  // Reset the cached HTMLImageElement during render when the source changes,
+  // instead of inside an effect. The "set state during render on prop change"
+  // pattern is the official React workaround for what would otherwise be a
+  // setState-in-effect anti-pattern. The next render observes prevDataUrl
+  // already updated, so this does not loop.
+  const prevDataUrlRef = useRef<string | undefined>(cached?.dataUrl);
+  if (prevDataUrlRef.current !== cached?.dataUrl) {
+    prevDataUrlRef.current = cached?.dataUrl;
+    setHtmlImg(null);
+  }
   useEffect(() => {
-    if (!cached) {
-      setHtmlImg(null); // eslint-disable-line react-hooks/set-state-in-effect
-      return;
-    }
+    if (!cached) return;
     let active = true;
     const img = new window.Image();
     img.src = cached.dataUrl;
@@ -260,7 +267,7 @@ function ImageObject({
     return () => {
       active = false;
     };
-  }, [cached?.dataUrl, cached]);
+  }, [cached]);
 
   const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
     onChange({
@@ -376,7 +383,7 @@ function KonvaObjectInner({
   let displayY = obj.y;
   if (obj.positionType === "FT") {
     if (obj.type === "text" || obj.type === "serial") {
-      const p = obj.props as { fontHeight: number; rotation: string };
+      const p = obj.props;
       // ^FT places the origin at the baseline of the first character.
       // The Konva anchor point after rotation sits at a different corner
       // of the visual bounding box than the ZPL FT baseline origin:
@@ -402,7 +409,7 @@ function KonvaObjectInner({
   // Konva rotates text around its top-left corner, but ZPL's ^FO anchor
   // shifts with rotation. 15 dots is an empirically determined fixed offset.
   if (obj.type === "text" || obj.type === "serial") {
-    const p = obj.props as { fontHeight: number; rotation: string };
+    const p = obj.props;
     const ROTATION_OFFSET = 15; // dots — empirical canvas/ZPL alignment correction
     if (p.rotation === "I") {
       displayY -= ROTATION_OFFSET;
@@ -435,7 +442,7 @@ function KonvaObjectInner({
     let finalY = pxToDots(e.target.y() - offsetY, scale, dpmm);
 
     if (obj.type === "text" || obj.type === "serial") {
-      const p = obj.props as { fontHeight: number; rotation: string };
+      const p = obj.props;
       const ROTATION_OFFSET = 15;
       if (p.rotation === "I") {
         finalY += ROTATION_OFFSET;
@@ -451,7 +458,7 @@ function KonvaObjectInner({
     // instead of the ZPL baseline coordinate, causing a vertical jump on re-render.
     if (obj.positionType === "FT") {
       if (obj.type === "text" || obj.type === "serial") {
-        const p = obj.props as { fontHeight: number; rotation: string };
+        const p = obj.props;
         const renderedH = p.fontHeight / 1.3;
         if (p.rotation === "N") {
           finalY += p.fontHeight;
