@@ -15,6 +15,7 @@ import type { Unit } from "../../lib/units";
 import { useT } from "../../lib/useT";
 import { parseIntOrUndef } from "../../lib/inputParse";
 import { CollapsibleSection } from "../ui/CollapsibleSection";
+import { AlignButtons } from "./AlignButtons";
 import { inputCls, labelCls } from "./styles";
 import type { LabelConfig } from "../../types/ObjectType";
 
@@ -41,9 +42,12 @@ export function PropertiesPanel() {
             {t.properties.multipleSelectedFmt.replace('{n}', String(selectedIds.length))}
           </span>
         </div>
-        <p className="px-3 py-3 text-xs text-muted">
-          {t.properties.x} / {t.properties.y}: {t.properties.multipleSelectedHint}
-        </p>
+        <div className="px-3 py-3 flex flex-col gap-3">
+          <p className="text-xs text-muted">
+            {t.properties.x} / {t.properties.y}: {t.properties.multipleSelectedHint}
+          </p>
+          <AlignButtons />
+        </div>
       </div>
     );
   }
@@ -127,6 +131,7 @@ export function PropertiesPanel() {
               />
             </div>
           </div>
+          <AlignButtons />
         </div>
 
         <div className="border-t border-border" />
