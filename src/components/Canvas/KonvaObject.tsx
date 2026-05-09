@@ -6,7 +6,11 @@ import { LineObject } from "./LineObject";
 import { ImageObject } from "./ImageObject";
 import type Konva from "konva";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
-import { objectToDisplay, displayToObject } from "./textPositionTransforms";
+import {
+  objectToDisplay,
+  displayToObject,
+  ZPL_FONT_HEIGHT_TO_CSS_RATIO,
+} from "./textPositionTransforms";
 import type { KonvaObjectProps } from "./konvaObjectProps";
 
 type Props = KonvaObjectProps;
@@ -106,7 +110,10 @@ function KonvaObjectInner({
 
   if (obj.type === "text") {
     const p = obj.props;
-    const fontSize = Math.max(dotsToPx(p.fontHeight, scale, dpmm) / 1.3, 6);
+    const fontSize = Math.max(
+      dotsToPx(p.fontHeight, scale, dpmm) / ZPL_FONT_HEIGHT_TO_CSS_RATIO,
+      6,
+    );
     const fontFamily = p.printerFontName
       ? (getFontFamily(p.printerFontName) ?? "'Roboto Condensed', sans-serif")
       : "'Roboto Condensed', sans-serif";
@@ -179,7 +186,10 @@ function KonvaObjectInner({
 
   if (obj.type === "serial") {
     const p = obj.props;
-    const fontSize = Math.max(dotsToPx(p.fontHeight, scale, dpmm) / 1.3, 6);
+    const fontSize = Math.max(
+      dotsToPx(p.fontHeight, scale, dpmm) / ZPL_FONT_HEIGHT_TO_CSS_RATIO,
+      6,
+    );
     const zplRotationDeg: Record<typeof p.rotation, number> = {
       N: 0,
       R: 90,

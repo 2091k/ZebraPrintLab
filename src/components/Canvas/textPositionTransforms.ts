@@ -24,12 +24,18 @@ interface TextLikeProps {
 /** 15 dots empirical canvas/ZPL alignment offset for rotated text. */
 const ROTATION_OFFSET_DOTS = 15;
 
+/** Ratio between ZPL fontHeight (cap-height) and CSS/Konva fontSize
+ *  (em-height) for Roboto Condensed Bold. Empirical: divide ZPL
+ *  fontHeight by this to get the Konva-rendered height in dots, or to
+ *  derive the Konva fontSize. Lives here because it appears in both
+ *  the FT baseline math and the text/serial render paths. */
+export const ZPL_FONT_HEIGHT_TO_CSS_RATIO = 1.3;
+
 function ftBaselineDelta(props: TextLikeProps): { dx: number; dy: number } {
   // For R/I/B the Konva anchor sits at the far end of the rendered
-  // glyph, so we use the actual rendered height (fontHeight / 1.3).
-  // For N the anchor is at the top, so we shift up by the full ZPL
-  // fontHeight.
-  const renderedH = props.fontHeight / 1.3;
+  // glyph, so we use the actual rendered height. For N the anchor is
+  // at the top, so we shift up by the full ZPL fontHeight.
+  const renderedH = props.fontHeight / ZPL_FONT_HEIGHT_TO_CSS_RATIO;
   switch (props.rotation) {
     case 'N': return { dx: 0, dy: -props.fontHeight };
     case 'R': return { dx: renderedH, dy: 0 };
