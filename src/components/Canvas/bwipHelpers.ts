@@ -435,6 +435,18 @@ export interface BarcodeDisplaySize {
   barTopPx: number;
 }
 
+/** Firmware-reserved text-zone height in dots, keyed by symbology. The
+ *  zone sits below the bars in upright orientation; rotation maps it to
+ *  another side of the bbox in getDisplaySize. Types not listed have no
+ *  reserved zone. */
+const TEXT_ZONE_DOTS_BY_TYPE: Partial<Record<LabelObject["type"], number>> = {
+  ean13: EAN_TEXT_ZONE_DOTS,
+  ean8: EAN_TEXT_ZONE_DOTS,
+  upca: EAN_TEXT_ZONE_DOTS,
+  upce: EAN_TEXT_ZONE_DOTS,
+  logmars: LOGMARS_TEXT_ZONE_DOTS,
+};
+
 export function getDisplaySize(
   obj: LabelObject,
   canvas: HTMLCanvasElement,
@@ -458,16 +470,10 @@ export function getDisplaySize(
   const w = isQuarter ? upright.h : upright.w;
   const h = isQuarter ? upright.w : upright.h;
 
-  // Find this object's text-zone reservation (in upright orientation, on the
-  // "below" side of the bars per Labelary's bbox). Zero for symbologies
-  // without a reserved zone.
-  let textZonePx = 0;
-  if (obj.type === "ean13" || obj.type === "ean8" ||
-      obj.type === "upca"  || obj.type === "upce") {
-    textZonePx = dotsToPx(EAN_TEXT_ZONE_DOTS, scale, dpmm);
-  } else if (obj.type === "logmars") {
-    textZonePx = dotsToPx(LOGMARS_TEXT_ZONE_DOTS, scale, dpmm);
-  }
+  // Text-zone reservation in upright orientation, on the "below" side of
+  // the bars per Labelary's bbox. Zero for symbologies without one.
+  const textZoneDots = TEXT_ZONE_DOTS_BY_TYPE[obj.type] ?? 0;
+  const textZonePx = dotsToPx(textZoneDots, scale, dpmm);
 
   // Map the upright "below the bars" zone onto the rotated bbox: it travels
   // around the rectangle as the symbol rotates.
