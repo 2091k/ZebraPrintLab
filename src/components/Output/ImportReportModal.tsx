@@ -99,7 +99,7 @@ export function ImportReportModal({ result, onClose }: Props) {
           onClick={onClose}
           className="px-3 py-1.5 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 transition-opacity"
         >
-          Close
+          {t.app.close}
         </button>
       </div>
     </DialogShell>

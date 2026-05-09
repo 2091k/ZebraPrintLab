@@ -81,7 +81,7 @@ export function ZplImportModal({ onClose }: Props) {
       boxClassName="bg-surface border border-border rounded-lg w-130 flex flex-col shadow-2xl max-h-[80vh]"
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-        <span id="zpl-import-title" className="font-mono text-xs text-muted uppercase tracking-widest">Import ZPL</span>
+        <span id="zpl-import-title" className="font-mono text-xs text-muted uppercase tracking-widest">{t.app.importZpl}</span>
         <button
           onClick={onClose}
           aria-label={t.app.close}
@@ -107,7 +107,7 @@ export function ZplImportModal({ onClose }: Props) {
               onClick={onClose}
               className="px-3 py-1.5 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 transition-opacity"
             >
-              Close
+              {t.app.close}
             </button>
           </div>
         </>
@@ -154,7 +154,7 @@ export function ZplImportModal({ onClose }: Props) {
                 onClick={onClose}
                 className="px-3 py-1.5 rounded text-xs font-mono text-muted hover:text-text hover:bg-surface-2 transition-colors"
               >
-                Cancel
+                {t.app.cancel}
               </button>
               <button
                 onClick={handleImport}
