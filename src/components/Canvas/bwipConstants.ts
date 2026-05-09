@@ -41,13 +41,17 @@ export const CODE11_QUIET_ZONE_DELTA_MODULES = 19;
 export const PLESSEY_BWIP_TO_ZEBRA_WIDTH_RATIO = 49 / 82;
 
 /** Symbologies whose displayed bbox is dimensionally ZPL-correct but whose
- *  bitmap stretches or squeezes because bwip-js' bar pattern doesn't match
- *  Zebra firmware. UI surfaces a hint when one is selected so users know
- *  the visual fidelity is approximate even though the layout is correct. */
+ *  bitmap diverges visually from Zebra firmware — either through stretching
+ *  to fit the corrected bbox (code93/code11/plessey) or through a different
+ *  bar-pattern encoder (gs1databar: bwip-js and Zebra encode the same data
+ *  with the same module count but at different transition positions). UI
+ *  surfaces a hint when one is selected so users know the layout is correct
+ *  even when the visual rendering is approximate. */
 export const BWIP_VISUAL_APPROX_TYPES = new Set<string>([
   "code93",
   "code11",
   "plessey",
+  "gs1databar",
 ]);
 
 // Per-symbology spec module heights for GS1 DataBar. bwip-js renders most
