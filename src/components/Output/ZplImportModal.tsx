@@ -6,7 +6,7 @@ import { useLabelStore } from '../../store/labelStore';
 import { formatReportAsText, type ImportResult } from '../../lib/importReport';
 import { ImportSummaryBody } from './ImportReportModal';
 import { useT } from '../../lib/useT';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { DialogShell } from '../ui/DialogShell';
 
 interface Props {
   onClose: () => void;
@@ -14,8 +14,6 @@ interface Props {
 
 export function ZplImportModal({ onClose }: Props) {
   const t = useT();
-  const containerRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(containerRef, onClose);
   const [zpl, setZpl] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -77,104 +75,98 @@ export function ZplImportModal({ onClose }: Props) {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.6)' }}
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="zpl-import-title"
+    <DialogShell
+      onClose={onClose}
+      labelledBy="zpl-import-title"
+      boxClassName="bg-surface border border-border rounded-lg w-130 flex flex-col shadow-2xl max-h-[80vh]"
     >
-      <div className="bg-surface border border-border rounded-lg w-130 flex flex-col shadow-2xl max-h-[80vh]">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-          <span id="zpl-import-title" className="font-mono text-xs text-muted uppercase tracking-widest">Import ZPL</span>
-          <button
-            onClick={onClose}
-            aria-label={t.app.close}
-            className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors"
-          >
-            <XMarkIcon className="w-4 h-4" />
-          </button>
-        </div>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+        <span id="zpl-import-title" className="font-mono text-xs text-muted uppercase tracking-widest">Import ZPL</span>
+        <button
+          onClick={onClose}
+          aria-label={t.app.close}
+          className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors"
+        >
+          <XMarkIcon className="w-4 h-4" />
+        </button>
+      </div>
 
-        {result ? (
-          <>
-            <ImportSummaryBody result={result} />
-            <div className="flex justify-between items-center px-4 py-3 border-t border-border shrink-0">
-              <button
-                onClick={handleCopy}
-                className="flex items-center gap-1.5 font-mono text-[10px] text-muted hover:text-text transition-colors"
-              >
-                {copied
-                  ? <><CheckIcon className="w-3.5 h-3.5" /> Copied</>
-                  : <><ClipboardDocumentIcon className="w-3.5 h-3.5" /> Copy report</>}
-              </button>
+      {result ? (
+        <>
+          <ImportSummaryBody result={result} />
+          <div className="flex justify-between items-center px-4 py-3 border-t border-border shrink-0">
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 font-mono text-[10px] text-muted hover:text-text transition-colors"
+            >
+              {copied
+                ? <><CheckIcon className="w-3.5 h-3.5" /> Copied</>
+                : <><ClipboardDocumentIcon className="w-3.5 h-3.5" /> Copy report</>}
+            </button>
+            <button
+              onClick={onClose}
+              className="px-3 py-1.5 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 transition-opacity"
+            >
+              Close
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex flex-col gap-3 p-4 flex-1 min-h-0">
+            <p className="font-mono text-[10px] text-muted leading-relaxed">
+              Import produces an{' '}
+              <span className="text-amber-400">editable reconstruction</span>
+              , not an exact replica. Simple labels import cleanly; complex or
+              machine-generated ZPL may lose fidelity. Use{' '}
+              <span className="text-text">Save design (.json)</span> as the
+              lossless source format.
+            </p>
+            <textarea
+              className="flex-1 min-h-60 bg-surface-2 border border-border rounded px-3 py-2 font-mono text-xs text-text focus:border-accent focus:outline-none resize-none"
+              placeholder="^XA&#10;^PW800&#10;^LL480&#10;^FO50,50^A0N,30,0^FDHello World^FS&#10;^XZ"
+              value={zpl}
+              onChange={(e) => setZpl(e.target.value)}
+              spellCheck={false}
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".zpl,text/plain"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            {error && (
+              <p className="font-mono text-[10px] text-amber-400 leading-relaxed">{error}</p>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border shrink-0">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1.5 font-mono text-[10px] text-muted hover:text-text transition-colors"
+            >
+              <FolderOpenIcon className="w-3.5 h-3.5" />
+              Choose file
+            </button>
+            <div className="flex gap-2">
               <button
                 onClick={onClose}
-                className="px-3 py-1.5 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 transition-opacity"
+                className="px-3 py-1.5 rounded text-xs font-mono text-muted hover:text-text hover:bg-surface-2 transition-colors"
               >
-                Close
+                Cancel
               </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-col gap-3 p-4 flex-1 min-h-0">
-              <p className="font-mono text-[10px] text-muted leading-relaxed">
-                Import produces an{' '}
-                <span className="text-amber-400">editable reconstruction</span>
-                , not an exact replica. Simple labels import cleanly; complex or
-                machine-generated ZPL may lose fidelity. Use{' '}
-                <span className="text-text">Save design (.json)</span> as the
-                lossless source format.
-              </p>
-              <textarea
-                className="flex-1 min-h-60 bg-surface-2 border border-border rounded px-3 py-2 font-mono text-xs text-text focus:border-accent focus:outline-none resize-none"
-                placeholder="^XA&#10;^PW800&#10;^LL480&#10;^FO50,50^A0N,30,0^FDHello World^FS&#10;^XZ"
-                value={zpl}
-                onChange={(e) => setZpl(e.target.value)}
-                spellCheck={false}
-              />
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".zpl,text/plain"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-              {error && (
-                <p className="font-mono text-[10px] text-amber-400 leading-relaxed">{error}</p>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border shrink-0">
               <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1.5 font-mono text-[10px] text-muted hover:text-text transition-colors"
+                onClick={handleImport}
+                disabled={!zpl.trim()}
+                className="px-3 py-1.5 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 disabled:opacity-25 disabled:cursor-not-allowed transition-opacity"
               >
-                <FolderOpenIcon className="w-3.5 h-3.5" />
-                Choose file
+                Import
               </button>
-              <div className="flex gap-2">
-                <button
-                  onClick={onClose}
-                  className="px-3 py-1.5 rounded text-xs font-mono text-muted hover:text-text hover:bg-surface-2 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleImport}
-                  disabled={!zpl.trim()}
-                  className="px-3 py-1.5 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 disabled:opacity-25 disabled:cursor-not-allowed transition-opacity"
-                >
-                  Import
-                </button>
-              </div>
             </div>
-          </>
-        )}
-      </div>
-    </div>
+          </div>
+        </>
+      )}
+    </DialogShell>
   );
 }

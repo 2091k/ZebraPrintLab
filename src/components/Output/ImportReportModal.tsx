@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { XMarkIcon, ClipboardDocumentIcon, CheckIcon } from '@heroicons/react/16/solid';
 import { partialLoss, formatReportAsText } from '../../lib/importReport';
 import type { ImportResult } from '../../lib/importReport';
 import { useT } from '../../lib/useT';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { DialogShell } from '../ui/DialogShell';
 
 export type { ImportResult };
 
@@ -58,8 +58,6 @@ interface Props {
 
 export function ImportReportModal({ result, onClose }: Props) {
   const t = useT();
-  const containerRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(containerRef, onClose);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -70,46 +68,40 @@ export function ImportReportModal({ result, onClose }: Props) {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.6)' }}
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="import-report-title"
+    <DialogShell
+      onClose={onClose}
+      labelledBy="import-report-title"
+      boxClassName="bg-surface border border-border rounded-lg w-130 flex flex-col shadow-2xl max-h-[80vh]"
     >
-      <div className="bg-surface border border-border rounded-lg w-130 flex flex-col shadow-2xl max-h-[80vh]">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-          <span id="import-report-title" className="font-mono text-xs text-muted uppercase tracking-widest">Import Report</span>
-          <button
-            onClick={onClose}
-            aria-label={t.app.close}
-            className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors"
-          >
-            <XMarkIcon className="w-4 h-4" />
-          </button>
-        </div>
-
-        <ImportSummaryBody result={result} />
-
-        <div className="flex justify-between items-center px-4 py-3 border-t border-border shrink-0">
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 font-mono text-[10px] text-muted hover:text-text transition-colors"
-          >
-            {copied
-              ? <><CheckIcon className="w-3.5 h-3.5" /> Copied</>
-              : <><ClipboardDocumentIcon className="w-3.5 h-3.5" /> Copy report</>}
-          </button>
-          <button
-            onClick={onClose}
-            className="px-3 py-1.5 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 transition-opacity"
-          >
-            Close
-          </button>
-        </div>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+        <span id="import-report-title" className="font-mono text-xs text-muted uppercase tracking-widest">Import Report</span>
+        <button
+          onClick={onClose}
+          aria-label={t.app.close}
+          className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors"
+        >
+          <XMarkIcon className="w-4 h-4" />
+        </button>
       </div>
-    </div>
+
+      <ImportSummaryBody result={result} />
+
+      <div className="flex justify-between items-center px-4 py-3 border-t border-border shrink-0">
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 font-mono text-[10px] text-muted hover:text-text transition-colors"
+        >
+          {copied
+            ? <><CheckIcon className="w-3.5 h-3.5" /> Copied</>
+            : <><ClipboardDocumentIcon className="w-3.5 h-3.5" /> Copy report</>}
+        </button>
+        <button
+          onClick={onClose}
+          className="px-3 py-1.5 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 transition-opacity"
+        >
+          Close
+        </button>
+      </div>
+    </DialogShell>
   );
 }

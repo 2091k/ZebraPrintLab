@@ -1,6 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { DialogShell } from './DialogShell';
 
 interface ConfirmDialogProps {
   message: string;
@@ -26,65 +24,42 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(containerRef, onCancel);
-
-  // Lock background scroll while the modal is open so the dialog stays
-  // visually anchored and the user cannot drift past it.
-  useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, []);
-
   const confirmCls = destructive
     ? 'bg-red-500 text-white hover:bg-red-600'
     : 'bg-accent text-bg hover:opacity-90';
 
-  // Portal so the fixed-position backdrop is anchored to the viewport even
-  // when an ancestor has a CSS transform (which would otherwise contain
-  // `position: fixed` and miscentre the modal).
-  return createPortal(
-    <div
-      ref={containerRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onCancel}
+  return (
+    <DialogShell
+      onClose={onCancel}
+      role="alertdialog"
+      describedBy="confirm-dialog-message"
+      portal
+      boxClassName="bg-surface border border-border rounded shadow-lg flex flex-col w-[400px] max-w-[95vw]"
     >
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-describedby="confirm-dialog-message"
-        className="bg-surface border border-border rounded shadow-lg flex flex-col w-[400px] max-w-[95vw]"
-        onClick={(e) => e.stopPropagation()}
+      <p
+        id="confirm-dialog-message"
+        className="px-5 py-5 text-xs text-text leading-relaxed"
       >
-        <p
-          id="confirm-dialog-message"
-          className="px-5 py-5 text-xs text-text leading-relaxed"
+        {message}
+      </p>
+      <div className="flex justify-end gap-2 px-4 py-3 border-t border-border">
+        <button
+          type="button"
+          onClick={onCancel}
+          autoFocus={destructive}
+          className="px-4 py-1.5 rounded text-xs font-mono whitespace-nowrap border border-border text-text hover:bg-surface-2 transition-colors"
         >
-          {message}
-        </p>
-        <div className="flex justify-end gap-2 px-4 py-3 border-t border-border">
-          <button
-            type="button"
-            onClick={onCancel}
-            autoFocus={destructive}
-            className="px-4 py-1.5 rounded text-xs font-mono whitespace-nowrap border border-border text-text hover:bg-surface-2 transition-colors"
-          >
-            {cancelLabel}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            autoFocus={!destructive}
-            className={`px-4 py-1.5 rounded text-xs font-mono whitespace-nowrap ${confirmCls} transition`}
-          >
-            {confirmLabel}
-          </button>
-        </div>
+          {cancelLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          autoFocus={!destructive}
+          className={`px-4 py-1.5 rounded text-xs font-mono whitespace-nowrap ${confirmCls} transition`}
+        >
+          {confirmLabel}
+        </button>
       </div>
-    </div>,
-    document.body,
+    </DialogShell>
   );
 }
