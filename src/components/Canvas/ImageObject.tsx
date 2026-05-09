@@ -27,7 +27,12 @@ export function ImageObject({
   const p = obj.props;
   const cached = getImage(p.imageId);
   const w = dotsToPx(p.widthDots, scale, dpmm);
-  const h = cached ? w * (cached.height / cached.width) : w;
+  // Guard against a 0-width cached image: the imageCache pipeline
+  // doesn't normally produce one, but a malformed file could leak
+  // through and div-by-zero would render NaN-sized canvas nodes.
+  const h = cached && cached.width > 0
+    ? w * (cached.height / cached.width)
+    : w;
   const x = offsetX + dotsToPx(obj.x, scale, dpmm);
   const y = offsetY + dotsToPx(obj.y, scale, dpmm);
 

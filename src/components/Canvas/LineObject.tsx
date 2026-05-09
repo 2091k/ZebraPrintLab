@@ -86,7 +86,15 @@ export function LineObject({
         }
         onTap={() => onSelect(false)}
         onDragMove={(e) => {
-          setDragDelta({ x: e.target.x(), y: e.target.y() });
+          // Snap the whole-line delta in dot space, then mirror back
+          // to pixels — same idiom the endpoint handles use, and
+          // keeps the line consistent with shape/text/image drag.
+          const deltaXPx =
+            dotsToPx(snap(pxToDots(e.target.x(), scale, dpmm)), scale, dpmm);
+          const deltaYPx =
+            dotsToPx(snap(pxToDots(e.target.y(), scale, dpmm)), scale, dpmm);
+          e.target.position({ x: deltaXPx, y: deltaYPx });
+          setDragDelta({ x: deltaXPx, y: deltaYPx });
         }}
         onDragEnd={(e) => {
           const deltaXPx = e.target.x();
