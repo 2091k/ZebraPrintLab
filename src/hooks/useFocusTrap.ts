@@ -79,9 +79,14 @@ export function useFocusTrap(
       }
     };
 
-    document.addEventListener('keydown', handleKey);
+    // Listener on the container, not document: keydown bubbles from
+    // the focused element up through the container, so we still see
+    // every key while focus is inside. Listening on document would
+    // mean stacked modals (e.g. confirm-on-top-of-import) all react to
+    // a single Escape press and the entire stack would collapse.
+    container.addEventListener('keydown', handleKey);
     return () => {
-      document.removeEventListener('keydown', handleKey);
+      container.removeEventListener('keydown', handleKey);
       previouslyFocused?.focus?.();
     };
   }, [containerRef]);
