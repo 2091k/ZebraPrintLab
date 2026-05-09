@@ -97,6 +97,7 @@ const da = {
     newDesign: 'Nyt design',
     addPage: 'Tilføj side',
     cancel: 'Annuller',
+    close: 'Luk',
     deletePage: 'Slet side',
     deletePageConfirm: 'Slet den aktuelle side?',
     openDesign: 'Åbn design',

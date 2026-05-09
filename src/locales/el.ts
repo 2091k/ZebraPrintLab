@@ -97,6 +97,7 @@ const el = {
     newDesign: 'Νέο σχέδιο',
     addPage: 'Προσθήκη σελίδας',
     cancel: 'Ακύρωση',
+    close: 'Κλείσιμο',
     deletePage: 'Διαγραφή σελίδας',
     deletePageConfirm: 'Διαγραφή της τρέχουσας σελίδας;',
     openDesign: 'Άνοιγμα σχεδίου',

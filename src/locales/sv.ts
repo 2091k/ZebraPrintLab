@@ -97,6 +97,7 @@ const sv = {
     newDesign: 'Nytt design',
     addPage: 'Lägg till sida',
     cancel: 'Avbryt',
+    close: 'Stäng',
     deletePage: 'Ta bort sida',
     deletePageConfirm: 'Ta bort aktuell sida?',
     openDesign: 'Öppna design',

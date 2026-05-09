@@ -97,6 +97,7 @@ const zhHans = {
     newDesign: '新建设计',
     addPage: '添加页面',
     cancel: '取消',
+    close: '关闭',
     deletePage: '删除页面',
     deletePageConfirm: '删除当前页面？',
     openDesign: '打开设计',

@@ -97,6 +97,7 @@ const ro = {
     newDesign: 'Design nou',
     addPage: 'Adaugă pagină',
     cancel: 'Anulează',
+    close: 'Închide',
     deletePage: 'Șterge pagina',
     deletePageConfirm: 'Ștergeți pagina curentă?',
     openDesign: 'Deschide design',

@@ -97,6 +97,7 @@ const nl = {
     newDesign: 'Nieuw ontwerp',
     addPage: 'Pagina toevoegen',
     cancel: 'Annuleren',
+    close: 'Sluiten',
     deletePage: 'Pagina verwijderen',
     deletePageConfirm: 'Huidige pagina verwijderen?',
     openDesign: 'Ontwerp openen',

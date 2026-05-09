@@ -97,6 +97,7 @@ const es = {
     newDesign: 'Nuevo diseño',
     addPage: 'Añadir página',
     cancel: 'Cancelar',
+    close: 'Cerrar',
     deletePage: 'Eliminar página',
     deletePageConfirm: '¿Eliminar la página actual?',
     openDesign: 'Abrir diseño',

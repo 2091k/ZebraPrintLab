@@ -97,6 +97,7 @@ const bg = {
     newDesign: 'Нов дизайн',
     addPage: 'Добавяне на страница',
     cancel: 'Отказ',
+    close: 'Затваряне',
     deletePage: 'Изтриване на страница',
     deletePageConfirm: 'Изтриване на текущата страница?',
     openDesign: 'Отвори дизайн',

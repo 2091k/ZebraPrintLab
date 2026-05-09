@@ -28,17 +28,21 @@ export function LabelaryNoticeModal({ onContinue, onClose }: Props) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="labelary-notice-title"
     >
       <div
         className="bg-surface border border-border-2 rounded shadow-lg flex flex-col overflow-hidden max-w-[90vw]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-2 shrink-0">
-          <span className="font-mono text-[10px] text-muted uppercase tracking-widest">
+          <span id="labelary-notice-title" className="font-mono text-[10px] text-muted uppercase tracking-widest">
             {t.output.previewNoticeTitle}
           </span>
           <button
             onClick={onClose}
+            aria-label={t.app.close}
             className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors ml-6"
           >
             <XMarkIcon className="w-4 h-4" />

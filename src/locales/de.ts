@@ -97,6 +97,7 @@ const de = {
     newDesign: 'Neues Design',
     addPage: 'Seite hinzufügen',
     cancel: 'Abbrechen',
+    close: 'Schließen',
     deletePage: 'Seite löschen',
     deletePageConfirm: 'Aktuelle Seite löschen?',
     openDesign: 'Design öffnen',

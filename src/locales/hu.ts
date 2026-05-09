@@ -97,6 +97,7 @@ const hu = {
     newDesign: 'Új terv',
     addPage: 'Oldal hozzáadása',
     cancel: 'Mégse',
+    close: 'Bezárás',
     deletePage: 'Oldal törlése',
     deletePageConfirm: 'Törli az aktuális oldalt?',
     openDesign: 'Terv megnyitása',

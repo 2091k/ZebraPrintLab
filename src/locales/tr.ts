@@ -97,6 +97,7 @@ const tr = {
     newDesign: 'Yeni Tasarım',
     addPage: 'Sayfa ekle',
     cancel: 'İptal',
+    close: 'Kapat',
     deletePage: 'Sayfayı sil',
     deletePageConfirm: 'Geçerli sayfa silinsin mi?',
     openDesign: 'Tasarım Aç',

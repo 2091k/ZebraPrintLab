@@ -97,6 +97,7 @@ const ko = {
     newDesign: '새 디자인',
     addPage: '페이지 추가',
     cancel: '취소',
+    close: '닫기',
     deletePage: '페이지 삭제',
     deletePageConfirm: '현재 페이지를 삭제하시겠습니까?',
     openDesign: '디자인 열기',

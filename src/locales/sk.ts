@@ -97,6 +97,7 @@ const sk = {
     newDesign: 'Nový návrh',
     addPage: 'Pridať stránku',
     cancel: 'Zrušiť',
+    close: 'Zavrieť',
     deletePage: 'Odstrániť stránku',
     deletePageConfirm: 'Odstrániť aktuálnu stránku?',
     openDesign: 'Otvoriť návrh',

@@ -97,6 +97,7 @@ const sl = {
     newDesign: 'Nov dizajn',
     addPage: 'Dodaj stran',
     cancel: 'Prekliči',
+    close: 'Zapri',
     deletePage: 'Izbriši stran',
     deletePageConfirm: 'Izbrišem trenutno stran?',
     openDesign: 'Odpri dizajn',

@@ -97,6 +97,7 @@ const pt = {
     newDesign: 'Novo design',
     addPage: 'Adicionar página',
     cancel: 'Cancelar',
+    close: 'Fechar',
     deletePage: 'Eliminar página',
     deletePageConfirm: 'Eliminar a página atual?',
     openDesign: 'Abrir design',

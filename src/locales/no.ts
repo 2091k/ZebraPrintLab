@@ -97,6 +97,7 @@ const no = {
     newDesign: 'Nytt design',
     addPage: 'Legg til side',
     cancel: 'Avbryt',
+    close: 'Lukk',
     deletePage: 'Slett side',
     deletePageConfirm: 'Slette gjeldende side?',
     openDesign: 'Åpne design',

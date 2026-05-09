@@ -97,6 +97,7 @@ const hr = {
     newDesign: 'Novi dizajn',
     addPage: 'Dodaj stranicu',
     cancel: 'Odustani',
+    close: 'Zatvori',
     deletePage: 'Izbriši stranicu',
     deletePageConfirm: 'Izbrisati trenutnu stranicu?',
     openDesign: 'Otvori dizajn',

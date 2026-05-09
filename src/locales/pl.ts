@@ -97,6 +97,7 @@ const pl = {
     newDesign: 'Nowy projekt',
     addPage: 'Dodaj stronę',
     cancel: 'Anuluj',
+    close: 'Zamknij',
     deletePage: 'Usuń stronę',
     deletePageConfirm: 'Usunąć bieżącą stronę?',
     openDesign: 'Otwórz projekt',

@@ -97,6 +97,7 @@ const he = {
     newDesign: 'עיצוב חדש',
     addPage: 'הוסף דף',
     cancel: 'ביטול',
+    close: 'סגור',
     deletePage: 'מחק דף',
     deletePageConfirm: 'למחוק את הדף הנוכחי?',
     openDesign: 'פתח עיצוב',

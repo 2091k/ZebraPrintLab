@@ -97,6 +97,7 @@ const it = {
     newDesign: 'Nuovo design',
     addPage: 'Aggiungi pagina',
     cancel: 'Annulla',
+    close: 'Chiudi',
     deletePage: 'Elimina pagina',
     deletePageConfirm: 'Eliminare la pagina corrente?',
     openDesign: 'Apri design',

@@ -97,6 +97,7 @@ const et = {
     newDesign: 'Uus kujundus',
     addPage: 'Lisa leht',
     cancel: 'Loobu',
+    close: 'Sulge',
     deletePage: 'Kustuta leht',
     deletePageConfirm: 'Kustuta praegune leht?',
     openDesign: 'Ava kujundus',

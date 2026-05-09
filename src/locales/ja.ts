@@ -97,6 +97,7 @@ const ja = {
     newDesign: '新しいデザイン',
     addPage: 'ページを追加',
     cancel: 'キャンセル',
+    close: '閉じる',
     deletePage: 'ページを削除',
     deletePageConfirm: '現在のページを削除しますか?',
     openDesign: 'デザインを開く',

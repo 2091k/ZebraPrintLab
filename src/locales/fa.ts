@@ -97,6 +97,7 @@ const fa = {
     newDesign: 'طرح جدید',
     addPage: 'افزودن صفحه',
     cancel: 'لغو',
+    close: 'بستن',
     deletePage: 'حذف صفحه',
     deletePageConfirm: 'صفحه فعلی حذف شود؟',
     openDesign: 'باز کردن طرح',

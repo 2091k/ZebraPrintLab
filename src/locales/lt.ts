@@ -97,6 +97,7 @@ const lt = {
     newDesign: 'Naujas dizainas',
     addPage: 'Pridėti puslapį',
     cancel: 'Atšaukti',
+    close: 'Uždaryti',
     deletePage: 'Ištrinti puslapį',
     deletePageConfirm: 'Ištrinti dabartinį puslapį?',
     openDesign: 'Atidaryti dizainą',

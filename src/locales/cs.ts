@@ -97,6 +97,7 @@ const cs = {
     newDesign: 'Nový návrh',
     addPage: 'Přidat stránku',
     cancel: 'Zrušit',
+    close: 'Zavřít',
     deletePage: 'Smazat stránku',
     deletePageConfirm: 'Smazat aktuální stránku?',
     openDesign: 'Otevřít návrh',

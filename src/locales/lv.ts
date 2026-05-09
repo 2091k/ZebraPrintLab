@@ -97,6 +97,7 @@ const lv = {
     newDesign: 'Jauns dizains',
     addPage: 'Pievienot lapu',
     cancel: 'Atcelt',
+    close: 'Aizvērt',
     deletePage: 'Dzēst lapu',
     deletePageConfirm: 'Dzēst pašreizējo lapu?',
     openDesign: 'Atvērt dizainu',

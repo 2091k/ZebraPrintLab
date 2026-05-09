@@ -97,6 +97,7 @@ const fi = {
     newDesign: 'Uusi rakenne',
     addPage: 'Lisää sivu',
     cancel: 'Peruuta',
+    close: 'Sulje',
     deletePage: 'Poista sivu',
     deletePageConfirm: 'Poistetaanko nykyinen sivu?',
     openDesign: 'Avaa rakenne',

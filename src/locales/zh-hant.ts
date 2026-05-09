@@ -97,6 +97,7 @@ const zhHant = {
     newDesign: '新增設計',
     addPage: '新增頁面',
     cancel: '取消',
+    close: '關閉',
     deletePage: '刪除頁面',
     deletePageConfirm: '刪除目前頁面？',
     openDesign: '開啟設計',

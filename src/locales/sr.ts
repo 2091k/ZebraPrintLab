@@ -97,6 +97,7 @@ const sr = {
     newDesign: 'Нови дизајн',
     addPage: 'Додај страницу',
     cancel: 'Откажи',
+    close: 'Затвори',
     deletePage: 'Обриши страницу',
     deletePageConfirm: 'Обрисати тренутну страницу?',
     openDesign: 'Отвори дизајн',

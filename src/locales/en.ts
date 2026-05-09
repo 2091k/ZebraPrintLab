@@ -97,6 +97,7 @@ const en = {
     newDesign: 'New design',
     addPage: 'Add page',
     cancel: 'Cancel',
+    close: 'Close',
     deletePage: 'Delete page',
     deletePageConfirm: 'Delete the current page?',
     openDesign: 'Open design',

@@ -97,6 +97,7 @@ const ar = {
     newDesign: 'تصميم جديد',
     addPage: 'إضافة صفحة',
     cancel: 'إلغاء',
+    close: 'إغلاق',
     deletePage: 'حذف الصفحة',
     deletePageConfirm: 'حذف الصفحة الحالية؟',
     openDesign: 'فتح تصميم',

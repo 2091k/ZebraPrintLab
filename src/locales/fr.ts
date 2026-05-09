@@ -97,6 +97,7 @@ const fr = {
     newDesign: 'Nouveau design',
     addPage: 'Ajouter une page',
     cancel: 'Annuler',
+    close: 'Fermer',
     deletePage: 'Supprimer la page',
     deletePageConfirm: 'Supprimer la page actuelle ?',
     openDesign: 'Ouvrir le design',
