@@ -122,7 +122,7 @@ const sv = {
     previewEmpty: 'Förhandsvisning visas\nefter ändringar',
     previewProvider: 'Förhandsgranskning via api.labelary.com',
     previewNoticeTitle: 'Integritetsmeddelande',
-    previewNoticeBody: 'Förhandsgranskningen renderas av den externa tjänsten api.labelary.com. Hela etikettens ZPL, inklusive känsliga data, skickas över nätverket.',
+    previewNoticeBody: 'Förhandsgranskning och utskrift renderas av den externa tjänsten api.labelary.com. Hela etikettens ZPL, inklusive känsliga data, skickas över nätverket.',
     previewNoticePrivacyLink: 'Labelarys integritetsinformation',
     previewNoticeAcknowledge: 'Uppfattat, fortsätt',
   },

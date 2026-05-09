@@ -122,7 +122,7 @@ const fa = {
     previewEmpty: 'پیش‌نمایش پس از\nتغییرات نمایش داده می‌شود',
     previewProvider: 'پیش‌نمایش از طریق api.labelary.com',
     previewNoticeTitle: 'اطلاعیه حریم خصوصی',
-    previewNoticeBody: 'پیش‌نمایش توسط سرویس خارجی api.labelary.com تولید می‌شود. ZPL کامل برچسب، شامل داده‌های حساس، از طریق شبکه ارسال می‌شود.',
+    previewNoticeBody: 'پیش‌نمایش و چاپ توسط سرویس خارجی api.labelary.com تولید می‌شود. ZPL کامل برچسب، شامل داده‌های حساس، از طریق شبکه ارسال می‌شود.',
     previewNoticePrivacyLink: 'اطلاعات حریم خصوصی Labelary',
     previewNoticeAcknowledge: 'متوجه شدم، ادامه',
   },

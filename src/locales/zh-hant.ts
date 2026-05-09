@@ -122,7 +122,7 @@ const zhHant = {
     previewEmpty: '變更後顯示預覽',
     previewProvider: '透過 api.labelary.com 預覽',
     previewNoticeTitle: '隱私聲明',
-    previewNoticeBody: '預覽由外部服務 api.labelary.com 產生。完整的標籤 ZPL（包含敏感資料）會透過網路傳送。',
+    previewNoticeBody: '預覽和列印由外部服務 api.labelary.com 產生。完整的標籤 ZPL（包含敏感資料）會透過網路傳送。',
     previewNoticePrivacyLink: 'Labelary 隱私資訊',
     previewNoticeAcknowledge: '了解，繼續',
   },

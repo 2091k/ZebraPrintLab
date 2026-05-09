@@ -122,7 +122,7 @@ const et = {
     previewEmpty: 'Eelvaade kuvatakse\npärast muudatusi',
     previewProvider: 'Eelvaade api.labelary.com kaudu',
     previewNoticeTitle: 'Privaatsusteatis',
-    previewNoticeBody: 'Eelvaate genereerib väline teenus api.labelary.com. Sildi terve ZPL, sealhulgas tundlikud andmed, saadetakse võrgu kaudu.',
+    previewNoticeBody: 'Eelvaate ja printimise genereerib väline teenus api.labelary.com. Sildi terve ZPL, sealhulgas tundlikud andmed, saadetakse võrgu kaudu.',
     previewNoticePrivacyLink: 'Labelary privaatsusteave',
     previewNoticeAcknowledge: 'Selge, jätka',
   },

@@ -122,7 +122,7 @@ const lv = {
     previewEmpty: 'Priekšskatījums parādās\npēc izmaiņām',
     previewProvider: 'Priekšskatījums caur api.labelary.com',
     previewNoticeTitle: 'Paziņojums par privātumu',
-    previewNoticeBody: 'Priekšskatījumu ģenerē ārējais pakalpojums api.labelary.com. Visa etiķetes ZPL, tostarp sensitīvi dati, tiek sūtīta tīklā.',
+    previewNoticeBody: 'Priekšskatījumu un drukāšanu ģenerē ārējais pakalpojums api.labelary.com. Visa etiķetes ZPL, tostarp sensitīvi dati, tiek sūtīta tīklā.',
     previewNoticePrivacyLink: 'Labelary privātuma informācija',
     previewNoticeAcknowledge: 'Saprotu, turpināt',
   },

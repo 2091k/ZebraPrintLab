@@ -122,7 +122,7 @@ const zhHans = {
     previewEmpty: '更改后显示预览',
     previewProvider: '通过 api.labelary.com 预览',
     previewNoticeTitle: '隐私提示',
-    previewNoticeBody: '预览由外部服务 api.labelary.com 生成。完整的标签 ZPL（包括敏感数据）将通过网络发送。',
+    previewNoticeBody: '预览和打印由外部服务 api.labelary.com 生成。完整的标签 ZPL（包括敏感数据）将通过网络发送。',
     previewNoticePrivacyLink: 'Labelary 隐私信息',
     previewNoticeAcknowledge: '知道了，继续',
   },
