@@ -14,7 +14,11 @@ Writing ZPL by hand is tedious: cryptic commands, dot coordinates, no visual fee
 
 ---
 
-<!-- TODO: add screenshot -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshot-light.png">
+  <img alt="Zebra Print Lab — designer with a sample label" src="docs/screenshot-light.png">
+</picture>
 
 ---
 
