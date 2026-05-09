@@ -24,13 +24,13 @@ import type { LabelConfig } from "../../types/ObjectType";
 
 interface PropertiesPanelProps {
   /** Imperative handle on the canvas — used for actions that need live render
-   *  bboxes (alignment, future zoom-to-selection, etc.). Optional: when no
-   *  object is selected, the panel falls back to label config and the ref is
-   *  unused. */
-  canvasRef?: RefObject<LabelCanvasHandle | null>;
+   *  bboxes (alignment, future zoom-to-selection, etc.). Required so the
+   *  type system forces the caller to wire it up; the inner null-check on
+   *  `.current` only covers the brief window before LabelCanvas mounts. */
+  canvasRef: RefObject<LabelCanvasHandle | null>;
 }
 
-export function PropertiesPanel({ canvasRef }: PropertiesPanelProps = {}) {
+export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
   const t = useT();
   const {
     selectedIds,
@@ -44,7 +44,7 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps = {}) {
   const unit = canvasSettings.unit;
   const obj = objects.find((o) => o.id === selectedIds[0]);
   const handleAlign = (axis: AlignAxis) =>
-    canvasRef?.current?.alignSelectionToLabel(axis);
+    canvasRef.current?.alignSelectionToLabel(axis);
 
   if (selectedIds.length > 1) {
     return (
