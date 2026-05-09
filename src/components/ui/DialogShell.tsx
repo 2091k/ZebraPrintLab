@@ -29,9 +29,10 @@ type Props = Labelling & {
 /** Modal shell: backdrop + dialog box with focus trap, body scroll
  *  lock, ARIA dialog semantics, and Escape / click-outside close.
  *
- *  Backdrop close fires only when both press and release happen on the
- *  backdrop itself — prevents accidental close when dragging text out
- *  of an input or releasing a selection over the backdrop. */
+ *  Backdrop close uses click + target===currentTarget: the click event
+ *  only fires when press and release land on the same element, so
+ *  dragging text out of an input or starting a selection on the
+ *  backdrop and releasing inside the dialog will not close it. */
 export function DialogShell(props: Props) {
   const {
     onClose,
@@ -49,8 +50,13 @@ export function DialogShell(props: Props) {
   const node = (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      // tabIndex lets the container itself receive focus as the
+      // useFocusTrap fallback (when the dialog has no focusable
+      // children); focus:outline-none hides the browser ring on
+      // that purely programmatic focus.
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 focus:outline-none"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       role={role}
       aria-modal="true"
       aria-labelledby={labelledBy}
