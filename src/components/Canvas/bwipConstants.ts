@@ -18,6 +18,28 @@ export const LOGMARS_TEXT_ZONE_DOTS = 20;
 // bwip-js adds 3 quiet-zone rows to MicroPDF417 canvas output.
 export const MICROPDF417_QUIET_ZONE_ROWS = 3;
 
+/**
+ * bwip-vs-Zebra width-correction constants for symbologies whose bar
+ * pattern in bwip-js diverges from Zebra firmware.
+ *
+ * code93 / code11: bwip uses a narrower quiet zone than Zebra. The delta
+ *   is content-independent — it's the per-side quiet-zone shortfall in
+ *   modules. Adding it to the bwip canvas module count yields the
+ *   ZPL-correct print width. The bitmap stretches by ~10-25% to fill;
+ *   bars look slightly wider than the print but dimensions match.
+ *
+ * plessey: bwip uses a fundamentally different bar encoding from Zebra
+ *   ^BP — both grow linearly with content but at different rates. The
+ *   ratio (≈0.6) is empirically derived from the canonical "12345678"
+ *   fixture. The bitmap squeezes to ~60% width; bars look noticeably
+ *   compressed but the printed footprint matches.
+ */
+export const CODE93_QUIET_ZONE_DELTA_MODULES = 17;
+export const CODE11_QUIET_ZONE_DELTA_MODULES = 19;
+// Expressed as a fraction so the canonical fixture (492 → 294 dots)
+// matches exactly without rounding drift; numerically ≈ 0.5976.
+export const PLESSEY_BWIP_TO_ZEBRA_WIDTH_RATIO = 49 / 82;
+
 // Per-symbology spec module heights for GS1 DataBar. bwip-js renders most
 // non-stacked variants at the same canvas height as the omni form (33 modules)
 // regardless of the actual variant, which doesn't match Zebra firmware. Use

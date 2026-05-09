@@ -135,13 +135,12 @@ describe("Labelary Sync - Canvas Dimension Logic", () => {
       );
       // LOGMARS and EAN/UPC have firmware-reserved text zones now included
       // in getDisplaySize's bbox, so they pass the strict height check below.
-      // bwip-natural display size diverges from the Labelary reference for these types
-      // (quiet zone narrower than Zebra, or fundamentally different bar structure).
-      // The strict bounds check is skipped; ZPL generation is still verified above.
-      const hasBwipSizeMismatch = [
-        "code93", "code11",                  // quiet zone narrower than Zebra
-        "plessey",                           // different bar encoding algorithm
-      ].includes(obj.type);
+      // No remaining bwip-vs-Zebra width mismatches at the bbox level —
+      // code93/code11 add a fixed quiet-zone delta in getDisplaySize, and
+      // plessey applies an empirical width ratio. The bitmap inside still
+      // looks visually distorted (kept as a known limitation in
+      // visualRegression.test.ts), but the bbox dimensions now match.
+      const hasBwipSizeMismatch = false;
       // GS1 Databar variant 7 (Expanded Stacked) is segments-dependent; bwip-natural
       // height differs from spec and we don't yet have a per-segment formula.
       const isGs1Sym7 = obj.type === "gs1databar" && obj.props.symbology === 7;

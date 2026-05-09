@@ -23,10 +23,13 @@ import {
   wrapGs1AIs,
 } from "../../lib/gs1";
 import {
+  CODE11_QUIET_ZONE_DELTA_MODULES,
+  CODE93_QUIET_ZONE_DELTA_MODULES,
   EAN_TEXT_ZONE_DOTS,
   GS1_DATABAR_SPEC_HEIGHT_MODULES,
   LOGMARS_TEXT_ZONE_DOTS,
   MICROPDF417_QUIET_ZONE_ROWS,
+  PLESSEY_BWIP_TO_ZEBRA_WIDTH_RATIO,
 } from "./bwipConstants";
 
 const GS1_DATABAR_BCID: Record<Gs1DatabarProps["symbology"], string> = {
@@ -509,20 +512,31 @@ function getUprightDisplaySize(
   switch (obj.type) {
     case "code93":
     case "code11": {
-      // bwip-js renders a narrower quiet zone than Zebra firmware.
-      // Correcting to the Labelary width would stretch bars; return the bwip-natural size.
+      // bwip-js uses a narrower quiet zone than Zebra firmware. The
+      // shortfall is content-independent — a fixed module count per
+      // symbology — so we add it to the bwip module count to recover
+      // the ZPL-correct print width. The bitmap stretches ~10-25% to
+      // fill the wider bbox; bars look slightly broader than the
+      // printed output but dimensions match.
+      const delta = obj.type === "code93"
+        ? CODE93_QUIET_ZONE_DELTA_MODULES
+        : CODE11_QUIET_ZONE_DELTA_MODULES;
       const modulePx = dotsToPx(obj.props.moduleWidth, scale, dpmm);
       const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
-      const w = (cw / bwipSc) * modulePx;
+      const w = ((cw / bwipSc) + delta) * modulePx;
       const h = dotsToPx(obj.props.height, scale, dpmm);
       return { w, h };
     }
     case "plessey": {
-      // bwip-js uses a different bar encoding algorithm than Zebra firmware.
-      // Width is approximate; the visual regression is skipped for this type.
+      // bwip-js uses a fundamentally different bar encoding from Zebra
+      // ^BP — bwip renders ~67% wider than Zebra for the same content.
+      // Both encodings grow linearly with content, so a constant ratio
+      // suffices. The bitmap squeezes to ~60% of its intrinsic width;
+      // bars look compressed but the printed footprint matches.
       const modulePx = dotsToPx(obj.props.moduleWidth, scale, dpmm);
       const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
-      const w = (cw / bwipSc) * modulePx;
+      const w =
+        (cw / bwipSc) * modulePx * PLESSEY_BWIP_TO_ZEBRA_WIDTH_RATIO;
       const h = dotsToPx(obj.props.height, scale, dpmm);
       return { w, h };
     }
