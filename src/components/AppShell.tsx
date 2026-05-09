@@ -36,6 +36,7 @@ import { localeNames } from "../locales";
 import type { LocaleCode } from "../locales";
 import { mmToUnit } from "../lib/units";
 import { useT } from "../lib/useT";
+import { kbd } from "../lib/kbd";
 import { useGlobalShortcuts } from "../hooks/useGlobalShortcuts";
 import { useDesignFileActions } from "../hooks/useDesignFileActions";
 import { useZplImportExport } from "../hooks/useZplImportExport";
@@ -114,7 +115,7 @@ export function AppShell() {
           <button
             onClick={() => undo()}
             disabled={!canUndo}
-            title={`${t.app.undo} (⌘Z)`}
+            title={`${t.app.undo} (${kbd('Z')})`}
             aria-label={t.app.undo}
             className="p-1.5 rounded text-muted hover:text-text hover:bg-surface-2 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >
@@ -123,7 +124,7 @@ export function AppShell() {
           <button
             onClick={() => redo()}
             disabled={!canRedo}
-            title={`${t.app.redo} (⌘⇧Z)`}
+            title={`${t.app.redo} (${kbd('Z', { shift: true })})`}
             aria-label={t.app.redo}
             className="p-1.5 rounded text-muted hover:text-text hover:bg-surface-2 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >
