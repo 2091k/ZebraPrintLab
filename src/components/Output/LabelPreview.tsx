@@ -5,6 +5,7 @@ import { generateZPL } from '../../lib/zplGenerator';
 import { fetchPreview, labelaryErrorMessage } from '../../lib/labelary';
 import { triggerDownload } from '../../lib/triggerDownload';
 import { useT } from '../../lib/useT';
+import { DialogShell } from '../ui/DialogShell';
 
 interface Props {
   onClose: () => void;
@@ -51,72 +52,65 @@ export function LabelPreviewModal({ onClose }: Props) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="label-preview-title"
+    <DialogShell
+      onClose={onClose}
+      labelledBy="label-preview-title"
+      boxClassName="bg-surface border border-border-2 rounded shadow-lg flex flex-col overflow-hidden max-w-[90vw] max-h-[90vh]"
     >
-      <div
-        className="bg-surface border border-border-2 rounded shadow-lg flex flex-col overflow-hidden max-w-[90vw] max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-2 shrink-0">
-          <span id="label-preview-title" className="font-mono text-[10px] text-muted uppercase tracking-widest">
-            {t.output.previewHeading}
-          </span>
-          <button
-            onClick={onClose}
-            aria-label={t.app.close}
-            className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors ml-6"
-          >
-            <XMarkIcon className="w-4 h-4" />
-          </button>
-        </div>
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-2 shrink-0">
+        <span id="label-preview-title" className="font-mono text-[10px] text-muted uppercase tracking-widest">
+          {t.output.previewHeading}
+        </span>
+        <button
+          onClick={onClose}
+          aria-label={t.app.close}
+          className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors ml-6"
+        >
+          <XMarkIcon className="w-4 h-4" />
+        </button>
+      </div>
 
-        {/* Inset preview area: bg-bg gives a clear edge against the surrounding
-            surface (especially in light mode where the label image is white).
-            The outer div scrolls; the inner one stays at least as large as the
-            viewport so small previews are still centered. */}
-        <div className="flex-1 overflow-auto bg-bg min-h-24 min-w-48">
-          <div className="min-h-full min-w-full flex items-center justify-center p-4">
-            {loading && (
-              <span className="font-mono text-[10px] text-muted animate-pulse">{t.output.loading}</span>
-            )}
-            {!loading && error && (
-              <div className="flex flex-col items-center gap-3 max-w-64 text-center">
-                <span className="font-mono text-[10px] text-amber-400 leading-relaxed">{error}</span>
-                <button
-                  onClick={handleDownloadFallback}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-mono bg-surface-2 border border-border text-muted hover:text-text hover:border-accent transition-colors"
-                >
-                  <ArrowDownTrayIcon className="w-3.5 h-3.5" />
-                  Export ZPL instead
-                </button>
-              </div>
-            )}
-            {!loading && !error && previewUrl && (
-              <img
-                src={previewUrl}
-                alt="Label preview"
-                className="block shrink-0"
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="px-3 py-1 border-t border-border-2 shrink-0 text-center">
-          <a
-            href="https://labelary.com/"
-            target="_blank"
-            rel="noreferrer"
-            className="font-mono text-[9px] text-muted hover:text-accent transition-colors"
-          >
-            {t.output.previewProvider}
-          </a>
+      {/* Inset preview area: bg-bg gives a clear edge against the surrounding
+          surface (especially in light mode where the label image is white).
+          The outer div scrolls; the inner one stays at least as large as the
+          viewport so small previews are still centered. */}
+      <div className="flex-1 overflow-auto bg-bg min-h-24 min-w-48">
+        <div className="min-h-full min-w-full flex items-center justify-center p-4">
+          {loading && (
+            <span className="font-mono text-[10px] text-muted animate-pulse">{t.output.loading}</span>
+          )}
+          {!loading && error && (
+            <div className="flex flex-col items-center gap-3 max-w-64 text-center">
+              <span className="font-mono text-[10px] text-amber-400 leading-relaxed">{error}</span>
+              <button
+                onClick={handleDownloadFallback}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-mono bg-surface-2 border border-border text-muted hover:text-text hover:border-accent transition-colors"
+              >
+                <ArrowDownTrayIcon className="w-3.5 h-3.5" />
+                Export ZPL instead
+              </button>
+            </div>
+          )}
+          {!loading && !error && previewUrl && (
+            <img
+              src={previewUrl}
+              alt="Label preview"
+              className="block shrink-0"
+            />
+          )}
         </div>
       </div>
-    </div>
+
+      <div className="px-3 py-1 border-t border-border-2 shrink-0 text-center">
+        <a
+          href="https://labelary.com/"
+          target="_blank"
+          rel="noreferrer"
+          className="font-mono text-[9px] text-muted hover:text-accent transition-colors"
+        >
+          {t.output.previewProvider}
+        </a>
+      </div>
+    </DialogShell>
   );
 }

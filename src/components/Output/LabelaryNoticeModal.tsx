@@ -1,6 +1,7 @@
 import { XMarkIcon } from '@heroicons/react/16/solid';
 import { useLabelStore } from '../../store/labelStore';
 import { useT } from '../../lib/useT';
+import { DialogShell } from '../ui/DialogShell';
 
 interface Props {
   /** Called after the modal flipped the store flag, so callers only need
@@ -25,48 +26,41 @@ export function LabelaryNoticeModal({ onContinue, onClose }: Props) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="labelary-notice-title"
+    <DialogShell
+      onClose={onClose}
+      labelledBy="labelary-notice-title"
+      boxClassName="bg-surface border border-border-2 rounded shadow-lg flex flex-col overflow-hidden max-w-[90vw]"
     >
-      <div
-        className="bg-surface border border-border-2 rounded shadow-lg flex flex-col overflow-hidden max-w-[90vw]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-2 shrink-0">
-          <span id="labelary-notice-title" className="font-mono text-[10px] text-muted uppercase tracking-widest">
-            {t.output.previewNoticeTitle}
-          </span>
-          <button
-            onClick={onClose}
-            aria-label={t.app.close}
-            className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors ml-6"
-          >
-            <XMarkIcon className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-3 p-6 max-w-80 text-center font-mono text-[10px] text-muted leading-relaxed">
-          <span>{t.output.previewNoticeBody}</span>
-          <a
-            href="https://labelary.com/privacy.html"
-            target="_blank"
-            rel="noreferrer"
-            className="text-accent hover:underline"
-          >
-            {t.output.previewNoticePrivacyLink}
-          </a>
-          <button
-            onClick={handleContinue}
-            className="self-center mt-1 px-3 py-1.5 rounded text-[10px] font-mono bg-surface-2 border border-border text-text hover:border-accent transition-colors"
-          >
-            {t.output.previewNoticeAcknowledge}
-          </button>
-        </div>
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-2 shrink-0">
+        <span id="labelary-notice-title" className="font-mono text-[10px] text-muted uppercase tracking-widest">
+          {t.output.previewNoticeTitle}
+        </span>
+        <button
+          onClick={onClose}
+          aria-label={t.app.close}
+          className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors ml-6"
+        >
+          <XMarkIcon className="w-4 h-4" />
+        </button>
       </div>
-    </div>
+
+      <div className="flex flex-col gap-3 p-6 max-w-80 text-center font-mono text-[10px] text-muted leading-relaxed">
+        <span>{t.output.previewNoticeBody}</span>
+        <a
+          href="https://labelary.com/privacy.html"
+          target="_blank"
+          rel="noreferrer"
+          className="text-accent hover:underline"
+        >
+          {t.output.previewNoticePrivacyLink}
+        </a>
+        <button
+          onClick={handleContinue}
+          className="self-center mt-1 px-3 py-1.5 rounded text-[10px] font-mono bg-surface-2 border border-border text-text hover:border-accent transition-colors"
+        >
+          {t.output.previewNoticeAcknowledge}
+        </button>
+      </div>
+    </DialogShell>
   );
 }
