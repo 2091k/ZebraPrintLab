@@ -201,7 +201,7 @@ export function BarcodeObject({
 
         const { xLeft: xLeft13, xRight: xRight13, halfWidth: halfW13 } = layout;
 
-        const textY = Math.max(h, 1) + textGap;
+        const textY = Math.max(bh, 1) + textGap;
         clipLeft = ldW;
         textNodes = [
           <Text
@@ -253,7 +253,7 @@ export function BarcodeObject({
 
         const { xLeft: xLeft8, xRight: xRight8, halfWidth: halfW8 } = layout;
 
-        const textY = Math.max(h, 1) + textGap;
+        const textY = Math.max(bh, 1) + textGap;
         textNodes = [
           <Text
             key="dl"
@@ -292,7 +292,7 @@ export function BarcodeObject({
         const { xLeft: xLeftUpca, xRight: xRightUpca, halfWidth: halfUpca } =
           layout;
 
-        const textY = Math.max(h, 1) + textGap;
+        const textY = Math.max(bh, 1) + textGap;
         clipLeft = ldW;
         textNodes = [
           // number system digit — floated left of barcode image
@@ -348,7 +348,7 @@ export function BarcodeObject({
 
         // UPC-E: 6 digits centered over the data area (modules 3–44 of 51)
         const { xLeft: xMid, halfWidth: midW } = layout;
-        const textY = Math.max(h, 1) + textGap;
+        const textY = Math.max(bh, 1) + textGap;
         clipLeft = ldW;
         clipRight = ldW;
         textNodes = [
@@ -463,7 +463,7 @@ export function BarcodeObject({
       const textLocalY = (sy: number) =>
         isTextAbove
           ? -(textFontSize + aboveGap) / sy
-          : Math.max(h, 1) + textGap / sy;
+          : Math.max(bh, 1) + textGap / sy;
       const txtY = textLocalY(1);
 
       // Counter-scale the text so it stays at constant pixel size while the
@@ -653,7 +653,7 @@ export function BarcodeObject({
           txtX = sideX; txtY = 0; txtWidth = h;
         } else if (rotation === "I") {
           txtX = w;
-          txtY = isTextAbove ? h + textGap + textFontSize : -textGap;
+          txtY = isTextAbove ? bh + textGap + textFontSize : -textGap;
           txtWidth = w;
         } else {
           txtX = sideX; txtY = h; txtWidth = h;
