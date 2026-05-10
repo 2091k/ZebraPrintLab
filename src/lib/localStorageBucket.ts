@@ -9,20 +9,31 @@
 
 /**
  * Iterate every localStorage entry whose key starts with `prefix`, parse it
- * as JSON, and forward the parsed value to `accept`. Corrupt entries are
- * silently dropped — runtime hydration must never throw.
+ * as JSON, and forward the parsed value to `accept`. Corrupt entries and
+ * non-object primitives (numbers, booleans, null, arrays) are silently
+ * dropped — runtime hydration must never throw, and `T` is contractually
+ * an object shape.
+ *
+ * Keys are snapshotted before iteration so an `accept` callback that
+ * removes or adds localStorage entries can't shift indexes mid-loop.
  */
 export function hydrateLocalStoragePrefix<T>(
   prefix: string,
   accept: (entry: T) => void,
 ): void {
+  const keys: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (!key?.startsWith(prefix)) continue;
+    if (key?.startsWith(prefix)) keys.push(key);
+  }
+  for (const key of keys) {
     const raw = localStorage.getItem(key);
     if (raw === null) continue;
     try {
-      accept(JSON.parse(raw) as T);
+      const entry: unknown = JSON.parse(raw);
+      if (entry !== null && typeof entry === "object" && !Array.isArray(entry)) {
+        accept(entry as T);
+      }
     } catch {
       // ignore corrupt entries
     }
