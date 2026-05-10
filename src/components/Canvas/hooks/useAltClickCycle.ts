@@ -38,6 +38,7 @@ export function useAltClickCycle({ containerRef, stageRef, selectObject }: Optio
       // offset, per-shape transforms and the listening flag, all of
       // which our own bbox math would have to mirror by hand.
       const intersections = stage.getAllIntersections(point);
+      if (intersections.length === 0) return;
       const objIds = new Set(getCurrentObjects().map((o) => o.id));
       const hits: string[] = [];
       const seen = new Set<string>();
@@ -60,6 +61,8 @@ export function useAltClickCycle({ containerRef, stageRef, selectObject }: Optio
       e.stopPropagation();
       e.preventDefault();
       const idx = nextCycleIndex(hits, anchorRef.current, point, ALT_CYCLE_TOL_PX);
+      // `hits[idx]` is `string | undefined` under noUncheckedIndexedAccess
+      // even though idx is guaranteed valid here — the guard satisfies TS.
       const nextId = hits[idx];
       if (!nextId) return;
       anchorRef.current = { x: point.x, y: point.y, id: nextId };
