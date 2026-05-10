@@ -165,6 +165,14 @@ describe("sendViaNetwork", () => {
       status: 200,
     });
   });
+
+  it("preserves a non-2xx status so the caller can flag it as an error", async () => {
+    vi.stubGlobal("fetch", mockFetch({}, false));
+    await expect(sendViaNetwork("192.168.1.50", 9100, "^XA^XZ")).resolves.toEqual({
+      kind: "responded",
+      status: 500,
+    });
+  });
 });
 
 // ── printPreview pure functions ───────────────────────────────────────────────

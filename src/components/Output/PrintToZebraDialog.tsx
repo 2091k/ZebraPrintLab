@@ -58,7 +58,13 @@ export function PrintToZebraDialog({ zpl, onClose }: Props) {
     const result = await sendViaNetwork(ip.trim(), Number(port) || 9100, zpl);
     switch (result.kind) {
       case "responded":
-        setNetStatus({ type: "success", message: t.zebraPrint.success });
+        // 2xx only counts as success; print servers / proxies that respond
+        // with 4xx or 5xx must surface as an error rather than green-success.
+        if (result.status >= 200 && result.status < 300) {
+          setNetStatus({ type: "success", message: t.zebraPrint.success });
+        } else {
+          setNetStatus({ type: "error", message: t.zebraPrint.errorGeneric });
+        }
         return;
       case "no_response":
         // Raw-socket printers (port 9100) never reply with HTTP, so a
