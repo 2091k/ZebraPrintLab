@@ -64,7 +64,12 @@ export function Ruler({
         strokeWidth={isMajor ? 1 : 0.5}
         listening={false} />,
     );
-    const displayMm = horizontalReversed ? labelWidthMm - mm : mm;
+    // `mm` was rounded above; subtraction reintroduces IEEE-754 artefacts
+    // (e.g. 100 - 30 = 70.00000000000001), so re-round to keep tick labels
+    // free of trailing-decimal noise on rotated labels.
+    const displayMm = horizontalReversed
+      ? Math.round((labelWidthMm - mm) * 1000) / 1000
+      : mm;
     if (isMajor && displayMm > 0 && displayMm <= labelWidthMm) {
       els.push(
         <Text key={`ht-${i}`}
@@ -92,7 +97,9 @@ export function Ruler({
         strokeWidth={isMajor ? 1 : 0.5}
         listening={false} />,
     );
-    const displayMm = verticalReversed ? labelHeightMm - mm : mm;
+    const displayMm = verticalReversed
+      ? Math.round((labelHeightMm - mm) * 1000) / 1000
+      : mm;
     if (isMajor && displayMm > 0 && displayMm <= labelHeightMm) {
       els.push(
         <Text key={`vt-${i}`}
