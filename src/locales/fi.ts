@@ -256,6 +256,7 @@ const fi = {
       selectImage: 'Valitse kuva…',
       upload: 'Lataa kuva',
       uploading: 'Ladataan…',
+      uploadError: 'Kuvaa ei voitu ladata',
       preview: 'Esikatselu',
       widthDots: 'Leveys (pisteet)',
       threshold: 'Mono-kynnys',

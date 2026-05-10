@@ -256,6 +256,7 @@ const pt = {
       selectImage: 'Selecionar imagem…',
       upload: 'Carregar imagem',
       uploading: 'Carregando…',
+      uploadError: 'Não foi possível carregar a imagem',
       preview: 'Pré-visualização',
       widthDots: 'Largura (pontos)',
       threshold: 'Limiar mono',

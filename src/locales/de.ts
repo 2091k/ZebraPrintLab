@@ -276,6 +276,7 @@ const de = {
       selectImage: 'Bild auswählen…',
       upload: 'Bild hochladen',
       uploading: 'Hochladen…',
+      uploadError: 'Bild konnte nicht geladen werden',
       preview: 'Vorschau',
       widthDots: 'Breite (Punkte)',
       threshold: 'Mono-Schwellenwert',

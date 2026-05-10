@@ -256,6 +256,7 @@ const nl = {
       selectImage: 'Afbeelding selecteren…',
       upload: 'Afbeelding uploaden',
       uploading: 'Uploaden…',
+      uploadError: 'Kon afbeelding niet laden',
       preview: 'Voorbeeld',
       widthDots: 'Breedte (punten)',
       threshold: 'Mono-drempelwaarde',

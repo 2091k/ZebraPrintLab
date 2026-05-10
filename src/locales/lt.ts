@@ -256,6 +256,7 @@ const lt = {
       selectImage: 'Pasirinkite vaizdą…',
       upload: 'Įkelti vaizdą',
       uploading: 'Įkeliama…',
+      uploadError: 'Nepavyko įkelti vaizdo',
       preview: 'Peržiūra',
       widthDots: 'Plotis (taškai)',
       threshold: 'Mono slenkstis',

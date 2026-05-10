@@ -256,6 +256,7 @@ const lv = {
       selectImage: 'Izvēlēties attēlu…',
       upload: 'Augšupielādēt attēlu',
       uploading: 'Augšupielāde…',
+      uploadError: 'Neizdevās ielādēt attēlu',
       preview: 'Priekšskatījums',
       widthDots: 'Platums (punkti)',
       threshold: 'Mono slieksnis',

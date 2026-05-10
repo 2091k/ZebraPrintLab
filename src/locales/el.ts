@@ -256,6 +256,7 @@ const el = {
       selectImage: 'Επιλογή εικόνας…',
       upload: 'Μεταφόρτωση εικόνας',
       uploading: 'Μεταφόρτωση…',
+      uploadError: 'Αδυναμία φόρτωσης εικόνας',
       preview: 'Προεπισκόπηση',
       widthDots: 'Πλάτος (κουκκίδες)',
       threshold: 'Κατώφλι mono',

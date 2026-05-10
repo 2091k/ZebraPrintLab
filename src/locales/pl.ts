@@ -256,6 +256,7 @@ const pl = {
       selectImage: 'Wybierz obraz…',
       upload: 'Prześlij obraz',
       uploading: 'Przesyłanie…',
+      uploadError: 'Nie można załadować obrazu',
       preview: 'Podgląd',
       widthDots: 'Szerokość (punkty)',
       threshold: 'Próg mono',

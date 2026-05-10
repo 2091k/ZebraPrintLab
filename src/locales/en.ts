@@ -276,6 +276,7 @@ const en = {
       selectImage: 'Select image…',
       upload: 'Upload image',
       uploading: 'Uploading…',
+      uploadError: 'Could not load image',
       preview: 'Preview',
       widthDots: 'Width (dots)',
       threshold: 'Mono threshold',

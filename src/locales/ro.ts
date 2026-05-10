@@ -256,6 +256,7 @@ const ro = {
       selectImage: 'Selectați imaginea…',
       upload: 'Încărcați imaginea',
       uploading: 'Se încarcă…',
+      uploadError: 'Imaginea nu a putut fi încărcată',
       preview: 'Previzualizare',
       widthDots: 'Lățime (puncte)',
       threshold: 'Prag mono',

@@ -256,6 +256,7 @@ const hu = {
       selectImage: 'Kép kiválasztása…',
       upload: 'Kép feltöltése',
       uploading: 'Feltöltés…',
+      uploadError: 'A kép nem tölthető be',
       preview: 'Előnézet',
       widthDots: 'Szélesség (pont)',
       threshold: 'Mono küszöb',

@@ -256,6 +256,7 @@ const sv = {
       selectImage: 'Välj bild…',
       upload: 'Ladda upp bild',
       uploading: 'Laddar upp…',
+      uploadError: 'Kunde inte ladda bilden',
       preview: 'Förhandsvisning',
       widthDots: 'Bredd (punkter)',
       threshold: 'Mono-tröskel',

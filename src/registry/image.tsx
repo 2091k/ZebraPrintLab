@@ -87,17 +87,25 @@ export const image: ObjectTypeDefinition<ImageProps> = {
     const p = obj.props;
     const fileRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+    const [uploadFailed, setUploadFailed] = useState(false);
 
     const cached = getImage(p.imageId);
     const allImages = getAllImages();
 
     const handleUpload = useCallback(async (file: File) => {
       setUploading(true);
+      setUploadFailed(false);
       try {
         const entry = await loadImageFile(file);
         // Pre-generate GFA cache
         const result = await imageToGFA(entry.dataUrl, p.widthDots, p.threshold);
         onChange({ imageId: entry.id, _gfaCache: result.zpl });
+      } catch {
+        // Surface the failure inline (non-image MIME, oversized file, decode
+        // error, GFA exception) and stop. The codebase has no production
+        // logging path; debugging specific causes (e.g. an obscure MIME) is
+        // done with a devtools breakpoint on this catch.
+        setUploadFailed(true);
       } finally {
         setUploading(false);
       }
@@ -160,6 +168,9 @@ export const image: ObjectTypeDefinition<ImageProps> = {
           >
             {uploading ? t.registry.image.uploading : t.registry.image.upload}
           </button>
+          {uploadFailed && (
+            <p className="text-[10px] font-mono text-red-400">{t.registry.image.uploadError}</p>
+          )}
         </div>
 
         {/* Preview thumbnail */}

@@ -90,6 +90,9 @@ function AddFontForm({ onDone }: AddFontFormProps) {
       await loadFontFile(file, printerName);
       onDone();
     } catch {
+      // Inline hint is the only signal (non-TTF/OTF, oversized, FileReader
+      // failure). Codebase has no production logging path; specific causes
+      // are debugged with a devtools breakpoint on this catch.
       setUploadFailed(true);
     } finally {
       setUploading(false);

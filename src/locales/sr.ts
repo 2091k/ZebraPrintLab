@@ -256,6 +256,7 @@ const sr = {
       selectImage: 'Изаберите слику…',
       upload: 'Отпремите слику',
       uploading: 'Отпремање…',
+      uploadError: 'Слика није могла да се учита',
       preview: 'Преглед',
       widthDots: 'Ширина (тачке)',
       threshold: 'Моно праг',
