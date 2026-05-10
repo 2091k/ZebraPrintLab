@@ -423,6 +423,7 @@ const nl = {
     noPrinters: 'Geen printers gevonden',
     agentNotFound: 'Zebra Browser Print-agent niet actief. Download op zebra.com.',
     success: 'ZPL succesvol verzonden',
+    sentNoResponse: 'Verzonden. Controleer op de printer.',
     errorRefused: 'Verbinding geweigerd — controleer IP en poort',
     errorGeneric: 'ZPL verzenden mislukt',
     httpsWarning: 'Pagina gebruikt HTTPS — direct afdrukken via IP kan worden geblokkeerd door de browser (gemengde inhoud).',

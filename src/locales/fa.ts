@@ -423,6 +423,7 @@ const fa = {
     noPrinters: 'چاپگری یافت نشد',
     agentNotFound: 'عامل Zebra Browser Print در حال اجرا نیست. از zebra.com دانلود کنید.',
     success: 'ZPL با موفقیت ارسال شد',
+    sentNoResponse: 'ارسال شد. روی چاپگر بررسی کنید.',
     errorRefused: 'اتصال رد شد — IP و پورت را بررسی کنید',
     errorGeneric: 'ارسال ZPL ناموفق بود',
     httpsWarning: 'صفحه روی HTTPS است — چاپ مستقیم از طریق IP ممکن است توسط مرورگر مسدود شود (محتوای مختلط).',

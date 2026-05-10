@@ -423,6 +423,7 @@ const he = {
     noPrinters: 'לא נמצאו מדפסות',
     agentNotFound: 'סוכן Zebra Browser Print אינו פועל. הורד מזברא.com.',
     success: 'ZPL נשלח בהצלחה',
+    sentNoResponse: 'נשלח. בדוק במדפסת.',
     errorRefused: 'החיבור סורב — בדוק IP ופורט',
     errorGeneric: 'שליחת ZPL נכשלה',
     httpsWarning: 'הדף נמצא על HTTPS — הדפסה ישירה דרך IP עלולה להיחסם על ידי הדפדפן (תוכן מעורב).',

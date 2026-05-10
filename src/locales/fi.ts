@@ -423,6 +423,7 @@ const fi = {
     noPrinters: 'Tulostimia ei löydy',
     agentNotFound: 'Zebra Browser Print -agentti ei ole käynnissä. Lataa osoitteesta zebra.com.',
     success: 'ZPL lähetetty onnistuneesti',
+    sentNoResponse: 'Lähetetty. Tarkista tulostimelta.',
     errorRefused: 'Yhteys evätty — tarkista IP ja portti',
     errorGeneric: 'ZPL:n lähetys epäonnistui',
     httpsWarning: 'Sivu on HTTPS:llä — suora IP-tulostus saattaa olla selaimen estämä (sekasisältö).',

@@ -423,6 +423,7 @@ const hu = {
     noPrinters: 'Nem találhatók nyomtatók',
     agentNotFound: 'A Zebra Browser Print ügynök nem fut. Töltse le a zebra.com oldalról.',
     success: 'ZPL sikeresen elküldve',
+    sentNoResponse: 'Elküldve. Ellenőrizze a nyomtatón.',
     errorRefused: 'Kapcsolat megtagadva — ellenőrizze az IP-t és a portot',
     errorGeneric: 'ZPL küldése sikertelen',
     httpsWarning: 'Az oldal HTTPS-en fut — az IP-n keresztüli közvetlen nyomtatást a böngésző blokkolhatja (vegyes tartalom).',

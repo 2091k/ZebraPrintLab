@@ -423,6 +423,7 @@ const hr = {
     noPrinters: 'Nisu pronađeni pisači',
     agentNotFound: 'Agent Zebra Browser Print nije pokrenut. Preuzmite sa zebra.com.',
     success: 'ZPL uspješno poslan',
+    sentNoResponse: 'Poslano. Provjerite na pisaču.',
     errorRefused: 'Veza odbijena — provjerite IP i port',
     errorGeneric: 'Slanje ZPL-a nije uspjelo',
     httpsWarning: 'Stranica koristi HTTPS — izravno ispisivanje putem IP-a može biti blokirano od preglednika (mješoviti sadržaj).',

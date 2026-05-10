@@ -423,6 +423,7 @@ const sl = {
     noPrinters: 'Ni najdenih tiskalnikov',
     agentNotFound: 'Agent Zebra Browser Print ne deluje. Prenesite s zebra.com.',
     success: 'ZPL uspešno poslan',
+    sentNoResponse: 'Poslano. Preverite na tiskalniku.',
     errorRefused: 'Povezava zavrnjena — preverite IP in vrata',
     errorGeneric: 'Pošiljanje ZPL ni uspelo',
     httpsWarning: 'Stran uporablja HTTPS — neposredno tiskanje prek IP-ja je morda blokirano s strani brskalnika (mešana vsebina).',

@@ -423,6 +423,7 @@ const bg = {
     noPrinters: 'Не са намерени принтери',
     agentNotFound: 'Агентът Zebra Browser Print не работи. Изтеглете от zebra.com.',
     success: 'ZPL изпратен успешно',
+    sentNoResponse: 'Изпратено. Проверете принтера.',
     errorRefused: 'Връзката е отказана — проверете IP и порт',
     errorGeneric: 'Неуспешно изпращане на ZPL',
     httpsWarning: 'Страницата е на HTTPS — директният печат по IP може да бъде блокиран от браузъра (смесено съдържание).',

@@ -423,6 +423,7 @@ const sv = {
     noPrinters: 'Inga skrivare hittades',
     agentNotFound: 'Zebra Browser Print-agenten körs inte. Ladda ner från zebra.com.',
     success: 'ZPL skickades',
+    sentNoResponse: 'Skickat. Verifiera på skrivaren.',
     errorRefused: 'Anslutning nekad — kontrollera IP och port',
     errorGeneric: 'Det gick inte att skicka ZPL',
     httpsWarning: 'Sidan använder HTTPS — direktutskrift via IP kan blockeras av webbläsaren (blandat innehåll).',
