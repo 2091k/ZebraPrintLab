@@ -85,6 +85,7 @@ File menu → **Add page** creates a new page. With multiple pages, the control 
 | `S` | Toggle snap |
 | `R` | Rotate view (0° → 90° → 180° → 270°) |
 | `Page Up` / `Page Down` | Previous / Next page |
+| `Alt`+click | Cycle selection through stacked objects (select-below) |
 | Middle mouse / Space+drag | Pan canvas |
 | Scroll | Pan canvas |
 | Ctrl+Scroll | Zoom |
