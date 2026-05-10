@@ -6,9 +6,8 @@ import { BARCODE_1D_TYPES, STACKED_2D_TYPES, ObjectRegistry } from "../../../reg
 import type { LabelObject } from "../../../registry";
 import type { ObjectChanges } from "../../../store/labelStore";
 import {
-  snapBoxHeight,
-  pinBottomEdge,
-  isTopAnchorResize,
+  applyHeightSnap,
+  pinInactiveEdges,
   transformNodeTopLeft,
   positionDidMove,
   forceSquareBox,
@@ -53,27 +52,6 @@ function captureOtherRects(
 }
 
 /**
- * Phase 1 of resize: snap height to whole rowHeight increments for stacked-2D
- * barcodes (or to whole dots otherwise), and pin the bottom edge if the resize
- * originates from the top anchor.
- */
-function applyHeightSnap(
-  oldBox: BoundingBox,
-  newBox: BoundingBox,
-  dotPx: number,
-  anchor: { nodeHeight: number; rowHeight: number } | null,
-): BoundingBox {
-  const stepPx =
-    anchor && anchor.rowHeight > 0 && anchor.nodeHeight > 0
-      ? anchor.nodeHeight / anchor.rowHeight
-      : dotPx;
-  const snappedH = snapBoxHeight(newBox.height, stepPx);
-  return isTopAnchorResize(oldBox, newBox, dotPx * 0.5)
-    ? pinBottomEdge(oldBox, newBox, snappedH)
-    : { ...newBox, height: snappedH };
-}
-
-/**
  * Phase 2 of resize: snap moving edges to other objects' / label edges
  * (object-snap, mirrors drag-time snap). Pure delegation to `computeResizeSnap`
  * with input shape conversion.
@@ -110,6 +88,10 @@ interface Options {
   objectSnapEnabled: boolean;
   /** Pushes resize-time snap guides into the canvas's shared guide state. */
   setGuides: (guides: SnapGuide[]) => void;
+  /** Canvas view rotation. When non-zero, the parent group is rotated and
+   *  Konva's bbox semantics in boundBoxFunc no longer match our axis-aware
+   *  snap / pin helpers — we fall back to native Konva resize there. */
+  viewRotation: number;
 }
 
 export interface TransformerState {
@@ -135,6 +117,7 @@ export function useKonvaTransformer({
   labelRect,
   objectSnapEnabled,
   setGuides,
+  viewRotation,
 }: Options): TransformerState {
   // Captures node height and rowHeight at drag start so boundBoxFunc uses a
   // fixed step size throughout the entire drag session.
@@ -230,8 +213,10 @@ export function useKonvaTransformer({
     transformAnchorRef.current = obj && STACKED_2D_TYPES.has(obj.type)
       ? { nodeHeight: node.height(), rowHeight: (obj.props as { rowHeight: number }).rowHeight }
       : null;
-    const startRect = node.getClientRect({ skipShadow: true, skipStroke: true, relativeTo: stageRef.current });
-    transformStartBboxRef.current = toSnapRect(singleId, startRect);
+    // startBbox is captured lazily on the first boundBoxFunc call — Konva
+    // passes those bboxes in the transformer's frame, which on rotated
+    // parents differs from getClientRect's stage frame.
+    transformStartBboxRef.current = null;
     othersSnapshotRef.current = captureOtherRects(stageRef.current, objects, singleId);
   };
 
@@ -240,18 +225,50 @@ export function useKonvaTransformer({
       return oldBox;
     }
     if (isUniformScale) newBox = forceSquareBox(oldBox, newBox);
+    // When the canvas view is rotated, Konva's bbox semantics in this
+    // callback no longer match an axis-aware snap / pin model — visual
+    // bottom-edge becomes node-local-left etc. Skip the height snap,
+    // object-snap and inactive-edge pin in that case and let Konva
+    // resize natively. Stacked-2D row quantisation only matters when
+    // not rotated anyway.
+    //
+    // Latent coord-frame mismatch: at viewRotation=0 the transformer-frame
+    // bboxes (oldBox/newBox here, and the lazily-captured startBbox below)
+    // coincide with stage coords, which is the same frame othersSnapshotRef
+    // and labelRect use. Removing this early-return without first lifting
+    // the others / labelRect snapshot into the transformer frame would
+    // re-introduce the rotated-resize drift this whole block guards against.
+    if (viewRotation !== 0) return newBox;
     const dotPx = scale / dpmm;
-    let bbox = applyHeightSnap(oldBox, newBox, dotPx, transformAnchorRef.current);
-
-    // Object-snap during resize (mirrors drag-time snap). Only fires when
-    // grid-snap is off and the user is doing a free corner-resize — the 1D /
-    // stacked-2D anchor restrictions have their own height math above and
-    // would conflict with edge-driven snapping.
+    if (!transformStartBboxRef.current) {
+      transformStartBboxRef.current = {
+        id: selectedIds[0] ?? "",
+        x: oldBox.x,
+        y: oldBox.y,
+        width: oldBox.width,
+        height: oldBox.height,
+      };
+    }
     const startBbox = transformStartBboxRef.current;
+    let bbox = applyHeightSnap(oldBox, newBox, dotPx, transformAnchorRef.current);
     if (objectSnapEnabled && isFreeResize && startBbox) {
       const snapped = applyResizeObjectSnap(bbox, startBbox, othersSnapshotRef.current, labelRect);
       setGuides(snapped.guides);
       bbox = snapped.bbox;
+    }
+    if (startBbox) {
+      const startBox: BoundingBox = {
+        x: startBbox.x,
+        y: startBbox.y,
+        width: startBbox.width,
+        height: startBbox.height,
+        rotation: 0,
+      };
+      const activeEdges = deriveActiveEdges(startBbox, {
+        id: startBbox.id,
+        x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height,
+      });
+      bbox = pinInactiveEdges(bbox, startBox, activeEdges);
     }
     return bbox;
   };

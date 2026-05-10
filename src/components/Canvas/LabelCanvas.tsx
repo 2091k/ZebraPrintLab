@@ -352,6 +352,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     labelRect: transformerSnapLabelRect,
     objectSnapEnabled: !snapEnabled,
     setGuides,
+    viewRotation,
   });
 
   const handleObjectChange = (

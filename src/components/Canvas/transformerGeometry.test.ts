@@ -6,6 +6,9 @@ import {
   transformNodeTopLeft,
   positionDidMove,
   forceSquareBox,
+  applyHeightSnap,
+  pinInactiveEdges,
+  type BoundingBox,
 } from "./transformerGeometry";
 
 describe("snapBoxHeight", () => {
@@ -92,6 +95,108 @@ describe("positionDidMove", () => {
   it("returns true once the delta exceeds the tolerance", () => {
     expect(positionDidMove(102, 100)).toBe(true);
     expect(positionDidMove(80, 100)).toBe(true);
+  });
+});
+
+describe("applyHeightSnap", () => {
+  // Captured from a real low-zoom box bottom-edge resize that triggered
+  // the runaway top-anchor pin. dotPx ≈ 0.116 (≈ 4.3 px / dot at fit-zoom),
+  // newBox.y drifted 0.8–10 px from oldBox.y due to Konva FP scale-driven
+  // node-position updates — comfortably above the prior `dotPx * 0.5`
+  // threshold, which incorrectly identified each frame as top-anchor and
+  // pinned the bottom edge, marching the box upward.
+  const oldBoxLowZoom = { x: 100, y: 346.809, width: 50, height: 27.426, rotation: 0 };
+  const newBoxLowZoom = { x: 100, y: 347.611, width: 50, height: 27.826, rotation: 0 };
+  const dotPxLowZoom = 0.232; // threshold dotPx * 0.5 = 0.116 → false positive
+
+  it("returns newBox unchanged for shapes without a row anchor (regression: low-zoom drift)", () => {
+    const result = applyHeightSnap(oldBoxLowZoom, newBoxLowZoom, dotPxLowZoom, null);
+    expect(result).toEqual(newBoxLowZoom);
+  });
+
+  it("row-quantises the height for stacked-2D barcodes with a row anchor", () => {
+    // anchor: nodeHeight=100, rowHeight=20 → stepPx = 5
+    const anchor = { nodeHeight: 100, rowHeight: 20 };
+    const oldBox = { x: 0, y: 0, width: 50, height: 100, rotation: 0 };
+    const newBox = { x: 0, y: 0, width: 50, height: 113, rotation: 0 };
+    const result = applyHeightSnap(oldBox, newBox, 1, anchor);
+    expect(result.height).toBe(115); // 113 rounds up to next 5-multiple
+    expect(result.y).toBe(0);
+  });
+
+  it("pins the bottom edge for stacked-2D top-anchor resize", () => {
+    const anchor = { nodeHeight: 100, rowHeight: 20 };
+    const oldBox = { x: 0, y: 0, width: 50, height: 100, rotation: 0 };
+    // Top moves UP by 30 → top-anchor resize
+    const newBox = { x: 0, y: -30, width: 50, height: 130, rotation: 0 };
+    const result = applyHeightSnap(oldBox, newBox, 1, anchor);
+    expect(result.height).toBe(130);
+    // Bottom stays where it was (oldBox.y + oldBox.height = 100)
+    expect(result.y + result.height).toBe(oldBox.y + oldBox.height);
+  });
+});
+
+describe("pinInactiveEdges + applyHeightSnap (multi-frame regression)", () => {
+  // Simulates a real low-zoom bottom-edge drag where Konva's per-frame
+  // node-position updates drift the y-coordinate sub-pixel. Each frame:
+  //   1. applyHeightSnap (no row anchor → no-op)
+  //   2. derive active edges against the lazily-captured start bbox
+  //   3. pinInactiveEdges restores stationary edges to the start bbox
+  // The invariant under test: the top-edge stays at start.y across all
+  // frames, regardless of Konva's drifted newBox.y.
+
+  // Captured from the buggy reproduction at viewRotation=0, low zoom:
+  // Konva's per-frame y drifts by < 2 px on a pure bottom-edge drag
+  // (above 2 px would be a real intentional top-edge drag).
+  const start = { x: 100, y: 200, width: 80, height: 50, rotation: 0 };
+  const driftedFrames = [
+    { y: 200.4, height: 51.2 },
+    { y: 200.9, height: 52.7 },
+    { y: 201.5, height: 54.0 },
+    { y: 199.8, height: 55.3 },
+    { y: 201.2, height: 56.1 },
+    { y: 200.6, height: 57.4 },
+  ];
+  const dotPx = 0.232; // representative low-zoom value (≈ 4.3 dots / px)
+
+  it("keeps the top edge pinned to startBox.y across drifting frames", () => {
+    let oldBox: BoundingBox = start;
+    for (const frame of driftedFrames) {
+      const newBox: BoundingBox = { ...oldBox, y: frame.y, height: frame.height };
+      const afterSnap = applyHeightSnap(oldBox, newBox, dotPx, null);
+      const active = {
+        left:  Math.abs(afterSnap.x - start.x) > 2,
+        right: Math.abs((afterSnap.x + afterSnap.width) - (start.x + start.width)) > 2,
+        top:   Math.abs(afterSnap.y - start.y) > 2,
+        bottom: Math.abs((afterSnap.y + afterSnap.height) - (start.y + start.height)) > 2,
+      };
+      const pinned = pinInactiveEdges(afterSnap, start, active);
+      // Top edge invariant: stays at start.y (within float-cmp tolerance).
+      expect(pinned.y).toBe(start.y);
+      // Width and x untouched (no horizontal drag).
+      expect(pinned.x).toBe(start.x);
+      expect(pinned.width).toBe(start.width);
+      // Height must reflect the grown bottom edge.
+      expect(pinned.height).toBeGreaterThanOrEqual(start.height);
+      oldBox = pinned;
+    }
+  });
+
+  it("does not let cumulative drift carry the box out of frame", () => {
+    // After 6 frames of drift, top must still be at start.y, not drifted up.
+    let oldBox: BoundingBox = start;
+    for (const frame of driftedFrames) {
+      const newBox: BoundingBox = { ...oldBox, y: frame.y, height: frame.height };
+      const afterSnap = applyHeightSnap(oldBox, newBox, dotPx, null);
+      const active = {
+        left: false, right: false,
+        top: Math.abs(afterSnap.y - start.y) > 2,
+        bottom: Math.abs((afterSnap.y + afterSnap.height) - (start.y + start.height)) > 2,
+      };
+      oldBox = pinInactiveEdges(afterSnap, start, active);
+    }
+    // Final state: top has not drifted; bottom is wherever the user dragged.
+    expect(oldBox.y).toBe(start.y);
   });
 });
 

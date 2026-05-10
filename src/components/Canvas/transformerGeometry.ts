@@ -72,11 +72,102 @@ export function transformNodeTopLeft(
 }
 
 /**
+ * Phase 1 of resize: row-quantise the height for stacked-2D barcodes
+ * (PDF417, MicroPDF417, Codablock) where a non-integer row count is
+ * invalid. Pins the bottom edge if the resize comes from the top anchor
+ * so the dragged edge tracks the cursor.
+ *
+ * No-op for non-stacked-2D shapes — applying a height-snap there used to
+ * trigger pinBottomEdge whenever Konva's frame-to-frame y drifted past a
+ * sub-pixel threshold (low zoom = 1 dot < 1 screen pixel), compounding
+ * into a runaway top-anchor pin that marched the box out of the work
+ * area. Boxes / barcodes that don't need row-quantised heights run
+ * unsnapped here; rounding happens in the global onTransformEnd snap.
+ */
+export interface RowAnchor {
+  nodeHeight: number;
+  rowHeight: number;
+}
+
+export function applyHeightSnap(
+  oldBox: BoundingBox,
+  newBox: BoundingBox,
+  dotPx: number,
+  anchor: RowAnchor | null,
+): BoundingBox {
+  if (!anchor || anchor.rowHeight <= 0 || anchor.nodeHeight <= 0) return newBox;
+  const stepPx = anchor.nodeHeight / anchor.rowHeight;
+  const snappedH = snapBoxHeight(newBox.height, stepPx);
+  return isTopAnchorResize(oldBox, newBox, dotPx * 0.5)
+    ? pinBottomEdge(oldBox, newBox, snappedH)
+    : { ...newBox, height: snappedH };
+}
+
+/**
  * Tolerance for `positionDidMove`. Sized to absorb float rounding from the
  * screen-pixel <-> dot conversion; anything within this margin counts as
  * "did not move" so the original integer position is preserved.
  */
 export const POSITION_MOVE_TOLERANCE_DOTS = 1;
+
+export interface ActiveEdgeFlags {
+  left: boolean;
+  right: boolean;
+  top: boolean;
+  bottom: boolean;
+}
+
+/**
+ * Enforce the resize-invariant: edges the user did NOT grab stay at their
+ * start-of-drag positions. Konva's per-frame scale-driven node-position
+ * updates can drift sub-pixel for "stationary" edges even on a pure
+ * single-edge drag — without this, those drifts compound and the box
+ * walks away from where the user wanted it pinned.
+ *
+ *  - Both side-edges inactive → restore start.x and start.width.
+ *  - Only one side-edge active → keep the moving edge's current position
+ *    and extend the size from the corresponding pinned start-edge.
+ *  - Both active (e.g. uniform-scale corner drag) → pass through.
+ *
+ * Same logic on the y axis.
+ */
+export function pinInactiveEdges(
+  bbox: BoundingBox,
+  startBox: BoundingBox,
+  active: ActiveEdgeFlags,
+): BoundingBox {
+  let { x, y, width, height } = bbox;
+
+  if (!active.left && !active.right) {
+    x = startBox.x;
+    width = startBox.width;
+  } else if (!active.left) {
+    // right edge moves; left is pinned at start
+    const newRight = x + width;
+    x = startBox.x;
+    width = Math.max(0, newRight - x);
+  } else if (!active.right) {
+    // left edge moves; right is pinned at start
+    const startRight = startBox.x + startBox.width;
+    width = Math.max(0, startRight - x);
+  }
+
+  if (!active.top && !active.bottom) {
+    y = startBox.y;
+    height = startBox.height;
+  } else if (!active.top) {
+    // bottom edge moves; top is pinned at start
+    const newBottom = y + height;
+    y = startBox.y;
+    height = Math.max(0, newBottom - y);
+  } else if (!active.bottom) {
+    // top edge moves; bottom is pinned at start
+    const startBottom = startBox.y + startBox.height;
+    height = Math.max(0, startBottom - y);
+  }
+
+  return { ...bbox, x, y, width, height };
+}
 
 /**
  * Decide whether the resize actually moved the object. When the user drags
