@@ -55,11 +55,18 @@ export function computePointSnap(
       consider(endEdge, perpStart, perpEnd);
     }
     if (labelRect) {
+      // Label edges *and* center are valid endpoint snap targets. Centre
+      // is intentionally only allowed for the label (not for other
+      // objects) — endpoint alignment to a neighbour's midpoint produced
+      // the "50 %" artefact this helper was created to avoid.
       const startEdge = axis === 'x' ? labelRect.x : labelRect.y;
-      const endEdge = startEdge + (axis === 'x' ? labelRect.width : labelRect.height);
+      const size = axis === 'x' ? labelRect.width : labelRect.height;
+      const endEdge = startEdge + size;
+      const center = startEdge + size / 2;
       const perpStart = axis === 'x' ? labelRect.y : labelRect.x;
       const perpEnd = perpStart + (axis === 'x' ? labelRect.height : labelRect.width);
       consider(startEdge, perpStart, perpEnd);
+      consider(center, perpStart, perpEnd);
       consider(endEdge, perpStart, perpEnd);
     }
     return { value: bestValue, guides: bestGuides };

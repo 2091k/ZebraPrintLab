@@ -695,7 +695,7 @@ export function BarcodeObject({
             strokeWidth={isSelected ? 2 : 0}
             strokeScaleEnabled={false}
           />
-          {Array.isArray(textElements) && textElements.length > 0 && (
+          {textElements && (
             <Group ref={excludeGroupFromBbox}>{textElements}</Group>
           )}
         </Group>

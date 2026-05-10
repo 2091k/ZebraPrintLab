@@ -192,9 +192,21 @@ describe("computePointSnap", () => {
 
   it("uses the label rect for edge alignment too", () => {
     const lbl = r("_lbl", 0, 0, 1000, 600);
+    // y=300 sits exactly on the label's vertical centre — a valid
+    // label-centre snap, so two guides fire (right edge + centre).
     const result = computePointSnap({ x: 998, y: 300 }, [], 6, lbl);
     expect(result.x).toBe(1000); // right edge of label
-    expect(result.guides).toHaveLength(1);
+    expect(result.y).toBe(300);  // label vertical centre
+    expect(result.guides).toHaveLength(2);
+  });
+
+  it("snaps to label centre (allowed for label only, not for neighbour objects)", () => {
+    const lbl = r("_lbl", 0, 0, 1000, 600);
+    // Point near horizontal centre of label (500, 300).
+    const result = computePointSnap({ x: 502, y: 302 }, [], 6, lbl);
+    expect(result.x).toBe(500);
+    expect(result.y).toBe(300);
+    expect(result.guides).toHaveLength(2);
   });
 
   it("respects the threshold — far targets are ignored", () => {
