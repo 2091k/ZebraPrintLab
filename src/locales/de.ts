@@ -135,6 +135,7 @@ const de = {
     noPrinters: 'Keine Drucker gefunden',
     agentNotFound: 'Zebra Browser Print Agent nicht gefunden. Download auf zebra.com.',
     success: 'ZPL erfolgreich gesendet',
+    sentNoResponse: 'Gesendet. Bitte am Drucker prüfen.',
     errorRefused: 'Verbindung abgelehnt — IP und Port prüfen',
     errorGeneric: 'Fehler beim Senden',
     httpsWarning: 'Seite läuft über HTTPS — direktes IP-Drucken kann vom Browser blockiert werden (Mixed Content).',

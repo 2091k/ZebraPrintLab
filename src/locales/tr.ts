@@ -423,6 +423,7 @@ const tr = {
     noPrinters: 'Yazıcı bulunamadı',
     agentNotFound: 'Zebra Browser Print aracısı çalışmıyor. zebra.com adresinden indirin.',
     success: 'ZPL başarıyla gönderildi',
+    sentNoResponse: 'Gönderildi. Yazıcıdan doğrulayın.',
     errorRefused: 'Bağlantı reddedildi — IP ve portu kontrol edin',
     errorGeneric: 'ZPL gönderilemedi',
     httpsWarning: 'Sayfa HTTPS üzerinde — doğrudan IP yazdırma tarayıcı tarafından engellenebilir (karma içerik).',

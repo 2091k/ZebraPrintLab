@@ -423,6 +423,7 @@ const lv = {
     noPrinters: 'Printeri nav atrasti',
     agentNotFound: 'Zebra Browser Print aģents nedarbojas. Lejupielādējiet no zebra.com.',
     success: 'ZPL veikmīgi nosūtīts',
+    sentNoResponse: 'Nosūtīts. Pārbaudiet printerī.',
     errorRefused: 'Savienojums atteikts — pārbaudiet IP un portu',
     errorGeneric: 'ZPL nosūtīšana neizdevās',
     httpsWarning: 'Lapa izmanto HTTPS — tiešā IP drukāšana var tikt bloķēta pārlūkprogrammā (jaukts saturs).',

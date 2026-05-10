@@ -423,6 +423,7 @@ const lt = {
     noPrinters: 'Spausdintuvų nerasta',
     agentNotFound: 'Zebra Browser Print agentas neveikia. Atsisiųskite iš zebra.com.',
     success: 'ZPL sėkmingai išsiųsta',
+    sentNoResponse: 'Išsiųsta. Patikrinkite spausdintuvą.',
     errorRefused: 'Ryšys atmestas — patikrinkite IP ir prievadą',
     errorGeneric: 'ZPL siuntimas nepavyko',
     httpsWarning: 'Puslapis naudoja HTTPS — tiesioginis spausdinimas per IP gali būti užblokuotas naršyklės (mišrus turinys).',

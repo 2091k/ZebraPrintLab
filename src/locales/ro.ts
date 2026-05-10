@@ -423,6 +423,7 @@ const ro = {
     noPrinters: 'Nu s-au găsit imprimante',
     agentNotFound: 'Agentul Zebra Browser Print nu rulează. Descărcați de pe zebra.com.',
     success: 'ZPL trimis cu succes',
+    sentNoResponse: 'Trimis. Verifică pe imprimantă.',
     errorRefused: 'Conexiune refuzată — verificați IP şi portul',
     errorGeneric: 'Trimiterea ZPL a eşuat',
     httpsWarning: 'Pagina este pe HTTPS — imprimarea directă prin IP poate fi blocată de browser (conținut mixt).',

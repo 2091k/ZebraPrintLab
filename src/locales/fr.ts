@@ -423,6 +423,7 @@ const fr = {
     noPrinters: 'Aucune imprimante trouvée',
     agentNotFound: 'Agent Zebra Browser Print non détecté. Téléchargez-le sur zebra.com.',
     success: 'ZPL envoyé avec succès',
+    sentNoResponse: 'Envoyé. Vérifie sur l\'imprimante.',
     errorRefused: 'Connexion refusée — vérifiez IP et port',
     errorGeneric: 'Échec de l’envoi ZPL',
     httpsWarning: 'La page est en HTTPS — l\'impression directe par IP peut être bloquée par le navigateur (contenu mixte).',

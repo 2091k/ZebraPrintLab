@@ -423,6 +423,7 @@ const et = {
     noPrinters: 'Printereid ei leitud',
     agentNotFound: 'Zebra Browser Print agent ei tööta. Laadige alla aadressilt zebra.com.',
     success: 'ZPL edukalt saadetud',
+    sentNoResponse: 'Saadetud. Kontrolli printerit.',
     errorRefused: 'Ühendus keeldutud — kontrollige IP-d ja porti',
     errorGeneric: 'ZPL saatmine ebaõnnestus',
     httpsWarning: 'Leht kasutab HTTPS-i — otsene IP-printimistöö võib olla brauseri poolt blokeeritud (segasisaldus).',

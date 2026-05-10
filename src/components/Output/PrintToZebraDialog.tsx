@@ -4,7 +4,6 @@ import { useT } from "../../lib/useT";
 import { DialogShell } from "../ui/DialogShell";
 import {
   discoverBrowserPrintDevices,
-  isConnectionRefused,
   sendViaBrowserPrint,
   sendViaNetwork,
   type BrowserPrintDevice,
@@ -56,14 +55,20 @@ export function PrintToZebraDialog({ zpl, onClose }: Props) {
   async function handleNetworkSend() {
     persistNetwork();
     setNetStatus({ type: "sending" });
-    try {
-      await sendViaNetwork(ip.trim(), Number(port) || 9100, zpl);
-      setNetStatus({ type: "success", message: t.zebraPrint.success });
-    } catch (e) {
-      const msg = isConnectionRefused(e)
-        ? t.zebraPrint.errorRefused
-        : t.zebraPrint.errorGeneric;
-      setNetStatus({ type: "error", message: msg });
+    const result = await sendViaNetwork(ip.trim(), Number(port) || 9100, zpl);
+    switch (result.kind) {
+      case "responded":
+        setNetStatus({ type: "success", message: t.zebraPrint.success });
+        return;
+      case "no_response":
+        // Raw-socket printers (port 9100) never reply with HTTP, so a
+        // timeout is the typical success case — but it is indistinguishable
+        // from an unreachable host. Report honestly instead of green-success.
+        setNetStatus({ type: "success", message: t.zebraPrint.sentNoResponse });
+        return;
+      case "refused":
+        setNetStatus({ type: "error", message: t.zebraPrint.errorRefused });
+        return;
     }
   }
 

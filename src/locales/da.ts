@@ -423,6 +423,7 @@ const da = {
     noPrinters: 'Ingen printere fundet',
     agentNotFound: 'Zebra Browser Print-agenten kører ikke. Download fra zebra.com.',
     success: 'ZPL sendt',
+    sentNoResponse: 'Sendt. Kontrollér printeren.',
     errorRefused: 'Forbindelse nægtet — kontroller IP og port',
     errorGeneric: 'Afsendelse af ZPL mislykkedes',
     httpsWarning: 'Siden bruger HTTPS — direkte udskrivning via IP kan blive blokeret af browseren (blandet indhold).',

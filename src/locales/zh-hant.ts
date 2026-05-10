@@ -423,6 +423,7 @@ const zhHant = {
     noPrinters: '未找到印表機',
     agentNotFound: 'Zebra Browser Print 代理程式未執行。請從 zebra.com 下載。',
     success: 'ZPL 傳送成功',
+    sentNoResponse: '已傳送。請在印表機上確認。',
     errorRefused: '連線遭拒 — 請確認 IP 和連接埠',
     errorGeneric: '傳送 ZPL 失敗',
     httpsWarning: '頁面在 HTTPS 上 — 瀏覽器可能封鎖直接 IP 列印（混合內容）。',

@@ -423,6 +423,7 @@ const cs = {
     noPrinters: 'Nenalezeny žádné tiskárny',
     agentNotFound: 'Agent Zebra Browser Print není spuštěn. Stáhněte z zebra.com.',
     success: 'ZPL úspěšně odesláno',
+    sentNoResponse: 'Odesláno. Zkontrolujte tiskárnu.',
     errorRefused: 'Připojení odmítnuto — zkontrolujte IP a port',
     errorGeneric: 'Odeslání ZPL selhalo',
     httpsWarning: 'Stránka používá HTTPS — přímý tisk přes IP může být prohlížečem zablokován (smíšený obsah).',

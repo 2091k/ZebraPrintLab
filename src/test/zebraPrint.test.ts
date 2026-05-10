@@ -133,30 +133,37 @@ describe("sendViaNetwork", () => {
     expect(init.body).toBe("^XA^XZ");
   });
 
-  it("swallows a generic TypeError (printer gives no HTTP response)", async () => {
+  it("returns no_response on a generic TypeError (raw-socket printer's typical case)", async () => {
     vi.stubGlobal("fetch", mockFetchThrow(new TypeError("network error")));
-    await expect(sendViaNetwork("192.168.1.50", 9100, "^XA^XZ")).resolves.toBeUndefined();
+    await expect(sendViaNetwork("192.168.1.50", 9100, "^XA^XZ")).resolves.toEqual({
+      kind: "no_response",
+    });
   });
 
-  it("swallows an AbortError (timeout — printer never responds)", async () => {
+  it("returns no_response on AbortError (timeout — host unreachable or printer silent)", async () => {
     const abort = new DOMException("signal timed out", "AbortError");
     vi.stubGlobal("fetch", mockFetchThrow(abort));
-    await expect(sendViaNetwork("192.168.1.50", 9100, "^XA^XZ")).resolves.toBeUndefined();
+    await expect(sendViaNetwork("192.168.1.50", 9100, "^XA^XZ")).resolves.toEqual({
+      kind: "no_response",
+    });
   });
 
-  it("re-throws TypeError with 'refused' in message", async () => {
+  it("returns refused on a TypeError with 'refused' in the message", async () => {
     vi.stubGlobal(
       "fetch",
       mockFetchThrow(new TypeError("Connection refused")),
     );
-    await expect(sendViaNetwork("192.168.1.50", 9100, "^XA^XZ")).rejects.toThrow(
-      "Connection refused",
-    );
+    await expect(sendViaNetwork("192.168.1.50", 9100, "^XA^XZ")).resolves.toEqual({
+      kind: "refused",
+    });
   });
 
-  it("swallows a successful response (printer accepts data)", async () => {
+  it("returns responded with status when fetch resolves (e.g. print server)", async () => {
     vi.stubGlobal("fetch", mockFetch({}));
-    await expect(sendViaNetwork("192.168.1.50", 9100, "^XA^XZ")).resolves.toBeUndefined();
+    await expect(sendViaNetwork("192.168.1.50", 9100, "^XA^XZ")).resolves.toEqual({
+      kind: "responded",
+      status: 200,
+    });
   });
 });
 
