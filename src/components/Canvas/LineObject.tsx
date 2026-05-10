@@ -4,7 +4,7 @@ import type { LabelObject } from "../../registry";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
 import { constrainLine, type ConstrainMode } from "../../lib/lineConstrain";
 import { useColorScheme } from "../../lib/useColorScheme";
-import type { KonvaObjectProps } from "./konvaObjectProps";
+import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 
 /** Endpoint-handle visuals — small white square with a thin selection
  *  stroke, mirroring the look of the Konva Transformer's anchors. The
@@ -150,10 +150,7 @@ export function LineObject({
         stroke="transparent"
         strokeWidth={Math.max(lineStrokeWidth, 14)}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={(e) => {
           // Snap the absolute start-point position to the grid (not
           // the delta), then derive the delta to apply. Snapping the

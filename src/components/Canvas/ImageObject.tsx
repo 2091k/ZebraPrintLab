@@ -5,7 +5,7 @@ import type { LabelObject } from "../../registry";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
 import { getImage } from "../../lib/imageCache";
 import { useColorScheme } from "../../lib/useColorScheme";
-import type { KonvaObjectProps } from "./konvaObjectProps";
+import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 
 type ImageLabelObject = Extract<LabelObject, { type: "image" }>;
 type Props = Omit<KonvaObjectProps, "obj"> & { obj: ImageLabelObject };
@@ -95,10 +95,7 @@ export function ImageObject({
         stroke={isSelected ? colors.selection : undefined}
         strokeWidth={isSelected ? 2 : 0}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       />
@@ -111,10 +108,7 @@ export function ImageObject({
       x={x}
       y={y}
       draggable
-      onClick={(e) =>
-        onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-      }
-      onTap={() => onSelect(false)}
+      {...selectionHandlers(onSelect)}
       onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
     >

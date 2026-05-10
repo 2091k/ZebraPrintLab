@@ -5,7 +5,7 @@ import type Konva from "konva";
 import { BARCODE_1D_TYPES, ObjectRegistry } from "../../registry";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
 import { useColorScheme } from "../../lib/useColorScheme";
-import type { KonvaObjectProps } from "./konvaObjectProps";
+import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 import {
   buildBwipOptions,
   getDisplaySize,
@@ -417,10 +417,7 @@ export function BarcodeObject({
           clipWidth={Math.max(w, 1) + clipLeft + clipRight}
           clipHeight={Math.max(h, 1) + textFontSize + textGap}
           draggable
-          onClick={(e) =>
-            onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-          }
-          onTap={() => onSelect(false)}
+          {...selectionHandlers(onSelect)}
           onDragMove={(e) =>
             e.target.position(snapPos(e.target.x(), e.target.y()))
           }
@@ -510,10 +507,7 @@ export function BarcodeObject({
           x={x}
           y={y}
           draggable
-          onClick={(e) =>
-            onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-          }
-          onTap={() => onSelect(false)}
+          {...selectionHandlers(onSelect)}
           onDragMove={(e) =>
             e.target.position(snapPos(e.target.x(), e.target.y()))
           }
@@ -687,8 +681,7 @@ export function BarcodeObject({
       return (
         <Group
           id={obj.id} x={x} y={y} draggable
-          onClick={(e) => onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)}
-          onTap={() => onSelect(false)}
+          {...selectionHandlers(onSelect)}
           onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
           onDragEnd={handleDragEnd}
         >
@@ -724,10 +717,7 @@ export function BarcodeObject({
         x={x}
         y={y}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
@@ -764,10 +754,7 @@ export function BarcodeObject({
       x={x}
       y={y}
       draggable
-      onClick={(e) =>
-        onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-      }
-      onTap={() => onSelect(false)}
+      {...selectionHandlers(onSelect)}
       onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
     >

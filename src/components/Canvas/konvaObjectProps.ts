@@ -1,5 +1,24 @@
+import type Konva from "konva";
 import type { LabelObject } from "../../registry";
 import type { ObjectChanges } from "../../store/labelStore";
+
+/**
+ * Click / tap handlers shared across every per-type renderer. Click reads
+ * shift / ctrl / meta to toggle multi-select; tap (touch) is always a
+ * single-select. Spread onto the outermost selectable Konva node:
+ *
+ *   <Group {...selectionHandlers(onSelect)}>
+ */
+export function selectionHandlers(onSelect: (add: boolean) => void): {
+  onClick: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  onTap: () => void;
+} {
+  return {
+    onClick: (e) =>
+      onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey),
+    onTap: () => onSelect(false),
+  };
+}
 
 /** Shared props for the per-type renderers under KonvaObject (LineObject,
  *  ImageObject, BarcodeObject, KonvaObjectInner). LineObject and

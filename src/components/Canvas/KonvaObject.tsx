@@ -12,7 +12,7 @@ import {
   displayToObject,
   ZPL_FONT_HEIGHT_TO_CSS_RATIO,
 } from "./textPositionTransforms";
-import type { KonvaObjectProps } from "./konvaObjectProps";
+import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 
 type Props = KonvaObjectProps;
 
@@ -193,10 +193,7 @@ function KonvaObjectInner({
           y={y}
           rotation={zplRotationDeg[p.rotation]}
           draggable
-          onClick={(e) =>
-            onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-          }
-          onTap={() => onSelect(false)}
+          {...selectionHandlers(onSelect)}
           onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
         >
@@ -233,10 +230,7 @@ function KonvaObjectInner({
         stroke={isSelected ? colors.selection : undefined}
         strokeWidth={isSelected ? 1 : 0}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       />
@@ -269,10 +263,7 @@ function KonvaObjectInner({
         stroke={isSelected ? colors.selection : undefined}
         strokeWidth={isSelected ? 1 : 0}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       />
@@ -337,10 +328,7 @@ function KonvaObjectInner({
         x={x}
         y={y}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
@@ -392,10 +380,7 @@ function KonvaObjectInner({
         strokeScaleEnabled={false}
         fill={fill}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={(e) => {
           // Center-anchored: snap the top-left corner, then re-add radius
           const snapped = snapPos(e.target.x() - rx, e.target.y() - ry);
@@ -432,10 +417,7 @@ function KonvaObjectInner({
         strokeScaleEnabled={false}
         fill={fill}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={(e) => {
           const snapped = snapPos(e.target.x() - r, e.target.y() - r);
           e.target.position({ x: snapped.x + r, y: snapped.y + r });
