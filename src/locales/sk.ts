@@ -256,6 +256,7 @@ const sk = {
       selectImage: 'Vybrať obrázok…',
       upload: 'Nahrať obrázok',
       uploading: 'Nahrávanie…',
+      uploadError: 'Obrázok sa nedá načítať',
       preview: 'Náhľad',
       widthDots: 'Šírka (body)',
       threshold: 'Mono prah',

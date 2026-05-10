@@ -256,6 +256,7 @@ const ar = {
       selectImage: 'اختر صورة…',
       upload: 'رفع صورة',
       uploading: 'جارٍ الرفع…',
+      uploadError: 'تعذر تحميل الصورة',
       preview: 'معاينة',
       widthDots: 'العرض (نقاط)',
       threshold: 'عتبة أحادية',

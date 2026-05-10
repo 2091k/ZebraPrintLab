@@ -256,6 +256,7 @@ const sl = {
       selectImage: 'Izberite sliko…',
       upload: 'Naloži sliko',
       uploading: 'Nalaganje…',
+      uploadError: 'Slike ni bilo mogoče naložiti',
       preview: 'Predogled',
       widthDots: 'Širina (pike)',
       threshold: 'Mono prag',

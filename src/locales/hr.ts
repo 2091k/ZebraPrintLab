@@ -256,6 +256,7 @@ const hr = {
       selectImage: 'Odaberite sliku…',
       upload: 'Prenesi sliku',
       uploading: 'Prenošenje…',
+      uploadError: 'Sliku nije moguće učitati',
       preview: 'Pregled',
       widthDots: 'Širina (točke)',
       threshold: 'Mono prag',

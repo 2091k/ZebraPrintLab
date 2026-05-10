@@ -256,6 +256,7 @@ const he = {
       selectImage: 'בחר תמונה…',
       upload: 'העלאת תמונה',
       uploading: 'מעלה…',
+      uploadError: 'לא ניתן לטעון את התמונה',
       preview: 'תצוגה מקדימה',
       widthDots: 'רוחב (נקודות)',
       threshold: 'סף מונו',

@@ -256,6 +256,7 @@ const et = {
       selectImage: 'Vali pilt…',
       upload: 'Laadi pilt üles',
       uploading: 'Üleslaadimine…',
+      uploadError: 'Pildi laadimine ebaõnnestus',
       preview: 'Eelvaade',
       widthDots: 'Laius (punktid)',
       threshold: 'Mono lävi',

@@ -256,6 +256,7 @@ const zhHant = {
       selectImage: '選擇圖片…',
       upload: '上傳圖片',
       uploading: '上傳中…',
+      uploadError: '無法載入圖片',
       preview: '預覽',
       widthDots: '寬度（點）',
       threshold: '單色閾值',

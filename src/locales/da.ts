@@ -256,6 +256,7 @@ const da = {
       selectImage: 'Vælg billede…',
       upload: 'Upload billede',
       uploading: 'Uploader…',
+      uploadError: 'Kunne ikke indlæse billede',
       preview: 'Forhåndsvisning',
       widthDots: 'Bredde (punkter)',
       threshold: 'Mono-tærskel',

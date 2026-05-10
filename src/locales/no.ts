@@ -256,6 +256,7 @@ const no = {
       selectImage: 'Velg bilde…',
       upload: 'Last opp bilde',
       uploading: 'Laster opp…',
+      uploadError: 'Kunne ikke laste bilde',
       preview: 'Forhåndsvisning',
       widthDots: 'Bredde (punkter)',
       threshold: 'Mono-terskel',

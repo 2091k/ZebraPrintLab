@@ -256,6 +256,7 @@ const bg = {
       selectImage: 'Изберете изображение…',
       upload: 'Качване на изображение',
       uploading: 'Качване…',
+      uploadError: 'Изображението не може да бъде заредено',
       preview: 'Преглед',
       widthDots: 'Ширина (точки)',
       threshold: 'Моно праг',

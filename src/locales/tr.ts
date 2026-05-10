@@ -256,6 +256,7 @@ const tr = {
       selectImage: 'Görsel seçin…',
       upload: 'Görsel yükle',
       uploading: 'Yükleniyor…',
+      uploadError: 'Görsel yüklenemedi',
       preview: 'Önizleme',
       widthDots: 'Genişlik (nokta)',
       threshold: 'Mono eşik',

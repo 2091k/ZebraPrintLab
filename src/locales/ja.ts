@@ -256,6 +256,7 @@ const ja = {
       selectImage: '画像を選択…',
       upload: '画像をアップロード',
       uploading: 'アップロード中…',
+      uploadError: '画像を読み込めませんでした',
       preview: 'プレビュー',
       widthDots: '幅（ドット）',
       threshold: 'モノクロしきい値',

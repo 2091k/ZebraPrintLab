@@ -256,6 +256,7 @@ const fa = {
       selectImage: 'انتخاب تصویر…',
       upload: 'بارگذاری تصویر',
       uploading: 'در حال بارگذاری…',
+      uploadError: 'بارگذاری تصویر ممکن نشد',
       preview: 'پیش‌نمایش',
       widthDots: 'عرض (نقاط)',
       threshold: 'آستانه تک‌رنگ',

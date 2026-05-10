@@ -256,6 +256,7 @@ const fr = {
       selectImage: 'Sélectionner une image…',
       upload: 'Télécharger une image',
       uploading: 'Téléchargement…',
+      uploadError: 'Impossible de charger l\'image',
       preview: 'Aperçu',
       widthDots: 'Largeur (points)',
       threshold: 'Seuil mono',

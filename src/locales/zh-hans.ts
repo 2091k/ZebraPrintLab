@@ -256,6 +256,7 @@ const zhHans = {
       selectImage: '选择图片…',
       upload: '上传图片',
       uploading: '上传中…',
+      uploadError: '无法加载图像',
       preview: '预览',
       widthDots: '宽度（点）',
       threshold: '单色阈值',

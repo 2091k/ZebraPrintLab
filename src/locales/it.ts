@@ -256,6 +256,7 @@ const it = {
       selectImage: 'Seleziona immagine…',
       upload: 'Carica immagine',
       uploading: 'Caricamento…',
+      uploadError: 'Impossibile caricare l\'immagine',
       preview: 'Anteprima',
       widthDots: 'Larghezza (punti)',
       threshold: 'Soglia mono',

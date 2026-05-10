@@ -256,6 +256,7 @@ const es = {
       selectImage: 'Seleccionar imagen…',
       upload: 'Subir imagen',
       uploading: 'Subiendo…',
+      uploadError: 'No se pudo cargar la imagen',
       preview: 'Vista previa',
       widthDots: 'Ancho (puntos)',
       threshold: 'Umbral mono',

@@ -256,6 +256,7 @@ const cs = {
       selectImage: 'Vybrat obrázek…',
       upload: 'Nahrát obrázek',
       uploading: 'Nahrávání…',
+      uploadError: 'Obrázek nelze načíst',
       preview: 'Náhled',
       widthDots: 'Šířka (body)',
       threshold: 'Mono práh',
