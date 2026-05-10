@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   computeSnap,
+  computePointSnap,
   computeResizeSnap,
   deriveActiveEdges,
   SNAP_THRESHOLD_PX,
@@ -164,5 +165,54 @@ describe("computeResizeSnap", () => {
       expect(result).toMatchObject({ x: 0, y: 0, width: 50, height: 50 });
       expect(result.guides).toHaveLength(0);
     });
+  });
+});
+
+describe("computePointSnap", () => {
+  it("snaps to an other's nearest edge in x and y independently", () => {
+    // other rect at (100..200, 50..150). point near its left edge x=100
+    // and bottom edge y=150.
+    const other = r("o", 100, 50, 100, 100);
+    const result = computePointSnap({ x: 102, y: 148 }, [other], 6);
+    expect(result.x).toBe(100);
+    expect(result.y).toBe(150);
+    expect(result.guides).toHaveLength(2);
+  });
+
+  it("does NOT consider the other's centre as a snap target (regression: 50%-snap bug)", () => {
+    // other rect at (100..200, 50..150). centre y = 100. point at y=98
+    // is 2 px from the centre but >= 6 px from any edge — must not snap.
+    const other = r("o", 100, 50, 100, 100);
+    const result = computePointSnap({ x: 500, y: 98 }, [other], 6);
+    expect(result.y).toBe(98);
+    // x is far from the other and the labelRect is omitted, so no snap.
+    expect(result.x).toBe(500);
+    expect(result.guides).toHaveLength(0);
+  });
+
+  it("uses the label rect for edge alignment too", () => {
+    const lbl = r("_lbl", 0, 0, 1000, 600);
+    const result = computePointSnap({ x: 998, y: 300 }, [], 6, lbl);
+    expect(result.x).toBe(1000); // right edge of label
+    expect(result.guides).toHaveLength(1);
+  });
+
+  it("respects the threshold — far targets are ignored", () => {
+    const other = r("o", 100, 50, 50, 50);
+    const result = computePointSnap({ x: 300, y: 300 }, [other], 6);
+    expect(result.x).toBe(300);
+    expect(result.y).toBe(300);
+    expect(result.guides).toHaveLength(0);
+  });
+
+  it("picks the closest of two competing edges", () => {
+    // Two other rects with nearby edges at y=98 and y=102.
+    // point at y=100 → both at distance 2. The implementation prefers
+    // the first-encountered tied target; pin this to the closer one
+    // when it's strictly closer.
+    const a = r("a", 0, 0, 50, 96); // y_end = 96
+    const b = r("b", 0, 102, 50, 50); // y_start = 102
+    const result = computePointSnap({ x: 500, y: 100.5 }, [a, b], 6);
+    expect(result.y).toBe(102); // 102 - 100.5 = 1.5, closer than 100.5 - 96 = 4.5
   });
 });
