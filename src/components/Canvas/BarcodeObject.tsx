@@ -4,6 +4,7 @@ import { Image as KImage, Group, Rect, Text } from "react-konva";
 import type Konva from "konva";
 import { BARCODE_1D_TYPES, ObjectRegistry } from "../../registry";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
+import { useColorScheme } from "../../lib/useColorScheme";
 import type { KonvaObjectProps } from "./konvaObjectProps";
 import {
   buildBwipOptions,
@@ -36,6 +37,7 @@ export function BarcodeObject({
 }: KonvaObjectProps) {
   const groupRef = useRef<Konva.Group>(null);
   const textRef = useRef<Konva.Text>(null);
+  const colors = useColorScheme();
 
   // Exclude the HRI text from the parent Group's getClientRect. This anchors
   // the resize at the bar top (logmars: was anchoring at text top above bars)
@@ -432,7 +434,7 @@ export function BarcodeObject({
             width={bw}
             height={bh}
             imageSmoothingEnabled={false}
-            stroke={isSelected ? "#6366f1" : undefined}
+            stroke={isSelected ? colors.selection : undefined}
             strokeWidth={isSelected ? 2 : 0}
             strokeScaleEnabled={false}
           />
@@ -540,7 +542,7 @@ export function BarcodeObject({
             width={bw}
             height={bh}
             imageSmoothingEnabled={false}
-            stroke={isSelected ? "#6366f1" : undefined}
+            stroke={isSelected ? colors.selection : undefined}
             strokeWidth={isSelected ? 2 : 0}
             strokeScaleEnabled={false}
           />
@@ -702,7 +704,7 @@ export function BarcodeObject({
           <KImage x={btX} y={btY} image={barcodeCanvas} crop={bitmapCrop}
             width={bw} height={bh}
             imageSmoothingEnabled={false}
-            stroke={isSelected ? "#6366f1" : undefined}
+            stroke={isSelected ? colors.selection : undefined}
             strokeWidth={isSelected ? 2 : 0}
             strokeScaleEnabled={false}
           />
@@ -745,7 +747,7 @@ export function BarcodeObject({
           width={bw}
           height={bh}
           imageSmoothingEnabled={false}
-          stroke={isSelected ? "#6366f1" : undefined}
+          stroke={isSelected ? colors.selection : undefined}
           strokeWidth={isSelected ? 2 : 0}
           strokeScaleEnabled={false}
         />
@@ -773,7 +775,7 @@ export function BarcodeObject({
         width={fbW}
         height={fbH}
         fill="#f9fafb"
-        stroke={isSelected ? "#6366f1" : "#9ca3af"}
+        stroke={isSelected ? colors.selection : "#9ca3af"}
         strokeWidth={isSelected ? 2 : 1}
         dash={isSelected ? undefined : [4, 2]}
       />

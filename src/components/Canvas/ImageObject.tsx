@@ -4,6 +4,7 @@ import type Konva from "konva";
 import type { LabelObject } from "../../registry";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
 import { getImage } from "../../lib/imageCache";
+import { useColorScheme } from "../../lib/useColorScheme";
 import type { KonvaObjectProps } from "./konvaObjectProps";
 
 type ImageLabelObject = Extract<LabelObject, { type: "image" }>;
@@ -25,6 +26,7 @@ export function ImageObject({
   snap,
 }: Props) {
   const p = obj.props;
+  const colors = useColorScheme();
   const cached = getImage(p.imageId);
   const w = dotsToPx(p.widthDots, scale, dpmm);
   // Guard against a 0-width cached image: the imageCache pipeline
@@ -90,7 +92,7 @@ export function ImageObject({
         image={htmlImg}
         width={w}
         height={h}
-        stroke={isSelected ? "#6366f1" : undefined}
+        stroke={isSelected ? colors.selection : undefined}
         strokeWidth={isSelected ? 2 : 0}
         draggable
         onClick={(e) =>
@@ -120,7 +122,7 @@ export function ImageObject({
         width={w}
         height={h}
         fill="#f9fafb"
-        stroke={isSelected ? "#6366f1" : "#9ca3af"}
+        stroke={isSelected ? colors.selection : "#9ca3af"}
         strokeWidth={isSelected ? 2 : 1}
         dash={[4, 2]}
       />

@@ -721,6 +721,13 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
               onTransformStart={onTransformStart}
               boundBoxFunc={boundBoxFunc}
               onTransformEnd={onTransformEnd}
+              // Match the per-shape selection stroke and the line endpoint
+              // handles so all selection visuals share one colour.
+              borderStroke={colors.selection}
+              anchorStroke={colors.selection}
+              anchorFill="#ffffff"
+              anchorSize={7}
+              anchorStrokeWidth={1}
               // Exclude selection stroke from the bbox; otherwise scale-aware
               // stroke padding leaks into the resize math and produces sub-dot
               // drift in node.x()/y() that surfaces as 1-dot ZPL coordinate

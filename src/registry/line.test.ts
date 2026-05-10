@@ -1,5 +1,23 @@
 import { describe, it, expect } from "vitest";
-import { pickAngle } from "./line";
+import { pickAngle, line } from "./line";
+import type { LabelObject } from "./index";
+
+const makeLine = (overrides: Partial<{
+  x: number; y: number; angle: number; length: number; thickness: number;
+}> = {}) => ({
+  id: "test",
+  type: "line" as const,
+  positionType: "FO" as const,
+  x: overrides.x ?? 0,
+  y: overrides.y ?? 0,
+  rotation: 0 as const,
+  props: {
+    angle: overrides.angle ?? 0,
+    length: overrides.length ?? 100,
+    thickness: overrides.thickness ?? 3,
+    color: "B" as const,
+  },
+}) as Extract<LabelObject, { type: "line" }>;
 
 describe("pickAngle", () => {
   describe("nearest-candidate behaviour at viewRotation=0", () => {
@@ -78,5 +96,42 @@ describe("pickAngle", () => {
       //   dist(0, -135) = 135, dist(0, 45) = 45 → 45 wins
       expect(pickAngle(0, [-45, 135], 90)).toBe(45);
     });
+  });
+});
+
+describe("line.toZPL — thickness only affects perpendicular dimension", () => {
+  // Regression: thickness must change only the line's perpendicular extent
+  // (the ^GB rectangle's "short" side). The user-visible line length and
+  // start position must stay identical at any thickness so changing the
+  // stroke width doesn't accidentally extend the line.
+
+  it("horizontal line: width param = length, height param = thickness", () => {
+    expect(line.toZPL(makeLine({ x: 50, y: 100, length: 200, thickness: 3 })))
+      .toBe("^FO50,100^GB200,3,3,B,0^FS");
+    expect(line.toZPL(makeLine({ x: 50, y: 100, length: 200, thickness: 20 })))
+      .toBe("^FO50,100^GB200,20,20,B,0^FS");
+    // Length param identical; only thickness changed.
+  });
+
+  it("vertical line: width param = thickness, height param = length", () => {
+    expect(line.toZPL(makeLine({ x: 50, y: 100, length: 200, thickness: 3, angle: 90 })))
+      .toBe("^FO50,100^GB3,200,3,B,0^FS");
+    expect(line.toZPL(makeLine({ x: 50, y: 100, length: 200, thickness: 20, angle: 90 })))
+      .toBe("^FO50,100^GB20,200,20,B,0^FS");
+  });
+
+  it("changing thickness leaves the line's stored start position unchanged", () => {
+    const thin = line.toZPL(makeLine({ x: 50, y: 100, length: 200, thickness: 1 }));
+    const thick = line.toZPL(makeLine({ x: 50, y: 100, length: 200, thickness: 30 }));
+    // Both share the same ^FO start coordinate.
+    expect(thin).toMatch(/^\^FO50,100/);
+    expect(thick).toMatch(/^\^FO50,100/);
+  });
+
+  it("180° horizontal line shifts FO left by length but doesn't grow with thickness", () => {
+    expect(line.toZPL(makeLine({ x: 250, y: 100, length: 200, thickness: 3, angle: 180 })))
+      .toBe("^FO50,100^GB200,3,3,B,0^FS");
+    expect(line.toZPL(makeLine({ x: 250, y: 100, length: 200, thickness: 25, angle: 180 })))
+      .toBe("^FO50,100^GB200,25,25,B,0^FS");
   });
 });
