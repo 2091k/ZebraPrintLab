@@ -35,6 +35,13 @@ describe("pickAngle", () => {
       expect(pickAngle(-45, [-45, 135], 0)).toBe(135);
       expect(pickAngle(135, [-45, 135], 0)).toBe(-45);
     });
+
+    it("recognises an angle entered in an alternative normalisation (e.g. -270° = 90°)", () => {
+      // User typed -270 in the angle field. Strict equality with candidate 90
+      // would miss this and fall through to nearest-pick; angleDistance
+      // correctly identifies it as the same orientation and triggers a flip.
+      expect(pickAngle(-270, [90, -90], 0)).toBe(-90);
+    });
   });
 
   describe("view-rotation awareness (regression for the mirrored-picker bug)", () => {

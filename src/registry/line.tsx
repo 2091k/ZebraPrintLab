@@ -59,9 +59,13 @@ export function pickAngle(
 ): number {
   const a = screenAngles[0] - viewRotation;
   const b = screenAngles[1] - viewRotation;
-  if (currentAngle === a) return b;
-  if (currentAngle === b) return a;
-  return angleDistance(currentAngle, a) <= angleDistance(currentAngle, b) ? a : b;
+  // angleDistance (not strict ===) so equivalent-but-differently-normalised
+  // values like 90° and -270° still trigger the flip-on-second-click path.
+  const distA = angleDistance(currentAngle, a);
+  const distB = angleDistance(currentAngle, b);
+  if (distA < 0.5) return b;
+  if (distB < 0.5) return a;
+  return distA <= distB ? a : b;
 }
 
 export const line: ObjectTypeDefinition<LineProps> = {
