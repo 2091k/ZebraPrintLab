@@ -250,11 +250,16 @@ export interface ResizeSnapResult {
  * Derive which edges of `newBox` are moving relative to `oldBox`. Used to
  * decide which edges should participate in resize-time snapping (the static
  * edges have nothing to align).
+ *
+ * The default tolerance is 2 screen pixels so Konva's per-frame FP scale-
+ * driven node-position drift (sub-pixel on a pure single-edge drag, more
+ * at low zoom) doesn't flip a static edge to "active" — that previously
+ * let the object-snap pull a bottom-edge resize sideways/up.
  */
 export function deriveActiveEdges(
   oldBox: SnapRect,
   newBox: SnapRect,
-  tolerance = 0.5,
+  tolerance = 2,
 ): ActiveEdges {
   return {
     left: Math.abs(newBox.x - oldBox.x) > tolerance,

@@ -6,14 +6,50 @@ import { LineObject } from "./LineObject";
 import { ImageObject } from "./ImageObject";
 import type Konva from "konva";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
+import { useColorScheme } from "../../lib/useColorScheme";
 import {
   objectToDisplay,
   displayToObject,
   ZPL_FONT_HEIGHT_TO_CSS_RATIO,
 } from "./textPositionTransforms";
-import type { KonvaObjectProps } from "./konvaObjectProps";
+import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 
 type Props = KonvaObjectProps;
+
+/**
+ * Selection outline drawn as a separate (non-listening) overlay so the
+ * underlying shape can keep its own stroke / fill / globalCompositeOperation
+ * without compromise. Sits at local (0, 0) inside the parent Group so it
+ * follows drag translations together with the body.
+ */
+function SelectionOverlay({
+  width,
+  height,
+  strokeWidth,
+  color,
+  cornerRadius,
+}: {
+  width: number;
+  height: number;
+  strokeWidth: number;
+  color: string;
+  cornerRadius?: number;
+}) {
+  return (
+    <Rect
+      x={0}
+      y={0}
+      width={width}
+      height={height}
+      stroke={color}
+      strokeWidth={Math.max(strokeWidth, 1.5)}
+      strokeScaleEnabled={false}
+      fill="transparent"
+      cornerRadius={cornerRadius}
+      listening={false}
+    />
+  );
+}
 
 const BARCODE_TYPES = new Set([
   "code128",
@@ -54,6 +90,28 @@ export function KonvaObject(props_: Props) {
   return <KonvaObjectInner {...props_} />;
 }
 
+/**
+ * Per-type Konva renderer dispatcher (`KonvaObject` above narrows by
+ * `obj.type` and routes to the right component / case).
+ *
+ * Convention for adding a new shape type:
+ *
+ *  1. `id={obj.id}` sits on the **outermost render node**. Single-node
+ *     shapes (e.g. plain Text, Ellipse, Circle) put it on that shape;
+ *     multi-node shapes (Text+reverse, Box, Image, Line) wrap their
+ *     parts in a `<Group>` and put the id there. Stage-level lookups
+ *     (`stage.findOne(#id)`, snap, alt+click cycle) all walk up to the
+ *     id'd ancestor, so this stays consistent.
+ *
+ *  2. Selection visuals: a single shape can put its own selection stroke
+ *     on itself (`stroke={isSelected ? colors.selection : ...}`). A
+ *     shape whose body uses `globalCompositeOperation: "difference"`
+ *     for ZPL `^LRY` (currently Box and Line) needs an extra
+ *     `<SelectionOverlay>` Rect drawn with normal blending, so the
+ *     selection stroke isn't itself blended into a wrong colour. The
+ *     overlay sits inside the same Group as the body so drag
+ *     translations move both together.
+ */
 function KonvaObjectInner({
   obj,
   scale,
@@ -66,6 +124,7 @@ function KonvaObjectInner({
   snap,
 }: Props) {
   useFontCacheVersion();
+  const colors = useColorScheme();
   // For text/serial, ^FT (baseline) needs converting to Konva's top-left
   // anchor and the rotation introduces a 15-dot alignment offset. The
   // helper handles both; non-text types pass through unchanged.
@@ -134,10 +193,7 @@ function KonvaObjectInner({
           y={y}
           rotation={zplRotationDeg[p.rotation]}
           draggable
-          onClick={(e) =>
-            onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-          }
-          onTap={() => onSelect(false)}
+          {...selectionHandlers(onSelect)}
           onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
         >
@@ -145,7 +201,7 @@ function KonvaObjectInner({
             width={approxW}
             height={approxH}
             fill="#000000"
-            stroke={isSelected ? "#6366f1" : undefined}
+            stroke={isSelected ? colors.selection : undefined}
             strokeWidth={isSelected ? 1.5 : 0}
           />
           <Text
@@ -171,13 +227,10 @@ function KonvaObjectInner({
         fontStyle="bold"
         rotation={zplRotationDeg[p.rotation]}
         fill="#000000"
-        stroke={isSelected ? "#6366f1" : undefined}
+        stroke={isSelected ? colors.selection : undefined}
         strokeWidth={isSelected ? 1 : 0}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       />
@@ -207,13 +260,10 @@ function KonvaObjectInner({
         fontStyle="bold"
         rotation={zplRotationDeg[p.rotation]}
         fill="#000000"
-        stroke={isSelected ? "#6366f1" : undefined}
+        stroke={isSelected ? colors.selection : undefined}
         strokeWidth={isSelected ? 1 : 0}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       />
@@ -228,44 +278,82 @@ function KonvaObjectInner({
     const cornerRadius =
       p.rounding * dotsToPx(Math.min(p.width, p.height) / 8, scale, dpmm);
 
-    const useReverse = !isSelected && p.reverse;
-    const stroke = useReverse
-      ? "#ffffff"
-      : p.color === "B"
-        ? "#000000"
-        : "#cccccc";
-    const fill = useReverse
+    // Inverted (^LRY) regions print as a knockout. The difference-blend
+    // body renders print-correctly: on the white label it produces black
+    // (white-on-white inverted = black ink in print), and over darker
+    // shapes it inverts those pixels — matching what Zebra firmware
+    // actually prints. The body keeps that mode even while selected so
+    // the inversion visualisation doesn't disappear and hide whatever
+    // is layered behind. The selection outline is rendered as a separate
+    // overlay rect with normal blending.
+    //
+    // Special-cases:
+    //  - reverse + filled drops the body stroke. Konva renders fill then
+    //    stroke; with the difference blend the fill flips the destination
+    //    to black and the (white) stroke then flips back to white inside
+    //    the rect, producing a b/w/b banding artefact. The stroke and
+    //    fill carry the same colour anyway so dropping it is visually
+    //    identical without the artefact.
+    //  - colour W filled (non-reverse) uses the light-grey shape colour
+    //    for the fill too, otherwise white-on-white would make filled
+    //    and outlined indistinguishable on canvas.
+    const isReverse = !!p.reverse;
+    const shapeColor = p.color === "B" ? "#000000" : "#cccccc";
+    const stroke = isReverse
+      ? p.filled
+        ? "transparent"
+        : "#ffffff"
+      : shapeColor;
+    const fill = isReverse
       ? p.filled
         ? "#ffffff"
         : "transparent"
       : p.filled
-        ? p.color === "B"
-          ? "#000000"
-          : "#ffffff"
+        ? shapeColor
         : "transparent";
+    // Wrap body + selection overlay in a draggable Group so both move
+    // together during a drag — without this the selection-stroke rect
+    // stays at the start position while the body translates, leaving a
+    // visible ghost outline behind the moving box until drag-end.
+    // id sits on the Group (not the inner Rect) so onTransformEnd reads the
+    // Group's absolute position via node.x()/y(); putting id on the Rect
+    // would return its local (0, 0) and the post-resize commit would land
+    // off-canvas. The Transformer + altClickCycle + snap all walk up to
+    // the id'd ancestor, so finding the Group via findOne(#id) is fine.
+    // Group.width/height defaults to 0; commitWidthHeightTransform doesn't
+    // need them (it uses obj.props.width * sx).
     return (
-      <Rect
+      <Group
         id={obj.id}
         x={x}
         y={y}
-        width={w}
-        height={h}
-        stroke={isSelected ? "#6366f1" : stroke}
-        strokeWidth={isSelected ? Math.max(strokeWidth, 1.5) : strokeWidth}
-        strokeScaleEnabled={false}
-        fill={fill}
-        cornerRadius={cornerRadius}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
-        globalCompositeOperation={
-          !isSelected && p.reverse ? "difference" : "source-over"
-        }
-      />
+      >
+        <Rect
+          x={0}
+          y={0}
+          width={w}
+          height={h}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+          strokeScaleEnabled={false}
+          fill={fill}
+          cornerRadius={cornerRadius}
+          globalCompositeOperation={isReverse ? "difference" : "source-over"}
+        />
+        {isSelected && (
+          <SelectionOverlay
+            width={w}
+            height={h}
+            strokeWidth={strokeWidth}
+            color={colors.selection}
+            cornerRadius={cornerRadius}
+          />
+        )}
+      </Group>
     );
   }
 
@@ -287,15 +375,12 @@ function KonvaObjectInner({
         y={y + ry}
         radiusX={rx}
         radiusY={ry}
-        stroke={isSelected ? "#6366f1" : stroke}
+        stroke={isSelected ? colors.selection : stroke}
         strokeWidth={isSelected ? Math.max(strokeWidth, 1.5) : strokeWidth}
         strokeScaleEnabled={false}
         fill={fill}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={(e) => {
           // Center-anchored: snap the top-left corner, then re-add radius
           const snapped = snapPos(e.target.x() - rx, e.target.y() - ry);
@@ -327,15 +412,12 @@ function KonvaObjectInner({
         x={x + r}
         y={y + r}
         radius={r}
-        stroke={isSelected ? "#6366f1" : stroke}
+        stroke={isSelected ? colors.selection : stroke}
         strokeWidth={isSelected ? Math.max(strokeWidth, 1.5) : strokeWidth}
         strokeScaleEnabled={false}
         fill={fill}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={(e) => {
           const snapped = snapPos(e.target.x() - r, e.target.y() - r);
           e.target.position({ x: snapped.x + r, y: snapped.y + r });

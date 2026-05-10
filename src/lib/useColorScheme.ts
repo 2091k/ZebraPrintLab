@@ -11,6 +11,11 @@ export interface CanvasColors {
   rulerMinorTick: string;
   rulerLabel: string;
   rulerSeparator: string;
+  /** Selection stroke / handle colour for shapes and the Konva Transformer.
+   *  Distinct from the UI accent (amber) on purpose — design tools follow
+   *  a blue-ish convention here (Figma, Sketch, Illustrator) to keep
+   *  contrast usable across the B/W shape colour space. */
+  selection: string;
 }
 
 export const DARK_COLORS: CanvasColors = {
@@ -24,6 +29,7 @@ export const DARK_COLORS: CanvasColors = {
   rulerMinorTick: '#686868',
   rulerLabel:     '#cccccc',
   rulerSeparator: '#2a2a2a',
+  selection:      '#6366f1',
 };
 
 export const LIGHT_COLORS: CanvasColors = {
@@ -37,6 +43,7 @@ export const LIGHT_COLORS: CanvasColors = {
   rulerMinorTick: '#71717a',
   rulerLabel:     '#27272a',
   rulerSeparator: '#d4d4d8',
+  selection:      '#6366f1',
 };
 
 export function useColorScheme(): CanvasColors {

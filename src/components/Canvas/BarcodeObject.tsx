@@ -4,7 +4,8 @@ import { Image as KImage, Group, Rect, Text } from "react-konva";
 import type Konva from "konva";
 import { BARCODE_1D_TYPES, ObjectRegistry } from "../../registry";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
-import type { KonvaObjectProps } from "./konvaObjectProps";
+import { useColorScheme } from "../../lib/useColorScheme";
+import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 import {
   buildBwipOptions,
   getDisplaySize,
@@ -36,6 +37,7 @@ export function BarcodeObject({
 }: KonvaObjectProps) {
   const groupRef = useRef<Konva.Group>(null);
   const textRef = useRef<Konva.Text>(null);
+  const colors = useColorScheme();
 
   // Exclude the HRI text from the parent Group's getClientRect. This anchors
   // the resize at the bar top (logmars: was anchoring at text top above bars)
@@ -415,10 +417,7 @@ export function BarcodeObject({
           clipWidth={Math.max(w, 1) + clipLeft + clipRight}
           clipHeight={Math.max(h, 1) + textFontSize + textGap}
           draggable
-          onClick={(e) =>
-            onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-          }
-          onTap={() => onSelect(false)}
+          {...selectionHandlers(onSelect)}
           onDragMove={(e) =>
             e.target.position(snapPos(e.target.x(), e.target.y()))
           }
@@ -432,7 +431,7 @@ export function BarcodeObject({
             width={bw}
             height={bh}
             imageSmoothingEnabled={false}
-            stroke={isSelected ? "#6366f1" : undefined}
+            stroke={isSelected ? colors.selection : undefined}
             strokeWidth={isSelected ? 2 : 0}
             strokeScaleEnabled={false}
           />
@@ -508,10 +507,7 @@ export function BarcodeObject({
           x={x}
           y={y}
           draggable
-          onClick={(e) =>
-            onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-          }
-          onTap={() => onSelect(false)}
+          {...selectionHandlers(onSelect)}
           onDragMove={(e) =>
             e.target.position(snapPos(e.target.x(), e.target.y()))
           }
@@ -540,7 +536,7 @@ export function BarcodeObject({
             width={bw}
             height={bh}
             imageSmoothingEnabled={false}
-            stroke={isSelected ? "#6366f1" : undefined}
+            stroke={isSelected ? colors.selection : undefined}
             strokeWidth={isSelected ? 2 : 0}
             strokeScaleEnabled={false}
           />
@@ -685,8 +681,7 @@ export function BarcodeObject({
       return (
         <Group
           id={obj.id} x={x} y={y} draggable
-          onClick={(e) => onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)}
-          onTap={() => onSelect(false)}
+          {...selectionHandlers(onSelect)}
           onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
           onDragEnd={handleDragEnd}
         >
@@ -702,7 +697,7 @@ export function BarcodeObject({
           <KImage x={btX} y={btY} image={barcodeCanvas} crop={bitmapCrop}
             width={bw} height={bh}
             imageSmoothingEnabled={false}
-            stroke={isSelected ? "#6366f1" : undefined}
+            stroke={isSelected ? colors.selection : undefined}
             strokeWidth={isSelected ? 2 : 0}
             strokeScaleEnabled={false}
           />
@@ -722,10 +717,7 @@ export function BarcodeObject({
         x={x}
         y={y}
         draggable
-        onClick={(e) =>
-          onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-        }
-        onTap={() => onSelect(false)}
+        {...selectionHandlers(onSelect)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
@@ -745,7 +737,7 @@ export function BarcodeObject({
           width={bw}
           height={bh}
           imageSmoothingEnabled={false}
-          stroke={isSelected ? "#6366f1" : undefined}
+          stroke={isSelected ? colors.selection : undefined}
           strokeWidth={isSelected ? 2 : 0}
           strokeScaleEnabled={false}
         />
@@ -762,10 +754,7 @@ export function BarcodeObject({
       x={x}
       y={y}
       draggable
-      onClick={(e) =>
-        onSelect(e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey)
-      }
-      onTap={() => onSelect(false)}
+      {...selectionHandlers(onSelect)}
       onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
     >
@@ -773,7 +762,7 @@ export function BarcodeObject({
         width={fbW}
         height={fbH}
         fill="#f9fafb"
-        stroke={isSelected ? "#6366f1" : "#9ca3af"}
+        stroke={isSelected ? colors.selection : "#9ca3af"}
         strokeWidth={isSelected ? 2 : 1}
         dash={isSelected ? undefined : [4, 2]}
       />
