@@ -76,19 +76,19 @@ File menu → **Add page** creates a new page. With multiple pages, the control 
 
 | Shortcut | Action |
 |---|---|
-| `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / Redo |
-| `Ctrl+A` | Select all |
-| `Ctrl+C` / `Ctrl+V` | Copy / Paste |
-| `Ctrl+D` | Duplicate selection |
+| `Ctrl/⌘+Z` / `Ctrl/⌘+Shift+Z` | Undo / Redo |
+| `Ctrl/⌘+A` | Select all |
+| `Ctrl/⌘+C` / `Ctrl/⌘+V` | Copy / Paste |
+| `Ctrl/⌘+D` | Duplicate selection |
 | `Del` / `Backspace` | Delete selection |
 | `G` | Toggle grid |
 | `S` | Toggle snap |
 | `R` | Rotate view (0° → 90° → 180° → 270°) |
 | `Page Up` / `Page Down` | Previous / Next page |
-| `Alt`+click | Cycle selection through stacked objects (select-below) |
+| `Alt/⌥`+click | Cycle selection through stacked objects (select-below) |
 | Middle mouse / Space+drag | Pan canvas |
 | Scroll | Pan canvas |
-| Ctrl+Scroll | Zoom |
+| `Ctrl/⌘`+Scroll | Zoom |
 
 ### Saving and loading
 
