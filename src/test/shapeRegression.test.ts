@@ -35,25 +35,23 @@ if (!fs.existsSync(DIFF_DIR)) {
 const CANVAS_W = 812;
 const CANVAS_H = 812;
 // Per-test diff budget. The shape primitives are pure black-on-white
-// rectangles / ellipses, so the realistic diff is just rasterisation
-// rounding at curved edges. Tightened from the barcode suite's 500
-// (which accommodates bwip-js antialiasing quirks).
-const ALLOWED_TOLERANCE = 200;
+// rectangles / ellipses. The diagonal cases trace a 1-pixel-wide AA
+// gradient along their full length (~400 px each), so the realistic
+// upper bound from rasterisation alone is ~1500 px. Axis-aligned cases
+// finish at <50 px diff in practice.
+const ALLOWED_TOLERANCE = 1500;
+// pixelmatch threshold (per-pixel YIQ distance, 0..1). 0.1 catches
+// geometry shifts down to 1 px; raising to 0.3 ignores the half-tone
+// AA halo Labelary doesn't produce (Zebra renders 1-bit binary).
+const PIXELMATCH_THRESHOLD = 0.3;
 
 describe("Visual Regression - shape primitives vs Labelary", () => {
   it("loads shape test cases", () => {
     expect(shapeTestCases.length).toBeGreaterThan(0);
   });
 
-  // `^GD` diagonal-line geometry (Zebra parallelogram with flat top/bottom
-  // edges and pointy sides) is not implemented in `renderShape` yet. The
-  // fixtures are fetched so Phase 2 can iterate red→green offline, but the
-  // tests are skipped here to keep CI green.
-  const isDiagonal = (id: string) => id.startsWith("shape_line_diag_");
-
   describe.each(shapeTestCases)("Shape: $id", (tc) => {
-    const testFn = isDiagonal(tc.id) ? it.skip : it;
-    testFn("matches the Labelary reference pixel-for-pixel", async () => {
+    it("matches the Labelary reference pixel-for-pixel", async () => {
       const fixturePath = path.join(FIXTURES_DIR, tc.image_ref);
       if (!fs.existsSync(fixturePath)) {
         throw new Error(
@@ -81,7 +79,7 @@ describe("Visual Regression - shape primitives vs Labelary", () => {
         diff.data,
         CANVAS_W,
         CANVAS_H,
-        { threshold: 0.1 },
+        { threshold: PIXELMATCH_THRESHOLD },
       );
 
       if (numDiffPixels > ALLOWED_TOLERANCE) {

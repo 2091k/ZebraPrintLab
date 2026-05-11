@@ -104,11 +104,42 @@ export function renderShape(
       } else if (a === 270) {
         ctx.fillRect(obj.x, obj.y - p.length, t, p.length);
       } else {
-        // Diagonal — ^GD path not implemented yet (Zebra quadrilateral
-        // geometry diverges from a stroked HTML5 line). Tracked under
-        // shape-pixel-tests TODO; tests for diagonals are intentionally
-        // absent until the renderer covers them.
-        throw new Error(`renderShape: diagonal line not implemented (angle=${a})`);
+        // Diagonal ^GD: parallelogram inside the bounding box defined by
+        // the line's dx/dy projection. Top and bottom edges are
+        // horizontal (length-t vertical separation); the short sides
+        // are vertical, so the figure looks pointy at the left/right
+        // ends and flat on top/bottom.
+        //
+        // For orientation L (top-left → bottom-right, slope `\`):
+        //   upper edge runs (boxX, boxY)         → (boxX+w, boxY+h-t)
+        //   lower edge runs (boxX, boxY+t)       → (boxX+w, boxY+h)
+        // Orientation R is the mirror (top-right → bottom-left, `/`).
+        //
+        // dx/dy/w/h/boxX/boxY mirror the math in line.toZPL exactly so
+        // the renderer and the Labelary ZPL describe the same bbox.
+        const rad = (a * Math.PI) / 180;
+        const dx = p.length * Math.cos(rad);
+        const dy = p.length * Math.sin(rad);
+        const w = Math.max(1, Math.abs(Math.round(dx)));
+        const h = Math.max(1, Math.abs(Math.round(dy)));
+        const orientation: "L" | "R" = dx * dy >= 0 ? "L" : "R";
+        const boxX = obj.x + (dx < 0 ? Math.round(dx) : 0);
+        const boxY = obj.y + (dy < 0 ? Math.round(dy) : 0);
+
+        ctx.beginPath();
+        if (orientation === "L") {
+          ctx.moveTo(boxX, boxY);
+          ctx.lineTo(boxX + w, boxY + h - t);
+          ctx.lineTo(boxX + w, boxY + h);
+          ctx.lineTo(boxX, boxY + t);
+        } else {
+          ctx.moveTo(boxX + w, boxY);
+          ctx.lineTo(boxX, boxY + h - t);
+          ctx.lineTo(boxX, boxY + h);
+          ctx.lineTo(boxX + w, boxY + t);
+        }
+        ctx.closePath();
+        ctx.fill();
       }
       return;
     }
