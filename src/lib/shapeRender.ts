@@ -1,6 +1,46 @@
 import type { LabelObject } from "../registry";
 import { diagonalPolygonPoints } from "./shapeGeometry";
 
+/** Inward-extruded ^GE / ^GC ring or solid disc, shared by ellipse and
+ *  circle. Extracted so the two registry types — which carry different
+ *  prop shapes — can each pass their normalised width / height in
+ *  without the call-site needing a union-narrowing ternary. */
+function drawEllipticalOutline(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number,
+  w: number, h: number,
+  thickness: number,
+  filled: boolean,
+  zplColor: "B" | "W",
+): void {
+  const color = zplColor === "B" ? "#000000" : "#ffffff";
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+
+  if (filled) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+
+  // Even-odd fill of outer ellipse minus inner ellipse — gives a true
+  // inward-extruded ring (canvas stroke would be centred on the path
+  // and overflow the declared bbox).
+  const t = Math.max(1, thickness);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    cx, cy,
+    Math.max(0, w / 2 - t),
+    Math.max(0, h / 2 - t),
+    0, 0, Math.PI * 2,
+  );
+  ctx.fill("evenodd");
+}
+
 /**
  * 2D-canvas shape primitive (^GB / ^GE / ^GC / line-as-^GB) renderer.
  *
@@ -51,37 +91,23 @@ export function renderShape(
       return;
     }
 
-    case "ellipse":
-    case "circle": {
-      const p = obj.props;
-      const w = obj.type === "circle" ? p.diameter : p.width;
-      const h = obj.type === "circle" ? p.diameter : p.height;
-      const color = p.color === "B" ? "#000000" : "#ffffff";
-      const cx = obj.x + w / 2;
-      const cy = obj.y + h / 2;
-
-      if (p.filled) {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        return;
-      }
-
-      const t = Math.max(1, p.thickness);
-      // Even-odd fill of outer ellipse minus inner ellipse — gives a true
-      // inward-extruded ring (canvas stroke would be centred on the path
-      // and overflow the declared bbox).
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
-      ctx.ellipse(
-        cx, cy,
-        Math.max(0, w / 2 - t),
-        Math.max(0, h / 2 - t),
-        0, 0, Math.PI * 2,
+    case "ellipse": {
+      drawEllipticalOutline(
+        ctx,
+        obj.x, obj.y,
+        obj.props.width, obj.props.height,
+        obj.props.thickness, obj.props.filled, obj.props.color,
       );
-      ctx.fill("evenodd");
+      return;
+    }
+
+    case "circle": {
+      drawEllipticalOutline(
+        ctx,
+        obj.x, obj.y,
+        obj.props.diameter, obj.props.diameter,
+        obj.props.thickness, obj.props.filled, obj.props.color,
+      );
       return;
     }
 
