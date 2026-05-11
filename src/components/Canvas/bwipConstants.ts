@@ -73,6 +73,12 @@ export const GS1_DATABAR_SPEC_HEIGHT_MODULES: Partial<
   6: 34,
 };
 
+/** Rows of whitespace bwip adds top and bottom of the GS1 DataBar bar
+ *  pattern when buildBwipOptions sets `paddingheight: N`. Re-used by
+ *  the bitmap-crop logic so the bar-extraction stays in lockstep with
+ *  the bwip option above. */
+export const GS1_DATABAR_PADDING_ROWS = 2;
+
 export const EAN_UPC_TYPES = new Set<string>([
   "ean13",
   "ean8",

@@ -394,21 +394,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     : null;
   const stepRotation = singleSelected ? getStepRotation(singleSelected) : null;
   const [rotationBtnPos, setRotationBtnPos] = useState<{ x: number; y: number } | null>(null);
-  // Hide the rotate affordance during an active drag / transform — the
-  // button's position is React-state-driven and would otherwise lag behind
-  // the live Konva node until the interaction ends.
-  const [isInteracting, setIsInteracting] = useState(false);
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const start = () => setIsInteracting(true);
-    const end = () => setIsInteracting(false);
-    stage.on("dragstart.rotbtn transformstart.rotbtn", start);
-    stage.on("dragend.rotbtn transformend.rotbtn", end);
-    return () => {
-      stage.off("dragstart.rotbtn transformstart.rotbtn dragend.rotbtn transformend.rotbtn");
-    };
-  }, []);
+  const rotationBtnRef = useRef<Konva.Group>(null);
   useLayoutEffect(() => {
     if (!singleSelected || !stepRotation) {
       setRotationBtnPos(null);
@@ -421,11 +407,23 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
       setRotationBtnPos(null);
       return;
     }
-    const rect = node.getClientRect({ relativeTo: stage, skipStroke: true });
-    setRotationBtnPos({
-      x: rect.x + rect.width + ROTATE_BUTTON_GAP_PX,
-      y: rect.y + ROTATE_BUTTON_TOP_OFFSET_PX,
-    });
+    // Recompute the button anchor whenever the selected node moves.
+    // The handler updates the Konva node directly so the button tracks
+    // the drag at full frame rate; React state is kept in sync so a
+    // subsequent re-render (selection change, scale, etc.) starts from
+    // the latest position instead of snapping back.
+    const update = () => {
+      const rect = node.getClientRect({ relativeTo: stage, skipStroke: true });
+      const x = rect.x + rect.width + ROTATE_BUTTON_GAP_PX;
+      const y = rect.y + ROTATE_BUTTON_TOP_OFFSET_PX;
+      rotationBtnRef.current?.position({ x, y });
+      setRotationBtnPos({ x, y });
+    };
+    update();
+    stage.on("dragmove.rotbtn transform.rotbtn", update);
+    return () => {
+      stage.off("dragmove.rotbtn transform.rotbtn");
+    };
   }, [singleSelected, stepRotation, scale, viewRotation]);
 
   const handleRotateStep = () => {
@@ -819,8 +817,9 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
               ignoreStroke
             />
 
-            {rotationBtnPos && !isInteracting && (
+            {rotationBtnPos && (
               <RotationButton
+                ref={rotationBtnRef}
                 x={rotationBtnPos.x}
                 y={rotationBtnPos.y}
                 color={colors.selection}
