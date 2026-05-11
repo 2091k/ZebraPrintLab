@@ -108,7 +108,14 @@ export function LineObject({
     : p.color === "B"
       ? "#000000"
       : "#cccccc";
-  const lineStrokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 1);
+  // Live thickness while the side handle is being dragged. Falls back to
+  // the stored prop when no drag is in flight; commits to props on
+  // dragEnd. Wrapping the rendering width in this state means the band,
+  // selection outline and handle anchors all track the cursor in real
+  // time without any one-frame delay on release.
+  const [liveThicknessDots, setLiveThicknessDots] = useState<number | null>(null);
+  const effectiveThicknessDots = liveThicknessDots ?? p.thickness;
+  const lineStrokeWidth = Math.max(dotsToPx(effectiveThicknessDots, scale, dpmm), 1);
 
   // Option-A geometry (mirrors src/lib/shapeRender.ts):
   //   - Axis-aligned lines map to ^GB and extrude thickness downward
@@ -166,6 +173,17 @@ export function LineObject({
   // drag — captured lazily on the first onDragMove and cleared on
   // onDragEnd. Avoids re-querying every Konva node's clientRect per frame.
   const othersSnapshotRef = useRef<SnapRect[] | null>(null);
+
+  // Anchor + starting thickness for the side-handle drag. Captured on
+  // dragstart so dragmove can compute the *delta* along the extrusion
+  // axis (y for horizontal lines, x for everything else) and add it to
+  // the original thickness — avoids a frame-1 jump that would happen if
+  // we read the cursor's absolute position.
+  const thicknessDragRef = useRef<{
+    anchorX: number;
+    anchorY: number;
+    startT: number;
+  } | null>(null);
 
   /**
    * Run the projected endpoint position through object-snap (other shapes'
@@ -511,6 +529,82 @@ export function LineObject({
             strokeWidth={1}
             listening={false}
           />
+          {/* Thickness handle — sits on the far long edge of the band
+              (bottom edge for horizontal lines, right edge otherwise)
+              and lets the user drag thickness perpendicular to the
+              extrusion axis. Mirrors the +y / +x semantics the line
+              actually has in ZPL so the visual change matches what
+              will print. Minimum clamps to 1 dot; the flip-on-overshoot
+              affordance is deferred to a follow-up. */}
+          {(() => {
+            const centerX = (dispX1 + dispX2) / 2;
+            const centerY = (dispY1 + dispY2) / 2;
+            const anchorX = centerX + (isHorizontal ? 0 : lineStrokeWidth);
+            const anchorY = centerY + (isHorizontal ? lineStrokeWidth : 0);
+            return (
+              <>
+                <Rect
+                  x={anchorX - HANDLE_HIT_SIZE / 2}
+                  y={anchorY - HANDLE_HIT_SIZE / 2}
+                  width={HANDLE_HIT_SIZE}
+                  height={HANDLE_HIT_SIZE}
+                  fill="transparent"
+                  draggable
+                  onDragStart={() => {
+                    thicknessDragRef.current = {
+                      anchorX: centerX,
+                      anchorY: centerY,
+                      startT: effectiveThicknessDots,
+                    };
+                  }}
+                  onDragMove={(e) => {
+                    const cursorX = e.target.x() + HANDLE_HIT_SIZE / 2;
+                    const cursorY = e.target.y() + HANDLE_HIT_SIZE / 2;
+                    const extPx = isHorizontal
+                      ? cursorY - centerY
+                      : cursorX - centerX;
+                    const newT = Math.max(
+                      1,
+                      Math.round(pxToDots(extPx, scale, dpmm)),
+                    );
+                    setLiveThicknessDots(newT);
+                    // Pin the Rect to the (possibly-clamped) anchor so
+                    // dragging past the minimum doesn't decouple the
+                    // handle from the band edge.
+                    const newStroke = Math.max(dotsToPx(newT, scale, dpmm), 1);
+                    e.target.position({
+                      x:
+                        centerX +
+                        (isHorizontal ? 0 : newStroke) -
+                        HANDLE_HIT_SIZE / 2,
+                      y:
+                        centerY +
+                        (isHorizontal ? newStroke : 0) -
+                        HANDLE_HIT_SIZE / 2,
+                    });
+                  }}
+                  onDragEnd={() => {
+                    const committed = liveThicknessDots;
+                    thicknessDragRef.current = null;
+                    setLiveThicknessDots(null);
+                    if (committed !== null && committed !== p.thickness) {
+                      onChange({ props: { thickness: committed } });
+                    }
+                  }}
+                />
+                <Rect
+                  x={anchorX - HANDLE_VISIBLE_SIZE / 2}
+                  y={anchorY - HANDLE_VISIBLE_SIZE / 2}
+                  width={HANDLE_VISIBLE_SIZE}
+                  height={HANDLE_VISIBLE_SIZE}
+                  fill="white"
+                  stroke={colors.selection}
+                  strokeWidth={1}
+                  listening={false}
+                />
+              </>
+            );
+          })()}
         </>
       )}
     </Group>
