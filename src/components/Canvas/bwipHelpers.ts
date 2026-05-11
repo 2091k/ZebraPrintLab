@@ -26,6 +26,7 @@ import {
   CODE11_QUIET_ZONE_DELTA_MODULES,
   CODE93_QUIET_ZONE_DELTA_MODULES,
   EAN_TEXT_ZONE_DOTS,
+  GS1_DATABAR_PADDING_ROWS,
   GS1_DATABAR_SPEC_HEIGHT_MODULES,
   LOGMARS_TEXT_ZONE_DOTS,
   MICROPDF417_QUIET_ZONE_ROWS,
@@ -407,7 +408,7 @@ export function buildBwipOptions(
         text,
         scale,
         height: 10,
-        paddingheight: 2,
+        paddingheight: GS1_DATABAR_PADDING_ROWS,
         ...(sym === 7 ? { segments: p.segments ?? GS1_DATABAR_DEFAULT_SEGMENTS } : {}),
       };
       break;
@@ -599,7 +600,7 @@ export function getDisplaySize(
     }
   }
 
-  // GS1 DataBar opts include `paddingheight: 2`, which adds whitespace
+  // GS1 DataBar opts include `paddingheight: N`, which adds whitespace
   // rows on top and bottom of the bwip canvas. Without cropping them out,
   // the bitmap drawn at displayH leaves the bars proportionally shorter
   // than the spec-correct height. Zebra firmware fills the full reserved
@@ -613,25 +614,22 @@ export function getDisplaySize(
   let bitmapCrop: BarcodeDisplaySize["bitmapCrop"];
   if (obj.type === "gs1databar") {
     const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
-    const padPx = 2 * bwipSc; // paddingheight=2 × bwip scale per side
-    if (isQuarter) {
-      if (canvas.width > 2 * padPx) {
-        bitmapCrop = {
-          x: padPx,
-          y: 0,
-          width: canvas.width - 2 * padPx,
-          height: canvas.height,
-        };
-      }
-    } else {
-      if (canvas.height > 2 * padPx) {
-        bitmapCrop = {
-          x: 0,
-          y: padPx,
-          width: canvas.width,
-          height: canvas.height - 2 * padPx,
-        };
-      }
+    const padPx = GS1_DATABAR_PADDING_ROWS * bwipSc;
+    const axisDim = isQuarter ? canvas.width : canvas.height;
+    if (axisDim > 2 * padPx) {
+      bitmapCrop = isQuarter
+        ? {
+            x: padPx,
+            y: 0,
+            width: canvas.width - 2 * padPx,
+            height: canvas.height,
+          }
+        : {
+            x: 0,
+            y: padPx,
+            width: canvas.width,
+            height: canvas.height - 2 * padPx,
+          };
     }
   }
 
