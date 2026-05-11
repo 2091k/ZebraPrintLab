@@ -132,7 +132,7 @@ const sr = {
     previewProvider: 'Преглед преко api.labelary.com',
     previewNoticeTitle: 'Обавештење о приватности',
     previewNoticeBody: 'Преглед и штампање приказује спољни сервис api.labelary.com. Цео ZPL етикете, укључујући осетљиве податке, шаље се преко мреже.',
-    previewNoticePrivacyLink: 'Информације о приватности Labelary',
+    previewNoticePrivacyLink: 'Labelary планови и чување података',
     previewNoticeAcknowledge: 'Разумем, настави',
   },
 

@@ -153,7 +153,7 @@ const de = {
     previewProvider: 'Vorschau über api.labelary.com',
     previewNoticeTitle: 'Datenschutzhinweis',
     previewNoticeBody: 'Vorschau und Druck werden vom externen Dienst api.labelary.com erstellt. Dabei wird das vollständige Label-ZPL inklusive sensibler Daten übertragen.',
-    previewNoticePrivacyLink: 'Labelary-Datenschutzhinweise',
+    previewNoticePrivacyLink: 'Labelary-Tarife & Datenaufbewahrung',
     previewNoticeAcknowledge: 'Verstanden, fortfahren',
   },
 

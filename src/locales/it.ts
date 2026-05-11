@@ -132,7 +132,7 @@ const it = {
     previewProvider: 'Anteprima tramite api.labelary.com',
     previewNoticeTitle: 'Informativa sulla privacy',
     previewNoticeBody: "L'anteprima e la stampa sono generate dal servizio esterno api.labelary.com. L'intero ZPL dell'etichetta, inclusi eventuali dati sensibili, viene trasmesso in rete.",
-    previewNoticePrivacyLink: 'Informativa sulla privacy di Labelary',
+    previewNoticePrivacyLink: 'Piani e conservazione dei dati di Labelary',
     previewNoticeAcknowledge: 'Ho capito, continua',
   },
 

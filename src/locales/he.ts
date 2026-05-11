@@ -132,7 +132,7 @@ const he = {
     previewProvider: 'תצוגה מקדימה דרך api.labelary.com',
     previewNoticeTitle: 'הודעת פרטיות',
     previewNoticeBody: 'התצוגה המקדימה וההדפסה מופקות על ידי השירות החיצוני api.labelary.com. ה-ZPL המלא של התווית, כולל נתונים רגישים, נשלח ברשת.',
-    previewNoticePrivacyLink: 'מידע פרטיות של Labelary',
+    previewNoticePrivacyLink: 'תוכניות Labelary ושימור נתונים',
     previewNoticeAcknowledge: 'הבנתי, המשך',
   },
 

@@ -132,7 +132,7 @@ const ar = {
     previewProvider: 'معاينة عبر api.labelary.com',
     previewNoticeTitle: 'إشعار الخصوصية',
     previewNoticeBody: 'يتم إنشاء المعاينة والطباعة بواسطة الخدمة الخارجية api.labelary.com. يتم إرسال ZPL الكامل للملصق، بما في ذلك أي بيانات حساسة، عبر الشبكة.',
-    previewNoticePrivacyLink: 'معلومات خصوصية Labelary',
+    previewNoticePrivacyLink: 'خطط Labelary والاحتفاظ بالبيانات',
     previewNoticeAcknowledge: 'فهمت، تابع',
   },
 

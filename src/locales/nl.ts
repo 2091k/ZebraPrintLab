@@ -132,7 +132,7 @@ const nl = {
     previewProvider: 'Voorbeeld via api.labelary.com',
     previewNoticeTitle: 'Privacymelding',
     previewNoticeBody: 'De voorbeeldweergave en het afdrukken worden gegenereerd door de externe dienst api.labelary.com. De volledige ZPL van het label, inclusief gevoelige gegevens, wordt verzonden.',
-    previewNoticePrivacyLink: 'Privacy-informatie van Labelary',
+    previewNoticePrivacyLink: 'Labelary-abonnementen en gegevensbewaring',
     previewNoticeAcknowledge: 'Begrepen, doorgaan',
   },
 

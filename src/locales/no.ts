@@ -132,7 +132,7 @@ const no = {
     previewProvider: 'Forhåndsvisning via api.labelary.com',
     previewNoticeTitle: 'Personvernmelding',
     previewNoticeBody: 'Forhåndsvisning og utskrift genereres av den eksterne tjenesten api.labelary.com. Hele etikettens ZPL, inkludert sensitive data, sendes over nettverket.',
-    previewNoticePrivacyLink: 'Labelary personverninformasjon',
+    previewNoticePrivacyLink: 'Labelary-planer og datalagring',
     previewNoticeAcknowledge: 'Forstått, fortsett',
   },
 

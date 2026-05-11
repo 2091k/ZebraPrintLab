@@ -31,7 +31,7 @@ import {
   SunIcon,
   MoonIcon,
 } from "@heroicons/react/16/solid";
-import { useLabelStore, useHistory } from "../store/labelStore";
+import { useLabelStore, useHistory, selectLabelaryNoticeRequired } from "../store/labelStore";
 import { LabelaryNoticeModal } from "./Output/LabelaryNoticeModal";
 import { localeNames } from "../locales";
 import type { LocaleCode } from "../locales";
@@ -54,7 +54,7 @@ export function AppShell() {
   const theme = useLabelStore((s) => s.theme);
   const setTheme = useLabelStore((s) => s.setTheme);
   const labelaryEnabled = useLabelStore((s) => s.thirdParty.labelary);
-  const noticeAcknowledged = useLabelStore((s) => s.labelaryNoticeAcknowledged);
+  const noticeRequired = useLabelStore(selectLabelaryNoticeRequired);
   const [showPrintNotice, setShowPrintNotice] = useState(false);
 
   // Bridge the theme preference to <html data-theme> so the CSS variables in
@@ -218,7 +218,7 @@ export function AppShell() {
             {labelaryEnabled && (
               <DropdownItem
                 icon={PrinterIcon}
-                onClick={() => (noticeAcknowledged ? handlePrint() : setShowPrintNotice(true))}
+                onClick={() => (noticeRequired ? setShowPrintNotice(true) : handlePrint())}
                 disabled={!hasObjects}
               >
                 {t.app.print}

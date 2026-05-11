@@ -132,7 +132,7 @@ const fi = {
     previewProvider: 'Esikatselu palvelusta api.labelary.com',
     previewNoticeTitle: 'Tietosuojailmoitus',
     previewNoticeBody: 'Esikatselun ja tulostuksen tuottaa ulkoinen palvelu api.labelary.com. Etiketin koko ZPL, mukaan lukien arkaluonteiset tiedot, lähetetään verkon yli.',
-    previewNoticePrivacyLink: 'Labelary-tietosuojatiedot',
+    previewNoticePrivacyLink: 'Labelary-tilaukset ja tietojen säilytys',
     previewNoticeAcknowledge: 'Selvä, jatka',
   },
 

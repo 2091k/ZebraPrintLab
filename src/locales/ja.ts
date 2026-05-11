@@ -132,7 +132,7 @@ const ja = {
     previewProvider: 'api.labelary.com 経由のプレビュー',
     previewNoticeTitle: 'プライバシーに関する通知',
     previewNoticeBody: 'プレビューと印刷は外部サービス api.labelary.com で生成されます。機密データを含むラベル全体の ZPL がネットワーク経由で送信されます。',
-    previewNoticePrivacyLink: 'Labelary のプライバシー情報',
+    previewNoticePrivacyLink: 'Labelary プランとデータ保持',
     previewNoticeAcknowledge: '了解しました、続行',
   },
 

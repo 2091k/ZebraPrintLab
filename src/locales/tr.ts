@@ -132,7 +132,7 @@ const tr = {
     previewProvider: 'api.labelary.com üzerinden önizleme',
     previewNoticeTitle: 'Gizlilik bildirimi',
     previewNoticeBody: 'Önizleme ve yazdırma, harici api.labelary.com hizmeti tarafından oluşturulur. Hassas veriler dahil etiketin tamamı ZPL olarak ağ üzerinden gönderilir.',
-    previewNoticePrivacyLink: 'Labelary gizlilik bilgileri',
+    previewNoticePrivacyLink: 'Labelary planları ve veri saklama',
     previewNoticeAcknowledge: 'Anladım, devam et',
   },
 

@@ -132,7 +132,7 @@ const el = {
     previewProvider: 'Προεπισκόπηση μέσω api.labelary.com',
     previewNoticeTitle: 'Ειδοποίηση απορρήτου',
     previewNoticeBody: 'Η προεπισκόπηση και η εκτύπωση δημιουργούνται από την εξωτερική υπηρεσία api.labelary.com. Ολόκληρο το ZPL της ετικέτας, συμπεριλαμβανομένων ευαίσθητων δεδομένων, αποστέλλεται μέσω δικτύου.',
-    previewNoticePrivacyLink: 'Πληροφορίες απορρήτου Labelary',
+    previewNoticePrivacyLink: 'Πλάνα και διατήρηση δεδομένων Labelary',
     previewNoticeAcknowledge: 'Κατάλαβα, συνέχεια',
   },
 
