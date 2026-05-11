@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { Group, Circle, Path } from "react-konva";
 import type Konva from "konva";
 
@@ -30,7 +30,10 @@ const ARROW_PATH_ICON =
 const ICON_SCALE = 0.55;
 const ICON_OFFSET = 12; // 24x24 viewBox → centre at (12, 12)
 
-export function RotationButton({ x, y, color, onClick }: Props) {
+export const RotationButton = forwardRef<Konva.Group, Props>(function RotationButton(
+  { x, y, color, onClick },
+  ref,
+) {
   const [hover, setHover] = useState(false);
   // Track the stage we set a cursor on so unmount-while-hovering can still
   // clean up (onMouseLeave never fires in that case — e.g. user hits Delete
@@ -61,6 +64,7 @@ export function RotationButton({ x, y, color, onClick }: Props) {
 
   return (
     <Group
+      ref={ref}
       x={x}
       y={y}
       onMouseEnter={cursorIn}
@@ -95,4 +99,4 @@ export function RotationButton({ x, y, color, onClick }: Props) {
       </Group>
     </Group>
   );
-}
+});
