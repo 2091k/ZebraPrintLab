@@ -287,6 +287,14 @@ export function LineObject({
     };
   }
 
+  // Diagonal-only: the parallelogram vertex list is reused by the body
+  // (filled) and the selection outline (stroke), so compute it once.
+  // Returns garbage for axis-aligned input — but the diagonal branch is
+  // gated on !isAxisAligned, so it's only consumed when valid.
+  const diagPoints = diagonalPolygonPoints(
+    dispX1, dispY1, dispX2, dispY2, lineStrokeWidth,
+  );
+
   // Thickness handle anchor — sits on the far long edge of the band:
   // bottom edge for horizontal lines, right edge otherwise. The handle's
   // perpendicular drag direction is then y for horizontal and x for
@@ -338,9 +346,7 @@ export function LineObject({
               pointy-side geometry. Reverse uses the same difference blend
               as the stroked case. */}
           <KLine
-            points={diagonalPolygonPoints(
-              dispX1, dispY1, dispX2, dispY2, lineStrokeWidth,
-            )}
+            points={diagPoints}
             closed
             fill={strokeColor}
             listening={false}
@@ -348,9 +354,7 @@ export function LineObject({
           />
           {isSelected && (
             <KLine
-              points={diagonalPolygonPoints(
-                dispX1, dispY1, dispX2, dispY2, lineStrokeWidth,
-              )}
+              points={diagPoints}
               closed
               stroke={colors.selection}
               strokeWidth={1.5}

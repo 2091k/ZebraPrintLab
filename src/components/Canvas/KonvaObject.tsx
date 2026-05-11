@@ -402,10 +402,10 @@ function KonvaObjectInner({
         radiusY={insetRy}
         stroke={isSelected ? colors.selection : stroke}
         strokeWidth={
-          renderFilled
-            ? 0
-            : isSelected
-              ? Math.max(strokeWidth, 1.5)
+          isSelected
+            ? Math.max(strokeWidth, 1.5)
+            : renderFilled
+              ? 0
               : strokeWidth
         }
         strokeScaleEnabled={false}
@@ -449,10 +449,10 @@ function KonvaObjectInner({
         radius={insetR}
         stroke={isSelected ? colors.selection : stroke}
         strokeWidth={
-          renderFilled
-            ? 0
-            : isSelected
-              ? Math.max(strokeWidth, 1.5)
+          isSelected
+            ? Math.max(strokeWidth, 1.5)
+            : renderFilled
+              ? 0
               : strokeWidth
         }
         strokeScaleEnabled={false}

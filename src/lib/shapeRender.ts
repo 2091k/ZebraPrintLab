@@ -66,6 +66,13 @@ export function renderShape(
     case "box": {
       const p = obj.props;
       const color = p.color === "B" ? "#000000" : "#ffffff";
+      // TODO: rounding support. ^GB w,h,t,c,r accepts a 0..8 rounding
+      // index that maps to corner radius (r * Math.min(w, h) / 8 in
+      // dots — the formula already in KonvaObject for canvas display).
+      // Implement via ctx.roundRect for outer + inner rect with
+      // evenodd fill once we have a Labelary fixture with rounding>0
+      // to validate against; the current fixtures all use rounding=0
+      // so the four-band approach below is exact.
       if (p.filled) {
         ctx.fillStyle = color;
         ctx.fillRect(obj.x, obj.y, p.width, p.height);
