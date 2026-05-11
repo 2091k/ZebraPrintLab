@@ -6,6 +6,7 @@ import { dotsToPx, pxToDots } from "../../lib/coordinates";
 import { constrainLine, type ConstrainMode } from "../../lib/lineConstrain";
 import { useColorScheme } from "../../lib/useColorScheme";
 import { computePointSnap, type SnapRect } from "../../lib/snapGuides";
+import { diagonalPolygonPoints } from "../../lib/shapeGeometry";
 import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 
 /** Endpoint-handle visuals — small white square with a thin selection
@@ -125,43 +126,6 @@ export function LineObject({
   // gram — a visible jump the user noticed.
   const halfStrokePx = lineStrokeWidth / 2;
 
-  /**
-   * Build the four ^GD parallelogram vertices in stage-px from arbitrary
-   * line endpoints. Mirrors the math in renderShape so the canvas and
-   * Labelary describe the same bbox.
-   *
-   * The conceptual line is the *left long edge* of the parallelogram —
-   * both endpoints sit on the same side, and the thickness extrudes
-   * purely in +x. This matches Zebra firmware's ^GD output (verified
-   * pixel-by-pixel against Labelary fixtures).
-   */
-  function diagonalPolygonPoints(
-    ax: number, ay: number,
-    bx: number, by: number,
-    t: number,
-  ): number[] {
-    const ddx = bx - ax;
-    const ddy = by - ay;
-    const w = Math.abs(ddx);
-    const h = Math.abs(ddy);
-    const orientation: "L" | "R" = ddx * ddy >= 0 ? "L" : "R";
-    const boxX = ddx < 0 ? ax + ddx : ax;
-    const boxY = ddy < 0 ? ay + ddy : ay;
-    if (orientation === "L") {
-      return [
-        boxX,             boxY,
-        boxX + t,         boxY,
-        boxX + w + t,     boxY + h,
-        boxX + w,         boxY + h,
-      ];
-    }
-    return [
-      boxX + w,         boxY,
-      boxX + w + t,     boxY,
-      boxX + t,         boxY + h,
-      boxX,             boxY + h,
-    ];
-  }
 
   // Live positions while handles are being dragged (snapped preview)
   const [livePt1, setLivePt1] = useState<{ x: number; y: number } | null>(null);

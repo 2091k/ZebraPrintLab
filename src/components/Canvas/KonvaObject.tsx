@@ -6,6 +6,7 @@ import { LineObject } from "./LineObject";
 import { ImageObject } from "./ImageObject";
 import type Konva from "konva";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
+import { outlineInset } from "../../lib/shapeGeometry";
 import { useColorScheme } from "../../lib/useColorScheme";
 import {
   objectToDisplay,
@@ -277,17 +278,14 @@ function KonvaObjectInner({
     const strokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 0.5);
     const cornerRadius =
       p.rounding * dotsToPx(Math.min(p.width, p.height) / 8, scale, dpmm);
-    // Option-A geometry (mirrors src/lib/shapeRender.ts): ZPL ^GB extrudes
-    // thickness inward from the declared (w × h) box, and collapses to
-    // solid when 2t ≥ min(w, h). We draw the body as a centred-stroke
-    // Rect inset by t/2 on every side — the stroke band then fills the
-    // outer band (0..t) exactly, matching what Labelary prints.
-    const clampsToFilled =
-      !p.filled && p.thickness * 2 >= Math.min(p.width, p.height);
-    const renderFilled = p.filled || clampsToFilled;
-    const inset = renderFilled ? 0 : strokeWidth / 2;
-    const insetW = renderFilled ? w : Math.max(0, w - strokeWidth);
-    const insetH = renderFilled ? h : Math.max(0, h - strokeWidth);
+    // Option-A geometry (delegated to lib/shapeGeometry.ts so the Konva
+    // canvas, the @napi-rs pixel-regression renderer, and any future
+    // consumer share one definition of ZPL ^GB extrusion). Centred
+    // stroke on the inset rect places the band exactly inside the
+    // declared bbox; the firmware's clamp-to-solid rule is handled by
+    // `renderFilled`.
+    const insetGeom = outlineInset(w, h, strokeWidth, p.filled);
+    const renderFilled = insetGeom.renderFilled;
     const insetCornerRadius = renderFilled
       ? cornerRadius
       : Math.max(0, cornerRadius - strokeWidth / 2);
@@ -350,10 +348,10 @@ function KonvaObjectInner({
         onDragEnd={handleDragEnd}
       >
         <Rect
-          x={inset}
-          y={inset}
-          width={insetW}
-          height={insetH}
+          x={insetGeom.offset}
+          y={insetGeom.offset}
+          width={insetGeom.width}
+          height={insetGeom.height}
           stroke={stroke}
           strokeWidth={renderFilled ? 0 : strokeWidth}
           strokeScaleEnabled={false}
@@ -383,14 +381,13 @@ function KonvaObjectInner({
     const ry = dotsToPx(p.height, scale, dpmm) / 2;
     const stroke = p.color === "B" ? "#000000" : "#cccccc";
     const strokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 0.5);
-    // Option-A geometry (mirrors src/lib/shapeRender.ts): inset the
-    // ellipse radii by t/2 so the centred stroke band fills the
-    // outer edge of the declared bounding box, matching ^GE.
-    const clampsToFilled =
-      !p.filled && p.thickness * 2 >= Math.min(p.width, p.height);
-    const renderFilled = p.filled || clampsToFilled;
-    const insetRx = renderFilled ? rx : Math.max(0, rx - strokeWidth / 2);
-    const insetRy = renderFilled ? ry : Math.max(0, ry - strokeWidth / 2);
+    // Option-A geometry — same outlineInset() definition as the box
+    // path so the firmware's clamp-to-solid rule stays consistent
+    // across shapes; only the centred-stroke placement differs.
+    const insetGeom = outlineInset(rx * 2, ry * 2, strokeWidth, p.filled);
+    const renderFilled = insetGeom.renderFilled;
+    const insetRx = insetGeom.width / 2;
+    const insetRy = insetGeom.height / 2;
     const fill = renderFilled
       ? p.color === "B"
         ? "#000000"
@@ -435,12 +432,10 @@ function KonvaObjectInner({
     const r = dotsToPx(p.diameter, scale, dpmm) / 2;
     const stroke = p.color === "B" ? "#000000" : "#cccccc";
     const strokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 0.5);
-    // Option-A geometry (mirrors src/lib/shapeRender.ts): inset radius
-    // by t/2 so the centred stroke band fills the outer edge of the
-    // declared diameter, matching ^GC / ^GE-square.
-    const clampsToFilled = !p.filled && p.thickness * 2 >= p.diameter;
-    const renderFilled = p.filled || clampsToFilled;
-    const insetR = renderFilled ? r : Math.max(0, r - strokeWidth / 2);
+    // Option-A geometry — same outlineInset() definition as box/ellipse.
+    const insetGeom = outlineInset(r * 2, r * 2, strokeWidth, p.filled);
+    const renderFilled = insetGeom.renderFilled;
+    const insetR = insetGeom.width / 2;
     const fill = renderFilled
       ? p.color === "B"
         ? "#000000"

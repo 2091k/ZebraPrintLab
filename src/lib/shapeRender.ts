@@ -1,4 +1,5 @@
 import type { LabelObject } from "../registry";
+import { diagonalPolygonPoints } from "./shapeGeometry";
 
 /**
  * 2D-canvas shape primitive (^GB / ^GE / ^GC / line-as-^GB) renderer.
@@ -104,45 +105,26 @@ export function renderShape(
       } else if (a === 270) {
         ctx.fillRect(obj.x, obj.y - p.length, t, p.length);
       } else {
-        // Diagonal ^GD: Zebra renders the line as the *left edge* of a
-        // parallelogram and extrudes thickness purely in the +x direction
-        // (right). Both conceptual line endpoints sit on the same long
-        // edge — the band never straddles the centreline. Verified by
-        // inspecting Labelary pixel output: for ^GD w,h,t,_,L the band
-        // covers x=[boxX..boxX+w+t-1] (overhanging the declared bbox on
-        // the right by t pixels), with the top cap at (boxX..boxX+t,
-        // boxY) and the bottom cap at (boxX+w..boxX+w+t, boxY+h).
-        //
-        // For orientation L (top-left → bottom-right, slope `\`):
-        //   line edge runs (boxX, boxY) → (boxX+w, boxY+h)
-        //   the +x-shifted parallel edge runs (boxX+t, boxY) → (boxX+w+t, boxY+h)
-        // For orientation R (top-right → bottom-left, slope `/`):
-        //   line edge runs (boxX+w, boxY) → (boxX, boxY+h)
-        //   the +x-shifted parallel edge runs (boxX+w+t, boxY) → (boxX+t, boxY+h)
-        //
-        // dx/dy/w/h/boxX/boxY mirror the math in line.toZPL exactly so
-        // the renderer and the Labelary ZPL describe the same bbox.
+        // Diagonal ^GD: derive the polygon vertices from the integer-
+        // rounded line endpoints (matching line.toZPL's rounding), then
+        // delegate the parallelogram geometry to shapeGeometry. The
+        // Konva canvas calls the same helper, so the two render paths
+        // cannot drift.
         const rad = (a * Math.PI) / 180;
         const dx = p.length * Math.cos(rad);
         const dy = p.length * Math.sin(rad);
-        const w = Math.max(1, Math.abs(Math.round(dx)));
-        const h = Math.max(1, Math.abs(Math.round(dy)));
-        const orientation: "L" | "R" = dx * dy >= 0 ? "L" : "R";
-        const boxX = obj.x + (dx < 0 ? Math.round(dx) : 0);
-        const boxY = obj.y + (dy < 0 ? Math.round(dy) : 0);
-
+        const ddx = Math.sign(dx) * Math.max(1, Math.abs(Math.round(dx)));
+        const ddy = Math.sign(dy) * Math.max(1, Math.abs(Math.round(dy)));
+        const [v0x, v0y, v1x, v1y, v2x, v2y, v3x, v3y] = diagonalPolygonPoints(
+          obj.x, obj.y,
+          obj.x + ddx, obj.y + ddy,
+          t,
+        ) as [number, number, number, number, number, number, number, number];
         ctx.beginPath();
-        if (orientation === "L") {
-          ctx.moveTo(boxX, boxY);
-          ctx.lineTo(boxX + t, boxY);
-          ctx.lineTo(boxX + w + t, boxY + h);
-          ctx.lineTo(boxX + w, boxY + h);
-        } else {
-          ctx.moveTo(boxX + w, boxY);
-          ctx.lineTo(boxX + w + t, boxY);
-          ctx.lineTo(boxX + t, boxY + h);
-          ctx.lineTo(boxX, boxY + h);
-        }
+        ctx.moveTo(v0x, v0y);
+        ctx.lineTo(v1x, v1y);
+        ctx.lineTo(v2x, v2y);
+        ctx.lineTo(v3x, v3y);
         ctx.closePath();
         ctx.fill();
       }
