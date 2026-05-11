@@ -132,7 +132,7 @@ const hu = {
     previewProvider: 'Előnézet az api.labelary.com útján',
     previewNoticeTitle: 'Adatvédelmi tájékoztató',
     previewNoticeBody: 'Az előnézetet és a nyomtatást a külső api.labelary.com szolgáltatás készíti. A címke teljes ZPL-je, beleértve a bizalmas adatokat is, hálózaton keresztül kerül elküldésre.',
-    previewNoticePrivacyLink: 'Labelary adatvédelmi tájékoztató',
+    previewNoticePrivacyLink: 'Labelary csomagok és adatmegőrzés',
     previewNoticeAcknowledge: 'Értem, folytatás',
   },
 

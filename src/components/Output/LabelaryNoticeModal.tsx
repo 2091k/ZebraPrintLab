@@ -47,7 +47,7 @@ export function LabelaryNoticeModal({ onContinue, onClose }: Props) {
       <div className="flex flex-col gap-3 p-6 max-w-80 text-center font-mono text-[10px] text-muted leading-relaxed">
         <span>{t.output.previewNoticeBody}</span>
         <a
-          href="https://labelary.com/privacy.html"
+          href="https://labelary.com/service.html#pricing"
           target="_blank"
           rel="noreferrer"
           className="text-accent hover:underline"

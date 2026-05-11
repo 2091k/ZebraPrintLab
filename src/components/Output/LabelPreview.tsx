@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { XMarkIcon, ArrowDownTrayIcon } from '@heroicons/react/16/solid';
 import { useLabelStore, useCurrentObjects } from '../../store/labelStore';
 import { generateZPL } from '../../lib/zplGenerator';
-import { fetchPreview, labelaryErrorMessage } from '../../lib/labelary';
+import { fetchPreview, labelaryErrorMessage, isDefaultLabelaryHost } from '../../lib/labelary';
 import { triggerDownload } from '../../lib/triggerDownload';
 import { useT } from '../../lib/useT';
 import { DialogShell } from '../ui/DialogShell';
@@ -101,16 +101,18 @@ export function LabelPreviewModal({ onClose }: Props) {
         </div>
       </div>
 
-      <div className="px-3 py-1 border-t border-border-2 shrink-0 text-center">
-        <a
-          href="https://labelary.com/"
-          target="_blank"
-          rel="noreferrer"
-          className="font-mono text-[9px] text-muted hover:text-accent transition-colors"
-        >
-          {t.output.previewProvider}
-        </a>
-      </div>
+      {isDefaultLabelaryHost() && (
+        <div className="px-3 py-1 border-t border-border-2 shrink-0 text-center">
+          <a
+            href="https://labelary.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="font-mono text-[9px] text-muted hover:text-accent transition-colors"
+          >
+            {t.output.previewProvider}
+          </a>
+        </div>
+      )}
     </DialogShell>
   );
 }

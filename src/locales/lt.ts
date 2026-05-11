@@ -132,7 +132,7 @@ const lt = {
     previewProvider: 'Peržiūra per api.labelary.com',
     previewNoticeTitle: 'Privatumo pranešimas',
     previewNoticeBody: 'Peržiūrą ir spausdinimą generuoja išorinė paslauga api.labelary.com. Visa etiketės ZPL, įskaitant jautrius duomenis, siunčiama tinklu.',
-    previewNoticePrivacyLink: 'Labelary privatumo informacija',
+    previewNoticePrivacyLink: 'Labelary planai ir duomenų saugojimas',
     previewNoticeAcknowledge: 'Supratau, tęsti',
   },
 

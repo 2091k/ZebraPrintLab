@@ -132,7 +132,7 @@ const sk = {
     previewProvider: 'Náhľad cez api.labelary.com',
     previewNoticeTitle: 'Upozornenie o ochrane údajov',
     previewNoticeBody: 'Náhľad a tlač sa generujú pomocou externej služby api.labelary.com. Celý ZPL štítku, vrátane citlivých údajov, sa odosiela cez sieť.',
-    previewNoticePrivacyLink: 'Informácie o ochrane údajov Labelary',
+    previewNoticePrivacyLink: 'Plány Labelary a uchovávanie údajov',
     previewNoticeAcknowledge: 'Rozumiem, pokračovať',
   },
 

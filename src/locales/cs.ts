@@ -132,7 +132,7 @@ const cs = {
     previewProvider: 'Náhled přes api.labelary.com',
     previewNoticeTitle: 'Upozornění na ochranu údajů',
     previewNoticeBody: 'Náhled a tisk se generují pomocí externí služby api.labelary.com. Celý ZPL štítku, včetně citlivých údajů, je odesílán přes síť.',
-    previewNoticePrivacyLink: 'Informace o ochraně údajů Labelary',
+    previewNoticePrivacyLink: 'Tarify a uchovávání dat Labelary',
     previewNoticeAcknowledge: 'Rozumím, pokračovat',
   },
 

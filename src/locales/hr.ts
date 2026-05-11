@@ -132,7 +132,7 @@ const hr = {
     previewProvider: 'Pregled putem api.labelary.com',
     previewNoticeTitle: 'Obavijest o privatnosti',
     previewNoticeBody: 'Pregled i ispis generira vanjska usluga api.labelary.com. Cijeli ZPL naljepnice, uključujući osjetljive podatke, šalje se putem mreže.',
-    previewNoticePrivacyLink: 'Informacije o privatnosti Labelary',
+    previewNoticePrivacyLink: 'Labelary planovi i čuvanje podataka',
     previewNoticeAcknowledge: 'Razumijem, nastavi',
   },
 

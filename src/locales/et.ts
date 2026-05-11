@@ -132,7 +132,7 @@ const et = {
     previewProvider: 'Eelvaade api.labelary.com kaudu',
     previewNoticeTitle: 'Privaatsusteatis',
     previewNoticeBody: 'Eelvaate ja printimise genereerib väline teenus api.labelary.com. Sildi terve ZPL, sealhulgas tundlikud andmed, saadetakse võrgu kaudu.',
-    previewNoticePrivacyLink: 'Labelary privaatsusteave',
+    previewNoticePrivacyLink: 'Labelary plaanid ja andmete säilitamine',
     previewNoticeAcknowledge: 'Selge, jätka',
   },
 

@@ -132,7 +132,7 @@ const fr = {
     previewProvider: 'Aperçu via api.labelary.com',
     previewNoticeTitle: 'Avis de confidentialité',
     previewNoticeBody: "Le rendu de l'aperçu et de l'impression est effectué par le service externe api.labelary.com. Le ZPL complet de l'étiquette, y compris toute donnée sensible, est envoyé sur le réseau.",
-    previewNoticePrivacyLink: 'Informations sur la confidentialité de Labelary',
+    previewNoticePrivacyLink: 'Forfaits et conservation des données Labelary',
     previewNoticeAcknowledge: 'Compris, continuer',
   },
 

@@ -132,7 +132,7 @@ const pl = {
     previewProvider: 'Podgląd przez api.labelary.com',
     previewNoticeTitle: 'Informacja o prywatności',
     previewNoticeBody: 'Podgląd i drukowanie są renderowane przez zewnętrzny serwis api.labelary.com. Cały ZPL etykiety, włącznie z danymi wrażliwymi, jest wysyłany przez sieć.',
-    previewNoticePrivacyLink: 'Informacje o prywatności Labelary',
+    previewNoticePrivacyLink: 'Plany i przechowywanie danych Labelary',
     previewNoticeAcknowledge: 'Rozumiem, kontynuuj',
   },
 

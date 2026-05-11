@@ -132,7 +132,7 @@ const es = {
     previewProvider: 'Vista previa vía api.labelary.com',
     previewNoticeTitle: 'Aviso de privacidad',
     previewNoticeBody: 'La previsualización y la impresión se generan mediante el servicio externo api.labelary.com. Se envía el ZPL completo de la etiqueta, incluidos los datos sensibles.',
-    previewNoticePrivacyLink: 'Información de privacidad de Labelary',
+    previewNoticePrivacyLink: 'Planes y retención de datos de Labelary',
     previewNoticeAcknowledge: 'Entendido, continuar',
   },
 

@@ -8,6 +8,7 @@ import { ObjectRegistry } from '../registry';
 import type { LabelObject } from '../registry';
 import { locales } from '../locales';
 import type { LocaleCode } from '../locales';
+import { isDefaultLabelaryHost } from '../lib/labelary';
 
 export type { ObjectChanges };
 
@@ -120,6 +121,12 @@ export const currentObjects = (state: PageState): LabelObject[] =>
  *  "show notice first" (gate on, not yet acknowledged). */
 export const canCallLabelary = (s: LabelState): boolean =>
   s.thirdParty.labelary && s.labelaryNoticeAcknowledged;
+
+/** True when clicking a Labelary-backed action must first surface the
+ *  privacy notice modal. A custom-host build implies the operator already
+ *  controls the endpoint and no third-party disclosure is needed. */
+export const selectLabelaryNoticeRequired = (s: LabelState): boolean =>
+  isDefaultLabelaryHost() && !s.labelaryNoticeAcknowledged;
 
 function updateCurrentObjects(
   state: PageState,

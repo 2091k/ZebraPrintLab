@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CheckIcon, ClipboardDocumentIcon, ChevronDownIcon, ChevronUpIcon, EyeIcon } from '@heroicons/react/16/solid';
-import { useLabelStore } from '../../store/labelStore';
+import { useLabelStore, selectLabelaryNoticeRequired } from '../../store/labelStore';
 import { generateMultiPageZPL } from '../../lib/zplGenerator';
 import { useT } from '../../lib/useT';
 import { LabelPreviewModal } from './LabelPreview';
@@ -17,7 +17,7 @@ export function ZPLOutput({ collapsed, onCollapse, onExpand }: Props) {
   const label = useLabelStore((s) => s.label);
   const pages = useLabelStore((s) => s.pages);
   const labelaryEnabled = useLabelStore((s) => s.thirdParty.labelary);
-  const noticeAcknowledged = useLabelStore((s) => s.labelaryNoticeAcknowledged);
+  const noticeRequired = useLabelStore(selectLabelaryNoticeRequired);
   const [copied, setCopied] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showNotice, setShowNotice] = useState(false);
@@ -50,7 +50,7 @@ export function ZPLOutput({ collapsed, onCollapse, onExpand }: Props) {
         <div className="flex items-center gap-3">
           {labelaryEnabled && (
             <button
-              onClick={() => (noticeAcknowledged ? setShowPreview(true) : setShowNotice(true))}
+              onClick={() => (noticeRequired ? setShowNotice(true) : setShowPreview(true))}
               disabled={!zpl}
               title={t.output.previewHeading}
               className="flex items-center gap-1 font-mono text-[10px] text-muted hover:text-accent disabled:opacity-25 disabled:cursor-not-allowed transition-colors"

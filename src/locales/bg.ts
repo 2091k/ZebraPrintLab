@@ -132,7 +132,7 @@ const bg = {
     previewProvider: 'Преглед чрез api.labelary.com',
     previewNoticeTitle: 'Известие за поверителност',
     previewNoticeBody: 'Прегледът и отпечатването се изобразяват от външната услуга api.labelary.com. Целият ZPL на етикета, включително чувствителните данни, се изпраща през мрежата.',
-    previewNoticePrivacyLink: 'Информация за поверителност на Labelary',
+    previewNoticePrivacyLink: 'Планове и съхранение на данни на Labelary',
     previewNoticeAcknowledge: 'Разбрах, продължи',
   },
 
