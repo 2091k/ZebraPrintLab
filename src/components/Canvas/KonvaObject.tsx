@@ -6,6 +6,7 @@ import { LineObject } from "./LineObject";
 import { ImageObject } from "./ImageObject";
 import type Konva from "konva";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
+import { outlineInset } from "../../lib/shapeGeometry";
 import { useColorScheme } from "../../lib/useColorScheme";
 import {
   objectToDisplay,
@@ -277,6 +278,17 @@ function KonvaObjectInner({
     const strokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 0.5);
     const cornerRadius =
       p.rounding * dotsToPx(Math.min(p.width, p.height) / 8, scale, dpmm);
+    // Option-A geometry (delegated to lib/shapeGeometry.ts so the Konva
+    // canvas, the @napi-rs pixel-regression renderer, and any future
+    // consumer share one definition of ZPL ^GB extrusion). Centred
+    // stroke on the inset rect places the band exactly inside the
+    // declared bbox; the firmware's clamp-to-solid rule is handled by
+    // `renderFilled`.
+    const insetGeom = outlineInset(w, h, strokeWidth, p.filled);
+    const renderFilled = insetGeom.renderFilled;
+    const insetCornerRadius = renderFilled
+      ? cornerRadius
+      : Math.max(0, cornerRadius - strokeWidth / 2);
 
     // Inverted (^LRY) regions print as a knockout. The difference-blend
     // body renders print-correctly: on the white label it produces black
@@ -299,16 +311,19 @@ function KonvaObjectInner({
     //    and outlined indistinguishable on canvas.
     const isReverse = !!p.reverse;
     const shapeColor = p.color === "B" ? "#000000" : "#cccccc";
+    // `renderFilled` includes the firmware clamp-to-solid case, so a
+    // very-thick outline picks the filled fill/stroke pair instead of
+    // collapsing into a degenerate inset rect.
     const stroke = isReverse
-      ? p.filled
+      ? renderFilled
         ? "transparent"
         : "#ffffff"
       : shapeColor;
     const fill = isReverse
-      ? p.filled
+      ? renderFilled
         ? "#ffffff"
         : "transparent"
-      : p.filled
+      : renderFilled
         ? shapeColor
         : "transparent";
     // Wrap body + selection overlay in a draggable Group so both move
@@ -333,22 +348,25 @@ function KonvaObjectInner({
         onDragEnd={handleDragEnd}
       >
         <Rect
-          x={0}
-          y={0}
-          width={w}
-          height={h}
+          x={insetGeom.offset}
+          y={insetGeom.offset}
+          width={insetGeom.width}
+          height={insetGeom.height}
           stroke={stroke}
-          strokeWidth={strokeWidth}
+          strokeWidth={renderFilled ? 0 : strokeWidth}
           strokeScaleEnabled={false}
           fill={fill}
-          cornerRadius={cornerRadius}
+          cornerRadius={insetCornerRadius}
           globalCompositeOperation={isReverse ? "difference" : "source-over"}
         />
         {isSelected && (
           <SelectionOverlay
             width={w}
             height={h}
-            strokeWidth={strokeWidth}
+            // Constant-thin selection stroke (decoupled from the body
+            // thickness) so a thick outline box doesn't get a thick
+            // selection halo. Matches the LineSelectionOutline pattern.
+            strokeWidth={1.5}
             color={colors.selection}
             cornerRadius={cornerRadius}
           />
@@ -363,7 +381,14 @@ function KonvaObjectInner({
     const ry = dotsToPx(p.height, scale, dpmm) / 2;
     const stroke = p.color === "B" ? "#000000" : "#cccccc";
     const strokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 0.5);
-    const fill = p.filled
+    // Option-A geometry — same outlineInset() definition as the box
+    // path so the firmware's clamp-to-solid rule stays consistent
+    // across shapes; only the centred-stroke placement differs.
+    const insetGeom = outlineInset(rx * 2, ry * 2, strokeWidth, p.filled);
+    const renderFilled = insetGeom.renderFilled;
+    const insetRx = insetGeom.width / 2;
+    const insetRy = insetGeom.height / 2;
+    const fill = renderFilled
       ? p.color === "B"
         ? "#000000"
         : "#ffffff"
@@ -373,10 +398,16 @@ function KonvaObjectInner({
         id={obj.id}
         x={x + rx}
         y={y + ry}
-        radiusX={rx}
-        radiusY={ry}
+        radiusX={insetRx}
+        radiusY={insetRy}
         stroke={isSelected ? colors.selection : stroke}
-        strokeWidth={isSelected ? Math.max(strokeWidth, 1.5) : strokeWidth}
+        strokeWidth={
+          isSelected
+            ? Math.max(strokeWidth, 1.5)
+            : renderFilled
+              ? 0
+              : strokeWidth
+        }
         strokeScaleEnabled={false}
         fill={fill}
         draggable
@@ -401,7 +432,11 @@ function KonvaObjectInner({
     const r = dotsToPx(p.diameter, scale, dpmm) / 2;
     const stroke = p.color === "B" ? "#000000" : "#cccccc";
     const strokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 0.5);
-    const fill = p.filled
+    // Option-A geometry — same outlineInset() definition as box/ellipse.
+    const insetGeom = outlineInset(r * 2, r * 2, strokeWidth, p.filled);
+    const renderFilled = insetGeom.renderFilled;
+    const insetR = insetGeom.width / 2;
+    const fill = renderFilled
       ? p.color === "B"
         ? "#000000"
         : "#ffffff"
@@ -411,9 +446,15 @@ function KonvaObjectInner({
         id={obj.id}
         x={x + r}
         y={y + r}
-        radius={r}
+        radius={insetR}
         stroke={isSelected ? colors.selection : stroke}
-        strokeWidth={isSelected ? Math.max(strokeWidth, 1.5) : strokeWidth}
+        strokeWidth={
+          isSelected
+            ? Math.max(strokeWidth, 1.5)
+            : renderFilled
+              ? 0
+              : strokeWidth
+        }
         strokeScaleEnabled={false}
         fill={fill}
         draggable

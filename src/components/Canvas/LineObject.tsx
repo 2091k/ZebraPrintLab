@@ -6,6 +6,7 @@ import { dotsToPx, pxToDots } from "../../lib/coordinates";
 import { constrainLine, type ConstrainMode } from "../../lib/lineConstrain";
 import { useColorScheme } from "../../lib/useColorScheme";
 import { computePointSnap, type SnapRect } from "../../lib/snapGuides";
+import { diagonalPolygonPoints } from "../../lib/shapeGeometry";
 import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 
 /** Endpoint-handle visuals — small white square with a thin selection
@@ -107,7 +108,31 @@ export function LineObject({
     : p.color === "B"
       ? "#000000"
       : "#cccccc";
-  const lineStrokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 1);
+  // Live thickness while the side handle is being dragged. Falls back to
+  // the stored prop when no drag is in flight; commits to props on
+  // dragEnd. Wrapping the rendering width in this state means the band,
+  // selection outline and handle anchors all track the cursor in real
+  // time without any one-frame delay on release.
+  const [liveThicknessDots, setLiveThicknessDots] = useState<number | null>(null);
+  const effectiveThicknessDots = liveThicknessDots ?? p.thickness;
+  const lineStrokeWidth = Math.max(dotsToPx(effectiveThicknessDots, scale, dpmm), 1);
+
+  // Option-A geometry (mirrors src/lib/shapeRender.ts):
+  //   - Axis-aligned lines map to ^GB and extrude thickness downward
+  //     (horizontal) or rightward (vertical) from (obj.x, obj.y) — the
+  //     visible body is shifted by t/2 along that axis so the band fills
+  //     y..y+t / x..x+t exactly. Handles stay at the band's start corner.
+  //   - Diagonal lines map to ^GD: the conceptual line is the left long
+  //     edge of a parallelogram and thickness extrudes purely in +x. The
+  //     diagonalPolygonPoints helper builds the four vertices.
+  //
+  // The axis-aligned / diagonal pick is derived from the *live* display
+  // endpoints rather than `p.angle` (which only updates on dragEnd).
+  // Otherwise dragging a near-horizontal endpoint shows the body locked
+  // to the horizontal band until release, then snaps to the parallelo-
+  // gram — a visible jump the user noticed.
+  const halfStrokePx = lineStrokeWidth / 2;
+
 
   // Live positions while handles are being dragged (snapped preview)
   const [livePt1, setLivePt1] = useState<{ x: number; y: number } | null>(null);
@@ -126,6 +151,18 @@ export function LineObject({
   const dispY1 = livePt1?.y ?? y1 + dy;
   const dispX2 = livePt2?.x ?? x2 + dx;
   const dispY2 = livePt2?.y ?? y2 + dy;
+
+  // Half-pixel epsilon: constrainLine's auto-snap commits 45°-step
+  // positions where ddx/ddy land exactly on axis-aligned values, but
+  // float math can leave a tiny residue. <0.5 px collapses to "the
+  // pixel grid sees this as axis-aligned" without false-positives.
+  const ddxDisp = dispX2 - dispX1;
+  const ddyDisp = dispY2 - dispY1;
+  const isHorizontal = Math.abs(ddyDisp) < 0.5;
+  const isVertical = Math.abs(ddxDisp) < 0.5;
+  const isAxisAligned = isHorizontal || isVertical;
+  const visualShiftX = isVertical ? halfStrokePx : 0;
+  const visualShiftY = isHorizontal ? halfStrokePx : 0;
 
   // Shift forces the user-explicit 45°-step constraint; otherwise we use
   // Figma-style auto-snap (±5° tolerance to the nearest 45° step).
@@ -250,6 +287,25 @@ export function LineObject({
     };
   }
 
+  // Diagonal-only: the parallelogram vertex list is reused by the body
+  // (filled) and the selection outline (stroke), so compute it once.
+  // Returns garbage for axis-aligned input — but the diagonal branch is
+  // gated on !isAxisAligned, so it's only consumed when valid.
+  const diagPoints = diagonalPolygonPoints(
+    dispX1, dispY1, dispX2, dispY2, lineStrokeWidth,
+  );
+
+  // Thickness handle anchor — sits on the far long edge of the band:
+  // bottom edge for horizontal lines, right edge otherwise. The handle's
+  // perpendicular drag direction is then y for horizontal and x for
+  // anything else, matching ZPL's ^GB / ^GD extrusion conventions.
+  const lineCenterX = (dispX1 + dispX2) / 2;
+  const lineCenterY = (dispY1 + dispY2) / 2;
+  const thickHandleX =
+    lineCenterX + (isHorizontal ? 0 : lineStrokeWidth);
+  const thickHandleY =
+    lineCenterY + (isHorizontal ? lineStrokeWidth : 0);
+
   return (
     <Group>
       {/* Visible line — tracks both whole-drag and handle-drag live.
@@ -257,30 +313,71 @@ export function LineObject({
           white label it renders black, over darker shapes it inverts
           those pixels. Stays in reverse mode even when selected so the
           inversion visualisation isn't masked. */}
-      <KLine
-        points={[dispX1, dispY1, dispX2, dispY2]}
-        stroke={strokeColor}
-        strokeWidth={lineStrokeWidth}
-        lineCap="butt"
-        listening={false}
-        globalCompositeOperation={isReverse ? "difference" : "source-over"}
-      />
-      {isSelected && (
-        <LineSelectionOutline
-          x1={dispX1}
-          y1={dispY1}
-          x2={dispX2}
-          y2={dispY2}
-          bodyStrokeWidth={lineStrokeWidth}
-          color={colors.selection}
-        />
+      {isAxisAligned ? (
+        <>
+          <KLine
+            points={[
+              dispX1 + visualShiftX,
+              dispY1 + visualShiftY,
+              dispX2 + visualShiftX,
+              dispY2 + visualShiftY,
+            ]}
+            stroke={strokeColor}
+            strokeWidth={lineStrokeWidth}
+            lineCap="butt"
+            listening={false}
+            globalCompositeOperation={isReverse ? "difference" : "source-over"}
+          />
+          {isSelected && (
+            <LineSelectionOutline
+              x1={dispX1 + visualShiftX}
+              y1={dispY1 + visualShiftY}
+              x2={dispX2 + visualShiftX}
+              y2={dispY2 + visualShiftY}
+              bodyStrokeWidth={lineStrokeWidth}
+              color={colors.selection}
+            />
+          )}
+        </>
+      ) : (
+        <>
+          {/* Diagonal ^GD body — closed filled parallelogram rather than
+              a centred stroke so the canvas matches Labelary's flat-top /
+              pointy-side geometry. Reverse uses the same difference blend
+              as the stroked case. */}
+          <KLine
+            points={diagPoints}
+            closed
+            fill={strokeColor}
+            listening={false}
+            globalCompositeOperation={isReverse ? "difference" : "source-over"}
+          />
+          {isSelected && (
+            <KLine
+              points={diagPoints}
+              closed
+              stroke={colors.selection}
+              strokeWidth={1.5}
+              strokeScaleEnabled={false}
+              fill="transparent"
+              listening={false}
+            />
+          )}
+        </>
       )}
       {/* Wide transparent hit area — handles click-to-select and whole-line drag.
           id is here (not on the Group) so the Stage snap handler can find this node
-          via e.target.id() and apply object-snap correctly. */}
+          via e.target.id() and apply object-snap correctly. The hit area is
+          shifted along with the visible body so clicks register where the
+          user sees the line. */}
       <KLine
         id={obj.id}
-        points={[x1, y1, x2, y2]}
+        points={[
+          x1 + visualShiftX,
+          y1 + visualShiftY,
+          x2 + visualShiftX,
+          y2 + visualShiftY,
+        ]}
         stroke="transparent"
         strokeWidth={Math.max(lineStrokeWidth, 14)}
         draggable
@@ -429,6 +526,60 @@ export function LineObject({
           <Rect
             x={(livePt2?.x ?? x2 + dx) - HANDLE_VISIBLE_SIZE / 2}
             y={(livePt2?.y ?? y2 + dy) - HANDLE_VISIBLE_SIZE / 2}
+            width={HANDLE_VISIBLE_SIZE}
+            height={HANDLE_VISIBLE_SIZE}
+            fill="white"
+            stroke={colors.selection}
+            strokeWidth={1}
+            listening={false}
+          />
+          {/* Thickness handle — drags perpendicular to the extrusion
+              axis (y for horizontal, x for everything else). Clamps to
+              the 1-dot minimum; flip-on-overshoot is deferred. */}
+          <Rect
+            x={thickHandleX - HANDLE_HIT_SIZE / 2}
+            y={thickHandleY - HANDLE_HIT_SIZE / 2}
+            width={HANDLE_HIT_SIZE}
+            height={HANDLE_HIT_SIZE}
+            fill="transparent"
+            draggable
+            onDragMove={(e) => {
+              const cursorX = e.target.x() + HANDLE_HIT_SIZE / 2;
+              const cursorY = e.target.y() + HANDLE_HIT_SIZE / 2;
+              const extPx = isHorizontal
+                ? cursorY - lineCenterY
+                : cursorX - lineCenterX;
+              const newT = Math.max(
+                1,
+                Math.round(pxToDots(extPx, scale, dpmm)),
+              );
+              setLiveThicknessDots(newT);
+              // Pin the Rect to the (possibly-clamped) anchor so
+              // dragging past the minimum doesn't decouple the handle
+              // from the band edge.
+              const newStroke = Math.max(dotsToPx(newT, scale, dpmm), 1);
+              e.target.position({
+                x:
+                  lineCenterX +
+                  (isHorizontal ? 0 : newStroke) -
+                  HANDLE_HIT_SIZE / 2,
+                y:
+                  lineCenterY +
+                  (isHorizontal ? newStroke : 0) -
+                  HANDLE_HIT_SIZE / 2,
+              });
+            }}
+            onDragEnd={() => {
+              const committed = liveThicknessDots;
+              setLiveThicknessDots(null);
+              if (committed !== null && committed !== p.thickness) {
+                onChange({ props: { thickness: committed } });
+              }
+            }}
+          />
+          <Rect
+            x={thickHandleX - HANDLE_VISIBLE_SIZE / 2}
+            y={thickHandleY - HANDLE_VISIBLE_SIZE / 2}
             width={HANDLE_VISIBLE_SIZE}
             height={HANDLE_VISIBLE_SIZE}
             fill="white"
