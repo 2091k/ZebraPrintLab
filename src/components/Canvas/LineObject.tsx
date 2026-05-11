@@ -117,15 +117,57 @@ export function LineObject({
   // x..x+t) exactly. Handles stay at the conceptual endpoints (band's
   // start corner) — this is the affordance the user agreed to.
   //
-  // Diagonals fall back to centred-stroke for now (visually wrong vs.
-  // ^GD's parallelogram, tracked under shape-pixel-tests TODO). They'll
-  // be replaced with a closed Konva.Line polygon in a follow-up commit.
+  // Diagonal lines map to ^GD, which Zebra renders as a parallelogram
+  // with horizontal short sides (flat top/bottom, pointy left/right
+  // ends, thickness extruded vertically downward from the diagonal
+  // centreline). A centred Konva stroke does not match that shape, so
+  // the diagonal branch below builds an explicit closed polygon mirror-
+  // ing renderShape's ^GD math.
   const normalizedAngle = ((p.angle % 360) + 360) % 360;
   const isHorizontal = normalizedAngle === 0 || normalizedAngle === 180;
   const isVertical = normalizedAngle === 90 || normalizedAngle === 270;
+  const isAxisAligned = isHorizontal || isVertical;
   const halfStrokePx = lineStrokeWidth / 2;
   const visualShiftX = isVertical ? halfStrokePx : 0;
   const visualShiftY = isHorizontal ? halfStrokePx : 0;
+
+  /**
+   * Build the four ^GD parallelogram vertices in stage-px from arbitrary
+   * line endpoints. Mirrors the math in renderShape so the canvas and
+   * Labelary describe the same bbox.
+   *
+   * The conceptual line is the *left long edge* of the parallelogram —
+   * both endpoints sit on the same side, and the thickness extrudes
+   * purely in +x. This matches Zebra firmware's ^GD output (verified
+   * pixel-by-pixel against Labelary fixtures).
+   */
+  function diagonalPolygonPoints(
+    ax: number, ay: number,
+    bx: number, by: number,
+    t: number,
+  ): number[] {
+    const ddx = bx - ax;
+    const ddy = by - ay;
+    const w = Math.abs(ddx);
+    const h = Math.abs(ddy);
+    const orientation: "L" | "R" = ddx * ddy >= 0 ? "L" : "R";
+    const boxX = ddx < 0 ? ax + ddx : ax;
+    const boxY = ddy < 0 ? ay + ddy : ay;
+    if (orientation === "L") {
+      return [
+        boxX,             boxY,
+        boxX + t,         boxY,
+        boxX + w + t,     boxY + h,
+        boxX + w,         boxY + h,
+      ];
+    }
+    return [
+      boxX + w,         boxY,
+      boxX + w + t,     boxY,
+      boxX + t,         boxY + h,
+      boxX,             boxY + h,
+    ];
+  }
 
   // Live positions while handles are being dragged (snapped preview)
   const [livePt1, setLivePt1] = useState<{ x: number; y: number } | null>(null);
@@ -275,28 +317,61 @@ export function LineObject({
           white label it renders black, over darker shapes it inverts
           those pixels. Stays in reverse mode even when selected so the
           inversion visualisation isn't masked. */}
-      <KLine
-        points={[
-          dispX1 + visualShiftX,
-          dispY1 + visualShiftY,
-          dispX2 + visualShiftX,
-          dispY2 + visualShiftY,
-        ]}
-        stroke={strokeColor}
-        strokeWidth={lineStrokeWidth}
-        lineCap="butt"
-        listening={false}
-        globalCompositeOperation={isReverse ? "difference" : "source-over"}
-      />
-      {isSelected && (
-        <LineSelectionOutline
-          x1={dispX1 + visualShiftX}
-          y1={dispY1 + visualShiftY}
-          x2={dispX2 + visualShiftX}
-          y2={dispY2 + visualShiftY}
-          bodyStrokeWidth={lineStrokeWidth}
-          color={colors.selection}
-        />
+      {isAxisAligned ? (
+        <>
+          <KLine
+            points={[
+              dispX1 + visualShiftX,
+              dispY1 + visualShiftY,
+              dispX2 + visualShiftX,
+              dispY2 + visualShiftY,
+            ]}
+            stroke={strokeColor}
+            strokeWidth={lineStrokeWidth}
+            lineCap="butt"
+            listening={false}
+            globalCompositeOperation={isReverse ? "difference" : "source-over"}
+          />
+          {isSelected && (
+            <LineSelectionOutline
+              x1={dispX1 + visualShiftX}
+              y1={dispY1 + visualShiftY}
+              x2={dispX2 + visualShiftX}
+              y2={dispY2 + visualShiftY}
+              bodyStrokeWidth={lineStrokeWidth}
+              color={colors.selection}
+            />
+          )}
+        </>
+      ) : (
+        <>
+          {/* Diagonal ^GD body — closed filled parallelogram rather than
+              a centred stroke so the canvas matches Labelary's flat-top /
+              pointy-side geometry. Reverse uses the same difference blend
+              as the stroked case. */}
+          <KLine
+            points={diagonalPolygonPoints(
+              dispX1, dispY1, dispX2, dispY2, lineStrokeWidth,
+            )}
+            closed
+            fill={strokeColor}
+            listening={false}
+            globalCompositeOperation={isReverse ? "difference" : "source-over"}
+          />
+          {isSelected && (
+            <KLine
+              points={diagonalPolygonPoints(
+                dispX1, dispY1, dispX2, dispY2, lineStrokeWidth,
+              )}
+              closed
+              stroke={colors.selection}
+              strokeWidth={1.5}
+              strokeScaleEnabled={false}
+              fill="transparent"
+              listening={false}
+            />
+          )}
+        </>
       )}
       {/* Wide transparent hit area — handles click-to-select and whole-line drag.
           id is here (not on the Group) so the Stage snap handler can find this node

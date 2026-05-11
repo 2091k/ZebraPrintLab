@@ -34,16 +34,13 @@ if (!fs.existsSync(DIFF_DIR)) {
 
 const CANVAS_W = 812;
 const CANVAS_H = 812;
-// Per-test diff budget. The shape primitives are pure black-on-white
-// rectangles / ellipses. The diagonal cases trace a 1-pixel-wide AA
-// gradient along their full length (~400 px each), so the realistic
-// upper bound from rasterisation alone is ~1500 px. Axis-aligned cases
-// finish at <50 px diff in practice.
-const ALLOWED_TOLERANCE = 1500;
-// pixelmatch threshold (per-pixel YIQ distance, 0..1). 0.1 catches
-// geometry shifts down to 1 px; raising to 0.3 ignores the half-tone
-// AA halo Labelary doesn't produce (Zebra renders 1-bit binary).
-const PIXELMATCH_THRESHOLD = 0.3;
+// Per-test diff budget. Pure black-on-white shapes finish at <100 px
+// diff in practice; 200 leaves headroom for rasterisation rounding
+// while still catching any 1-px geometry shift.
+const ALLOWED_TOLERANCE = 200;
+// pixelmatch threshold (per-pixel YIQ distance, 0..1). 0.1 is tight
+// enough to flag geometry off-by-ones without snagging on subpixel AA.
+const PIXELMATCH_THRESHOLD = 0.1;
 
 describe("Visual Regression - shape primitives vs Labelary", () => {
   it("loads shape test cases", () => {

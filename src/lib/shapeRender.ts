@@ -104,16 +104,21 @@ export function renderShape(
       } else if (a === 270) {
         ctx.fillRect(obj.x, obj.y - p.length, t, p.length);
       } else {
-        // Diagonal ^GD: parallelogram inside the bounding box defined by
-        // the line's dx/dy projection. Top and bottom edges are
-        // horizontal (length-t vertical separation); the short sides
-        // are vertical, so the figure looks pointy at the left/right
-        // ends and flat on top/bottom.
+        // Diagonal ^GD: Zebra renders the line as the *left edge* of a
+        // parallelogram and extrudes thickness purely in the +x direction
+        // (right). Both conceptual line endpoints sit on the same long
+        // edge — the band never straddles the centreline. Verified by
+        // inspecting Labelary pixel output: for ^GD w,h,t,_,L the band
+        // covers x=[boxX..boxX+w+t-1] (overhanging the declared bbox on
+        // the right by t pixels), with the top cap at (boxX..boxX+t,
+        // boxY) and the bottom cap at (boxX+w..boxX+w+t, boxY+h).
         //
         // For orientation L (top-left → bottom-right, slope `\`):
-        //   upper edge runs (boxX, boxY)         → (boxX+w, boxY+h-t)
-        //   lower edge runs (boxX, boxY+t)       → (boxX+w, boxY+h)
-        // Orientation R is the mirror (top-right → bottom-left, `/`).
+        //   line edge runs (boxX, boxY) → (boxX+w, boxY+h)
+        //   the +x-shifted parallel edge runs (boxX+t, boxY) → (boxX+w+t, boxY+h)
+        // For orientation R (top-right → bottom-left, slope `/`):
+        //   line edge runs (boxX+w, boxY) → (boxX, boxY+h)
+        //   the +x-shifted parallel edge runs (boxX+w+t, boxY) → (boxX+t, boxY+h)
         //
         // dx/dy/w/h/boxX/boxY mirror the math in line.toZPL exactly so
         // the renderer and the Labelary ZPL describe the same bbox.
@@ -129,14 +134,14 @@ export function renderShape(
         ctx.beginPath();
         if (orientation === "L") {
           ctx.moveTo(boxX, boxY);
-          ctx.lineTo(boxX + w, boxY + h - t);
+          ctx.lineTo(boxX + t, boxY);
+          ctx.lineTo(boxX + w + t, boxY + h);
           ctx.lineTo(boxX + w, boxY + h);
-          ctx.lineTo(boxX, boxY + t);
         } else {
           ctx.moveTo(boxX + w, boxY);
-          ctx.lineTo(boxX, boxY + h - t);
+          ctx.lineTo(boxX + w + t, boxY);
+          ctx.lineTo(boxX + t, boxY + h);
           ctx.lineTo(boxX, boxY + h);
-          ctx.lineTo(boxX + w, boxY + t);
         }
         ctx.closePath();
         ctx.fill();
