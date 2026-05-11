@@ -84,6 +84,12 @@ export function ZplImportModal({ onClose }: Props) {
 
     const { labelConfig, pages: importedPages, report } = importZplText(text, label.dpmm);
     const totalObjects = importedPages.reduce((s, p) => s + p.objects.length, 0);
+
+    if (totalObjects === 0 && Object.keys(labelConfig).length === 0) {
+      setError('No supported objects found in the ZPL code.');
+      return;
+    }
+
     applyImport(labelConfig, importedPages);
     setResult({ objectCount: totalObjects, report });
   };
