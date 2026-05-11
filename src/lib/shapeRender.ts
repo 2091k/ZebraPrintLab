@@ -44,9 +44,10 @@ function drawEllipticalOutline(
 /**
  * 2D-canvas shape primitive (^GB / ^GE / ^GC / line-as-^GB) renderer.
  *
- * Phase 2 will refactor the Konva canvas components in `KonvaObject.tsx`
- * and `LineObject.tsx` to consume this function so the on-screen designer
- * and the pixel regression suite produce identical output by construction.
+ * Test-only: the Konva canvas does not call this function. Both code
+ * paths share the same geometric definitions via `lib/shapeGeometry.ts`
+ * (outlineInset, diagonalPolygonPoints), and the pixel-regression
+ * suite uses this 2D-canvas renderer to compare against Labelary.
  *
  * Geometry follows ZPL semantics (Option A from the design discussion):
  * outline thickness extrudes *inward* from the declared bounding box for
@@ -167,7 +168,10 @@ export function renderShape(
     default:
       // Non-shape objects (text, barcodes, images, serial) are out of
       // scope for this renderer — the barcode regression suite covers
-      // bwip-js outputs separately.
+      // bwip-js outputs separately. Test infrastructure only, so a
+      // loud throw is intentional: any pixel-regression case that
+      // smuggles a non-shape object through here is a test-author bug,
+      // not a runtime condition the UI needs to survive.
       throw new Error(`renderShape: unsupported type "${(obj as { type: string }).type}"`);
   }
 }
