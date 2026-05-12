@@ -13,14 +13,17 @@ describe('buildBulkToggleUpdates', () => {
       expect(updates).toEqual([{ id: 'a', changes: { locked: true } }]);
     });
 
-    it('flips a single locked row back to unlocked', () => {
+    it('flips a single locked row back to its default state (undefined)', () => {
+      // Default-state values persist as `undefined` to match the
+      // PropertiesPanel checkbox pattern and keep saved JSON free of
+      // boilerplate `locked: false` keys.
       const updates = buildBulkToggleUpdates(
         [{ id: 'a', locked: true }],
         [],
         'a',
         'locked',
       );
-      expect(updates).toEqual([{ id: 'a', changes: { locked: false } }]);
+      expect(updates).toEqual([{ id: 'a', changes: { locked: undefined } }]);
     });
 
     it('broadcasts the clicked row state to the whole selection', () => {
@@ -79,14 +82,14 @@ describe('buildBulkToggleUpdates', () => {
       expect(updates).toEqual([{ id: 'a', changes: { visible: false } }]);
     });
 
-    it('flips a hidden row back to visible', () => {
+    it('flips a hidden row back to its default state (undefined)', () => {
       const updates = buildBulkToggleUpdates(
         [{ id: 'a', visible: false }],
         [],
         'a',
         'visible',
       );
-      expect(updates).toEqual([{ id: 'a', changes: { visible: true } }]);
+      expect(updates).toEqual([{ id: 'a', changes: { visible: undefined } }]);
     });
   });
 

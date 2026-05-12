@@ -38,6 +38,17 @@ export function buildBulkToggleUpdates(
     field === "locked" ? !!clicked.locked : clicked.visible !== false;
   const nextValue = !currentlyOn;
 
+  // Match the PropertiesPanel checkbox pattern: persist `undefined` for
+  // each field's default state (locked=off, visible=on) so the same toggle
+  // produces the same JSON regardless of which UI path triggered it.
+  // Without this, LayersPanel toggles would leave `locked: false` /
+  // `visible: true` in saved design files while PropertiesPanel toggles
+  // omit the key — producing churn in version-controlled design files.
+  const patchValue: boolean | undefined =
+    field === "locked"
+      ? (nextValue ? true : undefined)
+      : (nextValue ? undefined : false);
+
   const targets = selectedIds.includes(clickedId) ? selectedIds : [clickedId];
-  return targets.map((id) => ({ id, changes: { [field]: nextValue } }));
+  return targets.map((id) => ({ id, changes: { [field]: patchValue } }));
 }
