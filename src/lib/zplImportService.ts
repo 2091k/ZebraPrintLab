@@ -1,4 +1,4 @@
-import { parseZPL, type ImportReport } from "./zplParser";
+import { parseZPL, type ImportFinding, type ImportReport } from "./zplParser";
 import type { LabelConfig } from "../types/ObjectType";
 import type { LabelObject } from "../registry";
 
@@ -6,7 +6,6 @@ export interface ZplImportResult {
   labelConfig: Partial<LabelConfig>;
   pages: { objects: LabelObject[] }[];
   report: ImportReport;
-  notice: string;
 }
 
 /**
@@ -30,76 +29,36 @@ export function importZplText(zpl: string, dpmm: number): ZplImportResult {
     return {
       labelConfig: {},
       pages: [],
-      report: { partial: [], browserLimit: [], unknown: [] },
-      notice: 'No labels found in the ZPL code.',
+      report: { findings: [], partial: [], browserLimit: [], unknown: [] },
     };
   }
 
   let labelConfig: Partial<LabelConfig> = {};
   const pages: { objects: LabelObject[] }[] = [];
-  const partial: string[] = [];
-  const browserLimit: string[] = [];
-  const unknown: string[] = [];
-  let dimensionsDiffered = false;
+  const findings: ImportFinding[] = [];
 
   blocks.forEach((block, i) => {
     const result = parseZPL(block, dpmm);
     pages.push({ objects: result.objects });
     if (i === 0) {
       labelConfig = result.labelConfig;
-    } else {
-      const cfg = result.labelConfig;
-      if (
-        (cfg.widthMm !== undefined && cfg.widthMm !== labelConfig.widthMm) ||
-        (cfg.heightMm !== undefined && cfg.heightMm !== labelConfig.heightMm) ||
-        (cfg.dpmm !== undefined && cfg.dpmm !== labelConfig.dpmm)
-      ) {
-        dimensionsDiffered = true;
-      }
     }
-    partial.push(...result.importReport.partial);
-    browserLimit.push(...result.importReport.browserLimit);
-    unknown.push(...result.importReport.unknown);
+    // Per-block findings come from the parser with pageIndex=0; stamp the
+    // real page index here so the UI can navigate to them.
+    for (const f of result.importReport.findings) {
+      findings.push({ ...f, pageIndex: i });
+    }
   });
 
   const report: ImportReport = {
-    partial: [...new Set(partial)],
-    browserLimit: [...new Set(browserLimit)],
-    unknown: [...new Set(unknown)],
+    findings,
+    // Bucket views stay per-occurrence too (no Set dedup): the modal lists
+    // findings one-per-row so it can navigate to each affected page, and
+    // legacy text reports / parser tests read these arrays unchanged.
+    partial: findings.filter((f) => f.kind === 'partial').map((f) => f.command),
+    browserLimit: findings.filter((f) => f.kind === 'browserLimit').map((f) => f.command),
+    unknown: findings.filter((f) => f.kind === 'unknown').map((f) => f.command),
   };
 
-  const objectCount = pages.reduce((s, p) => s + p.objects.length, 0);
-  const notice = buildNotice(objectCount, pages.length, report, dimensionsDiffered);
-
-  return { labelConfig, pages, report, notice };
-}
-
-function buildNotice(
-  objectCount: number,
-  pageCount: number,
-  report: ImportReport,
-  dimensionsDiffered: boolean,
-): string {
-  const parts: string[] = [];
-
-  const objectsText = `${objectCount} object${objectCount !== 1 ? 's' : ''}`;
-  if (pageCount > 1) {
-    parts.push(`Editable reconstruction: ${objectsText} across ${pageCount} pages imported.`);
-  } else {
-    parts.push(`Editable reconstruction: ${objectsText} imported.`);
-  }
-
-  if (dimensionsDiffered) {
-    parts.push(`Pages have different dimensions; using the first page's size.`);
-  }
-
-  if (report.partial.length > 0) {
-    parts.push(`Font face not preserved (${report.partial.join(', ')}).`);
-  }
-  const skippedCount = report.browserLimit.length + report.unknown.length;
-  if (skippedCount > 0) {
-    parts.push(`${skippedCount} command${skippedCount !== 1 ? 's' : ''} skipped.`);
-  }
-
-  return parts.join(' ');
+  return { labelConfig, pages, report };
 }

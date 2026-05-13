@@ -21,13 +21,38 @@ import type { CodablockProps } from "../registry/codablock";
 import { putImage } from "./imageCache";
 import { GS1_DATABAR_DEFAULT_SEGMENTS } from "./gs1";
 
+export type ImportFindingKind = 'partial' | 'browserLimit' | 'unknown';
+
+/**
+ * One import finding. Created per-occurrence so each entry can be navigated
+ * to its source page in the UI; cross-block dedup happens (if at all) in the
+ * service layer that merges per-page parser runs.
+ */
+export interface ImportFinding {
+  kind: ImportFindingKind;
+  /** Command token. For 'partial' the bare code (e.g. "^A@"); for
+   *  'browserLimit' / 'unknown' the full token including parameters
+   *  (e.g. "^IM,R:LOGO.GRF"). Matches the pre-finding-restructure
+   *  format so existing UI / format helpers keep working. */
+  command: string;
+  /** Page index this finding originated from. The parser doesn't know about
+   *  pages and emits 0; `zplImportService` overwrites it when it merges the
+   *  per-block parser results into a multi-page report. */
+  pageIndex: number;
+}
+
 /**
  * Categorised import report produced alongside the parsed objects.
- * Enables the UI to give the user precise, actionable feedback.
+ * `findings` is the source of truth; the three string buckets are derived
+ * views kept for backward compatibility with existing parser tests and
+ * the textual report formatter.
  */
 export interface ImportReport {
+  /** Per-occurrence findings in encounter order, grouped by kind via the
+   *  derived arrays below. */
+  findings: ImportFinding[];
   /** Commands that were imported with known loss (e.g. ^A@ → font face not available in browser).
-   *  An object WAS created; something about it is approximate.  Deduplicated by command code. */
+   *  An object WAS created; something about it is approximate. Deduplicated by command code. */
   partial: string[];
   /** Commands skipped because they require printer hardware or file storage
    *  (e.g. ^IM, ~DG). No object was created for these. */
@@ -1272,11 +1297,22 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     }
   }
 
+  // Build findings list. `partialCmds` is deduplicated by command code;
+  // the others are per-occurrence in encounter order. pageIndex stays 0
+  // here; `zplImportService.importZplText` fills it once it knows which
+  // ^XA…^XZ block this came from.
+  const findings: ImportFinding[] = [
+    ...[...partialCmds].map((command): ImportFinding => ({ kind: 'partial', command, pageIndex: 0 })),
+    ...browserLimit.map((command): ImportFinding => ({ kind: 'browserLimit', command, pageIndex: 0 })),
+    ...unknown.map((command): ImportFinding => ({ kind: 'unknown', command, pageIndex: 0 })),
+  ];
+
   return {
     labelConfig,
     objects,
     skipped,
     importReport: {
+      findings,
       partial: [...partialCmds],
       browserLimit,
       unknown,

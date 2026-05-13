@@ -1,4 +1,4 @@
-import type { ImportReport } from './zplParser';
+import type { ImportFinding, ImportReport } from './zplParser';
 import { ZPL_COMMAND_MAP } from './zplCommandSupport';
 
 export interface ImportResult {
@@ -13,25 +13,62 @@ export function partialLoss(cmd: string): string {
   return entry?.loss ?? 'imported with limitations';
 }
 
+/**
+ * Single source of truth for finding wording. Both the UI list and the
+ * copy-as-text formatter feed off this so the user sees the same
+ * description in both surfaces; without it, the two pathways drift
+ * whenever someone tweaks a string in one place.
+ *
+ * `title` is the headline (kind + command code where useful);
+ * `detail` is the secondary line (loss description for partial, raw
+ * token for the others).
+ */
+export function describeFinding(f: ImportFinding): { title: string; detail: string } {
+  if (f.kind === 'partial') {
+    return {
+      title: `Partially imported (${f.command})`,
+      detail: partialLoss(f.command),
+    };
+  }
+  if (f.kind === 'browserLimit') {
+    return {
+      title: 'Skipped: needs printer hardware',
+      detail: f.command,
+    };
+  }
+  return {
+    title: 'Skipped: command not recognised',
+    detail: f.command,
+  };
+}
+
+/** Compact "Page N: " prefix when a finding originates from a multi-page
+ *  import. Single-page reports omit it to stay terse. */
+function pagePrefix(f: ImportFinding, multiPage: boolean): string {
+  return multiPage ? `Page ${f.pageIndex + 1}: ` : '';
+}
+
 export function formatReportAsText(result: ImportResult): string {
   const { objectCount, report } = result;
+  const findings = report.findings;
+  const multiPage = findings.some((f) => f.pageIndex > 0);
+
   const lines: string[] = [
     `ZPL Import Report`,
     `Objects imported: ${objectCount}`,
     '',
   ];
-  if (report.partial.length > 0) {
-    const uniqueLosses = [...new Set(report.partial.map(partialLoss))];
-    lines.push(`Partially imported (${report.partial.join(', ')}): ${uniqueLosses.join('; ')}`);
+
+  if (findings.length === 0) {
+    lines.push('All commands recognised. No design information was lost.');
+    return lines.join('\n');
   }
-  if (report.browserLimit.length > 0) {
-    lines.push(`Skipped (printer-only): ${report.browserLimit.map((t) => t.split(',')[0]).join(', ')}`);
-  }
-  if (report.unknown.length > 0) {
-    lines.push(`Skipped (unrecognised): ${report.unknown.map((t) => t.split(',')[0]).join(', ')}`);
-  }
-  if (report.partial.length === 0 && report.browserLimit.length === 0 && report.unknown.length === 0) {
-    lines.push('All commands recognised — no design information was lost.');
+
+  // One row per finding (per page-occurrence). Matches the UI list so the
+  // copied text mirrors what the user sees in the modal.
+  for (const f of findings) {
+    const { title, detail } = describeFinding(f);
+    lines.push(`${pagePrefix(f, multiPage)}${title}: ${detail}`);
   }
   return lines.join('\n');
 }
