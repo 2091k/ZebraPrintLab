@@ -9,12 +9,6 @@ describe('importZplText — single label', () => {
     expect(result.pages[0]?.objects).toHaveLength(1);
   });
 
-  it('reports a single-page notice', () => {
-    const zpl = '^XA^FO10,20^A0N,30,0^FDHello^FS^XZ';
-    const result = importZplText(zpl, 8);
-    expect(result.notice).toContain('1 object');
-    expect(result.notice).not.toContain('pages');
-  });
 });
 
 describe('importZplText — multi-label', () => {
@@ -31,12 +25,6 @@ describe('importZplText — multi-label', () => {
     expect(result.pages[2]?.objects).toHaveLength(1);
   });
 
-  it('mentions the page count in the notice', () => {
-    const zpl = '^XA^FDOne^FS^XZ\n^XA^FDTwo^FS^XZ';
-    const result = importZplText(zpl, 8);
-    expect(result.notice).toContain('across 2 pages');
-  });
-
   it('uses the first block\'s label dimensions', () => {
     const zpl = [
       '^XA^PW800^LL400^FDOne^FS^XZ',
@@ -45,24 +33,6 @@ describe('importZplText — multi-label', () => {
     const result = importZplText(zpl, 8);
     expect(result.labelConfig.widthMm).toBe(100); // 800 dots / 8 dpmm
     expect(result.labelConfig.heightMm).toBe(50);
-  });
-
-  it('flags differing dimensions in the notice', () => {
-    const zpl = [
-      '^XA^PW800^LL400^FDOne^FS^XZ',
-      '^XA^PW400^LL200^FDTwo^FS^XZ',
-    ].join('\n');
-    const result = importZplText(zpl, 8);
-    expect(result.notice).toContain('different dimensions');
-  });
-
-  it('does not flag dimensions when they match', () => {
-    const zpl = [
-      '^XA^PW800^LL400^FDOne^FS^XZ',
-      '^XA^PW800^LL400^FDTwo^FS^XZ',
-    ].join('\n');
-    const result = importZplText(zpl, 8);
-    expect(result.notice).not.toContain('different dimensions');
   });
 
   it('discards content before the first ^XA', () => {
@@ -82,6 +52,51 @@ describe('importZplText — empty / malformed', () => {
   it('returns no pages when no ^XA is present', () => {
     const result = importZplText('not zpl at all', 8);
     expect(result.pages).toHaveLength(0);
-    expect(result.notice).toContain('No labels found');
+  });
+
+  it('returns an empty findings list with empty buckets', () => {
+    const result = importZplText('not zpl at all', 8);
+    expect(result.report.findings).toEqual([]);
+    expect(result.report.partial).toEqual([]);
+  });
+});
+
+describe('importZplText: findings.pageIndex', () => {
+  it('stamps page 0 on findings from the first block', () => {
+    const zpl = '^XA^FO0,0^A@N,30,0,E:A.TTF^FDx^FS^XZ';
+    const { report } = importZplText(zpl, 8);
+    const partial = report.findings.filter((f) => f.kind === 'partial');
+    expect(partial).toHaveLength(1);
+    expect(partial[0]?.pageIndex).toBe(0);
+  });
+
+  it('stamps the correct page index across multiple blocks', () => {
+    // Page 0: clean. Page 1: ^A@ partial. Page 2: ^IM browser-limit + ^XX unknown.
+    const zpl = [
+      '^XA^FO0,0^A0N,30,0^FDclean^FS^XZ',
+      '^XA^FO0,0^A@N,30,0,E:A.TTF^FDfont^FS^XZ',
+      '^XA^IMR:LOGO.GRF^XX99^XZ',
+    ].join('\n');
+    const { report } = importZplText(zpl, 8);
+    const byPage = (idx: number) =>
+      report.findings.filter((f) => f.pageIndex === idx).map((f) => f.kind);
+    expect(byPage(0)).toEqual([]);
+    expect(byPage(1)).toContain('partial');
+    expect(byPage(2)).toContain('browserLimit');
+    expect(byPage(2)).toContain('unknown');
+  });
+
+  it('per-page partial dedup is preserved (one partial per page even with two ^A@)', () => {
+    // Inside page 1, ^A@ appears twice but is deduped per-block.
+    const zpl = [
+      '^XA^FO0,0^A0N,30,0^FDclean^FS^XZ',
+      '^XA^FO0,0^A@N,30,0,E:A.TTF^FDa^FS^FO0,50^A@N,30,0,E:B.TTF^FDb^FS^XZ',
+    ].join('\n');
+    const { report } = importZplText(zpl, 8);
+    const onPage1 = report.findings.filter(
+      (f) => f.kind === 'partial' && f.pageIndex === 1,
+    );
+    expect(onPage1).toHaveLength(1);
+    expect(onPage1[0]?.command).toBe('^A@');
   });
 });

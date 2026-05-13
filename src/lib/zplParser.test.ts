@@ -954,6 +954,28 @@ describe('parseZPL — importReport.unknown', () => {
     expect(importReport.partial).toHaveLength(0);
     expect(importReport.browserLimit).toHaveLength(0);
     expect(importReport.unknown).toHaveLength(0);
+    expect(importReport.findings).toHaveLength(0);
+  });
+});
+
+describe('parseZPL: importReport.findings', () => {
+  it('emits one finding per kind with pageIndex=0 (set by service layer later)', () => {
+    const zpl = '^XA^FO0,0^A@N,30,0,E:ARIAL.TTF^FDText^FS^IMR:LOGO.GRF^XX99^XZ';
+    const { importReport } = parseZPL(zpl, 8);
+    const kinds = importReport.findings.map((f) => f.kind);
+    expect(kinds).toContain('partial');
+    expect(kinds).toContain('browserLimit');
+    expect(kinds).toContain('unknown');
+    expect(importReport.findings.every((f) => f.pageIndex === 0)).toBe(true);
+  });
+
+  it('partial findings are deduplicated by command code', () => {
+    // Two ^A@ uses → one partial finding for "^A@".
+    const zpl = '^XA^FO0,0^A@N,30,0,E:A.TTF^FDFirst^FS^FO0,50^A@N,30,0,E:B.TTF^FDSecond^FS^XZ';
+    const { importReport } = parseZPL(zpl, 8);
+    const partialFindings = importReport.findings.filter((f) => f.kind === 'partial');
+    expect(partialFindings).toHaveLength(1);
+    expect(partialFindings[0]?.command).toBe('^A@');
   });
 });
 

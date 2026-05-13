@@ -4,8 +4,8 @@ import { importZplText } from '../../lib/zplImportService';
 import { readFileAsText } from '../../lib/readFile';
 import { useLabelStore, type Page } from '../../store/labelStore';
 import type { LabelConfig } from '../../types/ObjectType';
-import { formatReportAsText, type ImportResult } from '../../lib/importReport';
-import { ImportSummaryBody } from './ImportReportModal';
+import { formatReportAsText, type ImportReport, type ImportResult } from '../../lib/importReport';
+import { ImportSummaryBody } from './ImportSummary';
 import { useT } from '../../lib/useT';
 import { DialogShell } from '../ui/DialogShell';
 
@@ -35,7 +35,7 @@ export function ZplImportModal({ onClose }: Props) {
 
   const applyImport = (labelConfig: Partial<LabelConfig>, importedPages: Page[]) => {
     if (appendMode && hasExistingContent) {
-      // Keep the current label config — the user opted to keep the
+      // Keep the current label config: the user opted to keep the
       // existing design's dimensions, so any imported ^PW/^LL is
       // intentionally discarded.
       appendPages(importedPages);
@@ -44,23 +44,41 @@ export function ZplImportModal({ onClose }: Props) {
     }
   };
 
+  // Feedback through state change: when the import has no findings the
+  // changed canvas is confirmation enough. We only stop on the result
+  // view when there is something the user could not otherwise see, i.e.
+  // one or more findings to review.
+  const finishImport = (totalObjects: number, report: ImportReport) => {
+    if (report.findings.length === 0) {
+      onClose();
+    } else {
+      setResult({ objectCount: totalObjects, report });
+    }
+  };
+
+  // Shared post-source path: parse, gate on supported content, hand off
+  // to the store + finishImport. The two entry points (paste textarea,
+  // file picker) only differ in how they obtain the text and which
+  // source-specific error they surface; everything past that point is
+  // identical, so it lives here.
+  const processImport = (text: string) => {
+    const { labelConfig, pages: importedPages, report } = importZplText(text, label.dpmm);
+    const totalObjects = importedPages.reduce((s, p) => s + p.objects.length, 0);
+    if (totalObjects === 0 && Object.keys(labelConfig).length === 0) {
+      setError('No supported objects found in the ZPL code.');
+      return;
+    }
+    applyImport(labelConfig, importedPages);
+    finishImport(totalObjects, report);
+  };
+
   const handleImport = () => {
     setError(null);
     if (!zpl.trim()) {
       setError('Please paste some ZPL code first.');
       return;
     }
-
-    const { labelConfig, pages: importedPages, report } = importZplText(zpl, label.dpmm);
-    const totalObjects = importedPages.reduce((s, p) => s + p.objects.length, 0);
-
-    if (totalObjects === 0 && Object.keys(labelConfig).length === 0) {
-      setError('No supported objects found in the ZPL code.');
-      return;
-    }
-
-    applyImport(labelConfig, importedPages);
-    setResult({ objectCount: totalObjects, report });
+    processImport(zpl);
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,17 +99,7 @@ export function ZplImportModal({ onClose }: Props) {
       setError('The file appears to be empty.');
       return;
     }
-
-    const { labelConfig, pages: importedPages, report } = importZplText(text, label.dpmm);
-    const totalObjects = importedPages.reduce((s, p) => s + p.objects.length, 0);
-
-    if (totalObjects === 0 && Object.keys(labelConfig).length === 0) {
-      setError('No supported objects found in the ZPL code.');
-      return;
-    }
-
-    applyImport(labelConfig, importedPages);
-    setResult({ objectCount: totalObjects, report });
+    processImport(text);
   };
 
   const handleCopy = () => {
