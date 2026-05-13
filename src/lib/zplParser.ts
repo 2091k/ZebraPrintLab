@@ -48,8 +48,10 @@ export interface ImportFinding {
  * the textual report formatter.
  */
 export interface ImportReport {
-  /** Per-occurrence findings in encounter order, grouped by kind via the
-   *  derived arrays below. */
+  /** Per-block findings grouped by kind (partial, then browserLimit, then
+   *  unknown). Inside each group, entries are in encounter order; the
+   *  partial group is deduplicated by command code. The derived arrays
+   *  below offer a kind-filtered view. */
   findings: ImportFinding[];
   /** Commands that were imported with known loss (e.g. ^A@ → font face not available in browser).
    *  An object WAS created; something about it is approximate. Deduplicated by command code. */
