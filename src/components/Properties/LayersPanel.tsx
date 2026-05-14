@@ -1,13 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   DndContext,
   PointerSensor,
   closestCenter,
-  useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import type { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
+import type {
+  DragEndEvent,
+  DragMoveEvent,
+  DragOverEvent,
+  DragStartEvent,
+} from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import {
   EyeIcon,
@@ -21,7 +25,7 @@ import {
 import { useLabelStore, useCurrentObjects } from '../../store/labelStore';
 import { ObjectRegistry } from '../../registry';
 import type { LabelObject } from '../../registry';
-import { isGroup, walkObjects, findObjectById } from '../../types/Group';
+import { isGroup, walkObjects, findObjectById, findAncestors } from '../../types/Group';
 import { useT } from '../../lib/useT';
 import { buildBulkToggleUpdates, type ToggleField } from '../../lib/bulkToggle';
 import { DragHandleIcon } from '../ui/DragHandleIcon';
@@ -30,11 +34,15 @@ import { DragHandleIcon } from '../ui/DragHandleIcon';
  *  use the group's own id, so the root needs a value that can't collide. */
 const ROOT_CONTAINER = '__root__';
 
-/** Droppable id for the implicit drop zone rendered after the last row.
- *  Lets the user pull a child out of a group by dragging downward past
- *  the bottom of the panel — without this, the bottom-most element has
- *  no row below it to use as a drop target. */
-const BOTTOM_DROP_ZONE = '__bottom_drop__';
+/** Horizontal pixels per nesting level — matches the row's own paddingLeft
+ *  step so the insertion line lines up visually with the target row's
+ *  content column. Changing this means changing the row indent too. */
+const INDENT_STEP = 16;
+
+/** Pixel bias subtracted from the cursor X before quantising to depth so a
+ *  user has to drag a little before the target depth changes. Tuned to feel
+ *  like Figma's "you mean it" threshold. */
+const INDENT_DEAD_ZONE = 6;
 
 interface FlatRow {
   obj: LabelObject;
@@ -71,6 +79,10 @@ interface RowProps {
   /** Show an accent line above this row — used for sibling drops so the
    *  user sees the exact landing slot before releasing. */
   showInsertionLine: boolean;
+  /** Visual depth at which to render the insertion line. Diverges from
+   *  the row's own depth while the user drags horizontally to climb out
+   *  of a deeply nested container. */
+  insertionLineDepth: number | null;
   onSelect: () => void;
   onToggle: () => void;
   onToggleLock: () => void;
@@ -95,6 +107,7 @@ function LayerRow({
   isExpanded,
   isDropTarget,
   showInsertionLine,
+  insertionLineDepth,
   onSelect,
   onToggle,
   onToggleLock,
@@ -120,9 +133,10 @@ function LayerRow({
     disabled: isLocked,
   });
   const stopRowClick = (e: React.MouseEvent) => e.stopPropagation();
-  // Indent the insertion line so it visually aligns with the indented
-  // row, signalling that the drop will land at that nesting level.
-  const linePadLeft = depth > 0 ? depth * 16 + 16 : 8;
+  // The line indent follows the *target* depth, not the row's own depth,
+  // so as the user drags left the line slides left in real time.
+  const lineDepth = insertionLineDepth ?? depth;
+  const linePadLeft = lineDepth > 0 ? lineDepth * INDENT_STEP + 16 : 8;
 
   return (
     <>
@@ -134,7 +148,7 @@ function LayerRow({
       />
     <div
       ref={setNodeRef}
-      style={{ touchAction: 'none', paddingLeft: depth > 0 ? depth * 16 + 8 : undefined }}
+      style={{ touchAction: 'none', paddingLeft: depth > 0 ? depth * INDENT_STEP + 8 : undefined }}
       {...attributes}
       {...(isLocked ? {} : listeners)}
       onClick={(e) => {
@@ -217,21 +231,6 @@ function LayerRow({
   );
 }
 
-function BottomDropZone({ active }: { active: boolean }) {
-  const { setNodeRef } = useDroppable({ id: BOTTOM_DROP_ZONE });
-  // 12px is enough to be a comfortable hit target without adding visible
-  // panel padding. Highlights softly while a drag is hovering it so the
-  // user sees the extract-to-top-level affordance.
-  return (
-    <div
-      ref={setNodeRef}
-      className={`h-3 mx-2 mt-0.5 rounded transition-colors ${
-        active ? 'bg-accent/30 outline outline-1 outline-accent/60' : 'bg-transparent'
-      }`}
-    />
-  );
-}
-
 export function LayersPanel() {
   const t = useT();
   const {
@@ -245,6 +244,12 @@ export function LayersPanel() {
   const objects = useCurrentObjects();
   const [overId, setOverId] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  // Cursor X within the panel during a drag — drives indent-style depth
+  // selection so dragging left climbs out of a container the same way
+  // Figma / VSCode tree views handle it.
+  const [dragCursorX, setDragCursorX] = useState<number | null>(null);
+  const dragStartScreenXRef = useRef<number | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
@@ -271,6 +276,57 @@ export function LayersPanel() {
     });
   };
 
+  /**
+   * Walk up the container chain by N levels. Returns the container at the
+   * target depth and the group node that lives AT that climbed level — the
+   * latter is the row whose visual position the insertion will sit above.
+   */
+  const climbContainer = (
+    fromContainerId: string,
+    levels: number,
+  ): { containerId: string; overObj: LabelObject | null } => {
+    if (levels <= 0) return { containerId: fromContainerId, overObj: null };
+    let current = fromContainerId;
+    let overObj: LabelObject | null = null;
+    for (let i = 0; i < levels && current !== ROOT_CONTAINER; i++) {
+      const groupNode = findObjectById(objects, current);
+      if (!groupNode) break;
+      overObj = groupNode;
+      const ancestors = findAncestors(objects, current);
+      const parent = ancestors[ancestors.length - 1];
+      current = parent ? parent.id : ROOT_CONTAINER;
+    }
+    return { containerId: current, overObj };
+  };
+
+  /**
+   * Resolve the cursor position + over-row into the actual drop target:
+   * which container to write into, which row the insertion sits above
+   * (for the visual line), and at which visual depth the line sits.
+   * Returns null when there's nothing actionable (no over, depth mismatch).
+   */
+  const resolveDropTarget = (overRow: FlatRow): {
+    targetParent: string | null;
+    overObj: LabelObject;
+    effectiveDepth: number;
+  } => {
+    const cursorDepth = dragCursorX !== null
+      ? Math.max(0, Math.floor((dragCursorX - INDENT_DEAD_ZONE) / INDENT_STEP))
+      : overRow.depth;
+    const effectiveDepth = Math.min(cursorDepth, overRow.depth);
+    const levels = overRow.depth - effectiveDepth;
+    if (levels === 0) {
+      const parent = overRow.containerId === ROOT_CONTAINER ? null : overRow.containerId;
+      return { targetParent: parent, overObj: overRow.obj, effectiveDepth };
+    }
+    const climbed = climbContainer(overRow.containerId, levels);
+    return {
+      targetParent: climbed.containerId === ROOT_CONTAINER ? null : climbed.containerId,
+      overObj: climbed.overObj ?? overRow.obj,
+      effectiveDepth,
+    };
+  };
+
   if (objects.length === 0) {
     return (
       <div className="p-4 text-center text-muted text-xs mt-6">
@@ -281,29 +337,45 @@ export function LayersPanel() {
 
   const allRowIds = rows.map((r) => r.obj.id);
 
+  const handleDragStart = (e: DragStartEvent) => {
+    const native = e.activatorEvent;
+    if (
+      native &&
+      typeof (native as PointerEvent).clientX === 'number'
+    ) {
+      dragStartScreenXRef.current = (native as PointerEvent).clientX;
+    }
+  };
+
+  const handleDragMove = (e: DragMoveEvent) => {
+    const startX = dragStartScreenXRef.current;
+    const panelEl = panelRef.current;
+    if (startX === null || !panelEl) return;
+    const screenX = startX + e.delta.x;
+    const rect = panelEl.getBoundingClientRect();
+    setDragCursorX(screenX - rect.left);
+  };
+
   const handleDragOver = ({ over }: DragOverEvent) =>
     setOverId((over?.id as string) ?? null);
 
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+  const clearDragState = () => {
     setOverId(null);
+    setDragCursorX(null);
+    dragStartScreenXRef.current = null;
+  };
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    clearDragState();
     if (!over || active.id === over.id) return;
     const activeId = active.id as string;
-
-    // Bottom drop zone: move the active to the very bottom of the
-    // top-level list (data index 0 in display-reversed terms). Lets a
-    // user extract a child by dragging downward past the last row.
-    if (over.id === BOTTOM_DROP_ZONE) {
-      reparentObject(activeId, { parentId: null, index: 0 });
-      return;
-    }
-
     const overRow = rowsById.get(over.id as string);
     if (!overRow) return;
 
     // "Drop into group" target: a group that has no expanded children
-    // to drop between — either collapsed, or expanded but empty.
-    // Otherwise the user can drop on any child row inside, which lands
-    // the item inside the group via the sibling code path below.
+    // to drop between — either collapsed, or expanded but empty. The
+    // indent-drag path is skipped here because there's no "land beside"
+    // semantic on an empty container; the only meaningful drop is INTO.
     if (
       isGroup(overRow.obj) &&
       (!expandedIds.has(overRow.obj.id) || overRow.obj.children.length === 0)
@@ -315,17 +387,11 @@ export function LayersPanel() {
       return;
     }
 
-    // Sibling case: active lands in the gap ABOVE over in display order,
-    // which matches the rendered insertion line. The panel reverses
-    // each container (topmost row = last in array), so the gap above
-    // over in display sits right AFTER over in data order. After
-    // detaching active from a same-container source, over's effective
-    // data index drops by one when active was previously above over in
-    // data; the conditional below adjusts for that so the final
-    // landing slot stays the visual gap the user saw.
-    const targetParent = overRow.containerId === ROOT_CONTAINER
-      ? null
-      : overRow.containerId;
+    // Indent-aware sibling drop: the cursor's X position selects how
+    // deep in the container chain the drop lands. Dragging left climbs
+    // out of nested groups; the resolveDropTarget call already did the
+    // ancestor walk and gave us the effective over row.
+    const { targetParent, overObj } = resolveDropTarget(overRow);
     const containerChildren = targetParent === null
       ? objects
       : (() => {
@@ -333,18 +399,20 @@ export function LayersPanel() {
           return g && isGroup(g) ? g.children : null;
         })();
     if (!containerChildren) return;
-    const overDataIndex = containerChildren.findIndex(
-      (c) => c.id === overRow.obj.id,
-    );
+    const overDataIndex = containerChildren.findIndex((c) => c.id === overObj.id);
     if (overDataIndex === -1) return;
+    // Drops land in the gap ABOVE overObj in display order (= directly
+    // after overObj in data order). Same-container moves shift the
+    // effective index down by one when active was previously above
+    // over in data — without the shift the row would end up one slot
+    // off from where the insertion line implied.
     const activeRow = rowsById.get(activeId);
-    const sameContainer =
-      activeRow?.containerId === overRow.containerId;
+    const activeContainer = activeRow?.containerId ?? null;
+    const targetContainerId = targetParent ?? ROOT_CONTAINER;
+    const sameContainer = activeContainer === targetContainerId;
     let insertionIndex: number;
     if (sameContainer) {
-      const activeDataIndex = containerChildren.findIndex(
-        (c) => c.id === activeId,
-      );
+      const activeDataIndex = containerChildren.findIndex((c) => c.id === activeId);
       insertionIndex =
         activeDataIndex < overDataIndex ? overDataIndex : overDataIndex + 1;
     } else {
@@ -353,18 +421,12 @@ export function LayersPanel() {
     reparentObject(activeId, { parentId: targetParent, index: insertionIndex });
   };
 
-  const handleDragCancel = () => setOverId(null);
+  const handleDragCancel = () => clearDragState();
 
   // While dragging, `overId` is the row the cursor is currently on top
-  // of. Translate that into one of two visual modes:
-  //
-  //   dropIntoTargetId – the row's body gets an outline because the
-  //     drop will dive INTO it (collapsed group case).
-  //   insertionLineRowId – the row gets a thin accent line above it
-  //     because the drop will land as a sibling immediately before it
-  //     (in display order). Suppressed when the active is already at
-  //     that exact slot, so the indicator only shows when releasing
-  //     would actually change the model.
+  // of. resolveDropTarget translates that plus the cursor X into the
+  // actual drop slot — the row whose gap-above will host the insertion
+  // line, and the depth at which the line should sit.
   const overRow = overId ? rowsById.get(overId) ?? null : null;
   const dropIntoTargetId =
     overRow &&
@@ -372,19 +434,24 @@ export function LayersPanel() {
     (!expandedIds.has(overRow.obj.id) || overRow.obj.children.length === 0)
       ? overRow.obj.id
       : null;
-  const insertionLineRowId =
-    overRow && !dropIntoTargetId ? overRow.obj.id : null;
+  const previewSlot = overRow && !dropIntoTargetId
+    ? resolveDropTarget(overRow)
+    : null;
+  const insertionLineRowId = previewSlot?.overObj.id ?? null;
+  const insertionLineDepth = previewSlot?.effectiveDepth ?? null;
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
       <SortableContext items={allRowIds} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col">
+        <div ref={panelRef} className="flex flex-col">
           {rows.map(({ obj, depth, containerId }) => (
             <LayerRow
               key={obj.id}
@@ -395,6 +462,9 @@ export function LayersPanel() {
               isExpanded={expandedIds.has(obj.id)}
               isDropTarget={dropIntoTargetId === obj.id}
               showInsertionLine={insertionLineRowId === obj.id}
+              insertionLineDepth={
+                insertionLineRowId === obj.id ? insertionLineDepth : null
+              }
               onSelect={() => selectObject(obj.id)}
               onToggle={() => toggleSelectObject(obj.id)}
               onToggleLock={() => toggleField(obj.id, 'locked')}
@@ -411,7 +481,6 @@ export function LayersPanel() {
               tUngroupLabel={t.layers.ungroup}
             />
           ))}
-          <BottomDropZone active={overId === BOTTOM_DROP_ZONE} />
         </div>
       </SortableContext>
     </DndContext>
