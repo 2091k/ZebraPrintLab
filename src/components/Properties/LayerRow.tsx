@@ -89,6 +89,13 @@ export function LayerRow({
   const cancelEdit = () => setEditing(false);
   const defaultLabel = groupRow ? t.types.group : (def?.label ?? obj.type);
   const displayName = obj.name ?? defaultLabel;
+  // Show the child count next to a collapsed group's name so the user can
+  // judge what's inside without expanding. Hidden while expanded (the
+  // count is visible as actual rows) and while editing (the input would
+  // otherwise prefill with the count too).
+  const childCount = groupRow ? obj.children.length : 0;
+  const showCount = groupRow && !isExpanded && childCount > 0 && !editing;
+  const labelText = showCount ? `${displayName} · ${childCount}` : displayName;
   const isLocked = !!obj.locked;
   const isHidden = obj.visible === false;
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
@@ -185,11 +192,11 @@ export function LayerRow({
           />
         ) : (
           <span
-            className="text-xs text-text truncate"
+            className={`text-xs text-text truncate ${groupRow ? 'font-medium' : ''}`}
             onDoubleClick={groupRow ? (e) => { e.stopPropagation(); beginEdit(); } : undefined}
             title={groupRow ? t.layers.rename : undefined}
           >
-            {displayName}
+            {labelText}
           </span>
         )}
         <span className="font-mono text-[9px] text-muted">{obj.id.slice(0, 8)}</span>
