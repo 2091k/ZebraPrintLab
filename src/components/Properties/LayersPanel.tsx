@@ -1,184 +1,147 @@
-import { useState } from 'react';
-import {
-  DndContext,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import type { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { EyeIcon, EyeSlashIcon, LockClosedIcon, LockOpenIcon } from '@heroicons/react/16/solid';
+import { useMemo, useState } from 'react';
+import { DndContext } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { FolderPlusIcon } from '@heroicons/react/16/solid';
 import { useLabelStore, useCurrentObjects } from '../../store/labelStore';
-import { ObjectRegistry } from '../../registry';
-import type { LabelObject } from '../../registry';
+import { canGroupSelection, findObjectById, isGroup, walkObjects } from '../../types/Group';
 import { useT } from '../../lib/useT';
 import { buildBulkToggleUpdates, type ToggleField } from '../../lib/bulkToggle';
-import { DragHandleIcon } from '../ui/DragHandleIcon';
-
-interface RowProps {
-  obj: LabelObject;
-  isSelected: boolean;
-  isOver: boolean;
-  onSelect: () => void;
-  onToggle: () => void;
-  onToggleLock: () => void;
-  onToggleVisible: () => void;
-  tLock: string;
-  tUnlock: string;
-  tShow: string;
-  tHide: string;
-}
-
-function SortableLayerRow({
-  obj,
-  isSelected,
-  isOver,
-  onSelect,
-  onToggle,
-  onToggleLock,
-  onToggleVisible,
-  tLock,
-  tUnlock,
-  tShow,
-  tHide,
-}: RowProps) {
-  const def = ObjectRegistry[obj.type];
-  const isLocked = !!obj.locked;
-  const isHidden = obj.visible === false;
-  // Locked rows opt out of @dnd-kit's sortable listeners so the drag handle
-  // can't reorder them; the row stays clickable for selection / toggles.
-  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
-    id: obj.id,
-    disabled: isLocked,
-  });
-
-  const stopRowClick = (e: React.MouseEvent) => e.stopPropagation();
-
-  return (
-    <>
-      <div
-        className={`h-0.5 mx-2 rounded transition-colors ${isOver ? 'bg-accent' : 'bg-transparent'}`}
-      />
-      <div
-        ref={setNodeRef}
-        style={{ touchAction: 'none' }}
-        {...attributes}
-        {...(isLocked ? {} : listeners)}
-        onClick={(e) => {
-          if (e.shiftKey || e.ctrlKey || e.metaKey) onToggle();
-          else onSelect();
-        }}
-        className={`
-          flex items-center gap-2 px-2 py-1.5
-          ${isLocked ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}
-          border-b border-border group transition-colors hover:bg-surface-2
-          ${isSelected ? 'bg-surface-2 border-l-2 border-l-accent' : 'border-l-2 border-l-transparent'}
-          ${isDragging ? 'opacity-40' : ''}
-          ${isHidden ? 'opacity-50' : ''}
-        `}
-      >
-        <DragHandleIcon
-          className={`w-2 h-3.5 shrink-0 text-muted transition-opacity ${isLocked ? 'opacity-0' : 'opacity-0 group-hover:opacity-60'}`}
-        />
-        <span className="font-mono text-xs text-accent shrink-0 w-4 text-center">
-          {def?.icon}
-        </span>
-        <div className="flex flex-col flex-1 min-w-0">
-          <span className="text-xs text-text truncate">{def?.label ?? obj.type}</span>
-          <span className="font-mono text-[9px] text-muted">{obj.id.slice(0, 8)}</span>
-        </div>
-        <button
-          type="button"
-          onPointerDown={stopRowClick}
-          onClick={(e) => { stopRowClick(e); onToggleVisible(); }}
-          title={isHidden ? tShow : tHide}
-          aria-label={isHidden ? tShow : tHide}
-          className={`w-5 h-5 flex items-center justify-center rounded transition-colors ${isHidden ? 'text-accent' : 'text-muted opacity-0 group-hover:opacity-100'} hover:text-text hover:bg-surface`}
-        >
-          {isHidden ? <EyeSlashIcon className="w-3.5 h-3.5" /> : <EyeIcon className="w-3.5 h-3.5" />}
-        </button>
-        <button
-          type="button"
-          onPointerDown={stopRowClick}
-          onClick={(e) => { stopRowClick(e); onToggleLock(); }}
-          title={isLocked ? tUnlock : tLock}
-          aria-label={isLocked ? tUnlock : tLock}
-          className={`w-5 h-5 flex items-center justify-center rounded transition-colors ${isLocked ? 'text-accent' : 'text-muted opacity-0 group-hover:opacity-100'} hover:text-text hover:bg-surface`}
-        >
-          {isLocked ? <LockClosedIcon className="w-3.5 h-3.5" /> : <LockOpenIcon className="w-3.5 h-3.5" />}
-        </button>
-      </div>
-    </>
-  );
-}
+import { buildFlatRows, useLayerDnd, type FlatRow } from './useLayerDnd';
+import { LayerRow } from './LayerRow';
 
 export function LayersPanel() {
   const t = useT();
-  const { selectedIds, selectObject, toggleSelectObject, reorderObject, updateObjects } = useLabelStore();
+  const {
+    selectedIds,
+    selectObject,
+    toggleSelectObject,
+    updateObject,
+    updateObjects,
+    groupSelection,
+    addGroup,
+    ungroupIds,
+    reparentObject,
+  } = useLabelStore();
   const objects = useCurrentObjects();
-  const [overId, setOverId] = useState<string | null>(null);
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-  );
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const allNodes = useMemo(() => [...walkObjects(objects)], [objects]);
+  const rows = useMemo(() => buildFlatRows(objects, expandedIds), [objects, expandedIds]);
+  const rowsById = useMemo(() => {
+    const m = new Map<string, FlatRow>();
+    for (const r of rows) m.set(r.obj.id, r);
+    return m;
+  }, [rows]);
+  const allRowIds = useMemo(() => rows.map((r) => r.obj.id), [rows]);
+
+  // Soft tint for every descendant of a currently-selected group, so the
+  // user sees which leaves would move together if they dragged the group
+  // (or pressed an arrow key). Excludes the group itself — its row keeps
+  // the stronger "is selected" accent.
+  const idsUnderSelectedGroup = useMemo(() => {
+    const out = new Set<string>();
+    for (const id of selectedIds) {
+      const obj = findObjectById(objects, id);
+      if (!obj || !isGroup(obj)) continue;
+      for (const desc of walkObjects(obj.children)) out.add(desc.id);
+    }
+    return out;
+  }, [objects, selectedIds]);
+
+  const {
+    sensors,
+    collisionDetection,
+    panelRef,
+    onDragStart,
+    onDragOver,
+    onDragEnd,
+    onDragCancel,
+    preview,
+  } = useLayerDnd({ objects, rowsById, expandedIds, reparentObject });
 
   const toggleField = (clickedId: string, field: ToggleField) => {
-    const updates = buildBulkToggleUpdates(objects, selectedIds, clickedId, field);
+    const updates = buildBulkToggleUpdates(allNodes, selectedIds, clickedId, field);
     if (updates.length > 0) updateObjects(updates);
   };
 
-  if (objects.length === 0) {
-    return (
-      <div className="p-4 text-center text-muted text-xs mt-6">
-        {t.layers.empty}
-      </div>
-    );
-  }
-
-  // Reverse so topmost layer (last in array = front) appears first
-  const reversed = [...objects].reverse();
-  const n = objects.length;
-
-  const handleDragOver = ({ over }: DragOverEvent) =>
-    setOverId((over?.id as string) ?? null);
-
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    setOverId(null);
-    if (!over || active.id === over.id) return;
-    const toVisualIndex = reversed.findIndex((o) => o.id === over.id);
-    reorderObject(active.id as string, n - 1 - toVisualIndex);
+  // Smart "New group" button: prefer grouping the current top-level
+  // selection (matches the Ctrl+G shortcut), fall back to creating an
+  // empty group at the top so the affordance is also useful before
+  // any items exist or have been selected.
+  const onNewGroup = () => {
+    if (canGroupSelection(objects, selectedIds)) groupSelection();
+    else addGroup();
   };
 
-  const handleDragCancel = () => setOverId(null);
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
+      collisionDetection={collisionDetection}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragEnd={onDragEnd}
+      onDragCancel={onDragCancel}
     >
-      <SortableContext items={reversed.map((o) => o.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col">
-          {reversed.map((obj) => (
-            <SortableLayerRow
-              key={obj.id}
-              obj={obj}
-              isSelected={selectedIds.includes(obj.id)}
-              isOver={overId === obj.id}
-              onSelect={() => selectObject(obj.id)}
-              onToggle={() => toggleSelectObject(obj.id)}
-              onToggleLock={() => toggleField(obj.id, 'locked')}
-              onToggleVisible={() => toggleField(obj.id, 'visible')}
-              tLock={t.layers.lock}
-              tUnlock={t.layers.unlock}
-              tShow={t.layers.show}
-              tHide={t.layers.hide}
-            />
-          ))}
+      <div className="flex items-center justify-end px-2 py-1.5 border-b border-border shrink-0">
+        <button
+          type="button"
+          onClick={onNewGroup}
+          title={t.layers.newGroup}
+          aria-label={t.layers.newGroup}
+          className="w-5 h-5 flex items-center justify-center rounded text-muted hover:text-text hover:bg-surface-2 transition-colors"
+        >
+          <FolderPlusIcon className="w-3.5 h-3.5" />
+        </button>
+      </div>
+      {objects.length === 0 ? (
+        <div className="p-4 text-center text-muted text-xs mt-6">
+          {t.layers.empty}
         </div>
-      </SortableContext>
+      ) : (
+        <SortableContext items={allRowIds} strategy={verticalListSortingStrategy}>
+          <div ref={panelRef} className="flex flex-col">
+            {rows.map(({ obj, depth, containerId }, i) => (
+              <LayerRow
+                key={obj.id}
+                obj={obj}
+                depth={depth}
+                containerId={containerId}
+                isSelected={selectedIds.includes(obj.id)}
+                isInSelectedGroup={idsUnderSelectedGroup.has(obj.id)}
+                isExpanded={expandedIds.has(obj.id)}
+                isDropTarget={preview.dropIntoTargetId === obj.id}
+                showInsertionLine={preview.insertionLineRowId === obj.id}
+                insertionLineDepth={
+                  preview.insertionLineRowId === obj.id ? preview.insertionLineDepth : null
+                }
+                // The next row leaving a deeper container marks the
+                // boundary: add a small bottom gap so the user sees the
+                // group "close" before the next sibling at the parent
+                // level begins.
+                isContainerEnd={
+                  depth > 0 && (rows[i + 1]?.depth ?? -1) < depth
+                }
+                onSelect={() => selectObject(obj.id)}
+                onToggle={() => toggleSelectObject(obj.id)}
+                onToggleLock={() => toggleField(obj.id, 'locked')}
+                onToggleVisible={() => toggleField(obj.id, 'visible')}
+                onToggleExpand={() => toggleExpand(obj.id)}
+                onUngroup={() => ungroupIds([obj.id])}
+                onRename={(name) => updateObject(obj.id, { name })}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      )}
     </DndContext>
   );
 }

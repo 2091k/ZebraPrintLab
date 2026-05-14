@@ -13,6 +13,7 @@ import type { PaletteDragData } from "../../dnd/types";
 import { Stage, Layer, Group, Rect, Transformer } from "react-konva";
 import type Konva from "konva";
 import { useLabelStore, useCurrentObjects, currentObjects, getCurrentObjects } from "../../store/labelStore";
+import { isGroup, getAllLeaves, expandSelection, selectionTargetId, findObjectById } from "../../types/Group";
 import { pxToDots, SCREEN_PX_PER_MM } from "../../lib/coordinates";
 import { SNAP_OPTIONS } from "../../lib/units";
 import type { Unit } from "../../lib/units";
@@ -25,7 +26,7 @@ import { Grid } from "./Grid";
 import { GuideLines } from "./GuideLines";
 import { Ruler, RULER_SIZE } from "./Ruler";
 import { ObjectRegistry } from "../../registry";
-import type { LabelObject } from "../../registry";
+import type { LabelObject, LeafObject } from "../../registry";
 import { useColorScheme } from "../../lib/useColorScheme";
 import { objectIdsAtPoint } from "./hitTesting";
 import { useT } from "../../lib/useT";
@@ -93,7 +94,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const rotateView = () => onViewRotationChange(nextRotation(viewRotation));
   const [guides, setGuides] = useState<SnapGuide[]>([]);
-  const [ghost, setGhost] = useState<LabelObject | null>(null);
+  const [ghost, setGhost] = useState<LeafObject | null>(null);
 
   // Raw pointer position tracked independently of @dnd-kit's scroll-adjusted delta.
   // activatorEvent.client + event.delta includes scroll momentum from the palette
@@ -121,6 +122,42 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     selectObjects,
   } = useLabelStore();
   const objects = useCurrentObjects();
+
+  // Render path operates on visible leaves only: groups emit no node of
+  // their own (v1 has no group transform), and a group with visible=false
+  // hides its whole subtree. Lock cascades the same way — a leaf inside
+  // a locked group is stamped as effectively locked so the per-leaf
+  // draggable / locked-click checks all see one consistent value
+  // without each consumer having to walk ancestors.
+  const visibleLeaves = useMemo(() => {
+    const out: LeafObject[] = [];
+    const walk = (nodes: LabelObject[], inheritedLocked: boolean, inheritedHidden: boolean) => {
+      for (const n of nodes) {
+        const locked = inheritedLocked || !!n.locked;
+        const hidden = inheritedHidden || n.visible === false;
+        if (hidden) continue;
+        if (isGroup(n)) {
+          walk(n.children, locked, hidden);
+        } else {
+          // Preserve object identity when nothing was inherited so React
+          // memoisation keeps unaffected leaves stable across renders.
+          out.push(locked && !n.locked ? ({ ...n, locked: true } as LeafObject) : n);
+        }
+      }
+    };
+    walk(objects, false, false);
+    return out;
+  }, [objects]);
+
+  // Konva-side machinery (transformer, snap snapshots) lives on leaves;
+  // groups have no node of their own. Expanding the selection here is
+  // what makes "click a child → group is selected" feel like a Figma
+  // multi-drag without a second drag pathway.
+  const allLeaves = useMemo(() => getAllLeaves(objects), [objects]);
+  const attachableIds = useMemo(
+    () => expandSelection(objects, selectedIds),
+    [objects, selectedIds],
+  );
 
   useEffect(() => {
     const el = containerRef.current;
@@ -180,9 +217,13 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
       // always move the object the way the user sees it on the rotated view.
       const [dx, dy] = inverseRotateDelta(screenDx, screenDy, viewRotation);
 
+      // Expand so arrow keys move every leaf of a selected group, not
+      // the group node itself (whose x/y is conventionally 0 and has no
+      // effect on rendered children).
+      const expanded = expandSelection(objs, ids);
       updateObjects(
-        ids.flatMap((sid) => {
-          const obj = objs.find((o) => o.id === sid);
+        expanded.flatMap((sid) => {
+          const obj = findObjectById(objs, sid);
           if (!obj || obj.locked) return [];
           return [{ id: sid, changes: { x: obj.x + dx, y: obj.y + dy } }];
         }),
@@ -320,8 +361,12 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
         const ids = state.selectedIds;
         if (ids.length === 0) return;
         const objs = currentObjects(state);
+        // Konva nodes only exist for leaves; align operates on the
+        // measured rendered bboxes, so expand any selected group to its
+        // leaf ids and feed those into the Konva lookup.
+        const attachable = expandSelection(objs, ids);
 
-        const boxes = ids.flatMap((id) => {
+        const boxes = attachable.flatMap((id) => {
           const node = stage.findOne<Konva.Node>(`#${id}`);
           if (!node) return [];
           const r = node.getClientRect({ relativeTo: stage });
@@ -348,8 +393,8 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
         const dxDots = Math.round(layoutDx / pxPerDot);
         const dyDots = Math.round(layoutDy / pxPerDot);
 
-        const updates = ids.flatMap((id) => {
-          const obj = objs.find((o) => o.id === id);
+        const updates = attachable.flatMap((id) => {
+          const obj = findObjectById(objs, id);
           if (!obj) return [];
           return [
             { id, changes: { x: obj.x + dxDots, y: obj.y + dyDots } },
@@ -371,8 +416,8 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
   } = useKonvaTransformer({
     transformerRef,
     stageRef,
-    selectedIds,
-    objects,
+    selectedIds: attachableIds,
+    objects: allLeaves,
     scale,
     dpmm: label.dpmm,
     objectsOffsetX,
@@ -447,15 +492,18 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     // Multi-select: propagate position delta to all other selected objects.
     // Read fresh state (getState) to avoid stale closure when multiple DragEnd events
     // fire simultaneously during a Transformer group drag.
+    // expandSelection lets a selected group behave like a multi-selection
+    // of its leaves here, so dragging one leaf moves the whole group via
+    // the same delta-propagation path used by shift-click selections.
     const state = useLabelStore.getState();
-    const selIds = state.selectedIds;
     const currentObjs = currentObjects(state);
+    const selIds = expandSelection(currentObjs, state.selectedIds);
     if (
       selIds.length > 1 &&
       selIds.includes(id) &&
       (finalChanges.x !== undefined || finalChanges.y !== undefined)
     ) {
-      const srcObj = currentObjs.find((o) => o.id === id);
+      const srcObj = findObjectById(currentObjs, id);
       if (srcObj) {
         const ddx = finalChanges.x !== undefined ? finalChanges.x - srcObj.x : 0;
         const ddy = finalChanges.y !== undefined ? finalChanges.y - srcObj.y : 0;
@@ -464,7 +512,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
           ...selIds
             .filter((sid) => sid !== id)
             .flatMap((sid) => {
-              const other = currentObjs.find((o) => o.id === sid);
+              const other = findObjectById(currentObjs, sid);
               return other
                 ? [{ id: sid, changes: { x: other.x + ddx, y: other.y + ddy } }]
                 : [];
@@ -484,7 +532,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     if (!objId || !stageRef.current) return;
 
     const objs = getCurrentObjects();
-    const obj = objs.find((o) => o.id === objId);
+    const obj = findObjectById(objs, objId);
     if (!obj) return;
 
     const stage = stageRef.current;
@@ -492,7 +540,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     const draggedRect = { id: objId, x: dr.x, y: dr.y, width: dr.width, height: dr.height };
 
     const otherRects = [];
-    for (const o of objs) {
+    for (const o of getAllLeaves(objs)) {
       if (o.id === objId) continue;
       const n = stage.findOne<Konva.Node>(`#${o.id}`);
       if (!n) continue;
@@ -608,7 +656,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
       if (!type) return;
       const def = ObjectRegistry[type];
       if (!def) return;
-      setGhost({ id: "__ghost__", type, ...pos, rotation: 0, props: def.defaultProps } as LabelObject);
+      setGhost({ id: "__ghost__", type, ...pos, rotation: 0, props: def.defaultProps } as LeafObject);
     },
     onDragEnd(event) {
       setGhost(null);
@@ -771,7 +819,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
                 />
               )}
 
-              {objects.map((obj) => obj.visible === false ? null : (
+              {visibleLeaves.map((obj) => (
                 <KonvaObject
                   key={obj.id}
                   obj={obj}
@@ -779,11 +827,21 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
                   dpmm={label.dpmm}
                   offsetX={objectsOffsetX}
                   offsetY={labelOffsetY}
-                  isSelected={selectedIds.includes(obj.id)}
+                  isSelected={attachableIds.includes(obj.id)}
                   onSelect={(add) => {
-                    if (obj.locked) handleLockedClick(add);
-                    else if (add) toggleSelectObject(obj.id);
-                    else selectObject(obj.id);
+                    // Auto-select-parent: clicking a child of a group
+                    // surfaces the outermost containing group as the
+                    // selection target. Top-level leaves pass through.
+                    const target = selectionTargetId(objects, obj.id);
+                    // Lock cascades from the group: a click on a child
+                    // of a locked group routes through handleLockedClick
+                    // (so the next non-locked hit wins) instead of
+                    // selecting through to a leaf the user can't move.
+                    const targetObj =
+                      target === obj.id ? obj : findObjectById(objects, target);
+                    if (targetObj?.locked) handleLockedClick(add);
+                    else if (add) toggleSelectObject(target);
+                    else selectObject(target);
                   }}
                   onChange={(changes) => handleObjectChange(obj.id, changes)}
                   snap={snap}

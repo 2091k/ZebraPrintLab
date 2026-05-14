@@ -10,6 +10,8 @@ export function useGlobalShortcuts() {
   const setCanvasSettings = useLabelStore((s) => s.setCanvasSettings);
   const setCurrentPage = useLabelStore((s) => s.setCurrentPage);
   const updateObjects = useLabelStore((s) => s.updateObjects);
+  const groupSelection = useLabelStore((s) => s.groupSelection);
+  const ungroup = useLabelStore((s) => s.ungroup);
   const { undo, redo } = useHistory();
 
   useEffect(() => {
@@ -57,7 +59,15 @@ export function useGlobalShortcuts() {
         updateObjects(ids.map((id) => ({ id, changes: { locked } })));
         return;
       }
-      if (e.code === "KeyG") {
+      if (mod && e.code === "KeyG") {
+        // Ctrl+G groups the current selection, Ctrl+Shift+G ungroups.
+        // Listed before the bare-G grid toggle so the modifier wins.
+        e.preventDefault();
+        if (e.shiftKey) ungroup();
+        else groupSelection();
+        return;
+      }
+      if (e.code === "KeyG" && !mod) {
         e.preventDefault();
         setCanvasSettings({ showGrid: !useLabelStore.getState().canvasSettings.showGrid });
       }
@@ -83,5 +93,5 @@ export function useGlobalShortcuts() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [undo, redo, duplicateSelectedObjects, copySelectedObjects, pasteObjects, selectObjects, setCanvasSettings, setCurrentPage, updateObjects]);
+  }, [undo, redo, duplicateSelectedObjects, copySelectedObjects, pasteObjects, selectObjects, setCanvasSettings, setCurrentPage, updateObjects, groupSelection, ungroup]);
 }

@@ -41,6 +41,11 @@ export const labelObjectBaseSchema = z.object({
    *  visible so a designer can preview placement without shipping. Defaults
    *  to true. */
   includeInExport: z.boolean().optional(),
+  /** Optional user-supplied label. Used by groups so the layers panel and
+   *  properties panel can show "Header" instead of the generic "Group".
+   *  Leaves currently fall back to their registry label; the field lives
+   *  on the base so naming leaves later is a UI-only change. */
+  name: z.string().optional(),
 });
 
 export type LabelObjectBase = z.infer<typeof labelObjectBaseSchema>;

@@ -6,6 +6,14 @@ import type { Unit } from '../lib/units';
 import type { ViewRotation } from '../components/Canvas/rotationGeometry';
 import { ObjectRegistry } from '../registry';
 import type { LabelObject } from '../registry';
+import {
+  isGroup,
+  mapObjectById,
+  detachObjectById,
+  findObjectById,
+  isSelfOrDescendant,
+  type GroupObject,
+} from '../types/Group';
 import { locales } from '../locales';
 import type { LocaleCode } from '../locales';
 import { isDefaultLabelaryHost } from '../lib/labelary';
@@ -19,7 +27,7 @@ export interface Page {
 /** Meta fields that remain editable on a locked object so the user can
  *  release the lock or annotate without unlocking first. Everything else
  *  (position, props, rotation, positionType) is blocked. */
-const LOCK_BYPASS_KEYS = new Set(['locked', 'visible', 'includeInExport', 'comment']);
+const LOCK_BYPASS_KEYS = new Set(['locked', 'visible', 'includeInExport', 'comment', 'name']);
 
 function isLockBypass(changes: ObjectChanges): boolean {
   const keys = Object.keys(changes);
@@ -28,6 +36,12 @@ function isLockBypass(changes: ObjectChanges): boolean {
 
 function applyObjectChanges(obj: LabelObject, changes: ObjectChanges): LabelObject {
   if (obj.locked && !isLockBypass(changes)) return obj;
+  if (isGroup(obj)) {
+    // Groups have no registry entry (no normalize hook) and no props to
+    // merge — apply top-level changes only. Children stay untouched;
+    // tree updates reach them through their own mapObjectById call.
+    return { ...obj, ...changes } as LabelObject;
+  }
   const normalize = ObjectRegistry[obj.type]?.normalizeChanges;
   const normalized = normalize ? normalize(obj, changes) : changes;
   return {
@@ -35,6 +49,15 @@ function applyObjectChanges(obj: LabelObject, changes: ObjectChanges): LabelObje
     ...normalized,
     props: normalized.props ? Object.assign({}, obj.props, normalized.props) : obj.props,
   } as LabelObject;
+}
+
+/** Immutable insert-at-index that clamps `idx` into the array's bounds.
+ *  Used by reparent flows to splice a node into a children list or the
+ *  top-level list without crashing on out-of-range indices coming from
+ *  ephemeral drag state. */
+function insertAt<T>(arr: readonly T[], idx: number, item: T): T[] {
+  const clamped = Math.max(0, Math.min(idx, arr.length));
+  return [...arr.slice(0, clamped), item, ...arr.slice(clamped)];
 }
 
 function detectLocale(): LocaleCode {
@@ -101,6 +124,27 @@ interface LabelState {
   toggleSelectObject: (id: string) => void;
   selectObjects: (ids: string[]) => void;
   removeSelectedObjects: () => void;
+  /** Wraps every selected top-level, unlocked object in a new GroupObject
+   *  at the position of the topmost (last-in-array) selected item.
+   *  No-op if fewer than one such object is selected. */
+  groupSelection: () => void;
+  /** Replaces every selected top-level group with its children, splicing
+   *  them in at the group's former index. No-op on non-group selections. */
+  ungroup: () => void;
+  /** Like `ungroup`, but operates on an explicit id list instead of the
+   *  active selection. Used by the layers panel's per-row ungroup
+   *  button so the user doesn't have to select the group first. */
+  ungroupIds: (ids: readonly string[]) => void;
+  /** Move `id` to a new position in the tree. `parentId: null` means the
+   *  top level; any other value targets a group. `index` is the
+   *  insertion position inside the target's children list. Silently
+   *  refuses cycles (moving a group into its own descendant). */
+  reparentObject: (id: string, target: { parentId: string | null; index: number }) => void;
+  /** Append an empty group at the top level (end of the objects array =
+   *  front-most layer = topmost row in the layers panel) and select it.
+   *  Lets the user create a group up-front and drag items in afterwards
+   *  via the layers panel, instead of having to select-then-shortcut. */
+  addGroup: () => void;
   setLabelConfig: (config: Partial<LabelConfig>) => void;
   setLocale: (locale: LocaleCode) => void;
   setTheme: (theme: ThemePreference) => void;
@@ -168,6 +212,20 @@ function buildOffsetCopies(objs: LabelObject[], ids: readonly string[]): LabelOb
   return ids.flatMap((id) => {
     const src = byId.get(id);
     if (!src) return [];
+    // Groups don't carry props and need their children's ids regenerated
+    // recursively so the duplicate doesn't collide with the original
+    // (mapObjectById would otherwise hit the first match and ignore the
+    // second). Leaves: shallow-clone props to avoid sharing the
+    // reference with future mutators.
+    if (isGroup(src)) {
+      return [{
+        ...src,
+        id: crypto.randomUUID(),
+        x: src.x + DUPLICATE_OFFSET_DOTS,
+        y: src.y + DUPLICATE_OFFSET_DOTS,
+        children: cloneChildrenFresh(src.children),
+      }];
+    }
     return [{
       ...src,
       id: crypto.randomUUID(),
@@ -175,6 +233,22 @@ function buildOffsetCopies(objs: LabelObject[], ids: readonly string[]): LabelOb
       y: src.y + DUPLICATE_OFFSET_DOTS,
       props: { ...src.props },
     } as LabelObject];
+  });
+}
+
+/** Deep-clone a children list with fresh ids and shallow-cloned props on
+ *  every leaf. Recurses through nested groups. Used by duplicate flows
+ *  so a duplicated subtree has no id collisions with the source. */
+function cloneChildrenFresh(children: LabelObject[]): LabelObject[] {
+  return children.map((c) => {
+    if (isGroup(c)) {
+      return {
+        ...c,
+        id: crypto.randomUUID(),
+        children: cloneChildrenFresh(c.children),
+      };
+    }
+    return { ...c, id: crypto.randomUUID(), props: { ...c.props } } as LabelObject;
   });
 }
 
@@ -236,19 +310,35 @@ export const useLabelStore = create<LabelState>()(
       updateObject: (id, changes) =>
         set((state) =>
           updateCurrentObjects(state, (objs) =>
-            objs.map((obj) => obj.id === id ? applyObjectChanges(obj, changes) : obj)
-          )
+            mapObjectById(objs, id, (obj) => applyObjectChanges(obj, changes)),
+          ),
         ),
 
       updateObjects: (updates) =>
         set((state) => {
+          if (updates.length === 0) return {};
+          // Single tree walk that applies every queued change in one
+          // pass: O(tree) instead of O(updates × tree). Identity-
+          // preserving — subtrees with no matching id keep their
+          // reference so React memoisation can skip them.
           const updateMap = new Map(updates.map((u) => [u.id, u.changes]));
-          return updateCurrentObjects(state, (objs) =>
-            objs.map((obj) => {
-              const changes = updateMap.get(obj.id);
-              return changes ? applyObjectChanges(obj, changes) : obj;
-            })
-          );
+          const applyUpdates = (nodes: LabelObject[]): LabelObject[] => {
+            let changed = false;
+            const next = nodes.map((n) => {
+              const changes = updateMap.get(n.id);
+              let updated = changes ? applyObjectChanges(n, changes) : n;
+              if (isGroup(updated)) {
+                const nextChildren = applyUpdates(updated.children);
+                if (nextChildren !== updated.children) {
+                  updated = { ...updated, children: nextChildren };
+                }
+              }
+              if (updated !== n) changed = true;
+              return updated;
+            });
+            return changed ? next : nodes;
+          };
+          return updateCurrentObjects(state, (objs) => applyUpdates(objs));
         }),
 
       removeObject: (id) =>
@@ -286,7 +376,14 @@ export const useLabelStore = create<LabelState>()(
         const objs = currentObjects(state);
         const clipboard = state.selectedIds.flatMap((id) => {
           const obj = objs.find((o) => o.id === id);
-          return obj ? [{ ...obj, props: { ...obj.props } } as LabelObject] : [];
+          if (!obj) return [];
+          if (isGroup(obj)) {
+            // Clone children too so a later paste produces an
+            // independent subtree (paste regenerates the top-level id
+            // but expects descendants ready to be inserted as-is).
+            return [{ ...obj, children: cloneChildrenFresh(obj.children) }];
+          }
+          return [{ ...obj, props: { ...obj.props } } as LabelObject];
         });
         set({ clipboard, pasteCount: 0 });
       },
@@ -347,6 +444,124 @@ export const useLabelStore = create<LabelState>()(
               curr.filter((o) => !sel.has(o.id) || o.locked),
             ),
             selectedIds: lockedIds,
+          };
+        }),
+
+      groupSelection: () =>
+        set((state) => {
+          const objs = currentObjects(state);
+          const sel = new Set(state.selectedIds);
+          // Only consider top-level objects of the current page. Nested
+          // children of an existing group are out of scope for v1 — the
+          // user would have to ungroup the parent first.
+          const candidates = objs.flatMap((o) =>
+            sel.has(o.id) && !o.locked ? [o] : [],
+          );
+          if (candidates.length === 0) return {};
+          const candidateIds = new Set(candidates.map((o) => o.id));
+          // Insert at the position of the last (topmost in z-order)
+          // selected item so the group lands where the user's eye is.
+          const lastIndex = objs.reduce(
+            (acc, o, i) => (candidateIds.has(o.id) ? i : acc),
+            -1,
+          );
+          const group: GroupObject = {
+            id: crypto.randomUUID(),
+            type: 'group',
+            x: 0,
+            y: 0,
+            rotation: 0,
+            children: candidates,
+          };
+          const remaining = objs.filter((o) => !candidateIds.has(o.id));
+          // lastIndex is computed on the pre-filter array; convert it to
+          // the post-filter insertion point by counting how many of the
+          // removed items were before it.
+          const removedBefore = objs
+            .slice(0, lastIndex + 1)
+            .filter((o) => candidateIds.has(o.id)).length;
+          const insertAt = lastIndex + 1 - removedBefore;
+          const next = [
+            ...remaining.slice(0, insertAt),
+            group,
+            ...remaining.slice(insertAt),
+          ];
+          return {
+            ...updateCurrentObjects(state, () => next),
+            selectedIds: [group.id],
+          };
+        }),
+
+      reparentObject: (id, target) =>
+        set((state) => {
+          const objs = currentObjects(state);
+          // Forbid cycles: moving a group into itself or one of its
+          // descendants would orphan the rest of the tree.
+          if (target.parentId && isSelfOrDescendant(objs, id, target.parentId)) {
+            return {};
+          }
+          // Refuse drops into something that isn't a group — the layers
+          // panel should never produce this, but a defensive check
+          // keeps the model from picking up bogus state if a caller
+          // passes a leaf id.
+          if (target.parentId !== null) {
+            const parent = findObjectById(objs, target.parentId);
+            if (!parent || !isGroup(parent)) return {};
+          }
+          const { removed, rest } = detachObjectById(objs, id);
+          if (!removed) return {};
+          const node = removed;
+          if (target.parentId === null) {
+            return updateCurrentObjects(state, () => insertAt(rest, target.index, node));
+          }
+          const next = mapObjectById(rest, target.parentId, (p) =>
+            isGroup(p)
+              ? { ...p, children: insertAt(p.children, target.index, node) }
+              : p,
+          );
+          return updateCurrentObjects(state, () => next);
+        }),
+
+      addGroup: () =>
+        set((state) => {
+          const group: GroupObject = {
+            id: crypto.randomUUID(),
+            type: 'group',
+            x: 0,
+            y: 0,
+            rotation: 0,
+            children: [],
+          };
+          return {
+            ...updateCurrentObjects(state, (objs) => [...objs, group]),
+            selectedIds: [group.id],
+          };
+        }),
+
+      ungroup: () => get().ungroupIds(get().selectedIds),
+
+      ungroupIds: (ids) =>
+        set((state) => {
+          const wanted = new Set(ids);
+          const objs = currentObjects(state);
+          const targets = objs.flatMap((o) =>
+            wanted.has(o.id) && isGroup(o) && !o.locked ? [o] : [],
+          );
+          if (targets.length === 0) return {};
+          const targetIds = new Set(targets.map((g) => g.id));
+          const next: LabelObject[] = [];
+          const newSelection: string[] = [];
+          for (const o of objs) {
+            if (targetIds.has(o.id) && isGroup(o)) {
+              next.push(...o.children);
+              newSelection.push(...o.children.map((c) => c.id));
+            } else {
+              next.push(o);
+            }
+          }
+          return {
+            ...updateCurrentObjects(state, () => next),
+            selectedIds: newSelection,
           };
         }),
 
@@ -494,11 +709,20 @@ export const useLabelStore = create<LabelState>()(
           const source = state.pages[index];
           if (!source) return {};
           const cloned: Page = {
-            objects: source.objects.map((o) => ({
-              ...o,
-              id: crypto.randomUUID(),
-              props: { ...o.props },
-            } as LabelObject)),
+            objects: source.objects.map((o) => {
+              if (isGroup(o)) {
+                return {
+                  ...o,
+                  id: crypto.randomUUID(),
+                  children: cloneChildrenFresh(o.children),
+                };
+              }
+              return {
+                ...o,
+                id: crypto.randomUUID(),
+                props: { ...o.props },
+              } as LabelObject;
+            }),
           };
           const insertAt = index + 1;
           const newPages = [

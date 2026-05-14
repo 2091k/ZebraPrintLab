@@ -1,9 +1,10 @@
 import type { RefObject } from "react";
-import { InformationCircleIcon } from "@heroicons/react/16/solid";
+import { InformationCircleIcon, FolderPlusIcon } from "@heroicons/react/16/solid";
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import type { LabelCanvasHandle } from "../Canvas/LabelCanvas";
 import type { AlignAxis } from "../../lib/alignment";
 import { ObjectRegistry } from "../../registry";
+import { canGroupSelection, findObjectById, isGroup } from "../../types/Group";
 import { BWIP_VISUAL_APPROX_TYPES } from "../Canvas/bwipConstants";
 import { stripZplCommandChars } from "../../registry/zplHelpers";
 import { dotsToMm, mmToDots } from "../../lib/coordinates";
@@ -35,6 +36,7 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
   const {
     selectedIds,
     updateObject,
+    groupSelection,
     label,
     setLabelConfig,
     canvasSettings,
@@ -42,11 +44,17 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
   } = useLabelStore();
   const objects = useCurrentObjects();
   const unit = canvasSettings.unit;
-  const obj = objects.find((o) => o.id === selectedIds[0]);
+  // Walk the tree: when the layers panel drills into a nested child, the
+  // selection holds a leaf id that's not at top level. A plain
+  // top-level .find would miss it and the panel would silently fall
+  // through to LabelConfigPanel.
+  const firstId = selectedIds[0];
+  const obj = firstId !== undefined ? findObjectById(objects, firstId) : undefined;
   const handleAlign = (axis: AlignAxis) =>
     canvasRef.current?.alignSelectionToLabel(axis);
 
   if (selectedIds.length > 1) {
+    const canGroup = canGroupSelection(objects, selectedIds);
     return (
       <div className="flex flex-col">
         <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
@@ -60,6 +68,16 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
             {t.properties.x} / {t.properties.y}: {t.properties.multipleSelectedHint}
           </p>
           <AlignButtons onAlign={handleAlign} />
+          {canGroup && (
+            <button
+              type="button"
+              onClick={groupSelection}
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono bg-surface-2 text-text hover:bg-surface border border-border transition-colors"
+            >
+              <FolderPlusIcon className="w-3.5 h-3.5" />
+              {t.properties.groupSelection}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -80,16 +98,23 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
 
   const definition = ObjectRegistry[obj.type];
   const TypePanel = definition?.PropertiesPanel;
+  const groupRow = isGroup(obj);
+  // Groups intentionally have no registry entry; surface a folder-shape
+  // glyph here so the header reads as something rather than blank.
+  const icon = groupRow ? '⊞' : definition?.icon;
+  const typeLabel = groupRow
+    ? t.types.group
+    : (t.types as Record<string, string>)[obj.type] ?? definition?.label;
 
   return (
     <div className="flex flex-col">
       {/* Type header */}
       <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
         <span className="font-mono text-xs text-accent">
-          {definition?.icon}
+          {icon}
         </span>
         <span className="text-xs font-medium text-text">
-          {(t.types as Record<string, string>)[obj.type] ?? definition?.label}
+          {typeLabel}
         </span>
         {BWIP_VISUAL_APPROX_TYPES.has(obj.type) && (
           <InformationCircleIcon
@@ -103,73 +128,107 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
       </div>
 
       <div className="p-3 flex flex-col gap-4">
-        {/* Position */}
-        <div className="flex flex-col gap-2">
-          <p className={labelCls}>
-            {t.properties.positionSection} ({unitLabel(unit)})
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
-              <label className={labelCls}>{t.properties.x}</label>
-              <input
-                type="number"
-                className={inputCls}
-                value={mmToUnit(dotsToMm(obj.x, label.dpmm), unit)}
-                step={unitStep(unit)}
-                onChange={(e) =>
-                  updateObject(obj.id, {
-                    x: mmToDots(
-                      unitToMm(Number(e.target.value), unit),
-                      label.dpmm,
-                    ),
-                  })
-                }
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className={labelCls}>{t.properties.y}</label>
-              <input
-                type="number"
-                className={inputCls}
-                value={mmToUnit(dotsToMm(obj.y, label.dpmm), unit)}
-                step={unitStep(unit)}
-                onChange={(e) =>
-                  updateObject(obj.id, {
-                    y: mmToDots(
-                      unitToMm(Number(e.target.value), unit),
-                      label.dpmm,
-                    ),
-                  })
-                }
-              />
-            </div>
+        {/* Name — currently exposed only for groups, since leaf rows still
+            fall back to their registry label in the layers panel. The
+            field lives on LabelObjectBase so adding it for other types
+            later is a UI-only change. */}
+        {groupRow && (
+          <div className="flex flex-col gap-1">
+            <label className={labelCls}>{t.properties.name}</label>
+            <input
+              type="text"
+              className={inputCls}
+              value={obj.name ?? ''}
+              placeholder={t.types.group}
+              onChange={(e) =>
+                updateObject(obj.id, { name: e.target.value || undefined })
+              }
+            />
           </div>
+        )}
+
+        {/* Position: groups have no meaningful x/y of their own (children
+            store world coordinates), so the inputs are hidden. Align
+            still applies — it expands to the group's leaves at the
+            canvas layer. */}
+        <div className="flex flex-col gap-2">
+          {!groupRow && (
+            <>
+              <p className={labelCls}>
+                {t.properties.positionSection} ({unitLabel(unit)})
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className={labelCls}>{t.properties.x}</label>
+                  <input
+                    type="number"
+                    className={inputCls}
+                    value={mmToUnit(dotsToMm(obj.x, label.dpmm), unit)}
+                    step={unitStep(unit)}
+                    onChange={(e) =>
+                      updateObject(obj.id, {
+                        x: mmToDots(
+                          unitToMm(Number(e.target.value), unit),
+                          label.dpmm,
+                        ),
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className={labelCls}>{t.properties.y}</label>
+                  <input
+                    type="number"
+                    className={inputCls}
+                    value={mmToUnit(dotsToMm(obj.y, label.dpmm), unit)}
+                    step={unitStep(unit)}
+                    onChange={(e) =>
+                      updateObject(obj.id, {
+                        y: mmToDots(
+                          unitToMm(Number(e.target.value), unit),
+                          label.dpmm,
+                        ),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </>
+          )}
           <AlignButtons onAlign={handleAlign} />
         </div>
 
         <div className="border-t border-border" />
 
-        {TypePanel && (
-          <TypePanel
-            obj={obj}
-            onChange={(props) => updateObject(obj.id, { props })}
-          />
+        {/* Per-type panel: only leaves have a registry entry, so TypePanel
+            is never present for groups. The isGroup guard narrows obj for
+            TypeScript at the call site since registry panels expect the
+            leaf shape (props field present). */}
+        {TypePanel && !groupRow && (
+          <>
+            <TypePanel
+              obj={obj}
+              onChange={(props) => updateObject(obj.id, { props })}
+            />
+            <div className="border-t border-border" />
+          </>
         )}
 
-        <div className="border-t border-border" />
-
-        {/* Comment (^FX) */}
-        <div className="flex flex-col gap-1">
-          <label className={labelCls}>{t.properties.comment}</label>
-          <textarea
-            className={`${inputCls} resize-none`}
-            rows={2}
-            value={obj.comment ?? ""}
-            onChange={(e) =>
-              updateObject(obj.id, { comment: stripZplCommandChars(e.target.value) || undefined })
-            }
-          />
-        </div>
+        {/* Comment (^FX) — leaves only: groups emit no ZPL of their own
+            so the comment would never reach the output. */}
+        {!groupRow && (
+          <div className="flex flex-col gap-1">
+            <label className={labelCls}>{t.properties.comment}</label>
+            <textarea
+              className={`${inputCls} resize-none`}
+              rows={2}
+              value={obj.comment ?? ""}
+              onChange={(e) =>
+                updateObject(obj.id, { comment: stripZplCommandChars(e.target.value) || undefined })
+              }
+            />
+          </div>
+        )}
 
         {/* Lock — paired with the LayersPanel lock icon; mirroring it here
             so a user already in PropertiesPanel can flip lock state without

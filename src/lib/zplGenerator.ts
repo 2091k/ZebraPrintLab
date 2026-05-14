@@ -4,6 +4,7 @@ import { stripZplCommandChars } from '../registry/zplHelpers';
 import type { LabelConfig } from '../types/ObjectType';
 import type { LabelObject } from '../registry';
 import type { Page } from '../store/labelStore';
+import { isGroup } from '../types/Group';
 
 /**
  * Concatenates `generateZPL` output for every page. Each page becomes its own
@@ -41,12 +42,18 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   }
   if (label.labelShift) lines.push(`^LS${label.labelShift}`);
 
-  lines.push(...objects.flatMap((obj) => {
+  // Groups are structural only — they emit no ZPL of their own. A group
+  // with includeInExport=false cascades the skip to its whole subtree;
+  // otherwise we recurse and let each leaf decide.
+  const emitLeaf = (obj: LabelObject): string[] => {
     if (obj.includeInExport === false) return [];
+    if (isGroup(obj)) return obj.children.flatMap(emitLeaf);
     const zpl = ObjectRegistry[obj.type]?.toZPL(obj) ?? '';
-    if (!obj.comment) return [zpl];
-    return [`^FX${stripZplCommandChars(obj.comment)}\n${zpl}`];
-  }));
+    return obj.comment
+      ? [`^FX${stripZplCommandChars(obj.comment)}\n${zpl}`]
+      : [zpl];
+  };
+  lines.push(...objects.flatMap(emitLeaf));
 
   if (label.printQuantity && label.printQuantity > 1) {
     lines.push(`^PQ${label.printQuantity}`);
