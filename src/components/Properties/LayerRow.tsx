@@ -14,7 +14,7 @@ import type { LabelObject } from '../../registry';
 import { isGroup } from '../../types/Group';
 import { useT } from '../../lib/useT';
 import { DragHandleIcon } from '../ui/DragHandleIcon';
-import { INDENT_STEP } from './useLayerDnd';
+import { INDENT_STEP } from './layerLayout';
 
 export interface LayerRowProps {
   obj: LabelObject;

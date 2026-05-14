@@ -4,15 +4,11 @@ import type { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { isGroup, findObjectById, findAncestors } from '../../types/Group';
 import type { GroupObject } from '../../types/Group';
 import type { LabelObject } from '../../registry';
+import { INDENT_STEP } from './layerLayout';
 
 /** Sentinel container id for the top-level objects list. Group containers
  *  use the group's own id, so the root needs a value that can't collide. */
 export const ROOT_CONTAINER = '__root__';
-
-/** Horizontal pixels per nesting level — matches the row's own paddingLeft
- *  step so the insertion line lines up visually with the target row's
- *  content column. Changing this means changing the row indent too. */
-export const INDENT_STEP = 16;
 
 /** Pixel bias subtracted from the cursor X before quantising to depth so a
  *  user has to drag a little before the target depth changes. Tuned to feel
