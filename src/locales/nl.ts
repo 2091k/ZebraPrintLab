@@ -408,6 +408,7 @@ const nl = {
     unlock: 'Ontgrendelen',
     ungroup: 'Groepering opheffen',
     newGroup: 'Nieuwe groep',
+    rename: 'Dubbelklik om te hernoemen',
     show: 'Tonen',
     hide: 'Verbergen',
   },

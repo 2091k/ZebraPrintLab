@@ -408,6 +408,7 @@ const et = {
     unlock: 'Eemalda lukk',
     ungroup: 'Tühista rühm',
     newGroup: 'Uus rühm',
+    rename: 'Topeltklõpsake ümbernimetamiseks',
     show: 'Näita',
     hide: 'Peida',
   },

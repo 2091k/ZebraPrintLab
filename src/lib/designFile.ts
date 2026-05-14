@@ -7,8 +7,13 @@ export type DesignFileError = "parse_error" | "invalid_schema";
 export interface DesignFilePage { objects: LabelObject[] }
 export interface DesignFile { label: LabelConfig; pages: DesignFilePage[] }
 
+// Leaves carry `props`; groups carry `children` instead and skip `props`.
+// Both shapes share the base fields. Per-field children validation would
+// need a recursive schema; for now we accept any array (the registry-aware
+// runtime ignores unknown shapes regardless).
 const labelObjectSchema = labelObjectBaseSchema.extend({
-  props: z.record(z.string(), z.unknown()),
+  props: z.record(z.string(), z.unknown()).optional(),
+  children: z.array(z.unknown()).optional(),
 });
 
 const pageSchema = z.object({ objects: z.array(labelObjectSchema) });

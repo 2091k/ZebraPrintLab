@@ -408,6 +408,7 @@ const sv = {
     unlock: 'Lås upp',
     ungroup: 'Dela upp',
     newGroup: 'Ny grupp',
+    rename: 'Dubbelklicka för att byta namn',
     show: 'Visa',
     hide: 'Dölj',
   },

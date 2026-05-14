@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import {
@@ -41,6 +41,8 @@ interface RowProps {
   onToggleVisible: () => void;
   onToggleExpand: () => void;
   onUngroup: () => void;
+  /** Commit the new name; empty string clears it back to the default. */
+  onRename: (name: string | undefined) => void;
 }
 
 function LayerRow({
@@ -58,10 +60,31 @@ function LayerRow({
   onToggleVisible,
   onToggleExpand,
   onUngroup,
+  onRename,
 }: RowProps) {
   const t = useT();
   const def = ObjectRegistry[obj.type];
   const groupRow = isGroup(obj);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  const beginEdit = () => {
+    setDraft(obj.name ?? '');
+    setEditing(true);
+  };
+  const commitEdit = () => {
+    const trimmed = draft.trim();
+    if ((obj.name ?? '') !== trimmed) onRename(trimmed || undefined);
+    setEditing(false);
+  };
+  const cancelEdit = () => setEditing(false);
+  const defaultLabel = groupRow ? t.types.group : (def?.label ?? obj.type);
+  const displayName = obj.name ?? defaultLabel;
   const isLocked = !!obj.locked;
   const isHidden = obj.visible === false;
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
@@ -126,9 +149,30 @@ function LayerRow({
         {groupRow ? '⊞' : def?.icon}
       </span>
       <div className="flex flex-col flex-1 min-w-0">
-        <span className="text-xs text-text truncate">
-          {groupRow ? t.types.group : (def?.label ?? obj.type)}
-        </span>
+        {editing && groupRow ? (
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitEdit();
+              else if (e.key === 'Escape') cancelEdit();
+            }}
+            onClick={stopRowClick}
+            onPointerDown={stopRowClick}
+            placeholder={defaultLabel}
+            className="text-xs text-text bg-surface-2 border border-border rounded px-1 py-0 -my-0.5 focus:border-accent focus:outline-none w-full"
+          />
+        ) : (
+          <span
+            className="text-xs text-text truncate"
+            onDoubleClick={groupRow ? (e) => { e.stopPropagation(); beginEdit(); } : undefined}
+            title={groupRow ? t.layers.rename : undefined}
+          >
+            {displayName}
+          </span>
+        )}
         <span className="font-mono text-[9px] text-muted">{obj.id.slice(0, 8)}</span>
       </div>
       {groupRow && (
@@ -174,6 +218,7 @@ export function LayersPanel() {
     selectedIds,
     selectObject,
     toggleSelectObject,
+    updateObject,
     updateObjects,
     groupSelection,
     addGroup,
@@ -286,6 +331,7 @@ export function LayersPanel() {
               onToggleVisible={() => toggleField(obj.id, 'visible')}
               onToggleExpand={() => toggleExpand(obj.id)}
               onUngroup={() => ungroupIds([obj.id])}
+              onRename={(name) => updateObject(obj.id, { name })}
             />
           ))}
         </div>

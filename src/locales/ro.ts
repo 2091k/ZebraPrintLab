@@ -408,6 +408,7 @@ const ro = {
     unlock: 'Deblochează',
     ungroup: 'Anulează grupare',
     newGroup: 'Grup nou',
+    rename: 'Clic dublu pentru redenumire',
     show: 'Afișează',
     hide: 'Ascunde',
   },

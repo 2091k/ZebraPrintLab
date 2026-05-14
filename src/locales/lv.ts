@@ -408,6 +408,7 @@ const lv = {
     unlock: 'Atbloķēt',
     ungroup: 'Atgrupēt',
     newGroup: 'Jauna grupa',
+    rename: 'Dubultklikšķiniet, lai pārdēvētu',
     show: 'Rādīt',
     hide: 'Slēpt',
   },

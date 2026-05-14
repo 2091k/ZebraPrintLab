@@ -408,6 +408,7 @@ const no = {
     unlock: 'Lås opp',
     ungroup: 'Del opp',
     newGroup: 'Ny gruppe',
+    rename: 'Dobbeltklikk for å endre navn',
     show: 'Vis',
     hide: 'Skjul',
   },

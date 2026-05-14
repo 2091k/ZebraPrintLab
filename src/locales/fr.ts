@@ -408,6 +408,7 @@ const fr = {
     unlock: 'Déverrouiller',
     ungroup: 'Dégrouper',
     newGroup: 'Nouveau groupe',
+    rename: 'Double-cliquer pour renommer',
     show: 'Afficher',
     hide: 'Masquer',
   },

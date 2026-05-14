@@ -408,6 +408,7 @@ const lt = {
     unlock: 'Atrakinti',
     ungroup: 'Išgrupuoti',
     newGroup: 'Nauja grupė',
+    rename: 'Dukart spustelėkite, kad pervadintumėte',
     show: 'Rodyti',
     hide: 'Slėpti',
   },

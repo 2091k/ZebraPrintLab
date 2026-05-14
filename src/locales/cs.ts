@@ -408,6 +408,7 @@ const cs = {
     unlock: 'Odemknout',
     ungroup: 'Zrušit skupinu',
     newGroup: 'Nová skupina',
+    rename: 'Dvojklikem přejmenovat',
     show: 'Zobrazit',
     hide: 'Skrýt',
   },

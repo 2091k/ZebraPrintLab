@@ -408,6 +408,7 @@ const zhHant = {
     unlock: '解鎖',
     ungroup: '取消群組',
     newGroup: '新增群組',
+    rename: '雙擊以重新命名',
     show: '顯示',
     hide: '隱藏',
   },

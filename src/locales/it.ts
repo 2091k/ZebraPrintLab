@@ -408,6 +408,7 @@ const it = {
     unlock: 'Sblocca',
     ungroup: 'Separa',
     newGroup: 'Nuovo gruppo',
+    rename: 'Doppio clic per rinominare',
     show: 'Mostra',
     hide: 'Nascondi',
   },

@@ -408,6 +408,7 @@ const sl = {
     unlock: 'Odkleni',
     ungroup: 'Razdruži',
     newGroup: 'Nova skupina',
+    rename: 'Dvokliknite za preimenovanje',
     show: 'Prikaži',
     hide: 'Skrij',
   },

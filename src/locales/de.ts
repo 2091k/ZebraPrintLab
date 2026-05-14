@@ -429,6 +429,7 @@ const de = {
     unlock: 'Entsperren',
     ungroup: 'Gruppierung aufheben',
     newGroup: 'Neue Gruppe',
+    rename: 'Doppelklick zum Umbenennen',
     show: 'Einblenden',
     hide: 'Ausblenden',
   },

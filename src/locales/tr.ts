@@ -408,6 +408,7 @@ const tr = {
     unlock: 'Kilidi aç',
     ungroup: 'Grubu çöz',
     newGroup: 'Yeni grup',
+    rename: 'Yeniden adlandırmak için çift tıklayın',
     show: 'Göster',
     hide: 'Gizle',
   },

@@ -408,6 +408,7 @@ const hr = {
     unlock: 'Otključaj',
     ungroup: 'Razgrupiraj',
     newGroup: 'Nova grupa',
+    rename: 'Dvoklik za preimenovanje',
     show: 'Prikaži',
     hide: 'Sakrij',
   },

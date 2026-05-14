@@ -408,6 +408,7 @@ const sk = {
     unlock: 'Odomknúť',
     ungroup: 'Zrušiť skupinu',
     newGroup: 'Nová skupina',
+    rename: 'Dvojklikom premenovať',
     show: 'Zobraziť',
     hide: 'Skryť',
   },

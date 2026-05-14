@@ -408,6 +408,7 @@ const da = {
     unlock: 'Lås op',
     ungroup: 'Ophæv gruppering',
     newGroup: 'Ny gruppe',
+    rename: 'Dobbeltklik for at omdøbe',
     show: 'Vis',
     hide: 'Skjul',
   },

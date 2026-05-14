@@ -27,7 +27,7 @@ export interface Page {
 /** Meta fields that remain editable on a locked object so the user can
  *  release the lock or annotate without unlocking first. Everything else
  *  (position, props, rotation, positionType) is blocked. */
-const LOCK_BYPASS_KEYS = new Set(['locked', 'visible', 'includeInExport', 'comment']);
+const LOCK_BYPASS_KEYS = new Set(['locked', 'visible', 'includeInExport', 'comment', 'name']);
 
 function isLockBypass(changes: ObjectChanges): boolean {
   const keys = Object.keys(changes);

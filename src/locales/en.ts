@@ -429,6 +429,7 @@ const en = {
     unlock: 'Unlock',
     ungroup: 'Ungroup',
     newGroup: 'New group',
+    rename: 'Double-click to rename',
     show: 'Show',
     hide: 'Hide',
   },

@@ -408,6 +408,7 @@ const sr = {
     unlock: 'Откључај',
     ungroup: 'Razgrupiši',
     newGroup: 'Nova grupa',
+    rename: 'Dvoklik za preimenovanje',
     show: 'Прикажи',
     hide: 'Сакриј',
   },

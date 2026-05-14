@@ -408,6 +408,7 @@ const ko = {
     unlock: '잠금 해제',
     ungroup: '그룹 해제',
     newGroup: '새 그룹',
+    rename: '이름 바꾸려면 두 번 클릭',
     show: '표시',
     hide: '숨기기',
   },

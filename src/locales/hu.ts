@@ -408,6 +408,7 @@ const hu = {
     unlock: 'Feloldás',
     ungroup: 'Csoport bontása',
     newGroup: 'Új csoport',
+    rename: 'Átnevezéshez kattintson duplán',
     show: 'Megjelenítés',
     hide: 'Elrejtés',
   },

@@ -408,6 +408,7 @@ const pl = {
     unlock: 'Odblokuj',
     ungroup: 'Rozgrupuj',
     newGroup: 'Nowa grupa',
+    rename: 'Kliknij dwukrotnie, aby zmienić nazwę',
     show: 'Pokaż',
     hide: 'Ukryj',
   },

@@ -408,6 +408,7 @@ const fi = {
     unlock: 'Avaa lukitus',
     ungroup: 'Poista ryhmittely',
     newGroup: 'Uusi ryhmä',
+    rename: 'Nimeä uudelleen kaksoisnapsauttamalla',
     show: 'Näytä',
     hide: 'Piilota',
   },

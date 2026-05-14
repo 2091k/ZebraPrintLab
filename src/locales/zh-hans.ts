@@ -408,6 +408,7 @@ const zhHans = {
     unlock: '解锁',
     ungroup: '取消组合',
     newGroup: '新建组',
+    rename: '双击重命名',
     show: '显示',
     hide: '隐藏',
   },

@@ -408,6 +408,7 @@ const pt = {
     unlock: 'Desbloquear',
     ungroup: 'Desagrupar',
     newGroup: 'Novo grupo',
+    rename: 'Duplo clique para renomear',
     show: 'Mostrar',
     hide: 'Ocultar',
   },
