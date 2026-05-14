@@ -47,6 +47,7 @@ const ro = {
 
   properties: {
     positionSection: 'Poziție',
+    name: 'Nume',
     x: 'X',
     y: 'Y',
     comment: 'Comentariu',

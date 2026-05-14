@@ -47,6 +47,7 @@ const sk = {
 
   properties: {
     positionSection: 'Pozícia',
+    name: 'Názov',
     x: 'X',
     y: 'Y',
     comment: 'Komentár',

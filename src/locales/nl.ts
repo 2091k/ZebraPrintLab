@@ -47,6 +47,7 @@ const nl = {
 
   properties: {
     positionSection: 'Positie',
+    name: 'Naam',
     x: 'X',
     y: 'Y',
     comment: 'Opmerking',

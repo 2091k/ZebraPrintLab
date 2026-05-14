@@ -47,6 +47,7 @@ const lt = {
 
   properties: {
     positionSection: 'Padėtis',
+    name: 'Pavadinimas',
     x: 'X',
     y: 'Y',
     comment: 'Komentaras',

@@ -47,6 +47,7 @@ const hu = {
 
   properties: {
     positionSection: 'Pozíció',
+    name: 'Név',
     x: 'X',
     y: 'Y',
     comment: 'Megjegyzés',

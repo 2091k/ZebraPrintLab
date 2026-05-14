@@ -47,6 +47,7 @@ const fi = {
 
   properties: {
     positionSection: 'Sijainti',
+    name: 'Nimi',
     x: 'X',
     y: 'Y',
     comment: 'Kommentti',

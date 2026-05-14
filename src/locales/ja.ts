@@ -47,6 +47,7 @@ const ja = {
 
   properties: {
     positionSection: '位置',
+    name: '名前',
     x: 'X',
     y: 'Y',
     comment: 'コメント',

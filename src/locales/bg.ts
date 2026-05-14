@@ -47,6 +47,7 @@ const bg = {
 
   properties: {
     positionSection: 'Позиция',
+    name: 'Име',
     x: 'X',
     y: 'Y',
     comment: 'Коментар',

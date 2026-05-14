@@ -47,6 +47,7 @@ const zhHant = {
 
   properties: {
     positionSection: '位置 (公釐)',
+    name: '名稱',
     x: 'X',
     y: 'Y',
     comment: '備註',

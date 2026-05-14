@@ -47,6 +47,7 @@ const et = {
 
   properties: {
     positionSection: 'Asukoht',
+    name: 'Nimi',
     x: 'X',
     y: 'Y',
     comment: 'Kommentaar',

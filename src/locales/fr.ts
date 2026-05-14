@@ -47,6 +47,7 @@ const fr = {
 
   properties: {
     positionSection: 'Position',
+    name: 'Nom',
     x: 'X',
     y: 'Y',
     comment: 'Commentaire',

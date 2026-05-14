@@ -47,6 +47,7 @@ const he = {
 
   properties: {
     positionSection: 'מיקום (מ"מ)',
+    name: 'שם',
     x: 'X',
     y: 'Y',
     comment: 'הערה',

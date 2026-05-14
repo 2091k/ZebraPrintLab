@@ -47,6 +47,7 @@ const da = {
 
   properties: {
     positionSection: 'Position',
+    name: 'Navn',
     x: 'X',
     y: 'Y',
     comment: 'Kommentar',

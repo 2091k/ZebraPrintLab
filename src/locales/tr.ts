@@ -47,6 +47,7 @@ const tr = {
 
   properties: {
     positionSection: 'Konum',
+    name: 'Ad',
     x: 'X',
     y: 'Y',
     comment: 'Yorum',

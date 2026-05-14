@@ -47,6 +47,7 @@ const lv = {
 
   properties: {
     positionSection: 'Pozīcija',
+    name: 'Nosaukums',
     x: 'X',
     y: 'Y',
     comment: 'Komentārs',

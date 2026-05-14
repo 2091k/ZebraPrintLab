@@ -47,6 +47,7 @@ const sl = {
 
   properties: {
     positionSection: 'Položaj',
+    name: 'Ime',
     x: 'X',
     y: 'Y',
     comment: 'Komentar',

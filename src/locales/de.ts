@@ -47,6 +47,7 @@ const de = {
 
   properties: {
     positionSection: 'Position',
+    name: 'Name',
     x: 'X',
     y: 'Y',
     comment: 'Kommentar',

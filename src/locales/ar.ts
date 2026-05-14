@@ -47,6 +47,7 @@ const ar = {
 
   properties: {
     positionSection: 'الموضع (مم)',
+    name: 'الاسم',
     x: 'X',
     y: 'Y',
     comment: 'تعليق',

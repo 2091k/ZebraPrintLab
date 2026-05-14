@@ -106,6 +106,25 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
       </div>
 
       <div className="p-3 flex flex-col gap-4">
+        {/* Name — currently exposed only for groups, since leaf rows still
+            fall back to their registry label in the layers panel. The
+            field lives on LabelObjectBase so adding it for other types
+            later is a UI-only change. */}
+        {obj.type === 'group' && (
+          <div className="flex flex-col gap-1">
+            <label className={labelCls}>{t.properties.name}</label>
+            <input
+              type="text"
+              className={inputCls}
+              value={obj.name ?? ''}
+              placeholder={t.types.group}
+              onChange={(e) =>
+                updateObject(obj.id, { name: e.target.value || undefined })
+              }
+            />
+          </div>
+        )}
+
         {/* Position */}
         <div className="flex flex-col gap-2">
           <p className={labelCls}>

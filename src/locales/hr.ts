@@ -47,6 +47,7 @@ const hr = {
 
   properties: {
     positionSection: 'Položaj',
+    name: 'Naziv',
     x: 'X',
     y: 'Y',
     comment: 'Komentar',

@@ -47,6 +47,7 @@ const no = {
 
   properties: {
     positionSection: 'Posisjon',
+    name: 'Navn',
     x: 'X',
     y: 'Y',
     comment: 'Kommentar',

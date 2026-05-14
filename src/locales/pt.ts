@@ -47,6 +47,7 @@ const pt = {
 
   properties: {
     positionSection: 'Posição',
+    name: 'Nome',
     x: 'X',
     y: 'Y',
     comment: 'Comentário',

@@ -47,6 +47,7 @@ const cs = {
 
   properties: {
     positionSection: 'Pozice',
+    name: 'Název',
     x: 'X',
     y: 'Y',
     comment: 'Komentář',

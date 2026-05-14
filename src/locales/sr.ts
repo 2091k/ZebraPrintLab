@@ -47,6 +47,7 @@ const sr = {
 
   properties: {
     positionSection: 'Položaj',
+    name: 'Naziv',
     x: 'X',
     y: 'Y',
     comment: 'Коментар',

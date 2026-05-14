@@ -47,6 +47,7 @@ const ko = {
 
   properties: {
     positionSection: '위치',
+    name: '이름',
     x: 'X',
     y: 'Y',
     comment: '설명',

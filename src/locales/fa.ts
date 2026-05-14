@@ -47,6 +47,7 @@ const fa = {
 
   properties: {
     positionSection: 'موقعیت (میلی‌متر)',
+    name: 'نام',
     x: 'X',
     y: 'Y',
     comment: 'توضیح',

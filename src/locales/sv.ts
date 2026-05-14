@@ -47,6 +47,7 @@ const sv = {
 
   properties: {
     positionSection: 'Position',
+    name: 'Namn',
     x: 'X',
     y: 'Y',
     comment: 'Kommentar',

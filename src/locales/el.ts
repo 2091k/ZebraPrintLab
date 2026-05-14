@@ -47,6 +47,7 @@ const el = {
 
   properties: {
     positionSection: 'Θέση',
+    name: 'Όνομα',
     x: 'X',
     y: 'Y',
     comment: 'Σχόλιο',
