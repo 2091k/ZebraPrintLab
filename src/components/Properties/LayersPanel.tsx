@@ -3,7 +3,7 @@ import { DndContext } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { FolderPlusIcon } from '@heroicons/react/16/solid';
 import { useLabelStore, useCurrentObjects } from '../../store/labelStore';
-import { findObjectById, isGroup, walkObjects } from '../../types/Group';
+import { canGroupSelection, findObjectById, isGroup, walkObjects } from '../../types/Group';
 import { useT } from '../../lib/useT';
 import { buildBulkToggleUpdates, type ToggleField } from '../../lib/bulkToggle';
 import { buildFlatRows, useLayerDnd, type FlatRow } from './useLayerDnd';
@@ -68,11 +68,8 @@ export function LayersPanel() {
   // selection (matches the Ctrl+G shortcut), fall back to creating an
   // empty group at the top so the affordance is also useful before
   // any items exist or have been selected.
-  const hasTopLevelGroupable = selectedIds.some((id) =>
-    objects.some((o) => o.id === id && !o.locked),
-  );
   const onNewGroup = () => {
-    if (hasTopLevelGroupable) groupSelection();
+    if (canGroupSelection(objects, selectedIds)) groupSelection();
     else addGroup();
   };
 

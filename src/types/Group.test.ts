@@ -9,6 +9,7 @@ import {
   expandSelection,
   detachObjectById,
   isSelfOrDescendant,
+  canGroupSelection,
   type GroupObject,
 } from './Group';
 import type { LabelObject } from '../registry';
@@ -168,6 +169,31 @@ describe('Group helpers', () => {
 
     it('returns false when the root id is missing', () => {
       expect(isSelfOrDescendant([leaf('a')], 'missing', 'a')).toBe(false);
+    });
+  });
+
+  describe('canGroupSelection', () => {
+    it('returns true when at least one top-level unlocked item is selected', () => {
+      expect(canGroupSelection([leaf('a'), leaf('b')], ['a'])).toBe(true);
+    });
+
+    it('returns false for an empty selection', () => {
+      expect(canGroupSelection([leaf('a')], [])).toBe(false);
+    });
+
+    it('ignores nested ids (only top-level counts)', () => {
+      const tree = [group('g', [leaf('inside')])];
+      expect(canGroupSelection(tree, ['inside'])).toBe(false);
+    });
+
+    it('ignores locked top-level items', () => {
+      const locked = { ...leaf('a'), locked: true };
+      expect(canGroupSelection([locked], ['a'])).toBe(false);
+    });
+
+    it('returns true when one of several selected items is groupable', () => {
+      const locked = { ...leaf('a'), locked: true };
+      expect(canGroupSelection([locked, leaf('b')], ['a', 'b'])).toBe(true);
     });
   });
 

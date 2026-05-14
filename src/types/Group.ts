@@ -152,6 +152,21 @@ export function isSelfOrDescendant(
 }
 
 /**
+ * True when the current selection has at least one top-level, unlocked
+ * item — i.e. when `groupSelection()` would actually act. Used by the
+ * "Group" buttons in the layers panel header and the multi-select
+ * properties panel so they hide when the click would no-op.
+ */
+export function canGroupSelection(
+  objects: LabelObject[],
+  selectedIds: readonly string[],
+): boolean {
+  return selectedIds.some((id) =>
+    objects.some((o) => o.id === id && !o.locked),
+  );
+}
+
+/**
  * Map an intent-level selection (which may include group ids) to the
  * flat list of Konva-node ids the renderer and transformer can attach
  * to. Group ids expand to their descendant leaves; leaf ids pass
