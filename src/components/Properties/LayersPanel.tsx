@@ -3,7 +3,7 @@ import { DndContext } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { FolderPlusIcon } from '@heroicons/react/16/solid';
 import { useLabelStore, useCurrentObjects } from '../../store/labelStore';
-import { walkObjects } from '../../types/Group';
+import { findObjectById, isGroup, walkObjects } from '../../types/Group';
 import { useT } from '../../lib/useT';
 import { buildBulkToggleUpdates, type ToggleField } from '../../lib/bulkToggle';
 import { buildFlatRows, useLayerDnd, type FlatRow } from './useLayerDnd';
@@ -33,6 +33,20 @@ export function LayersPanel() {
     return m;
   }, [rows]);
   const allRowIds = useMemo(() => rows.map((r) => r.obj.id), [rows]);
+
+  // Soft tint for every descendant of a currently-selected group, so the
+  // user sees which leaves would move together if they dragged the group
+  // (or pressed an arrow key). Excludes the group itself — its row keeps
+  // the stronger "is selected" accent.
+  const idsUnderSelectedGroup = useMemo(() => {
+    const out = new Set<string>();
+    for (const id of selectedIds) {
+      const obj = findObjectById(objects, id);
+      if (!obj || !isGroup(obj)) continue;
+      for (const desc of walkObjects(obj.children)) out.add(desc.id);
+    }
+    return out;
+  }, [objects, selectedIds]);
 
   const {
     sensors,
@@ -105,6 +119,7 @@ export function LayersPanel() {
                 depth={depth}
                 containerId={containerId}
                 isSelected={selectedIds.includes(obj.id)}
+                isInSelectedGroup={idsUnderSelectedGroup.has(obj.id)}
                 isExpanded={expandedIds.has(obj.id)}
                 isDropTarget={preview.dropIntoTargetId === obj.id}
                 showInsertionLine={preview.insertionLineRowId === obj.id}

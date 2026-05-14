@@ -21,6 +21,9 @@ export interface LayerRowProps {
   depth: number;
   containerId: string;
   isSelected: boolean;
+  /** True for any leaf or sub-group that lives under a currently-selected
+   *  group. Drives the soft tint that signals "I move with the group". */
+  isInSelectedGroup: boolean;
   isExpanded: boolean;
   /** Highlight the row body — used for "drop into this group". */
   isDropTarget: boolean;
@@ -46,6 +49,7 @@ export function LayerRow({
   depth,
   containerId,
   isSelected,
+  isInSelectedGroup,
   isExpanded,
   isDropTarget,
   showInsertionLine,
@@ -108,7 +112,7 @@ export function LayerRow({
       />
     <div
       ref={setNodeRef}
-      style={{ touchAction: 'none', paddingLeft: depth > 0 ? depth * INDENT_STEP + 8 : undefined }}
+      style={{ touchAction: 'none' }}
       {...attributes}
       {...(isLocked ? {} : listeners)}
       onClick={(e) => {
@@ -116,15 +120,30 @@ export function LayerRow({
         else onSelect();
       }}
       className={`
-        flex items-center gap-2 px-2 py-1.5
+        flex items-center gap-2 pr-2 py-1.5
         ${isLocked ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}
         border-b border-border group transition-colors hover:bg-surface-2
         ${isSelected ? 'bg-surface-2 border-l-2 border-l-accent' : 'border-l-2 border-l-transparent'}
+        ${isInSelectedGroup && !isSelected ? 'bg-accent/5' : ''}
         ${isDragging ? 'opacity-40' : ''}
         ${isHidden ? 'opacity-50' : ''}
         ${isDropTarget ? 'bg-accent/15 outline outline-1 outline-accent/60' : ''}
       `}
     >
+      {/* Indent guide lines: one fixed-width spacer per ancestor level,
+          each carrying a left border so consecutive rows at the same
+          depth visually form a continuous vertical guide from the parent
+          group's row down through its children. The outer pl-2 is gone
+          because the spacers carry that offset themselves. */}
+      {depth > 0 && (
+        <div className="flex self-stretch shrink-0" aria-hidden>
+          <span className="w-2" />
+          {Array.from({ length: depth }, (_, i) => (
+            <span key={i} className="w-4 border-l border-border/60" />
+          ))}
+        </div>
+      )}
+      {depth === 0 && <span className="w-2 shrink-0" aria-hidden />}
       <DragHandleIcon
         className={`w-2 h-3.5 shrink-0 text-muted transition-opacity ${isLocked ? 'opacity-0' : 'opacity-0 group-hover:opacity-60'}`}
       />
