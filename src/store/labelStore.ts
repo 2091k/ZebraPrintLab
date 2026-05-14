@@ -6,6 +6,7 @@ import type { Unit } from '../lib/units';
 import type { ViewRotation } from '../components/Canvas/rotationGeometry';
 import { ObjectRegistry } from '../registry';
 import type { LabelObject } from '../registry';
+import { isGroup, type GroupObject } from '../types/Group';
 import { locales } from '../locales';
 import type { LocaleCode } from '../locales';
 import { isDefaultLabelaryHost } from '../lib/labelary';
@@ -101,6 +102,13 @@ interface LabelState {
   toggleSelectObject: (id: string) => void;
   selectObjects: (ids: string[]) => void;
   removeSelectedObjects: () => void;
+  /** Wraps every selected top-level, unlocked object in a new GroupObject
+   *  at the position of the topmost (last-in-array) selected item.
+   *  No-op if fewer than one such object is selected. */
+  groupSelection: () => void;
+  /** Replaces every selected top-level group with its children, splicing
+   *  them in at the group's former index. No-op on non-group selections. */
+  ungroup: () => void;
   setLabelConfig: (config: Partial<LabelConfig>) => void;
   setLocale: (locale: LocaleCode) => void;
   setTheme: (theme: ThemePreference) => void;
@@ -347,6 +355,76 @@ export const useLabelStore = create<LabelState>()(
               curr.filter((o) => !sel.has(o.id) || o.locked),
             ),
             selectedIds: lockedIds,
+          };
+        }),
+
+      groupSelection: () =>
+        set((state) => {
+          const objs = currentObjects(state);
+          const sel = new Set(state.selectedIds);
+          // Only consider top-level objects of the current page. Nested
+          // children of an existing group are out of scope for v1 — the
+          // user would have to ungroup the parent first.
+          const candidates = objs.flatMap((o) =>
+            sel.has(o.id) && !o.locked ? [o] : [],
+          );
+          if (candidates.length === 0) return {};
+          const candidateIds = new Set(candidates.map((o) => o.id));
+          // Insert at the position of the last (topmost in z-order)
+          // selected item so the group lands where the user's eye is.
+          const lastIndex = objs.reduce(
+            (acc, o, i) => (candidateIds.has(o.id) ? i : acc),
+            -1,
+          );
+          const group: GroupObject = {
+            id: crypto.randomUUID(),
+            type: 'group',
+            x: 0,
+            y: 0,
+            rotation: 0,
+            children: candidates,
+          };
+          const remaining = objs.filter((o) => !candidateIds.has(o.id));
+          // lastIndex is computed on the pre-filter array; convert it to
+          // the post-filter insertion point by counting how many of the
+          // removed items were before it.
+          const removedBefore = objs
+            .slice(0, lastIndex + 1)
+            .filter((o) => candidateIds.has(o.id)).length;
+          const insertAt = lastIndex + 1 - removedBefore;
+          const next = [
+            ...remaining.slice(0, insertAt),
+            group,
+            ...remaining.slice(insertAt),
+          ];
+          return {
+            ...updateCurrentObjects(state, () => next),
+            selectedIds: [group.id],
+          };
+        }),
+
+      ungroup: () =>
+        set((state) => {
+          const sel = new Set(state.selectedIds);
+          const objs = currentObjects(state);
+          const targets = objs.flatMap((o) =>
+            sel.has(o.id) && isGroup(o) && !o.locked ? [o] : [],
+          );
+          if (targets.length === 0) return {};
+          const targetIds = new Set(targets.map((g) => g.id));
+          const next: LabelObject[] = [];
+          const newSelection: string[] = [];
+          for (const o of objs) {
+            if (targetIds.has(o.id) && isGroup(o)) {
+              next.push(...o.children);
+              newSelection.push(...o.children.map((c) => c.id));
+            } else {
+              next.push(o);
+            }
+          }
+          return {
+            ...updateCurrentObjects(state, () => next),
+            selectedIds: newSelection,
           };
         }),
 

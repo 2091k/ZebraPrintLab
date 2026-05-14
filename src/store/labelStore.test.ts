@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useLabelStore, currentObjects } from './labelStore';
 import type { LabelObject } from '../registry';
+import { isGroup } from '../types/Group';
 import { defined, props } from '../test/helpers';
 
 /** Reset store to clean state before each test. */
@@ -588,5 +589,104 @@ describe('per-page object isolation', () => {
     expect(objs()).toHaveLength(1);
     state().setCurrentPage(0);
     expect(objs()).toHaveLength(1);
+  });
+});
+
+// ── groupSelection / ungroup ──────────────────────────────────────────────────
+
+describe('groupSelection', () => {
+  it('wraps selected objects in a single group and selects it', () => {
+    state().addObject('text');
+    state().addObject('box');
+    const [a, b] = objs();
+    state().selectObjects([defined(a).id, defined(b).id]);
+    state().groupSelection();
+    expect(objs()).toHaveLength(1);
+    const g = defined(objs()[0]);
+    expect(isGroup(g)).toBe(true);
+    if (isGroup(g)) expect(g.children).toHaveLength(2);
+    expect(state().selectedIds).toEqual([g.id]);
+  });
+
+  it('inserts the group at the topmost selected position', () => {
+    state().addObject('text');
+    state().addObject('box');
+    state().addObject('circle');
+    const [a, b, c] = objs();
+    // Select first and second; group should land where the second one was.
+    state().selectObjects([defined(a).id, defined(b).id]);
+    state().groupSelection();
+    expect(objs().map((o) => o.type)).toEqual(['group', 'circle']);
+    expect(defined(objs()[1]).id).toBe(defined(c).id);
+  });
+
+  it('is a no-op with empty selection', () => {
+    state().addObject('text');
+    state().selectObject(null);
+    state().groupSelection();
+    expect(objs()).toHaveLength(1);
+    expect(isGroup(defined(objs()[0]))).toBe(false);
+  });
+
+  it('skips locked objects', () => {
+    state().addObject('text');
+    state().addObject('box');
+    const [a, b] = objs();
+    state().updateObject(defined(a).id, { locked: true });
+    state().selectObjects([defined(a).id, defined(b).id]);
+    state().groupSelection();
+    // Only the box made it into a group; the locked text stayed at top level.
+    const objects = objs();
+    expect(objects).toHaveLength(2);
+    const grp = objects.find((o) => isGroup(o));
+    expect(grp).toBeDefined();
+    if (grp && isGroup(grp)) {
+      expect(grp.children).toHaveLength(1);
+      expect(defined(grp.children[0]).type).toBe('box');
+    }
+  });
+
+  it('allows grouping a single object (idiomatic in design tools)', () => {
+    state().addObject('text');
+    state().selectObject(defined(objs()[0]).id);
+    state().groupSelection();
+    expect(objs()).toHaveLength(1);
+    expect(isGroup(defined(objs()[0]))).toBe(true);
+  });
+});
+
+describe('ungroup', () => {
+  it('replaces a selected group with its children at the same position', () => {
+    state().addObject('text');
+    state().addObject('box');
+    state().addObject('circle');
+    const [, b, c] = objs();
+    state().selectObjects([defined(b).id, defined(c).id]);
+    state().groupSelection();
+    const groupId = defined(state().selectedIds[0]);
+    state().selectObject(groupId);
+    state().ungroup();
+    expect(objs().map((o) => o.type)).toEqual(['text', 'box', 'circle']);
+    // Selection follows the freed children.
+    expect(state().selectedIds).toHaveLength(2);
+  });
+
+  it('is a no-op when no group is selected', () => {
+    state().addObject('text');
+    state().selectObject(defined(objs()[0]).id);
+    state().ungroup();
+    expect(objs()).toHaveLength(1);
+    expect(isGroup(defined(objs()[0]))).toBe(false);
+  });
+
+  it('skips locked groups', () => {
+    state().addObject('text');
+    state().selectObject(defined(objs()[0]).id);
+    state().groupSelection();
+    const gid = defined(state().selectedIds[0]);
+    state().updateObject(gid, { locked: true });
+    state().ungroup();
+    expect(objs()).toHaveLength(1);
+    expect(isGroup(defined(objs()[0]))).toBe(true);
   });
 });
