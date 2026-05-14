@@ -407,6 +407,7 @@ const nl = {
     lock: 'Vergrendelen',
     unlock: 'Ontgrendelen',
     ungroup: 'Groepering opheffen',
+    newGroup: 'Nieuwe groep',
     show: 'Tonen',
     hide: 'Verbergen',
   },

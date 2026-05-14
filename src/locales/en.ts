@@ -428,6 +428,7 @@ const en = {
     lock: 'Lock',
     unlock: 'Unlock',
     ungroup: 'Ungroup',
+    newGroup: 'New group',
     show: 'Show',
     hide: 'Hide',
   },

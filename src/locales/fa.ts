@@ -407,6 +407,7 @@ const fa = {
     lock: 'قفل',
     unlock: 'بازکردن قفل',
     ungroup: 'لغو گروه‌بندی',
+    newGroup: 'گروه جدید',
     show: 'نمایش',
     hide: 'پنهان',
   },

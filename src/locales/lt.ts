@@ -407,6 +407,7 @@ const lt = {
     lock: 'Užrakinti',
     unlock: 'Atrakinti',
     ungroup: 'Išgrupuoti',
+    newGroup: 'Nauja grupė',
     show: 'Rodyti',
     hide: 'Slėpti',
   },

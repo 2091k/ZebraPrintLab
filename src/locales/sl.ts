@@ -407,6 +407,7 @@ const sl = {
     lock: 'Zakleni',
     unlock: 'Odkleni',
     ungroup: 'Razdruži',
+    newGroup: 'Nova skupina',
     show: 'Prikaži',
     hide: 'Skrij',
   },

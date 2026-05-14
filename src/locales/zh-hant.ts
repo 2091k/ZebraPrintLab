@@ -407,6 +407,7 @@ const zhHant = {
     lock: '鎖定',
     unlock: '解鎖',
     ungroup: '取消群組',
+    newGroup: '新增群組',
     show: '顯示',
     hide: '隱藏',
   },

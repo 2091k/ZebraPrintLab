@@ -9,6 +9,7 @@ import {
   ChevronRightIcon,
   ChevronDownIcon,
   LinkSlashIcon,
+  FolderPlusIcon,
 } from '@heroicons/react/16/solid';
 import { useLabelStore, useCurrentObjects } from '../../store/labelStore';
 import { ObjectRegistry } from '../../registry';
@@ -174,6 +175,8 @@ export function LayersPanel() {
     selectObject,
     toggleSelectObject,
     updateObjects,
+    groupSelection,
+    addGroup,
     ungroupIds,
     reparentObject,
   } = useLabelStore();
@@ -204,6 +207,18 @@ export function LayersPanel() {
     if (updates.length > 0) updateObjects(updates);
   };
 
+  // Smart "New group" button: prefer grouping the current top-level
+  // selection (matches the Ctrl+G shortcut), fall back to creating an
+  // empty group at the top so the affordance is also useful before
+  // any items exist or have been selected.
+  const hasTopLevelGroupable = selectedIds.some((id) =>
+    objects.some((o) => o.id === id && !o.locked),
+  );
+  const onNewGroup = () => {
+    if (hasTopLevelGroupable) groupSelection();
+    else addGroup();
+  };
+
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -213,10 +228,27 @@ export function LayersPanel() {
     });
   };
 
+  const header = (
+    <div className="flex items-center justify-end px-2 py-1.5 border-b border-border shrink-0">
+      <button
+        type="button"
+        onClick={onNewGroup}
+        title={t.layers.newGroup}
+        aria-label={t.layers.newGroup}
+        className="w-5 h-5 flex items-center justify-center rounded text-muted hover:text-text hover:bg-surface-2 transition-colors"
+      >
+        <FolderPlusIcon className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+
   if (objects.length === 0) {
     return (
-      <div className="p-4 text-center text-muted text-xs mt-6">
-        {t.layers.empty}
+      <div className="flex flex-col">
+        {header}
+        <div className="p-4 text-center text-muted text-xs mt-6">
+          {t.layers.empty}
+        </div>
       </div>
     );
   }
@@ -232,6 +264,7 @@ export function LayersPanel() {
       onDragEnd={onDragEnd}
       onDragCancel={onDragCancel}
     >
+      {header}
       <SortableContext items={allRowIds} strategy={verticalListSortingStrategy}>
         <div ref={panelRef} className="flex flex-col">
           {rows.map(({ obj, depth, containerId }) => (

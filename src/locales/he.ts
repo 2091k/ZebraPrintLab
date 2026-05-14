@@ -407,6 +407,7 @@ const he = {
     lock: 'נעל',
     unlock: 'בטל נעילה',
     ungroup: 'ביטול קיבוץ',
+    newGroup: 'קבוצה חדשה',
     show: 'הצג',
     hide: 'הסתר',
   },

@@ -407,6 +407,7 @@ const es = {
     lock: 'Bloquear',
     unlock: 'Desbloquear',
     ungroup: 'Desagrupar',
+    newGroup: 'Nuevo grupo',
     show: 'Mostrar',
     hide: 'Ocultar',
   },

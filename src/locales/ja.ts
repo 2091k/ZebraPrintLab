@@ -407,6 +407,7 @@ const ja = {
     lock: 'ロック',
     unlock: 'ロック解除',
     ungroup: 'グループ解除',
+    newGroup: '新規グループ',
     show: '表示',
     hide: '非表示',
   },

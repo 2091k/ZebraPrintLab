@@ -407,6 +407,7 @@ const sk = {
     lock: 'Uzamknúť',
     unlock: 'Odomknúť',
     ungroup: 'Zrušiť skupinu',
+    newGroup: 'Nová skupina',
     show: 'Zobraziť',
     hide: 'Skryť',
   },

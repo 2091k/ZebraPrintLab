@@ -407,6 +407,7 @@ const fr = {
     lock: 'Verrouiller',
     unlock: 'Déverrouiller',
     ungroup: 'Dégrouper',
+    newGroup: 'Nouveau groupe',
     show: 'Afficher',
     hide: 'Masquer',
   },

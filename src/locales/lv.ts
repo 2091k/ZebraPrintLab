@@ -407,6 +407,7 @@ const lv = {
     lock: 'Bloķēt',
     unlock: 'Atbloķēt',
     ungroup: 'Atgrupēt',
+    newGroup: 'Jauna grupa',
     show: 'Rādīt',
     hide: 'Slēpt',
   },

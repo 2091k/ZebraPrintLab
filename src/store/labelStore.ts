@@ -125,6 +125,11 @@ interface LabelState {
    *  insertion position inside the target's children list. Silently
    *  refuses cycles (moving a group into its own descendant). */
   reparentObject: (id: string, target: { parentId: string | null; index: number }) => void;
+  /** Append an empty group at the top level (end of the objects array =
+   *  front-most layer = topmost row in the layers panel) and select it.
+   *  Lets the user create a group up-front and drag items in afterwards
+   *  via the layers panel, instead of having to select-then-shortcut. */
+  addGroup: () => void;
   setLabelConfig: (config: Partial<LabelConfig>) => void;
   setLocale: (locale: LocaleCode) => void;
   setTheme: (theme: ThemePreference) => void;
@@ -460,6 +465,22 @@ export const useLabelStore = create<LabelState>()(
             };
           });
           return updateCurrentObjects(state, () => next);
+        }),
+
+      addGroup: () =>
+        set((state) => {
+          const group: GroupObject = {
+            id: crypto.randomUUID(),
+            type: 'group',
+            x: 0,
+            y: 0,
+            rotation: 0,
+            children: [],
+          };
+          return {
+            ...updateCurrentObjects(state, (objs) => [...objs, group]),
+            selectedIds: [group.id],
+          };
         }),
 
       ungroup: () => get().ungroupIds(get().selectedIds),

@@ -407,6 +407,7 @@ const sr = {
     lock: 'Закључај',
     unlock: 'Откључај',
     ungroup: 'Razgrupiši',
+    newGroup: 'Nova grupa',
     show: 'Прикажи',
     hide: 'Сакриј',
   },

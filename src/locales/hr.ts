@@ -407,6 +407,7 @@ const hr = {
     lock: 'Zaključaj',
     unlock: 'Otključaj',
     ungroup: 'Razgrupiraj',
+    newGroup: 'Nova grupa',
     show: 'Prikaži',
     hide: 'Sakrij',
   },

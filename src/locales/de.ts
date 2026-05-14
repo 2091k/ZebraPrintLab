@@ -428,6 +428,7 @@ const de = {
     lock: 'Sperren',
     unlock: 'Entsperren',
     ungroup: 'Gruppierung aufheben',
+    newGroup: 'Neue Gruppe',
     show: 'Einblenden',
     hide: 'Ausblenden',
   },

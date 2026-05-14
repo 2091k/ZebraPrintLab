@@ -407,6 +407,7 @@ const pl = {
     lock: 'Zablokuj',
     unlock: 'Odblokuj',
     ungroup: 'Rozgrupuj',
+    newGroup: 'Nowa grupa',
     show: 'Pokaż',
     hide: 'Ukryj',
   },

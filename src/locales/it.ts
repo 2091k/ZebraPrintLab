@@ -407,6 +407,7 @@ const it = {
     lock: 'Blocca',
     unlock: 'Sblocca',
     ungroup: 'Separa',
+    newGroup: 'Nuovo gruppo',
     show: 'Mostra',
     hide: 'Nascondi',
   },

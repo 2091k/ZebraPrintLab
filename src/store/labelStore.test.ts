@@ -781,6 +781,25 @@ describe('ungroup', () => {
     expect(JSON.stringify(objs())).toBe(before);
   });
 
+  it('addGroup appends an empty group and selects it', () => {
+    state().addGroup();
+    expect(objs()).toHaveLength(1);
+    const g = defined(objs()[0]);
+    expect(isGroup(g)).toBe(true);
+    if (isGroup(g)) expect(g.children).toEqual([]);
+    expect(state().selectedIds).toEqual([g.id]);
+  });
+
+  it('addGroup leaves existing top-level objects in place', () => {
+    state().addObject('text');
+    const textId = defined(objs()[0]).id;
+    state().addGroup();
+    expect(objs()).toHaveLength(2);
+    // Group is appended at the end of the array = topmost in display.
+    expect(defined(objs()[0]).id).toBe(textId);
+    expect(isGroup(defined(objs()[1]))).toBe(true);
+  });
+
   it('ungroupIds operates on the passed list, not the current selection', () => {
     state().addObject('text');
     state().addObject('box');

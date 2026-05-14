@@ -407,6 +407,7 @@ const cs = {
     lock: 'Uzamknout',
     unlock: 'Odemknout',
     ungroup: 'Zrušit skupinu',
+    newGroup: 'Nová skupina',
     show: 'Zobrazit',
     hide: 'Skrýt',
   },

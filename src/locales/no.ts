@@ -407,6 +407,7 @@ const no = {
     lock: 'Lås',
     unlock: 'Lås opp',
     ungroup: 'Del opp',
+    newGroup: 'Ny gruppe',
     show: 'Vis',
     hide: 'Skjul',
   },

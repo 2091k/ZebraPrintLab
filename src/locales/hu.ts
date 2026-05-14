@@ -407,6 +407,7 @@ const hu = {
     lock: 'Zárolás',
     unlock: 'Feloldás',
     ungroup: 'Csoport bontása',
+    newGroup: 'Új csoport',
     show: 'Megjelenítés',
     hide: 'Elrejtés',
   },

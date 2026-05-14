@@ -407,6 +407,7 @@ const tr = {
     lock: 'Kilitle',
     unlock: 'Kilidi aç',
     ungroup: 'Grubu çöz',
+    newGroup: 'Yeni grup',
     show: 'Göster',
     hide: 'Gizle',
   },

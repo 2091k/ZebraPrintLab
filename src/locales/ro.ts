@@ -407,6 +407,7 @@ const ro = {
     lock: 'Blochează',
     unlock: 'Deblochează',
     ungroup: 'Anulează grupare',
+    newGroup: 'Grup nou',
     show: 'Afișează',
     hide: 'Ascunde',
   },

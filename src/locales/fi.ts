@@ -407,6 +407,7 @@ const fi = {
     lock: 'Lukitse',
     unlock: 'Avaa lukitus',
     ungroup: 'Poista ryhmittely',
+    newGroup: 'Uusi ryhmä',
     show: 'Näytä',
     hide: 'Piilota',
   },

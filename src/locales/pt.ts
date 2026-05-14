@@ -407,6 +407,7 @@ const pt = {
     lock: 'Bloquear',
     unlock: 'Desbloquear',
     ungroup: 'Desagrupar',
+    newGroup: 'Novo grupo',
     show: 'Mostrar',
     hide: 'Ocultar',
   },

@@ -407,6 +407,7 @@ const et = {
     lock: 'Lukusta',
     unlock: 'Eemalda lukk',
     ungroup: 'Tühista rühm',
+    newGroup: 'Uus rühm',
     show: 'Näita',
     hide: 'Peida',
   },

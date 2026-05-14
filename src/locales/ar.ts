@@ -407,6 +407,7 @@ const ar = {
     lock: 'قفل',
     unlock: 'إلغاء القفل',
     ungroup: 'فك المجموعة',
+    newGroup: 'مجموعة جديدة',
     show: 'إظهار',
     hide: 'إخفاء',
   },

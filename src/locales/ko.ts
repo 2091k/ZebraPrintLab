@@ -407,6 +407,7 @@ const ko = {
     lock: '잠금',
     unlock: '잠금 해제',
     ungroup: '그룹 해제',
+    newGroup: '새 그룹',
     show: '표시',
     hide: '숨기기',
   },

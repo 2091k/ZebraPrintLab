@@ -407,6 +407,7 @@ const da = {
     lock: 'Lås',
     unlock: 'Lås op',
     ungroup: 'Ophæv gruppering',
+    newGroup: 'Ny gruppe',
     show: 'Vis',
     hide: 'Skjul',
   },

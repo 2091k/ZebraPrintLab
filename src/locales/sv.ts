@@ -407,6 +407,7 @@ const sv = {
     lock: 'Lås',
     unlock: 'Lås upp',
     ungroup: 'Dela upp',
+    newGroup: 'Ny grupp',
     show: 'Visa',
     hide: 'Dölj',
   },
