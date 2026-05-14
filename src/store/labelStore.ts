@@ -6,7 +6,14 @@ import type { Unit } from '../lib/units';
 import type { ViewRotation } from '../components/Canvas/rotationGeometry';
 import { ObjectRegistry } from '../registry';
 import type { LabelObject } from '../registry';
-import { isGroup, mapObjectById, type GroupObject } from '../types/Group';
+import {
+  isGroup,
+  mapObjectById,
+  detachObjectById,
+  findObjectById,
+  isSelfOrDescendant,
+  type GroupObject,
+} from '../types/Group';
 import { locales } from '../locales';
 import type { LocaleCode } from '../locales';
 import { isDefaultLabelaryHost } from '../lib/labelary';
@@ -113,6 +120,11 @@ interface LabelState {
    *  active selection. Used by the layers panel's per-row ungroup
    *  button so the user doesn't have to select the group first. */
   ungroupIds: (ids: readonly string[]) => void;
+  /** Move `id` to a new position in the tree. `parentId: null` means the
+   *  top level; any other value targets a group. `index` is the
+   *  insertion position inside the target's children list. Silently
+   *  refuses cycles (moving a group into its own descendant). */
+  reparentObject: (id: string, target: { parentId: string | null; index: number }) => void;
   setLabelConfig: (config: Partial<LabelConfig>) => void;
   setLocale: (locale: LocaleCode) => void;
   setTheme: (theme: ThemePreference) => void;
@@ -409,6 +421,45 @@ export const useLabelStore = create<LabelState>()(
             ...updateCurrentObjects(state, () => next),
             selectedIds: [group.id],
           };
+        }),
+
+      reparentObject: (id, target) =>
+        set((state) => {
+          const objs = currentObjects(state);
+          // Forbid cycles: moving a group into itself or one of its
+          // descendants would orphan the rest of the tree.
+          if (target.parentId && isSelfOrDescendant(objs, id, target.parentId)) {
+            return {};
+          }
+          // Refuse drops into something that isn't a group — the layers
+          // panel should never produce this, but a defensive check
+          // keeps the model from picking up bogus state if a caller
+          // passes a leaf id.
+          if (target.parentId !== null) {
+            const parent = findObjectById(objs, target.parentId);
+            if (!parent || !isGroup(parent)) return {};
+          }
+          const { removed, rest } = detachObjectById(objs, id);
+          if (!removed) return {};
+          const node = removed;
+          if (target.parentId === null) {
+            const clamped = Math.max(0, Math.min(target.index, rest.length));
+            const next = [...rest.slice(0, clamped), node, ...rest.slice(clamped)];
+            return updateCurrentObjects(state, () => next);
+          }
+          const next = mapObjectById(rest, target.parentId, (p) => {
+            if (!isGroup(p)) return p;
+            const clamped = Math.max(0, Math.min(target.index, p.children.length));
+            return {
+              ...p,
+              children: [
+                ...p.children.slice(0, clamped),
+                node,
+                ...p.children.slice(clamped),
+              ],
+            };
+          });
+          return updateCurrentObjects(state, () => next);
         }),
 
       ungroup: () => get().ungroupIds(get().selectedIds),

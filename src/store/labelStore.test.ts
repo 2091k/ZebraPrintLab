@@ -719,6 +719,68 @@ describe('ungroup', () => {
     expect(isGroup(defined(objs()[0]))).toBe(true);
   });
 
+  it('reparentObject moves a top-level leaf into a group', () => {
+    state().addObject('text'); // a
+    state().addObject('box');  // b
+    state().addObject('circle'); // c
+    const [a, b, c] = objs();
+    // Group b and c
+    state().selectObjects([defined(b).id, defined(c).id]);
+    state().groupSelection();
+    const gid = defined(state().selectedIds[0]);
+    // Move 'a' into the group
+    state().reparentObject(defined(a).id, { parentId: gid, index: 1 });
+    expect(objs()).toHaveLength(1); // only the group at top level
+    const grp = defined(objs()[0]);
+    if (!isGroup(grp)) throw new Error('expected group');
+    expect(grp.children.map((c) => c.id)).toEqual([
+      defined(b).id, defined(a).id, defined(c).id,
+    ]);
+  });
+
+  it('reparentObject moves a child out of a group to top level', () => {
+    state().addObject('text');
+    state().addObject('box');
+    const [a, b] = objs();
+    state().selectObjects([defined(a).id, defined(b).id]);
+    state().groupSelection();
+    const gid = defined(state().selectedIds[0]);
+    // Extract 'a' to top level at index 0 (before the group)
+    state().reparentObject(defined(a).id, { parentId: null, index: 0 });
+    expect(objs()).toHaveLength(2);
+    expect(defined(objs()[0]).id).toBe(defined(a).id);
+    const grp = defined(objs()[1]);
+    if (!isGroup(grp)) throw new Error('expected group');
+    expect(grp.children.map((c) => c.id)).toEqual([defined(b).id]);
+    expect(grp.id).toBe(gid);
+  });
+
+  it('reparentObject refuses to move a group into itself', () => {
+    state().addObject('text');
+    state().selectObject(defined(objs()[0]).id);
+    state().groupSelection();
+    const gid = defined(state().selectedIds[0]);
+    const before = JSON.stringify(objs());
+    state().reparentObject(gid, { parentId: gid, index: 0 });
+    expect(JSON.stringify(objs())).toBe(before);
+  });
+
+  it('reparentObject refuses to move a group into one of its descendants', () => {
+    state().addObject('text');
+    state().addObject('box');
+    const [a, b] = objs();
+    state().selectObjects([defined(a).id, defined(b).id]);
+    state().groupSelection();
+    const outerGid = defined(state().selectedIds[0]);
+    // Create an inner group containing only 'a' (manually via grouping
+    // the existing children would need ungroup-then-group; this test
+    // simulates the cycle case by trying to move outerGid into 'a'.)
+    const before = JSON.stringify(objs());
+    state().reparentObject(outerGid, { parentId: defined(a).id, index: 0 });
+    // No-op because 'a' is a leaf, not a group → defensive check.
+    expect(JSON.stringify(objs())).toBe(before);
+  });
+
   it('ungroupIds operates on the passed list, not the current selection', () => {
     state().addObject('text');
     state().addObject('box');

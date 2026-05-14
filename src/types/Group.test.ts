@@ -7,6 +7,8 @@ import {
   findAncestors,
   selectionTargetId,
   expandSelection,
+  detachObjectById,
+  isSelfOrDescendant,
   type GroupObject,
 } from './Group';
 import type { LabelObject } from '../registry';
@@ -114,6 +116,58 @@ describe('Group helpers', () => {
 
     it('returns the id itself when not found (no surprises for callers)', () => {
       expect(selectionTargetId([leaf('a')], 'missing')).toBe('missing');
+    });
+  });
+
+  describe('detachObjectById', () => {
+    it('removes a top-level leaf', () => {
+      const tree = [leaf('a'), leaf('b')];
+      const { removed, rest } = detachObjectById(tree, 'a');
+      expect(removed?.id).toBe('a');
+      expect(rest.map((o) => o.id)).toEqual(['b']);
+    });
+
+    it('removes a nested leaf and rebuilds the parent group', () => {
+      const tree = [group('g', [leaf('a'), leaf('b')])];
+      const { removed, rest } = detachObjectById(tree, 'a');
+      expect(removed?.id).toBe('a');
+      const grp = rest[0];
+      expect(grp && isGroup(grp) ? grp.children.map((c) => c.id) : null).toEqual(['b']);
+    });
+
+    it('removes a whole group node', () => {
+      const tree = [leaf('a'), group('g', [leaf('x')])];
+      const { removed, rest } = detachObjectById(tree, 'g');
+      expect(removed?.id).toBe('g');
+      expect(rest.map((o) => o.id)).toEqual(['a']);
+    });
+
+    it('returns null and the original tree when id is unknown', () => {
+      const tree = [leaf('a')];
+      const { removed, rest } = detachObjectById(tree, 'missing');
+      expect(removed).toBeNull();
+      expect(rest.map((o) => o.id)).toEqual(['a']);
+    });
+  });
+
+  describe('isSelfOrDescendant', () => {
+    it('identifies the node itself', () => {
+      expect(isSelfOrDescendant([leaf('a')], 'a', 'a')).toBe(true);
+    });
+
+    it('identifies a descendant of a group', () => {
+      const tree = [group('g', [group('inner', [leaf('deep')])])];
+      expect(isSelfOrDescendant(tree, 'g', 'deep')).toBe(true);
+      expect(isSelfOrDescendant(tree, 'g', 'inner')).toBe(true);
+    });
+
+    it('returns false for unrelated nodes', () => {
+      const tree = [group('g1', [leaf('a')]), group('g2', [leaf('b')])];
+      expect(isSelfOrDescendant(tree, 'g1', 'b')).toBe(false);
+    });
+
+    it('returns false when the root id is missing', () => {
+      expect(isSelfOrDescendant([leaf('a')], 'missing', 'a')).toBe(false);
     });
   });
 

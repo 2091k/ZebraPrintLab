@@ -108,6 +108,50 @@ export function mapObjectById(
 }
 
 /**
+ * Returns the tree with `id` removed and the removed node, or `null`
+ * for the node when nothing matched. Used by reparenting flows that
+ * need both the detached node and the tree-without-it.
+ */
+export function detachObjectById(
+  objects: LabelObject[],
+  id: string,
+): { removed: LabelObject | null; rest: LabelObject[] } {
+  let removed: LabelObject | null = null;
+  const visit = (nodes: LabelObject[]): LabelObject[] => {
+    const out: LabelObject[] = [];
+    for (const n of nodes) {
+      if (n.id === id) {
+        removed = n;
+        continue;
+      }
+      if (isGroup(n)) out.push({ ...n, children: visit(n.children) });
+      else out.push(n);
+    }
+    return out;
+  };
+  const rest = visit(objects);
+  return { removed, rest };
+}
+
+/**
+ * True when `ancestorId` is `id` itself or sits anywhere in the
+ * subtree rooted at `id`. Reparenting flows use this to forbid the
+ * cycle `move(g, into = g_or_descendant_of_g)`.
+ */
+export function isSelfOrDescendant(
+  objects: LabelObject[],
+  id: string,
+  ancestorId: string,
+): boolean {
+  const node = findObjectById(objects, id);
+  if (!node) return false;
+  for (const n of walkObjects([node])) {
+    if (n.id === ancestorId) return true;
+  }
+  return false;
+}
+
+/**
  * Map an intent-level selection (which may include group ids) to the
  * flat list of Konva-node ids the renderer and transformer can attach
  * to. Group ids expand to their descendant leaves; leaf ids pass
