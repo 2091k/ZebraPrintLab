@@ -57,6 +57,7 @@ const pl = {
     lockHint: 'Blokuje przesuwanie, zmianę rozmiaru i usuwanie. Wybór z panelu Warstwy lub Alt+kliknięciem na płótnie.',
     multipleSelectedFmt: 'Wybrano obiektów: {n}',
     multipleSelectedHint: 'strzałki przesuwają',
+    groupSelection: 'Grupuj zaznaczenie',
     visualApproxHint: 'Renderowanie wizualne jest przybliżone; wymiary odpowiadają wydrukowi ZPL',
     alignCenterH: 'Wyśrodkuj poziomo na etykiecie',
     alignCenterV: 'Wyśrodkuj pionowo na etykiecie',

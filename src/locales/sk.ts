@@ -57,6 +57,7 @@ const sk = {
     lockHint: 'Bráni presúvaniu, zmene veľkosti a odstráneniu. Výber z panela Vrstvy alebo Alt+klikom na plátno.',
     multipleSelectedFmt: 'Vybraných objektov: {n}',
     multipleSelectedHint: 'šípkami posuniete',
+    groupSelection: 'Zoskupiť výber',
     visualApproxHint: 'Vizuálne zobrazenie je približné; rozmery zodpovedajú tlači ZPL',
     alignCenterH: 'Vycentrovať vodorovne na štítku',
     alignCenterV: 'Vycentrovať zvislo na štítku',

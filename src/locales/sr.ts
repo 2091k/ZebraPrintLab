@@ -57,6 +57,7 @@ const sr = {
     lockHint: 'Спречава померање, промену величине и брисање. Избор преко панела Слојеви или Alt+кликом на платну.',
     multipleSelectedFmt: 'Изабрано објеката: {n}',
     multipleSelectedHint: 'стрелицама померај',
+    groupSelection: 'Grupiši izbor',
     visualApproxHint: 'Визуелни приказ је приближан; димензије одговарају ZPL отиску',
     alignCenterH: 'Хоризонтално центрирање на етикети',
     alignCenterV: 'Вертикално центрирање на етикети',

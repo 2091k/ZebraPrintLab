@@ -57,6 +57,7 @@ const fa = {
     lockHint: 'از جابه‌جایی، تغییر اندازه و حذف جلوگیری می‌کند. انتخاب از پنل لایه‌ها یا با Alt+کلیک روی بوم.',
     multipleSelectedFmt: '{n} مورد انتخاب شده',
     multipleSelectedHint: 'با کلیدهای جهت‌دار جابه‌جا کنید',
+    groupSelection: 'گروه‌بندی انتخاب',
     visualApproxHint: 'نمایش بصری تقریبی است؛ ابعاد با چاپ ZPL مطابقت دارد',
     alignCenterH: 'وسط‌چین افقی روی برچسب',
     alignCenterV: 'وسط‌چین عمودی روی برچسب',

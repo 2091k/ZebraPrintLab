@@ -57,6 +57,7 @@ const zhHant = {
     lockHint: '禁止移動、調整大小與刪除。可從「圖層」面板選取，或在畫布上 Alt+點擊。',
     multipleSelectedFmt: '已選擇 {n} 個物件',
     multipleSelectedHint: '方向鍵移動',
+    groupSelection: '群組所選',
     visualApproxHint: '視覺呈現為近似值；尺寸與 ZPL 列印輸出一致',
     alignCenterH: '於標籤水平置中',
     alignCenterV: '於標籤垂直置中',

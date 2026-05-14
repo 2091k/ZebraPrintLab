@@ -57,6 +57,7 @@ const es = {
     lockHint: 'Impide mover, redimensionar y eliminar. Selecciona desde el panel Capas o con Alt+clic en el lienzo.',
     multipleSelectedFmt: '{n} objetos seleccionados',
     multipleSelectedHint: 'flechas para mover',
+    groupSelection: 'Agrupar selección',
     visualApproxHint: 'Renderizado visual aproximado; las dimensiones coinciden con la impresión ZPL',
     alignCenterH: 'Centrar horizontalmente en la etiqueta',
     alignCenterV: 'Centrar verticalmente en la etiqueta',

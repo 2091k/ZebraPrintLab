@@ -57,6 +57,7 @@ const de = {
     lockHint: 'Blockiert Verschieben, Größenänderung und Löschen. Auswahl per Ebenen-Panel oder Alt+Klick im Canvas.',
     multipleSelectedFmt: '{n} Objekte ausgewählt',
     multipleSelectedHint: 'Pfeiltasten zum Verschieben',
+    groupSelection: 'Auswahl gruppieren',
     visualApproxHint: 'Visuelle Darstellung näherungsweise; Maße entsprechen dem ZPL-Druck',
     alignCenterH: 'Horizontal auf Label zentrieren',
     alignCenterV: 'Vertikal auf Label zentrieren',

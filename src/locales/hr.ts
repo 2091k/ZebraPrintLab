@@ -57,6 +57,7 @@ const hr = {
     lockHint: 'Sprječava pomicanje, promjenu veličine i brisanje. Odabir s ploče Slojevi ili Alt+klikom na platnu.',
     multipleSelectedFmt: 'Odabrano objekata: {n}',
     multipleSelectedHint: 'strelicama pomičeš',
+    groupSelection: 'Grupiraj odabir',
     visualApproxHint: 'Vizualni prikaz je približan; dimenzije odgovaraju ZPL ispisu',
     alignCenterH: 'Centriraj vodoravno na naljepnici',
     alignCenterV: 'Centriraj okomito na naljepnici',

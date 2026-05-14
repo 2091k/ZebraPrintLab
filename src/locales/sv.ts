@@ -57,6 +57,7 @@ const sv = {
     lockHint: 'Hindrar flytt, storleksändring och borttagning. Markera via Lager-panelen eller Alt+klick på arbetsytan.',
     multipleSelectedFmt: '{n} objekt markerade',
     multipleSelectedHint: 'pilar för att flytta',
+    groupSelection: 'Gruppera markering',
     visualApproxHint: 'Visuell återgivning är ungefärlig; måtten matchar ZPL-utskriften',
     alignCenterH: 'Centrera horisontellt på etikett',
     alignCenterV: 'Centrera vertikalt på etikett',

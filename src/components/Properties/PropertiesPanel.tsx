@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import { InformationCircleIcon } from "@heroicons/react/16/solid";
+import { InformationCircleIcon, FolderPlusIcon } from "@heroicons/react/16/solid";
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import type { LabelCanvasHandle } from "../Canvas/LabelCanvas";
 import type { AlignAxis } from "../../lib/alignment";
@@ -35,6 +35,7 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
   const {
     selectedIds,
     updateObject,
+    groupSelection,
     label,
     setLabelConfig,
     canvasSettings,
@@ -47,6 +48,12 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
     canvasRef.current?.alignSelectionToLabel(axis);
 
   if (selectedIds.length > 1) {
+    // groupSelection only acts on top-level, unlocked items — gate the
+    // button on whether the current selection has any of those, so we
+    // don't show a control that would no-op on click.
+    const canGroup = selectedIds.some((id) =>
+      objects.some((o) => o.id === id && !o.locked),
+    );
     return (
       <div className="flex flex-col">
         <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
@@ -60,6 +67,16 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
             {t.properties.x} / {t.properties.y}: {t.properties.multipleSelectedHint}
           </p>
           <AlignButtons onAlign={handleAlign} />
+          {canGroup && (
+            <button
+              type="button"
+              onClick={groupSelection}
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono bg-surface-2 text-text hover:bg-surface border border-border transition-colors"
+            >
+              <FolderPlusIcon className="w-3.5 h-3.5" />
+              {t.properties.groupSelection}
+            </button>
+          )}
         </div>
       </div>
     );

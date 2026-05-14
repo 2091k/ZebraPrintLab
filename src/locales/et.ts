@@ -57,6 +57,7 @@ const et = {
     lockHint: 'Takistab liigutamist, suuruse muutmist ja kustutamist. Vali kihtide paanilt või Alt+klõpsuga lõuendil.',
     multipleSelectedFmt: '{n} objekti valitud',
     multipleSelectedHint: 'nooltega liigutad',
+    groupSelection: 'Grupeeri valik',
     visualApproxHint: 'Visuaalne kuva on ligikaudne; mõõtmed vastavad ZPL-väljatrükile',
     alignCenterH: 'Keskjoonda sildil rõhtsalt',
     alignCenterV: 'Keskjoonda sildil püstiselt',

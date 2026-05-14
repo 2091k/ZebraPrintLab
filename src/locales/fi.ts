@@ -57,6 +57,7 @@ const fi = {
     lockHint: 'Estää siirtämisen, koon muuttamisen ja poistamisen. Valitse Tasot-paneelista tai Alt+napsautuksella kankaalla.',
     multipleSelectedFmt: '{n} objektia valittu',
     multipleSelectedHint: 'nuolinäppäimillä siirrät',
+    groupSelection: 'Ryhmittele valinta',
     visualApproxHint: 'Visuaalinen esitys on likimääräinen; mitat vastaavat ZPL-tulostetta',
     alignCenterH: 'Keskitä vaakasuunnassa etikettiin',
     alignCenterV: 'Keskitä pystysuunnassa etikettiin',

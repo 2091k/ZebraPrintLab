@@ -57,6 +57,7 @@ const fr = {
     lockHint: 'Empêche le déplacement, le redimensionnement et la suppression. Sélection via le panneau Calques ou Alt+clic sur le canevas.',
     multipleSelectedFmt: '{n} objets sélectionnés',
     multipleSelectedHint: 'flèches pour déplacer',
+    groupSelection: 'Grouper la sélection',
     visualApproxHint: 'Rendu visuel approximatif ; les dimensions correspondent à l\'impression ZPL',
     alignCenterH: 'Centrer horizontalement sur l\'étiquette',
     alignCenterV: 'Centrer verticalement sur l\'étiquette',

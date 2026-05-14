@@ -57,6 +57,7 @@ const en = {
     lockHint: 'Prevents moving, resizing and deleting. Select via the Layers panel or Alt+click on the canvas.',
     multipleSelectedFmt: '{n} objects selected',
     multipleSelectedHint: 'use arrow keys to move',
+    groupSelection: 'Group selection',
     visualApproxHint: 'Visual rendering approximate; dimensions match the ZPL print',
     alignCenterH: 'Center horizontally on label',
     alignCenterV: 'Center vertically on label',

@@ -57,6 +57,7 @@ const zhHans = {
     lockHint: '禁止移动、缩放与删除。可在“图层”面板中选择，或在画布上 Alt+点击。',
     multipleSelectedFmt: '已选择 {n} 个对象',
     multipleSelectedHint: '方向键移动',
+    groupSelection: '组合所选',
     visualApproxHint: '视觉渲染为近似值；尺寸与 ZPL 打印输出一致',
     alignCenterH: '在标签上水平居中',
     alignCenterV: '在标签上垂直居中',

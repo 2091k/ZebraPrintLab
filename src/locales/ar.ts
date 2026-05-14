@@ -57,6 +57,7 @@ const ar = {
     lockHint: 'يمنع التحريك وتغيير الحجم والحذف. التحديد يتم من قائمة الطبقات أو بـ Alt+النقر على اللوحة.',
     multipleSelectedFmt: '{n} عناصر مختارة',
     multipleSelectedHint: 'استخدم أسهم الاتجاه للتحريك',
+    groupSelection: 'تجميع التحديد',
     visualApproxHint: 'العرض المرئي تقريبي؛ الأبعاد تطابق طباعة ZPL',
     alignCenterH: 'توسيط أفقياً على الملصق',
     alignCenterV: 'توسيط رأسياً على الملصق',

@@ -57,6 +57,7 @@ const no = {
     lockHint: 'Hindrer flytting, størrelsesendring og sletting. Velg fra Lag-panelet eller med Alt+klikk på lerretet.',
     multipleSelectedFmt: '{n} objekter valgt',
     multipleSelectedHint: 'piltaster flytter',
+    groupSelection: 'Grupper utvalg',
     visualApproxHint: 'Visuell gjengivelse er omtrentlig; dimensjonene samsvarer med ZPL-utskriften',
     alignCenterH: 'Sentrer horisontalt på etiketten',
     alignCenterV: 'Sentrer vertikalt på etiketten',

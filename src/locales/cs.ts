@@ -57,6 +57,7 @@ const cs = {
     lockHint: 'Brání přesouvání, změně velikosti a smazání. Výběr přes panel vrstev nebo Alt+klikem na plátně.',
     multipleSelectedFmt: 'Vybráno objektů: {n}',
     multipleSelectedHint: 'šipkami posunete',
+    groupSelection: 'Seskupit výběr',
     visualApproxHint: 'Vizuální zobrazení je přibližné; rozměry odpovídají tisku ZPL',
     alignCenterH: 'Vystředit vodorovně na štítku',
     alignCenterV: 'Vystředit svisle na štítku',

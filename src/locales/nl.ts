@@ -57,6 +57,7 @@ const nl = {
     lockHint: 'Voorkomt verplaatsen, vergroten/verkleinen en verwijderen. Selecteer via het Lagen-paneel of Alt+klik op het canvas.',
     multipleSelectedFmt: '{n} objecten geselecteerd',
     multipleSelectedHint: 'pijltoetsen om te verplaatsen',
+    groupSelection: 'Selectie groeperen',
     visualApproxHint: 'Visuele weergave bij benadering; afmetingen komen overeen met de ZPL-afdruk',
     alignCenterH: 'Horizontaal op label centreren',
     alignCenterV: 'Verticaal op label centreren',

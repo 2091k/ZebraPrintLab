@@ -57,6 +57,7 @@ const ro = {
     lockHint: 'Împiedică mutarea, redimensionarea și ștergerea. Selectează din panoul Straturi sau cu Alt+clic pe pânză.',
     multipleSelectedFmt: '{n} obiecte selectate',
     multipleSelectedHint: 'săgeți pentru mutare',
+    groupSelection: 'Grupează selecția',
     visualApproxHint: 'Randarea vizuală este aproximativă; dimensiunile corespund tipăririi ZPL',
     alignCenterH: 'Centrează orizontal pe etichetă',
     alignCenterV: 'Centrează vertical pe etichetă',

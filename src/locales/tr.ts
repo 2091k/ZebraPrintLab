@@ -57,6 +57,7 @@ const tr = {
     lockHint: 'Taşıma, yeniden boyutlandırma ve silmeyi engeller. Katmanlar panelinden veya tuvalde Alt+tıklama ile seçin.',
     multipleSelectedFmt: '{n} nesne seçildi',
     multipleSelectedHint: 'oklarla taşı',
+    groupSelection: 'Seçimi grupla',
     visualApproxHint: 'Görsel render yaklaşıktır; boyutlar ZPL çıktısıyla eşleşir',
     alignCenterH: 'Etikette yatay ortala',
     alignCenterV: 'Etikette dikey ortala',

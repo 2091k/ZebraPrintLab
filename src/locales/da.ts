@@ -57,6 +57,7 @@ const da = {
     lockHint: 'Forhindrer flytning, ændring af størrelse og sletning. Markering via Lag-panelet eller Alt+klik på lærredet.',
     multipleSelectedFmt: '{n} objekter valgt',
     multipleSelectedHint: 'piletaster flytter',
+    groupSelection: 'Gruppér valg',
     visualApproxHint: 'Visuel gengivelse er omtrentlig; dimensionerne svarer til ZPL-udskriften',
     alignCenterH: 'Centrer vandret på label',
     alignCenterV: 'Centrer lodret på label',

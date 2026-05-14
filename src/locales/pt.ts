@@ -57,6 +57,7 @@ const pt = {
     lockHint: 'Impede mover, redimensionar e excluir. Selecione no painel Camadas ou com Alt+clique no canvas.',
     multipleSelectedFmt: '{n} objetos selecionados',
     multipleSelectedHint: 'setas para mover',
+    groupSelection: 'Agrupar seleção',
     visualApproxHint: 'Renderização visual aproximada; as dimensões correspondem à impressão ZPL',
     alignCenterH: 'Centralizar horizontalmente no rótulo',
     alignCenterV: 'Centralizar verticalmente no rótulo',

@@ -57,6 +57,7 @@ const lt = {
     lockHint: 'Neleidžia perkelti, keisti dydžio ir ištrinti. Pasirinkite iš sluoksnių skydelio arba Alt+spustelėjimu drobėje.',
     multipleSelectedFmt: 'Pasirinkta objektų: {n}',
     multipleSelectedHint: 'rodyklėmis perkeli',
+    groupSelection: 'Grupuoti pasirinkimą',
     visualApproxHint: 'Vaizdavimas apytikslis; matmenys atitinka ZPL spaudinį',
     alignCenterH: 'Centruoti horizontaliai etiketėje',
     alignCenterV: 'Centruoti vertikaliai etiketėje',

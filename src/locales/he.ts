@@ -57,6 +57,7 @@ const he = {
     lockHint: 'מונע הזזה, שינוי גודל ומחיקה. בחירה דרך לוח השכבות או באמצעות Alt+לחיצה על הקנבס.',
     multipleSelectedFmt: '{n} פריטים נבחרו',
     multipleSelectedHint: 'מקשי החצים מזיזים',
+    groupSelection: 'קבץ בחירה',
     visualApproxHint: 'התצוגה החזותית מקורבת; הממדים תואמים את הדפסת ה-ZPL',
     alignCenterH: 'מרכז אופקית במדבקה',
     alignCenterV: 'מרכז אנכית במדבקה',

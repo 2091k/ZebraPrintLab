@@ -57,6 +57,7 @@ const ja = {
     lockHint: '移動・サイズ変更・削除を防ぎます。レイヤーパネルから、またはキャンバス上で Alt+クリックして選択します。',
     multipleSelectedFmt: '{n} 個のオブジェクトが選択されました',
     multipleSelectedHint: '矢印キーで移動',
+    groupSelection: '選択をグループ化',
     visualApproxHint: '視覚的表示は概略です。寸法は ZPL 印刷と一致します',
     alignCenterH: 'ラベル上で水平方向に中央揃え',
     alignCenterV: 'ラベル上で垂直方向に中央揃え',

@@ -57,6 +57,7 @@ const ko = {
     lockHint: '이동, 크기 조정, 삭제를 차단합니다. 레이어 패널 또는 캔버스에서 Alt+클릭으로 선택하세요.',
     multipleSelectedFmt: '{n}개 항목 선택됨',
     multipleSelectedHint: '화살표 키로 이동',
+    groupSelection: '선택 항목 그룹화',
     visualApproxHint: '시각적 표시는 근사치이며, 치수는 ZPL 인쇄와 일치합니다',
     alignCenterH: '라벨에서 가로 가운데 정렬',
     alignCenterV: '라벨에서 세로 가운데 정렬',

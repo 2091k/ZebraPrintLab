@@ -57,6 +57,7 @@ const sl = {
     lockHint: 'Onemogoča premikanje, spreminjanje velikosti in brisanje. Izberite s plošče Sloji ali z Alt+klikom na platnu.',
     multipleSelectedFmt: 'Izbranih objektov: {n}',
     multipleSelectedHint: 's puščicami premikaš',
+    groupSelection: 'Združi izbor',
     visualApproxHint: 'Vizualni prikaz je približen; mere se ujemajo s tiskom ZPL',
     alignCenterH: 'Vodoravno sredinsko poravnaj na etiketi',
     alignCenterV: 'Navpično sredinsko poravnaj na etiketi',

@@ -57,6 +57,7 @@ const lv = {
     lockHint: 'Neļauj pārvietot, mainīt izmēru un dzēst. Atlasiet no slāņu paneļa vai ar Alt+klikšķi audeklā.',
     multipleSelectedFmt: 'Atlasīti {n} objekti',
     multipleSelectedHint: 'ar bultiņām pārvietot',
+    groupSelection: 'Grupēt atlasi',
     visualApproxHint: 'Vizuālais attēlojums ir aptuvens; izmēri atbilst ZPL izdrukai',
     alignCenterH: 'Centrēt horizontāli uz etiķetes',
     alignCenterV: 'Centrēt vertikāli uz etiķetes',

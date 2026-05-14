@@ -57,6 +57,7 @@ const hu = {
     lockHint: 'Megakadályozza a mozgatást, átméretezést és törlést. Kijelölés a Rétegek panelről vagy Alt+kattintással a vásznon.',
     multipleSelectedFmt: '{n} objektum kijelölve',
     multipleSelectedHint: 'nyilakkal mozgasd',
+    groupSelection: 'Kijelölés csoportosítása',
     visualApproxHint: 'A vizuális megjelenítés közelítő; a méretek megegyeznek a ZPL nyomtatással',
     alignCenterH: 'Vízszintesen középre a címkén',
     alignCenterV: 'Függőlegesen középre a címkén',
