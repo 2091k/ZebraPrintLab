@@ -150,6 +150,13 @@ export function useLayerDnd({
   const [dragCursorX, setDragCursorX] = useState<number | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  // Cached panel rect captured once at drag start. Reading
+  // getBoundingClientRect inside the 60Hz pointermove handler forces a
+  // synchronous layout pass on every move; the cache replaces that
+  // with a single read per drag at the cost of going stale on
+  // mid-drag scroll/resize (acceptable — users don't typically
+  // scroll while dragging a layer row).
+  const panelRectRef = useRef<{ left: number } | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
@@ -157,7 +164,7 @@ export function useLayerDnd({
   useEffect(() => {
     if (!dragActive) return;
     const onMove = (e: PointerEvent) => {
-      const rect = panelRef.current?.getBoundingClientRect();
+      const rect = panelRectRef.current;
       if (rect) setDragCursorX(e.clientX - rect.left);
     };
     document.addEventListener('pointermove', onMove);
@@ -168,9 +175,14 @@ export function useLayerDnd({
     setOverId(null);
     setDragCursorX(null);
     setDragActive(false);
+    panelRectRef.current = null;
   };
 
-  const onDragStart = () => setDragActive(true);
+  const onDragStart = () => {
+    const rect = panelRef.current?.getBoundingClientRect();
+    if (rect) panelRectRef.current = { left: rect.left };
+    setDragActive(true);
+  };
   const onDragOver = ({ over }: DragOverEvent) =>
     setOverId((over?.id as string) ?? null);
   const onDragCancel = () => clearDragState();

@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import type Konva from "konva";
 import { getCurrentObjects } from "../../../store/labelStore";
-import { getAllLeaves, selectionTargetId, findObjectById, isGroup } from "../../../types/Group";
+import type { LabelObject } from "../../../registry";
+import { isGroup } from "../../../types/Group";
 import { getIdsIntersectingRect, type LassoRect } from "../lassoGeometry";
 
 interface Options {
@@ -66,17 +67,33 @@ export function useCanvasLasso({ containerRef, stageRef, spaceDown, selectObject
     // Leaves are the only Konva-rendered things; intersect on those, then
     // map each captured leaf to its outermost group so a lasso over a
     // grouped child surfaces the group as the selection unit.
+    //
+    // Single-pass walk: collect unlocked leaf ids and the topmost group
+    // each leaf belongs to (or the leaf itself if at top level) so the
+    // hit→selection promote below is a Map lookup instead of an O(tree)
+    // ancestor walk per hit. Lock cascades from the top-level container.
     const objects = getCurrentObjects();
-    const leafIds = getAllLeaves(objects).flatMap((o) => {
-      if (o.locked) return [];
-      const top = findObjectById(objects, selectionTargetId(objects, o.id));
-      // A top-level group's lock cascades to its descendants for the
-      // purposes of lasso selection.
-      if (top && isGroup(top) && top.locked) return [];
-      return [o.id];
-    });
+    const leafIds: string[] = [];
+    const selectionTarget = new Map<string, string>();
+    const walk = (
+      nodes: LabelObject[],
+      inheritedLocked: boolean,
+      topAncestorId: string | null,
+    ) => {
+      for (const n of nodes) {
+        const locked = inheritedLocked || !!n.locked;
+        const ancestor = topAncestorId ?? n.id;
+        if (isGroup(n)) {
+          walk(n.children, locked, ancestor);
+        } else if (!locked) {
+          leafIds.push(n.id);
+          selectionTarget.set(n.id, ancestor);
+        }
+      }
+    };
+    walk(objects, false, null);
     const hits = getIdsIntersectingRect(stageRef.current, leafIds, rect);
-    const promoted = new Set(hits.map((id) => selectionTargetId(objects, id)));
+    const promoted = new Set(hits.map((id) => selectionTarget.get(id) ?? id));
     selectObjects([...promoted]);
   };
 

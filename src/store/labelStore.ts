@@ -316,17 +316,22 @@ export const useLabelStore = create<LabelState>()(
 
       updateObjects: (updates) =>
         set((state) => {
-          // Apply updates one at a time through mapObjectById so leaves
-          // nested inside groups receive the same treatment as top-level
-          // objects. The list of updates is small in practice (typically
-          // the active selection) so the O(updates × tree) cost is fine.
-          return updateCurrentObjects(state, (objs) =>
-            updates.reduce(
-              (acc, { id, changes }) =>
-                mapObjectById(acc, id, (obj) => applyObjectChanges(obj, changes)),
-              objs,
-            ),
-          );
+          if (updates.length === 0) return {};
+          // Single tree walk that applies every queued change in one
+          // pass. The previous reduce-over-mapObjectById approach was
+          // O(updates × tree) and fired per frame during multi-object
+          // drag; this is O(tree).
+          const updateMap = new Map(updates.map((u) => [u.id, u.changes]));
+          const applyUpdates = (nodes: LabelObject[]): LabelObject[] =>
+            nodes.map((n) => {
+              const changes = updateMap.get(n.id);
+              const updated = changes ? applyObjectChanges(n, changes) : n;
+              if (isGroup(updated)) {
+                return { ...updated, children: applyUpdates(updated.children) };
+              }
+              return updated;
+            });
+          return updateCurrentObjects(state, (objs) => applyUpdates(objs));
         }),
 
       removeObject: (id) =>
