@@ -1,4 +1,5 @@
 import type { ObjectTypeDefinition, LabelObjectBase } from '../types/ObjectType';
+import type { GroupObject } from '../types/Group';
 import { text } from './text.tsx';
 import type { TextProps } from './text.tsx';
 import { code128 } from './code128.tsx';
@@ -62,7 +63,10 @@ import type { MicroPdf417Props } from './micropdf417.tsx';
 import { codablock } from './codablock.tsx';
 import type { CodablockProps } from './codablock.tsx';
 
-export type LabelObject =
+/** Leaf objects: every registry-backed type. These render to ZPL and
+ *  have a PropertiesPanel. Groups (see `LabelObject`) are structural
+ *  only and intentionally outside this union. */
+export type LeafObject =
   | (LabelObjectBase & { type: 'text'; props: TextProps })
   | (LabelObjectBase & { type: 'code128'; props: Code128Props })
   | (LabelObjectBase & { type: 'code39'; props: Code39Props })
@@ -94,6 +98,11 @@ export type LabelObject =
   | (LabelObjectBase & { type: 'aztec'; props: AztecProps })
   | (LabelObjectBase & { type: 'micropdf417'; props: MicroPdf417Props })
   | (LabelObjectBase & { type: 'codablock'; props: CodablockProps });
+
+/** Any node in the object tree: either a leaf (registry-backed) or a
+ *  group container. Most code paths should operate on this; use
+ *  `isGroup` from `types/Group` to narrow. */
+export type LabelObject = LeafObject | GroupObject;
 
 export const BARCODE_1D_TYPES = new Set([
   'code128', 'code39', 'ean13', 'ean8', 'upca', 'upce', 'interleaved2of5', 'code93',
