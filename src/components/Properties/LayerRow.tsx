@@ -142,20 +142,18 @@ export function LayerRow({
         ${isContainerEnd ? 'mb-1' : ''}
       `}
     >
-      {/* Indent guide lines: one fixed-width spacer per ancestor level,
-          each carrying a left border so consecutive rows at the same
-          depth visually form a continuous vertical guide from the parent
-          group's row down through its children. The outer pl-2 is gone
-          because the spacers carry that offset themselves. */}
-      {depth > 0 && (
-        <div className="flex self-stretch shrink-0" aria-hidden>
-          <span className="w-2" />
-          {Array.from({ length: depth }, (_, i) => (
-            <span key={i} className="w-4 border-l border-border/60" />
-          ))}
-        </div>
-      )}
-      {depth === 0 && <span className="w-2 shrink-0" aria-hidden />}
+      {/* Indent column: a leading 8px gutter plus one fixed-width spacer
+          per ancestor level, each carrying a left border so consecutive
+          rows at the same depth visually form a continuous vertical
+          guide from the parent group's row down through its children.
+          Always rendered (even at depth 0) so the wrapper handles the
+          row's base left padding uniformly. */}
+      <div className="flex self-stretch shrink-0" aria-hidden>
+        <span className="w-2" />
+        {Array.from({ length: depth }, (_, i) => (
+          <span key={i} className="w-4 border-l border-border/60" />
+        ))}
+      </div>
       <DragHandleIcon
         className={`w-2 h-3.5 shrink-0 text-muted transition-opacity ${isLocked ? 'opacity-0' : 'opacity-0 group-hover:opacity-60'}`}
       />

@@ -45,6 +45,15 @@ function applyObjectChanges(obj: LabelObject, changes: ObjectChanges): LabelObje
   } as LabelObject;
 }
 
+/** Immutable insert-at-index that clamps `idx` into the array's bounds.
+ *  Used by reparent flows to splice a node into a children list or the
+ *  top-level list without crashing on out-of-range indices coming from
+ *  ephemeral drag state. */
+function insertAt<T>(arr: readonly T[], idx: number, item: T): T[] {
+  const clamped = Math.max(0, Math.min(idx, arr.length));
+  return [...arr.slice(0, clamped), item, ...arr.slice(clamped)];
+}
+
 function detectLocale(): LocaleCode {
   const lang = navigator.language.slice(0, 2).toLowerCase();
   return (lang in locales ? lang : 'en') as LocaleCode;
@@ -448,22 +457,13 @@ export const useLabelStore = create<LabelState>()(
           if (!removed) return {};
           const node = removed;
           if (target.parentId === null) {
-            const clamped = Math.max(0, Math.min(target.index, rest.length));
-            const next = [...rest.slice(0, clamped), node, ...rest.slice(clamped)];
-            return updateCurrentObjects(state, () => next);
+            return updateCurrentObjects(state, () => insertAt(rest, target.index, node));
           }
-          const next = mapObjectById(rest, target.parentId, (p) => {
-            if (!isGroup(p)) return p;
-            const clamped = Math.max(0, Math.min(target.index, p.children.length));
-            return {
-              ...p,
-              children: [
-                ...p.children.slice(0, clamped),
-                node,
-                ...p.children.slice(clamped),
-              ],
-            };
-          });
+          const next = mapObjectById(rest, target.parentId, (p) =>
+            isGroup(p)
+              ? { ...p, children: insertAt(p.children, target.index, node) }
+              : p,
+          );
           return updateCurrentObjects(state, () => next);
         }),
 
