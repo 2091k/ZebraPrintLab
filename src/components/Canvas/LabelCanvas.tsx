@@ -13,6 +13,7 @@ import type { PaletteDragData } from "../../dnd/types";
 import { Stage, Layer, Group, Rect, Transformer } from "react-konva";
 import type Konva from "konva";
 import { useLabelStore, useCurrentObjects, currentObjects, getCurrentObjects } from "../../store/labelStore";
+import { isGroup } from "../../types/Group";
 import { pxToDots, SCREEN_PX_PER_MM } from "../../lib/coordinates";
 import { SNAP_OPTIONS } from "../../lib/units";
 import type { Unit } from "../../lib/units";
@@ -121,6 +122,22 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     selectObjects,
   } = useLabelStore();
   const objects = useCurrentObjects();
+
+  // Render path operates on visible leaves only: groups emit no node of
+  // their own (v1 has no group transform), and a group with visible=false
+  // hides its whole subtree.
+  const visibleLeaves = useMemo(() => {
+    const out: LabelObject[] = [];
+    const walk = (nodes: LabelObject[]) => {
+      for (const n of nodes) {
+        if (n.visible === false) continue;
+        if (isGroup(n)) walk(n.children);
+        else out.push(n);
+      }
+    };
+    walk(objects);
+    return out;
+  }, [objects]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -771,7 +788,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
                 />
               )}
 
-              {objects.map((obj) => obj.visible === false ? null : (
+              {visibleLeaves.map((obj) => (
                 <KonvaObject
                   key={obj.id}
                   obj={obj}

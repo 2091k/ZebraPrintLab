@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { generateZPL, generateMultiPageZPL } from './zplGenerator';
 import { parseZPL } from './zplParser';
 import type { LabelConfig } from '../types/ObjectType';
+import type { LabelObject } from '../registry';
+import type { GroupObject } from '../types/Group';
 import { defined, props } from '../test/helpers';
 
 const BASE_LABEL: LabelConfig = {
@@ -270,5 +272,45 @@ describe('generateZPL — parse/generate roundtrip', () => {
     const { labelConfig } = parseZPL(regenerated, BASE_LABEL.dpmm);
     expect(labelConfig.defaultFontId).toBeUndefined();
     expect(labelConfig.defaultFontHeight).toBe(25);
+  });
+});
+
+// ── groups ────────────────────────────────────────────────────────────────────
+
+function textLeaf(id: string, content: string): LabelObject {
+  return {
+    id,
+    type: 'text',
+    x: 0,
+    y: 0,
+    rotation: 0,
+    props: { content, fontHeight: 20, fontWidth: 0, font: '0', interpretation: false },
+  } as LabelObject;
+}
+
+function group(id: string, children: LabelObject[], extras: Partial<GroupObject> = {}): GroupObject {
+  return { id, type: 'group', x: 0, y: 0, rotation: 0, children, ...extras };
+}
+
+describe('generateZPL — groups', () => {
+  it('emits a grouped leaf identically to an ungrouped one', () => {
+    const leaf = textLeaf('a', 'Hi');
+    const flat = generateZPL(BASE_LABEL, [leaf]);
+    const wrapped = generateZPL(BASE_LABEL, [group('g', [leaf])]);
+    expect(wrapped).toBe(flat);
+  });
+
+  it('skips the whole subtree when the group is excluded from export', () => {
+    const leaf = textLeaf('a', 'Hi');
+    const zpl = generateZPL(BASE_LABEL, [group('g', [leaf], { includeInExport: false })]);
+    expect(zpl).not.toContain('Hi');
+  });
+
+  it('still respects per-leaf includeInExport inside an included group', () => {
+    const visible = textLeaf('a', 'Visible');
+    const hidden = { ...textLeaf('b', 'Hidden'), includeInExport: false } as LabelObject;
+    const zpl = generateZPL(BASE_LABEL, [group('g', [visible, hidden])]);
+    expect(zpl).toContain('Visible');
+    expect(zpl).not.toContain('Hidden');
   });
 });
