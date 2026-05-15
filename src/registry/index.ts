@@ -62,41 +62,47 @@ import type { MicroPdf417Props } from './micropdf417.tsx';
 import { codablock } from './codablock.tsx';
 import type { CodablockProps } from './codablock.tsx';
 
+/** Single-branch shape for one registry type: the common base plus a
+ *  literal `type` discriminator and that type's props. Used to compose
+ *  `LeafObject` so adding a new registry entry is a one-line union
+ *  extension instead of a 60-character repetition. */
+type Leaf<T extends string, P extends object> = LabelObjectBase & { type: T; props: P };
+
 /** Leaf objects: every registry-backed type. These render to ZPL and
  *  have a PropertiesPanel. The tree-level union `LabelObject` (which
  *  also covers `GroupObject`) lives in `types/Group.ts`. */
 export type LeafObject =
-  | (LabelObjectBase & { type: 'text'; props: TextProps })
-  | (LabelObjectBase & { type: 'code128'; props: Code128Props })
-  | (LabelObjectBase & { type: 'code39'; props: Code39Props })
-  | (LabelObjectBase & { type: 'ean13'; props: Ean13Props })
-  | (LabelObjectBase & { type: 'qrcode'; props: QrCodeProps })
-  | (LabelObjectBase & { type: 'datamatrix'; props: DataMatrixProps })
-  | (LabelObjectBase & { type: 'box'; props: BoxProps })
-  | (LabelObjectBase & { type: 'ellipse'; props: EllipseProps })
-  | (LabelObjectBase & { type: 'circle'; props: CircleProps })
-  | (LabelObjectBase & { type: 'line'; props: LineProps })
-  | (LabelObjectBase & { type: 'serial'; props: SerialProps })
-  | (LabelObjectBase & { type: 'image'; props: ImageProps })
-  | (LabelObjectBase & { type: 'upca'; props: UpcAProps })
-  | (LabelObjectBase & { type: 'ean8'; props: Ean8Props })
-  | (LabelObjectBase & { type: 'upce'; props: UpcEProps })
-  | (LabelObjectBase & { type: 'interleaved2of5'; props: Interleaved2of5Props })
-  | (LabelObjectBase & { type: 'code93'; props: Code93Props })
-  | (LabelObjectBase & { type: 'pdf417'; props: Pdf417Props })
-  | (LabelObjectBase & { type: 'code11'; props: Code11Props })
-  | (LabelObjectBase & { type: 'industrial2of5'; props: Industrial2of5Props })
-  | (LabelObjectBase & { type: 'standard2of5'; props: Standard2of5Props })
-  | (LabelObjectBase & { type: 'codabar'; props: CodabarProps })
-  | (LabelObjectBase & { type: 'logmars'; props: LogmarsProps })
-  | (LabelObjectBase & { type: 'msi'; props: MsiProps })
-  | (LabelObjectBase & { type: 'plessey'; props: PlesseyProps })
-  | (LabelObjectBase & { type: 'gs1databar'; props: Gs1DatabarProps })
-  | (LabelObjectBase & { type: 'planet'; props: PlanetProps })
-  | (LabelObjectBase & { type: 'postal'; props: PostalProps })
-  | (LabelObjectBase & { type: 'aztec'; props: AztecProps })
-  | (LabelObjectBase & { type: 'micropdf417'; props: MicroPdf417Props })
-  | (LabelObjectBase & { type: 'codablock'; props: CodablockProps });
+  | Leaf<'text', TextProps>
+  | Leaf<'code128', Code128Props>
+  | Leaf<'code39', Code39Props>
+  | Leaf<'ean13', Ean13Props>
+  | Leaf<'qrcode', QrCodeProps>
+  | Leaf<'datamatrix', DataMatrixProps>
+  | Leaf<'box', BoxProps>
+  | Leaf<'ellipse', EllipseProps>
+  | Leaf<'circle', CircleProps>
+  | Leaf<'line', LineProps>
+  | Leaf<'serial', SerialProps>
+  | Leaf<'image', ImageProps>
+  | Leaf<'upca', UpcAProps>
+  | Leaf<'ean8', Ean8Props>
+  | Leaf<'upce', UpcEProps>
+  | Leaf<'interleaved2of5', Interleaved2of5Props>
+  | Leaf<'code93', Code93Props>
+  | Leaf<'pdf417', Pdf417Props>
+  | Leaf<'code11', Code11Props>
+  | Leaf<'industrial2of5', Industrial2of5Props>
+  | Leaf<'standard2of5', Standard2of5Props>
+  | Leaf<'codabar', CodabarProps>
+  | Leaf<'logmars', LogmarsProps>
+  | Leaf<'msi', MsiProps>
+  | Leaf<'plessey', PlesseyProps>
+  | Leaf<'gs1databar', Gs1DatabarProps>
+  | Leaf<'planet', PlanetProps>
+  | Leaf<'postal', PostalProps>
+  | Leaf<'aztec', AztecProps>
+  | Leaf<'micropdf417', MicroPdf417Props>
+  | Leaf<'codablock', CodablockProps>;
 
 export const BARCODE_1D_TYPES = new Set([
   'code128', 'code39', 'ean13', 'ean8', 'upca', 'upce', 'interleaved2of5', 'code93',
