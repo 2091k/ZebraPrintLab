@@ -2,6 +2,7 @@ import type { ObjectTypeDefinition } from "../types/ObjectType";
 import { useT } from "../lib/useT";
 import { inputCls, labelCls } from "../components/Properties/styles";
 import { textFieldPos, fdField } from "./zplHelpers";
+import { effectiveScale } from "./transformHelpers";
 import { filterContent, type ContentSpec } from "./contentSpec";
 import { RotationSelect } from "../components/Properties/RotationSelect";
 import { NumberInput } from "../components/Properties/NumberInput";
@@ -31,15 +32,13 @@ export const serial: ObjectTypeDefinition<SerialProps> = {
   },
   defaultSize: { width: 100, height: 30 },
   // Rectangle resize matching text.tsx — see notes there.
-  commitTransform: (obj, { sx, sy, snap }) => {
+  commitTransform: (obj, ctx) => {
     const oldH = obj.props.fontHeight;
     const oldW = obj.props.fontWidth > 0 ? obj.props.fontWidth : oldH;
-    const isRotated = obj.props.rotation === "R" || obj.props.rotation === "B";
-    const effectiveSy = isRotated ? sx : sy;
-    const effectiveSx = isRotated ? sy : sx;
+    const { esx, esy } = effectiveScale(obj.props.rotation, ctx);
     return {
-      fontHeight: Math.max(1, snap(Math.round(oldH * effectiveSy))),
-      fontWidth: Math.max(1, snap(Math.round(oldW * effectiveSx))),
+      fontHeight: Math.max(1, ctx.snap(Math.round(oldH * esy))),
+      fontWidth: Math.max(1, ctx.snap(Math.round(oldW * esx))),
     };
   },
 

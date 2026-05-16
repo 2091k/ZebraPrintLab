@@ -1,10 +1,6 @@
 import type { LabelConfig } from "../types/ObjectType";
-import {
-  zplAnchorToModel,
-  ZPL_FONT_HEIGHT_TO_CSS_RATIO,
-} from "../components/Canvas/textPositionTransforms";
-import { measureInkWidthPx } from "../components/Canvas/measureTextDots";
-import { getFontFamily } from "./fontCache";
+import { zplAnchorToModel } from "../components/Canvas/textPositionTransforms";
+import { computeTextRenderMetrics } from "../components/Canvas/textRenderMetrics";
 import type { LabelObject } from "../types/Group";
 import type { TextProps } from "../registry/text";
 import type { Code128Props } from "../registry/code128";
@@ -380,21 +376,17 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
 
     switch (fieldType) {
       case "text": {
-        const fontFamily = pendingPrinterFontName
-          ? (getFontFamily(pendingPrinterFontName) ??
-            "'PrintLab ZPL', sans-serif")
-          : "'PrintLab ZPL', sans-serif";
-        const fontScaleX = textW > 0 ? textW / textH : 1;
-        const inkWidthDots =
-          measureInkWidthPx(
-            snPending ? `#${decoded}` : decoded,
-            textH / ZPL_FONT_HEIGHT_TO_CSS_RATIO,
-            fontFamily,
-          ) * fontScaleX;
-
         // ZPL anchors ^FO at cap-top and ^FT at baseline; our internal
         // model stores the Konva render position (EM-top-left) so editor
-        // interactions stay shift-free. Convert here at import.
+        // interactions stay shift-free. The FO/I and FO/B shifts also
+        // need the rendered ink width — measure it the same way the
+        // renderer does so the round-trip stays exact.
+        const { inkWidthDots } = computeTextRenderMetrics({
+          content: snPending ? `#${decoded}` : decoded,
+          fontHeight: textH,
+          fontWidth: textW,
+          printerFontName: pendingPrinterFontName,
+        });
         const modelPos = zplAnchorToModel(
           x,
           y,

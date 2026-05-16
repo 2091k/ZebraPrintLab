@@ -3,6 +3,7 @@ import type { ObjectTypeDefinition } from "../types/ObjectType";
 import { useT } from "../lib/useT";
 import { inputCls, labelCls } from "../components/Properties/styles";
 import { textFieldPos, fdField } from "./zplHelpers";
+import { effectiveScale } from "./transformHelpers";
 import { getFont, getAllFonts, loadFontFile } from "../lib/fontCache";
 import { useFontCacheVersion } from "../hooks/useFontCacheVersion";
 import { RotationSelect } from "../components/Properties/RotationSelect";
@@ -38,16 +39,16 @@ export const text: ObjectTypeDefinition<TextProps> = {
   // fontWidth from sx independently. fontWidth=0 in storage is the
   // Zebra default meaning "match height"; in that case the effective
   // pre-resize width equals fontHeight, so we scale that derived value
-  // by sx and persist the result.
-  commitTransform: (obj, { sx, sy, snap }) => {
+  // by sx and persist the result. `effectiveScale` flips sx/sy for R/B
+  // rotations so the user's screen-vertical drag stays attached to
+  // fontHeight regardless of how Konva orients the glyphs.
+  commitTransform: (obj, ctx) => {
     const oldH = obj.props.fontHeight;
     const oldW = obj.props.fontWidth > 0 ? obj.props.fontWidth : oldH;
-    const isRotated = obj.props.rotation === "R" || obj.props.rotation === "B";
-    const effectiveSy = isRotated ? sx : sy;
-    const effectiveSx = isRotated ? sy : sx;
+    const { esx, esy } = effectiveScale(obj.props.rotation, ctx);
     return {
-      fontHeight: Math.max(1, snap(Math.round(oldH * effectiveSy))),
-      fontWidth: Math.max(1, snap(Math.round(oldW * effectiveSx))),
+      fontHeight: Math.max(1, ctx.snap(Math.round(oldH * esy))),
+      fontWidth: Math.max(1, ctx.snap(Math.round(oldW * esx))),
     };
   },
 
