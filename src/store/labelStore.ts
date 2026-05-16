@@ -250,6 +250,42 @@ function updateCurrentObjects(
  *  multiplies it by pasteCount because the clipboard source stays put. */
 const DUPLICATE_OFFSET_DOTS = 20;
 
+/** Single-entry cache for the Labelary preview blob URL, keyed by the
+ *  exact ZPL string that produced it. Module-level rather than store-
+ *  state because the blob URL is a non-serialisable side-effect handle:
+ *  persisting it through `partialize` would resurrect a stale identifier
+ *  across reloads, and including it in Zustand state would churn every
+ *  selector that observes the store.
+ *
+ *  The closure owns the URL: `set` revokes the previous blob before
+ *  replacing it, so callers can't leak by forgetting to clean up. */
+const previewCache = (() => {
+  let entry: { zpl: string; url: string } | null = null;
+  return {
+    /** Returns the cached URL if `zpl` matches the cached key, else null. */
+    get(zpl: string): string | null {
+      return entry && entry.zpl === zpl ? entry.url : null;
+    },
+    /** Stores a fresh (zpl, url) pair. Revokes the previously held URL
+     *  if any so the browser can reclaim the blob memory. */
+    set(zpl: string, url: string): void {
+      if (entry) URL.revokeObjectURL(entry.url);
+      entry = { zpl, url };
+    },
+    /** Test-only: drop the cached entry without revoking, so a fresh
+     *  test starts from a clean slate. Production callers should never
+     *  need this — `set` handles eviction on its own. */
+    _resetForTests(): void {
+      entry = null;
+    },
+  };
+})();
+
+/** Test-only handle to clear the preview cache between test cases.
+ *  Marked underscored to discourage production use; the cache otherwise
+ *  manages its own lifecycle via the `set` revoke path. */
+export const __resetPreviewCacheForTests = (): void => previewCache._resetForTests();
+
 /** Build offset copies of objects identified by `ids`. Missing ids are
  *  silently dropped. Props are shallow-cloned to match the pattern in
  *  copySelectedObjects — even though no current code path mutates props,
@@ -840,29 +876,47 @@ export const useLabelStore = create<LabelState>()(
         if (state.previewMode.status === 'loading' || state.previewMode.status === 'active') {
           return;
         }
-        set({ previewMode: { status: 'loading' } });
         const objs = currentObjects(state);
         const zpl = generateZPL(state.label, objs);
+        // Toggling preview off then on for a side-by-side pixel compare
+        // shouldn't burn an API call when nothing changed.
+        const cachedUrl = previewCache.get(zpl);
+        if (cachedUrl !== null) {
+          set({ previewMode: { status: 'active', url: cachedUrl } });
+          return;
+        }
+        set({ previewMode: { status: 'loading' } });
+        // Two checks guard against settling a stale request: the status
+        // check catches an exit that happened during the fetch; the
+        // reference-equality check catches the harder case where the
+        // user exited AND re-entered with a different design (so status
+        // is `loading` again — but for a different request whose result
+        // we mustn't overwrite). The store mutates label and objects
+        // immutably, so a reference change is the cheapest, most
+        // precise way to detect a divergent state — no string rebuild
+        // needed, and a page switch is caught too (different array).
+        const isStale = (): boolean =>
+          get().previewMode.status !== 'loading' ||
+          get().label !== state.label ||
+          currentObjects(get()) !== objs;
         try {
           const url = await fetchPreview(zpl, state.label);
-          // Avoid clobbering an exit that happened while the request was in
-          // flight — if the user toggled off, the loading state is gone.
-          if (get().previewMode.status !== 'loading') {
+          if (isStale()) {
             URL.revokeObjectURL(url);
             return;
           }
+          previewCache.set(zpl, url);
           set({ previewMode: { status: 'active', url } });
         } catch (e) {
-          if (get().previewMode.status !== 'loading') return;
+          if (isStale()) return;
           set({ previewMode: { status: 'error', error: labelaryErrorMessage(e) } });
         }
       },
 
       exitPreviewMode: () =>
         set((state) => {
-          if (state.previewMode.status === 'active') {
-            URL.revokeObjectURL(state.previewMode.url);
-          }
+          // The blob URL is owned by `previewCache` and intentionally
+          // kept alive across exits so a re-toggle skips the fetch.
           if (state.previewMode.status === 'idle') return {};
           return { previewMode: { status: 'idle' } };
         }),
