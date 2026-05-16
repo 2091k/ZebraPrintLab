@@ -1,42 +1,45 @@
-import type { ObjectTypeDefinition } from '../types/ObjectType';
-import { useT } from '../lib/useT';
-import { inputCls, labelCls } from '../components/Properties/styles';
-import { textFieldPos, fdField } from './zplHelpers';
-import { filterContent, type ContentSpec } from './contentSpec';
-import { RotationSelect } from '../components/Properties/RotationSelect';
-import { NumberInput } from '../components/Properties/NumberInput';
+import type { ObjectTypeDefinition } from "../types/ObjectType";
+import { useT } from "../lib/useT";
+import { inputCls, labelCls } from "../components/Properties/styles";
+import { textFieldPos, fdField } from "./zplHelpers";
+import { filterContent, type ContentSpec } from "./contentSpec";
+import { RotationSelect } from "../components/Properties/RotationSelect";
+import { NumberInput } from "../components/Properties/NumberInput";
 
-const serialSpec: ContentSpec = { charset: '0-9A-Za-z' };
+const serialSpec: ContentSpec = { charset: "0-9A-Za-z" };
 
 export interface SerialProps {
   content: string;
   increment: number;
   fontHeight: number;
   fontWidth: number;
-  rotation: 'N' | 'R' | 'I' | 'B';
-  zplMode: 'SF' | 'SN';
+  rotation: "N" | "R" | "I" | "B";
+  zplMode: "SF" | "SN";
 }
 
 export const serial: ObjectTypeDefinition<SerialProps> = {
-  label: 'Serial',
-  icon: '#',
-  group: 'text' as const,
+  label: "Serial",
+  icon: "#",
+  group: "text" as const,
   defaultProps: {
-    content: '001',
+    content: "001",
     increment: 1,
     fontHeight: 30,
     fontWidth: 0,
-    rotation: 'N',
-    zplMode: 'SN',
+    rotation: "N",
+    zplMode: "SN",
   },
   defaultSize: { width: 100, height: 30 },
   // Rectangle resize matching text.tsx — see notes there.
   commitTransform: (obj, { sx, sy, snap }) => {
     const oldH = obj.props.fontHeight;
     const oldW = obj.props.fontWidth > 0 ? obj.props.fontWidth : oldH;
+    const isRotated = obj.props.rotation === "R" || obj.props.rotation === "B";
+    const effectiveSy = isRotated ? sx : sy;
+    const effectiveSx = isRotated ? sy : sx;
     return {
-      fontHeight: Math.max(1, snap(Math.round(oldH * sy))),
-      fontWidth: Math.max(1, snap(Math.round(oldW * sx))),
+      fontHeight: Math.max(1, snap(Math.round(oldH * effectiveSy))),
+      fontWidth: Math.max(1, snap(Math.round(oldW * effectiveSx))),
     };
   },
 
@@ -48,7 +51,7 @@ export const serial: ObjectTypeDefinition<SerialProps> = {
     // parameter or comma-split the parameter list. fdField additionally
     // hex-escapes any survivors in the FD payload — belt and suspenders.
     const safe = filterContent(p.content, serialSpec);
-    if (p.zplMode === 'SF') {
+    if (p.zplMode === "SF") {
       // ^SF: increment, pad-digits (derived from content length), change-per-label
       return `${field}^SF${p.increment},${safe.length},Y${fdField(safe)}`;
     }
@@ -67,7 +70,9 @@ export const serial: ObjectTypeDefinition<SerialProps> = {
             <input
               className={inputCls}
               value={p.content}
-              onChange={(e) => onChange({ content: filterContent(e.target.value, serialSpec) })}
+              onChange={(e) =>
+                onChange({ content: filterContent(e.target.value, serialSpec) })
+              }
             />
           </div>
           <NumberInput
@@ -103,7 +108,9 @@ export const serial: ObjectTypeDefinition<SerialProps> = {
           <select
             className={inputCls}
             value={p.zplMode}
-            onChange={(e) => onChange({ zplMode: e.target.value as SerialProps['zplMode'] })}
+            onChange={(e) =>
+              onChange({ zplMode: e.target.value as SerialProps["zplMode"] })
+            }
           >
             <option value="SN">{t.registry.serial.zplModeSN}</option>
             <option value="SF">{t.registry.serial.zplModeSF}</option>

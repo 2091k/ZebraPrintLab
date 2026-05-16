@@ -41,11 +41,13 @@ const RENDER_Y_BIAS = 0.08;
 function zplAnchorDelta(
   props: TextLikeProps,
   positionType: "FO" | "FT" | undefined,
+  inkWidthDots = 0,
 ): { dx: number; dy: number } {
   const h = props.fontHeight / ZPL_FONT_HEIGHT_TO_CSS_RATIO;
   const pad = props.fontHeight * EM_TOP_ABOVE_CAP;
   const bias = props.fontHeight * RENDER_Y_BIAS;
   const isFT = positionType === "FT";
+  const w = inkWidthDots;
 
   // For each rotation, the FO offset is the ascender padding from EM-top
   // to cap-top; the FT offset adds cap-height to land at the baseline.
@@ -54,24 +56,16 @@ function zplAnchorDelta(
   // delta so the printed anchor lands where the editor displays it.
   switch (props.rotation) {
     case "R":
-      return isFT
-        ? { dx: -h + bias, dy: 0 }
-        : { dx: -pad + bias, dy: 0 };
+      return isFT ? { dx: -h + bias, dy: 0 } : { dx: -h - pad + bias, dy: 0 };
     case "I":
-      return isFT
-        ? { dx: 0, dy: -h + bias }
-        : { dx: 0, dy: -pad + bias };
+      return isFT ? { dx: 0, dy: -h + bias } : { dx: -w, dy: -h - pad + bias };
     case "B":
-      return isFT
-        ? { dx: h - bias, dy: 0 }
-        : { dx: pad - bias, dy: 0 };
+      return isFT ? { dx: h - bias, dy: 0 } : { dx: pad - bias, dy: -w };
     case "N":
     default:
       // Unknown rotation values get the N treatment so malformed inputs
       // can't propagate `undefined` through the math.
-      return isFT
-        ? { dx: 0, dy: h - bias }
-        : { dx: 0, dy: pad - bias };
+      return isFT ? { dx: 0, dy: h - bias } : { dx: 0, dy: pad - bias };
   }
 }
 
@@ -81,8 +75,9 @@ export function modelToZplAnchor(
   objectY: number,
   props: TextLikeProps,
   positionType: "FO" | "FT" | undefined,
+  inkWidthDots = 0,
 ): { x: number; y: number } {
-  const d = zplAnchorDelta(props, positionType);
+  const d = zplAnchorDelta(props, positionType, inkWidthDots);
   return { x: objectX + d.dx, y: objectY + d.dy };
 }
 
@@ -92,7 +87,8 @@ export function zplAnchorToModel(
   anchorY: number,
   props: TextLikeProps,
   positionType: "FO" | "FT" | undefined,
+  inkWidthDots = 0,
 ): { x: number; y: number } {
-  const d = zplAnchorDelta(props, positionType);
+  const d = zplAnchorDelta(props, positionType, inkWidthDots);
   return { x: anchorX - d.dx, y: anchorY - d.dy };
 }

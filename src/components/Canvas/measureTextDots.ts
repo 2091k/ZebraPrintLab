@@ -31,7 +31,7 @@ export function measureInkWidthPx(
 ): number {
   if (!text) return 0;
   const c = getCtx();
-  if (!c) {
+  if (!c || typeof c.measureText !== "function") {
     // Fallback heuristic for non-DOM contexts (unit tests of pure
     // helpers). Roboto Condensed Bold wght=900 averages ≈ 0.62·h per
     // glyph; good enough for round-trip tests that don't actually
