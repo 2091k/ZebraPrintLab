@@ -288,4 +288,36 @@ export const shapeTestCases: ShapeTestCase[] = [
     zpl_input: "^XA^FO100,200^GD200,346,6,B,L^FS^XZ",
     image_ref: "shape_line_diag_steep.png",
   },
+
+  // Reverse-print (^LRY) cases — Zebra firmware inverts each ink pixel
+  // produced by the wrapped field against whatever was already on the
+  // label. For a filled black ^GB on a white background that means the
+  // rect's interior turns into a white knockout. renderShape has to
+  // honour this or the editor will keep showing the inverse-marked field
+  // as plain black while Labelary prints it as a knockout.
+  //
+  // The 101×92 dimensions reproduce a user-reported case where the
+  // filled box's bottom edge aligned with a separate thin line in the
+  // editor but Labelary rendered the rect a couple of dots taller —
+  // exposing an off-by-one in the inset / height math.
+  {
+    id: "shape_box_thickness_exceeds_height",
+    obj: {
+      id: "20",
+      type: "box",
+      // ^GB101,92,101: thickness (101) > height (92). Zebra firmware
+      // promotes the rendered dimensions to max(w,t) × max(h,t), so the
+      // visible field is 101×101 rather than the literal 101×92. Our
+      // renderShape used to clamp to "filled w×h" without the height
+      // promotion, leaving a ~10-dot strip missing along the bottom
+      // edge. Reverse=true mirrors the user-reported ZPL but doesn't
+      // affect geometry (^LRY only inverts ink colour).
+      x: 144,
+      y: 160,
+      rotation: 0,
+      props: { width: 101, height: 92, thickness: 101, filled: false, color: "B", rounding: 0, reverse: true },
+    },
+    zpl_input: "^XA^LRY^FO144,160^GB101,92,101,B,0^FS^LRN^XZ",
+    image_ref: "shape_box_thickness_exceeds_height.png",
+  },
 ];
