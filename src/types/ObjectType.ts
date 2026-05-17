@@ -74,13 +74,6 @@ export interface ObjectTypeDefinition<P extends object = object> {
   defaultProps: P;
   defaultSize: { width: number; height: number };
   /**
-   * Origin of the Konva node used to render this type. Defaults to 'top-left'.
-   * Set to 'center' for shapes whose Konva counterpart positions by their
-   * center (e.g. Ellipse), so the transformer can convert the node coordinate
-   * back to the model's top-left convention.
-   */
-  nodeOrigin?: 'center' | 'top-left';
-  /**
    * True if the rendered height is fixed by the symbology spec rather than the
    * `height` prop (e.g. GS1 Databar Omnidirectional). The transformer disables
    * its height anchors and the properties panel renders the height input as

@@ -17,7 +17,9 @@ type Props = KonvaObjectProps;
  * Selection outline drawn as a separate (non-listening) overlay so the
  * underlying shape can keep its own stroke / fill / globalCompositeOperation
  * without compromise. Sits at local (0, 0) inside the parent Group so it
- * follows drag translations together with the body.
+ * follows drag translations together with the body. Tracing the declared
+ * bbox (not the inset body) means a thick outline shape gets a marker on
+ * its outer pixel, matching the user's mental model of selection.
  */
 function SelectionOverlay({
   width,
@@ -43,6 +45,31 @@ function SelectionOverlay({
       strokeScaleEnabled={false}
       fill="transparent"
       cornerRadius={cornerRadius}
+      listening={false}
+    />
+  );
+}
+
+/** Ellipse-shaped counterpart of `SelectionOverlay` for ^GE / ^GC bodies. */
+function EllipseSelectionOverlay({
+  rx,
+  ry,
+  color,
+}: {
+  rx: number;
+  ry: number;
+  color: string;
+}) {
+  return (
+    <Ellipse
+      x={rx}
+      y={ry}
+      radiusX={rx}
+      radiusY={ry}
+      stroke={color}
+      strokeWidth={1.5}
+      strokeScaleEnabled={false}
+      fill="transparent"
       listening={false}
     />
   );
@@ -93,21 +120,19 @@ export function KonvaObject(props_: Props) {
  *
  * Convention for adding a new shape type:
  *
- *  1. `id={obj.id}` sits on the **outermost render node**. Single-node
- *     shapes (e.g. plain Text, Ellipse, Circle) put it on that shape;
- *     multi-node shapes (Text+reverse, Box, Image, Line) wrap their
- *     parts in a `<Group>` and put the id there. Stage-level lookups
- *     (`stage.findOne(#id)`, snap, alt+click cycle) all walk up to the
- *     id'd ancestor, so this stays consistent.
+ *  1. `id={obj.id}` sits on the **outermost render node**. Plain Text
+ *     puts it directly on the Text node; every other shape wraps body
+ *     plus selection overlay in a `<Group>` and puts the id there.
+ *     Stage-level lookups (`stage.findOne(#id)`, snap, alt+click cycle)
+ *     all walk up to the id'd ancestor, so this stays consistent.
  *
- *  2. Selection visuals: a single shape can put its own selection stroke
- *     on itself (`stroke={isSelected ? colors.selection : ...}`). A
- *     shape whose body uses `globalCompositeOperation: "difference"`
- *     for ZPL `^LRY` (currently Box and Line) needs an extra
- *     `<SelectionOverlay>` Rect drawn with normal blending, so the
- *     selection stroke isn't itself blended into a wrong colour. The
- *     overlay sits inside the same Group as the body so drag
- *     translations move both together.
+ *  2. Selection visuals: shapes draw a dedicated overlay component
+ *     (`SelectionOverlay` for rectangular bodies, `EllipseSelectionOverlay`
+ *     for ^GE / ^GC) that traces the declared outer bbox. Decoupling the
+ *     marker from the body means a thick outline (or a ^LRY difference-
+ *     blended body) keeps a clean blue marker on its outer pixel rather
+ *     than re-tracing the body's stroke. The overlay sits inside the same
+ *     Group as the body so drag translations move both together.
  */
 function KonvaObjectInner({
   obj,
@@ -368,14 +393,16 @@ function KonvaObjectInner({
 
   if (obj.type === "ellipse") {
     const p = obj.props;
-    const rx = dotsToPx(p.width, scale, dpmm) / 2;
-    const ry = dotsToPx(p.height, scale, dpmm) / 2;
+    const w = dotsToPx(p.width, scale, dpmm);
+    const h = dotsToPx(p.height, scale, dpmm);
+    const rx = w / 2;
+    const ry = h / 2;
     const stroke = p.color === "B" ? "#000000" : "#cccccc";
     const strokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 0.5);
     // Option-A geometry — same outlineInset() definition as the box
     // path so the firmware's clamp-to-solid rule stays consistent
     // across shapes; only the centred-stroke placement differs.
-    const insetGeom = outlineInset(rx * 2, ry * 2, strokeWidth, p.filled);
+    const insetGeom = outlineInset(w, h, strokeWidth, p.filled);
     const renderFilled = insetGeom.renderFilled;
     const insetRx = insetGeom.width / 2;
     const insetRy = insetGeom.height / 2;
@@ -384,47 +411,44 @@ function KonvaObjectInner({
         ? "#000000"
         : "#ffffff"
       : "transparent";
+    // Group-at-top-left wrapper mirrors the box path: keeps the body's
+    // own stroke + thickness while a separate EllipseSelectionOverlay
+    // traces the outer bbox in the selection colour.
     return (
-      <Ellipse
+      <Group
         id={obj.id}
-        x={x + rx}
-        y={y + ry}
-        radiusX={insetRx}
-        radiusY={insetRy}
-        stroke={isSelected ? colors.selection : stroke}
-        strokeWidth={
-          isSelected
-            ? Math.max(strokeWidth, 1.5)
-            : renderFilled
-              ? 0
-              : strokeWidth
-        }
-        strokeScaleEnabled={false}
-        fill={fill}
+        x={x}
+        y={y}
         draggable={!obj.locked}
         {...selectionHandlers(onSelect)}
-        onDragMove={(e) => {
-          // Center-anchored: snap the top-left corner, then re-add radius
-          const snapped = snapPos(e.target.x() - rx, e.target.y() - ry);
-          e.target.position({ x: snapped.x + rx, y: snapped.y + ry });
-        }}
-        onDragEnd={(e) => {
-          onChange({
-            x: pxToDots(e.target.x() - rx - offsetX, scale, dpmm),
-            y: pxToDots(e.target.y() - ry - offsetY, scale, dpmm),
-          });
-        }}
-      />
+        onDragMove={handleDragMove}
+        onDragEnd={handleDragEnd}
+      >
+        <Ellipse
+          x={rx}
+          y={ry}
+          radiusX={insetRx}
+          radiusY={insetRy}
+          stroke={stroke}
+          strokeWidth={renderFilled ? 0 : strokeWidth}
+          strokeScaleEnabled={false}
+          fill={fill}
+        />
+        {isSelected && (
+          <EllipseSelectionOverlay rx={rx} ry={ry} color={colors.selection} />
+        )}
+      </Group>
     );
   }
 
   if (obj.type === "circle") {
     const p = obj.props;
-    const r = dotsToPx(p.diameter, scale, dpmm) / 2;
+    const d = dotsToPx(p.diameter, scale, dpmm);
+    const r = d / 2;
     const stroke = p.color === "B" ? "#000000" : "#cccccc";
     const strokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 0.5);
     // Option-A geometry — same outlineInset() definition as box/ellipse.
-    const insetGeom = outlineInset(r * 2, r * 2, strokeWidth, p.filled);
+    const insetGeom = outlineInset(d, d, strokeWidth, p.filled);
     const renderFilled = insetGeom.renderFilled;
     const insetR = insetGeom.width / 2;
     const fill = renderFilled
@@ -433,34 +457,28 @@ function KonvaObjectInner({
         : "#ffffff"
       : "transparent";
     return (
-      <Circle
+      <Group
         id={obj.id}
-        x={x + r}
-        y={y + r}
-        radius={insetR}
-        stroke={isSelected ? colors.selection : stroke}
-        strokeWidth={
-          isSelected
-            ? Math.max(strokeWidth, 1.5)
-            : renderFilled
-              ? 0
-              : strokeWidth
-        }
-        strokeScaleEnabled={false}
-        fill={fill}
+        x={x}
+        y={y}
         draggable={!obj.locked}
         {...selectionHandlers(onSelect)}
-        onDragMove={(e) => {
-          const snapped = snapPos(e.target.x() - r, e.target.y() - r);
-          e.target.position({ x: snapped.x + r, y: snapped.y + r });
-        }}
-        onDragEnd={(e) => {
-          onChange({
-            x: pxToDots(e.target.x() - r - offsetX, scale, dpmm),
-            y: pxToDots(e.target.y() - r - offsetY, scale, dpmm),
-          });
-        }}
-      />
+        onDragMove={handleDragMove}
+        onDragEnd={handleDragEnd}
+      >
+        <Circle
+          x={r}
+          y={r}
+          radius={insetR}
+          stroke={stroke}
+          strokeWidth={renderFilled ? 0 : strokeWidth}
+          strokeScaleEnabled={false}
+          fill={fill}
+        />
+        {isSelected && (
+          <EllipseSelectionOverlay rx={r} ry={r} color={colors.selection} />
+        )}
+      </Group>
     );
   }
 

@@ -22,7 +22,6 @@ export const circle: ObjectTypeDefinition<CircleProps> = {
     color: 'B',
   },
   defaultSize: { width: 100, height: 100 },
-  nodeOrigin: 'center',
   uniformScale: true,
 
   // Force a uniform scale: take the smaller of the two axes so the resized

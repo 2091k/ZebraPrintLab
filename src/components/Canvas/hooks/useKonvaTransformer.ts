@@ -9,7 +9,6 @@ import { findObjectById, isGroup } from "../../../types/Group";
 import {
   applyHeightSnap,
   pinInactiveEdges,
-  transformNodeTopLeft,
   positionDidMove,
   forceSquareBox,
   type BoundingBox,
@@ -303,7 +302,6 @@ export function useKonvaTransformer({
     }
     const sx = node.scaleX();
     const sy = node.scaleY();
-    const nodeWidth = node.width();
     const nodeHeight = node.height();
     node.scaleX(1);
     node.scaleY(1);
@@ -312,18 +310,8 @@ export function useKonvaTransformer({
       cleanupTransformState();
       return;
     }
-    const isCenterAnchored = ObjectRegistry[obj.type]?.nodeOrigin === "center";
-    const topLeft = transformNodeTopLeft(
-      node.x(),
-      node.y(),
-      nodeWidth,
-      nodeHeight,
-      sx,
-      sy,
-      isCenterAnchored,
-    );
-    const renderedXDots = pxToDots(topLeft.x - objectsOffsetX, scale, dpmm);
-    const renderedYDots = pxToDots(topLeft.y - labelOffsetY, scale, dpmm);
+    const renderedXDots = pxToDots(node.x() - objectsOffsetX, scale, dpmm);
+    const renderedYDots = pxToDots(node.y() - labelOffsetY, scale, dpmm);
     // For FT-anchored 1D barcodes, model.y is the bar baseline — needs the
     // post-resize bar height to convert from the bbox top back. Pipe the
     // scaled height through the same snap() commitBarcodeWidthHeight-
