@@ -5,7 +5,11 @@ import type { LabelObject } from "../../types/Group";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
 import { constrainLine, type ConstrainMode } from "../../lib/lineConstrain";
 import { useColorScheme } from "../../lib/useColorScheme";
-import { computePointSnap, type SnapRect } from "../../lib/snapGuides";
+import {
+  computePointSnap,
+  computeResizeSnap,
+  type SnapRect,
+} from "../../lib/snapGuides";
 import { diagonalPolygonPoints } from "../../lib/shapeGeometry";
 import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 
@@ -221,6 +225,90 @@ export function LineObject({
   function clearSnap() {
     othersSnapshotRef.current = null;
     setGuides?.([]);
+  }
+
+  /**
+   * Smart-align snap for the thickness side-handle. Treats the band as a
+   * resize bbox with only the extrusion edge active (`bottom` for horizontal
+   * lines, `right` for vertical) and delegates to `computeResizeSnap`, the
+   * same path the Transformer uses for free resizes. Returns the snapped
+   * thickness in dots. No-ops on diagonals (band axis isn't stage-aligned),
+   * rotated views (AABB conversion would mislabel the active edge), or
+   * shift-bypass.
+   */
+  function snapThickness(
+    rawT: number,
+    shift: boolean,
+    parent: Konva.Node | null,
+  ): number {
+    const absRot = parent ? Math.abs(parent.getAbsoluteRotation() % 360) : 0;
+    const rotated = absRot > 0.1 && absRot < 359.9;
+    if (
+      !isAxisAligned ||
+      shift ||
+      rotated ||
+      !getOthersSnapshot ||
+      !labelRect ||
+      !setGuides ||
+      !parent
+    ) {
+      setGuides?.([]);
+      return rawT;
+    }
+    if (othersSnapshotRef.current === null) {
+      othersSnapshotRef.current = getOthersSnapshot(obj.id);
+    }
+    const transform = parent.getAbsoluteTransform();
+    const thicknessPx = Math.max(dotsToPx(rawT, scale, dpmm), 1);
+    // Band bbox in label-local coords, then mapped to stage so the others
+    // snapshot (already in stage frame) can be compared apples-to-apples.
+    const localBand = isHorizontal
+      ? {
+          x: Math.min(dispX1, dispX2),
+          y: lineCenterY,
+          width: visualLenPx,
+          height: thicknessPx,
+        }
+      : {
+          x: lineCenterX,
+          y: Math.min(dispY1, dispY2),
+          width: thicknessPx,
+          height: visualLenPx,
+        };
+    const tl = transform.point({ x: localBand.x, y: localBand.y });
+    const br = transform.point({
+      x: localBand.x + localBand.width,
+      y: localBand.y + localBand.height,
+    });
+    const stageBand: SnapRect = {
+      id: obj.id,
+      x: Math.min(tl.x, br.x),
+      y: Math.min(tl.y, br.y),
+      width: Math.abs(br.x - tl.x),
+      height: Math.abs(br.y - tl.y),
+    };
+    const activeEdges = isHorizontal
+      ? { top: false, bottom: true, left: false, right: false }
+      : { top: false, bottom: false, left: false, right: true };
+    const result = computeResizeSnap(
+      stageBand,
+      othersSnapshotRef.current,
+      activeEdges,
+      undefined,
+      labelRect,
+      labelRect,
+    );
+    const snappedExtPx = isHorizontal ? result.height : result.width;
+    const cappedT = Math.min(
+      p.length,
+      Math.max(1, Math.round(pxToDots(snappedExtPx, scale, dpmm))),
+    );
+    // If the t ≤ length cap forced the band shorter than the snap target,
+    // the guide would point past the visible band edge — clear it so the
+    // hint matches what the user sees commit.
+    const cappedExtPx = dotsToPx(cappedT, scale, dpmm);
+    setGuides(Math.abs(cappedExtPx - snappedExtPx) < 0.5 ? result.guides : []);
+    return cappedT;
   }
 
   /**
@@ -575,14 +663,19 @@ export function LineObject({
               // promotion regime where thickness exceeds length and
               // Labelary would print `t × t` rather than the band the
               // user is dragging.
-              const newT = Math.min(
+              const rawT = Math.min(
                 p.length,
                 Math.max(1, Math.round(pxToDots(extPx, scale, dpmm))),
               );
+              const newT = snapThickness(
+                rawT,
+                e.evt.shiftKey,
+                e.target.getParent(),
+              );
               setLiveThicknessDots(newT);
-              // Pin the Rect to the (possibly-clamped) anchor so
-              // dragging past the minimum doesn't decouple the handle
-              // from the band edge.
+              // Pin the Rect to the (possibly-clamped, possibly-snapped)
+              // anchor so dragging past the minimum doesn't decouple the
+              // handle from the band edge.
               const newStroke = Math.max(dotsToPx(newT, scale, dpmm), 1);
               e.target.position({
                 x:
@@ -598,6 +691,7 @@ export function LineObject({
             onDragEnd={() => {
               const committed = liveThicknessDots;
               setLiveThicknessDots(null);
+              clearSnap();
               if (committed !== null && committed !== p.thickness) {
                 onChange({ props: { thickness: committed } });
               }
