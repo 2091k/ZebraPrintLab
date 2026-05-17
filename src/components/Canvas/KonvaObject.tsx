@@ -120,11 +120,10 @@ export function KonvaObject(props_: Props) {
  *
  * Convention for adding a new shape type:
  *
- *  1. `id={obj.id}` sits on the **outermost render node**. Plain Text
- *     puts it directly on the Text node; every other shape wraps body
- *     plus selection overlay in a `<Group>` and puts the id there.
- *     Stage-level lookups (`stage.findOne(#id)`, snap, alt+click cycle)
- *     all walk up to the id'd ancestor, so this stays consistent.
+ *  1. `id={obj.id}` sits on the **outermost render node**. Every shape
+ *     wraps body plus selection overlay in a `<Group>` and puts the id
+ *     there. Stage-level lookups (`stage.findOne(#id)`, snap, alt+click
+ *     cycle) all walk up to the id'd ancestor, so this stays consistent.
  *
  *  2. Selection visuals: shapes draw a dedicated overlay component
  *     (`SelectionOverlay` for rectangular bodies, `EllipseSelectionOverlay`
