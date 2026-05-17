@@ -108,7 +108,7 @@ Use `.json` (File → Save Design) to save your work. It preserves every object 
 ## Limitations
 
 - ZPL import covers the most common commands but not the full ZPL II command set. Labels using printer-stored images, downloaded graphics, or printer-specific extensions may not import completely.
-- The canvas is a design preview, not a pixel-perfect simulation: fonts and exact rendering may differ from what the printer produces. Shapes, spacing, and positions should match. For an accurate render, use the **Preview** in the bottom-right panel (powered by Labelary).
+- The canvas is a design preview, not a pixel-perfect simulation. Shapes, spacing, and positions match the print; text approximates Zebra's built-in font to within a few dots, but exact letterforms and anti-aliasing differ. For a faithful render, use the **Preview** in the bottom-right panel (powered by Labelary).
 - Label preview requires a connection to `api.labelary.com`.
 - The Labelary preview doesn't render every ZPL feature. Some less common elements (e.g. Codablock F barcodes) may be missing or wrong in the preview even when the actual print is fine.
 - The Labelary preview shows only the current page; the printed/exported ZPL still contains every page.
