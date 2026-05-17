@@ -124,11 +124,18 @@ export const line: ObjectTypeDefinition<LineProps> = {
           <NumberInput
             label={t.registry.line.length}
             value={p.length}
-            // Floored at thickness for the same reason thickness is
-            // capped at length below: keeps the model out of the ^GB
-            // promotion regime where t > length prints `t × t`.
-            min={p.thickness}
-            onChange={(length) => onChange({ length })}
+            min={1}
+            // Shrinking length below the current thickness would land
+            // the model in the ^GB promotion regime where t > length
+            // prints `t × t`; auto-clamp thickness down to match the
+            // new length, mirroring the endpoint-handle drag.
+            onChange={(length) =>
+              onChange(
+                length < p.thickness
+                  ? { length, thickness: length }
+                  : { length },
+              )
+            }
           />
           <NumberInput
             label={t.registry.line.angle}
