@@ -11,6 +11,10 @@ export interface EllipseProps {
   thickness: number;
   filled: boolean;
   color: 'B' | 'W';
+  /** When true, resize keeps width === height. Set by the "Circle"
+   *  palette entry and by the parser when an object round-trips through
+   *  ^GC. Used by the transformer to force uniform scale anchors. */
+  lockAspect?: boolean;
 }
 
 export const ellipse: ObjectTypeDefinition<EllipseProps> = {
@@ -26,16 +30,31 @@ export const ellipse: ObjectTypeDefinition<EllipseProps> = {
   },
   defaultSize: { width: 150, height: 100 },
 
-  commitTransform: commitWidthHeightTransform,
+  uniformScale: (p) => p.lockAspect === true,
+
+  commitTransform: (obj, ctx) => {
+    // When lockAspect is true, the transformer already constrains the
+    // bbox to a square via forceSquareBox, so sx === sy here. We still
+    // collapse to a single axis to keep width === height exact under
+    // float rounding rather than relying on identical Math.round inputs.
+    if (obj.props.lockAspect) {
+      const uniform = { ...ctx, sx: Math.min(ctx.sx, ctx.sy), sy: Math.min(ctx.sx, ctx.sy) };
+      return commitWidthHeightTransform(obj, uniform);
+    }
+    return commitWidthHeightTransform(obj, ctx);
+  },
 
   toZPL: (obj) => {
     const p = obj.props;
     const thick = p.filled ? Math.min(p.width, p.height) : p.thickness;
-    return [
-      fieldPos(obj),
-      `^GE${p.width},${p.height},${thick},${p.color}`,
-      `^FS`,
-    ].join('');
+    // Equal axes round-trip through Zebra's dedicated circle command
+    // (one parameter shorter, pixel-equivalent). The parser maps either
+    // ^GC or ^GE to an ellipse on import.
+    const cmd =
+      p.width === p.height
+        ? `^GC${p.width},${thick},${p.color}`
+        : `^GE${p.width},${p.height},${thick},${p.color}`;
+    return [fieldPos(obj), cmd, `^FS`].join('');
   },
 
   PropertiesPanel: ({ obj, onChange }) => {
@@ -43,20 +62,29 @@ export const ellipse: ObjectTypeDefinition<EllipseProps> = {
     const p = obj.props;
     return (
       <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-2 gap-2">
+        {p.lockAspect ? (
           <NumberInput
-            label={t.registry.ellipse.width}
+            label={t.registry.circle.diameter}
             value={p.width}
             min={1}
-            onChange={(width) => onChange({ width })}
+            onChange={(d) => onChange({ width: d, height: d })}
           />
-          <NumberInput
-            label={t.registry.ellipse.height}
-            value={p.height}
-            min={1}
-            onChange={(height) => onChange({ height })}
-          />
-        </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <NumberInput
+              label={t.registry.ellipse.width}
+              value={p.width}
+              min={1}
+              onChange={(width) => onChange({ width })}
+            />
+            <NumberInput
+              label={t.registry.ellipse.height}
+              value={p.height}
+              min={1}
+              onChange={(height) => onChange({ height })}
+            />
+          </div>
+        )}
 
         <label className="flex items-center gap-2 cursor-pointer">
           <input

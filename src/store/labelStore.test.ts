@@ -4,6 +4,7 @@ import {
   useLabelStore,
   currentObjects,
   __resetPreviewCacheForTests,
+  migrateLegacy,
 } from './labelStore';
 import { isGroup, type LabelObject } from '../types/Group';
 import { defined, props } from '../test/helpers';
@@ -637,12 +638,12 @@ describe('groupSelection', () => {
   it('inserts the group at the topmost selected position', () => {
     state().addObject('text');
     state().addObject('box');
-    state().addObject('circle');
+    state().addObject('ellipse');
     const [a, b, c] = objs();
     // Select first and second; group should land where the second one was.
     state().selectObjects([defined(a).id, defined(b).id]);
     state().groupSelection();
-    expect(objs().map((o) => o.type)).toEqual(['group', 'circle']);
+    expect(objs().map((o) => o.type)).toEqual(['group', 'ellipse']);
     expect(defined(objs()[1]).id).toBe(defined(c).id);
   });
 
@@ -714,14 +715,14 @@ describe('ungroup', () => {
   it('replaces a selected group with its children at the same position', () => {
     state().addObject('text');
     state().addObject('box');
-    state().addObject('circle');
+    state().addObject('ellipse');
     const [, b, c] = objs();
     state().selectObjects([defined(b).id, defined(c).id]);
     state().groupSelection();
     const groupId = defined(state().selectedIds[0]);
     state().selectObject(groupId);
     state().ungroup();
-    expect(objs().map((o) => o.type)).toEqual(['text', 'box', 'circle']);
+    expect(objs().map((o) => o.type)).toEqual(['text', 'box', 'ellipse']);
     // Selection follows the freed children.
     expect(state().selectedIds).toHaveLength(2);
   });
@@ -748,7 +749,7 @@ describe('ungroup', () => {
   it('reparentObject moves a top-level leaf into a group', () => {
     state().addObject('text'); // a
     state().addObject('box');  // b
-    state().addObject('circle'); // c
+    state().addObject('ellipse'); // c
     const [a, b, c] = objs();
     // Group b and c
     state().selectObjects([defined(b).id, defined(c).id]);
@@ -1059,5 +1060,90 @@ describe('ungroup', () => {
       expect(revokeSpy).toHaveBeenCalledWith(firstUrl);
       expect(activeUrl()).not.toBe(firstUrl);
     });
+  });
+});
+
+describe('migrateLegacy — v2→v3 circle→ellipse', () => {
+  it('rewrites top-level circle objects to ellipses with lockAspect', () => {
+    const persisted = {
+      pages: [
+        {
+          objects: [
+            {
+              id: 'c1',
+              type: 'circle',
+              x: 10,
+              y: 20,
+              rotation: 0,
+              props: { diameter: 80, thickness: 4, filled: false, color: 'B' },
+            },
+          ],
+        },
+      ],
+    };
+    const migrated = migrateLegacy(persisted, 2) as typeof persisted;
+    const obj = migrated.pages[0]?.objects[0] as { type: string; props: Record<string, unknown> };
+    expect(obj.type).toBe('ellipse');
+    expect(obj.props).toEqual({
+      width: 80,
+      height: 80,
+      thickness: 4,
+      filled: false,
+      color: 'B',
+      lockAspect: true,
+    });
+  });
+
+  it('rewrites circles nested in groups', () => {
+    const persisted = {
+      pages: [
+        {
+          objects: [
+            {
+              id: 'g1',
+              type: 'group',
+              x: 0,
+              y: 0,
+              rotation: 0,
+              children: [
+                {
+                  id: 'c1',
+                  type: 'circle',
+                  x: 5,
+                  y: 5,
+                  rotation: 0,
+                  props: { diameter: 50, thickness: 2, filled: true, color: 'W' },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const migrated = migrateLegacy(persisted, 2) as typeof persisted;
+    const group = migrated.pages[0]?.objects[0] as { children: { type: string; props: Record<string, unknown> }[] };
+    expect(group.children[0]?.type).toBe('ellipse');
+    expect(group.children[0]?.props).toEqual({
+      width: 50,
+      height: 50,
+      thickness: 2,
+      filled: true,
+      color: 'W',
+      lockAspect: true,
+    });
+  });
+
+  it('leaves non-circle objects untouched', () => {
+    const persisted = {
+      pages: [
+        {
+          objects: [
+            { id: 'b1', type: 'box', x: 0, y: 0, rotation: 0, props: { width: 10, height: 10 } },
+          ],
+        },
+      ],
+    };
+    const migrated = migrateLegacy(persisted, 2) as typeof persisted;
+    expect(migrated.pages[0]?.objects[0]).toEqual(persisted.pages[0]?.objects[0]);
   });
 });

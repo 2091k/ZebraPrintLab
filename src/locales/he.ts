@@ -235,11 +235,6 @@ const he = {
     },
     circle: {
       diameter: 'קוטר (נקודות)',
-      thickness: 'מסגרת (נקודות)',
-      filled: 'מלא',
-      color: 'צבע',
-      colorB: 'B — שחור',
-      colorW: 'W — לבן',
     },
     line: {
       angle: 'זווית (°)',

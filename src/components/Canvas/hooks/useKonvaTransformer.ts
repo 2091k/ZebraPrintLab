@@ -189,7 +189,12 @@ export function useKonvaTransformer({
       : undefined;
   const resizeEnabled = selectedIds.length <= 1 && !singleSelected?.locked;
   const singleType = singleSelected?.type ?? "";
-  const isUniformScale = !!ObjectRegistry[singleType]?.uniformScale;
+  const uniformScaleDef = ObjectRegistry[singleType]?.uniformScale;
+  const isUniformScale =
+    typeof uniformScaleDef === "function"
+      ? !!singleSelected && !isGroup(singleSelected) &&
+        uniformScaleDef(singleSelected.props as object)
+      : !!uniformScaleDef;
   const enabledAnchors: string[] | undefined =
     selectedIds.length > 1
       ? []

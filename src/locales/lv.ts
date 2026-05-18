@@ -235,11 +235,6 @@ const lv = {
     },
     circle: {
       diameter: 'Diametrs (punkti)',
-      thickness: 'Apmale (punkti)',
-      filled: 'Aizpildīts',
-      color: 'Krāsa',
-      colorB: 'B — Melns',
-      colorW: 'W — Balts',
     },
     line: {
       angle: 'Leņķis (°)',

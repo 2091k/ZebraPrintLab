@@ -469,7 +469,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
 
   // Quick 90°-rotation button overlay. Only step-rotation objects (those
   // with a `rotation: N|R|I|B` prop — text, serial, all barcodes) get the
-  // affordance; box/ellipse/circle/line/image rotate freely via the
+  // affordance; box/ellipse/line/image rotate freely via the
   // Transformer or have no rotation. Positioned at the visual top-right
   // corner of the selected node, derived from getClientRect so it tracks
   // the rendered bbox through both object-rotation and viewRotation.
@@ -701,11 +701,18 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
       }
       const pos = pointerToLabelDots(lastPointerRef.current.x, lastPointerRef.current.y);
       if (!pos) return;
-      const type = (event.active.data.current as PaletteDragData | undefined)?.type;
+      const dragData = event.active.data.current as PaletteDragData | undefined;
+      const type = dragData?.type;
       if (!type) return;
       const def = ObjectRegistry[type];
       if (!def) return;
-      setGhost({ id: "__ghost__", type, ...pos, rotation: 0, props: def.defaultProps } as LeafObject);
+      setGhost({
+        id: "__ghost__",
+        type,
+        ...pos,
+        rotation: 0,
+        props: { ...def.defaultProps, ...dragData?.propsOverride },
+      } as LeafObject);
     },
     onDragEnd(event) {
       setGhost(null);
@@ -713,9 +720,10 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
       if (event.over?.id !== "canvas") return;
       const pos = pointerToLabelDots(lastPointerRef.current.x, lastPointerRef.current.y);
       if (!pos) return;
-      const type = (event.active.data.current as PaletteDragData | undefined)?.type;
+      const dragData = event.active.data.current as PaletteDragData | undefined;
+      const type = dragData?.type;
       if (!type) return;
-      addObject(type, pos);
+      addObject(type, pos, dragData.propsOverride);
     },
     onDragCancel() {
       setGhost(null);

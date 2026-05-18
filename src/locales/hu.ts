@@ -235,11 +235,6 @@ const hu = {
     },
     circle: {
       diameter: 'Átmérő (pontok)',
-      thickness: 'Keret (pontok)',
-      filled: 'Kitöltött',
-      color: 'Szín',
-      colorB: 'B — Fekete',
-      colorW: 'W — Fehér',
     },
     line: {
       angle: 'Szög (°)',

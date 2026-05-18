@@ -15,8 +15,6 @@ import { box } from './box.tsx';
 import type { BoxProps } from './box.tsx';
 import { ellipse } from './ellipse.tsx';
 import type { EllipseProps } from './ellipse.tsx';
-import { circle } from './circle.tsx';
-import type { CircleProps } from './circle.tsx';
 import { line } from './line.tsx';
 import type { LineProps } from './line.tsx';
 import { serial } from './serial.tsx';
@@ -80,7 +78,6 @@ export type LeafObject =
   | Leaf<'datamatrix', DataMatrixProps>
   | Leaf<'box', BoxProps>
   | Leaf<'ellipse', EllipseProps>
-  | Leaf<'circle', CircleProps>
   | Leaf<'line', LineProps>
   | Leaf<'serial', SerialProps>
   | Leaf<'image', ImageProps>
@@ -150,7 +147,6 @@ export const ObjectRegistry: Record<string, ObjectTypeDefinition<any>> = {
   // shape
   box,
   ellipse,
-  circle,
   line,
   serial,
   image,

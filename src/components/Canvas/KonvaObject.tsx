@@ -1,5 +1,5 @@
 import { useFontCacheVersion } from "../../hooks/useFontCacheVersion";
-import { Circle, Ellipse, Group, Rect, Text } from "react-konva";
+import { Ellipse, Group, Rect, Text } from "react-konva";
 import { BarcodeObject } from "./BarcodeObject";
 import { LineObject } from "./LineObject";
 import { ImageObject } from "./ImageObject";
@@ -297,7 +297,7 @@ function KonvaObjectInner({
     // `renderFilled`.
     // promoteFilled=true: see note in shapeRender.ts — ^GB rects extrude
     // their solid fill to max(w,t) × max(h,t) per Zebra firmware. The
-    // ellipse / circle branches below leave this off because ^GE / ^GC
+    // ellipse branch below leaves this off because ^GE / ^GC
     // collapse to solid at their declared bbox without promotion.
     const insetGeom = outlineInset(w, h, strokeWidth, p.filled, true);
     const renderFilled = insetGeom.renderFilled;
@@ -435,47 +435,6 @@ function KonvaObjectInner({
         />
         {isSelected && (
           <EllipseSelectionOverlay rx={rx} ry={ry} color={colors.selection} />
-        )}
-      </Group>
-    );
-  }
-
-  if (obj.type === "circle") {
-    const p = obj.props;
-    const d = dotsToPx(p.diameter, scale, dpmm);
-    const r = d / 2;
-    const stroke = p.color === "B" ? "#000000" : "#cccccc";
-    const strokeWidth = Math.max(dotsToPx(p.thickness, scale, dpmm), 0.5);
-    // Option-A geometry — same outlineInset() definition as box/ellipse.
-    const insetGeom = outlineInset(d, d, strokeWidth, p.filled);
-    const renderFilled = insetGeom.renderFilled;
-    const insetR = insetGeom.width / 2;
-    const fill = renderFilled
-      ? p.color === "B"
-        ? "#000000"
-        : "#ffffff"
-      : "transparent";
-    return (
-      <Group
-        id={obj.id}
-        x={x}
-        y={y}
-        draggable={!obj.locked}
-        {...selectionHandlers(onSelect)}
-        onDragMove={handleDragMove}
-        onDragEnd={handleDragEnd}
-      >
-        <Circle
-          x={r}
-          y={r}
-          radius={insetR}
-          stroke={stroke}
-          strokeWidth={renderFilled ? 0 : strokeWidth}
-          strokeScaleEnabled={false}
-          fill={fill}
-        />
-        {isSelected && (
-          <EllipseSelectionOverlay rx={r} ry={r} color={colors.selection} />
         )}
       </Group>
     );

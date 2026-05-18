@@ -1204,6 +1204,7 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
             thickness: filled ? 3 : t,
             filled,
             color,
+            lockAspect: true,
           } satisfies EllipseProps,
           undefined,
           takeComment(),

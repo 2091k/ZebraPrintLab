@@ -235,11 +235,6 @@ const sr = {
     },
     circle: {
       diameter: 'Пречник (тачке)',
-      thickness: 'Оквир (тачке)',
-      filled: 'Испуњено',
-      color: 'Боја',
-      colorB: 'B — Црна',
-      colorW: 'W — Бела',
     },
     line: {
       angle: 'Ugao (°)',

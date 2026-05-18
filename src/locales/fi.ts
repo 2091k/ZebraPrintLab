@@ -235,11 +235,6 @@ const fi = {
     },
     circle: {
       diameter: 'Halkaisija (pisteet)',
-      thickness: 'Reuna (pisteet)',
-      filled: 'Täytetty',
-      color: 'Väri',
-      colorB: 'B — Musta',
-      colorW: 'W — Valkoinen',
     },
     line: {
       angle: 'Kulma (°)',

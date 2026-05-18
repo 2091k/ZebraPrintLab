@@ -497,6 +497,7 @@ describe('parseZPL — ^GC circle', () => {
     expect(props(objects[0]).width).toBe(100);
     expect(props(objects[0]).height).toBe(100);
     expect(props(objects[0]).filled).toBe(false);
+    expect(props(objects[0]).lockAspect).toBe(true);
   });
 
   it('creates a filled circle when thickness >= diameter', () => {

@@ -256,11 +256,6 @@ const en = {
     },
     circle: {
       diameter: 'Diameter (dots)',
-      thickness: 'Border (dots)',
-      filled: 'Filled',
-      color: 'Color',
-      colorB: 'B — Black',
-      colorW: 'W — White',
     },
     line: {
       angle: 'Angle (°)',

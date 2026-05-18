@@ -235,11 +235,6 @@ const hr = {
     },
     circle: {
       diameter: 'Promjer (točke)',
-      thickness: 'Obrub (točke)',
-      filled: 'Ispunjeno',
-      color: 'Boja',
-      colorB: 'B — Crno',
-      colorW: 'W — Bijelo',
     },
     line: {
       angle: 'Kut (°)',

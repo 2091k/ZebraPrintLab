@@ -1,10 +1,9 @@
 import type { LabelObject } from "../types/Group";
 import { diagonalPolygonPoints, outlineInset } from "./shapeGeometry";
 
-/** Inward-extruded ^GE / ^GC ring or solid disc, shared by ellipse and
- *  circle. Extracted so the two registry types — which carry different
- *  prop shapes — can each pass their normalised width / height in
- *  without the call-site needing a union-narrowing ternary. */
+/** Inward-extruded ^GE / ^GC ring or solid disc for the ellipse type
+ *  (circles round-trip as ellipse with `lockAspect:true`, sharing the
+ *  same geometry). */
 function drawEllipticalOutline(
   ctx: CanvasRenderingContext2D,
   x: number, y: number,
@@ -101,16 +100,6 @@ export function renderShape(
         ctx,
         obj.x, obj.y,
         obj.props.width, obj.props.height,
-        obj.props.thickness, obj.props.filled, obj.props.color,
-      );
-      return;
-    }
-
-    case "circle": {
-      drawEllipticalOutline(
-        ctx,
-        obj.x, obj.y,
-        obj.props.diameter, obj.props.diameter,
         obj.props.thickness, obj.props.filled, obj.props.color,
       );
       return;

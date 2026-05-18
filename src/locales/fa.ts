@@ -235,11 +235,6 @@ const fa = {
     },
     circle: {
       diameter: 'قطر (نقطه)',
-      thickness: 'حاشیه (نقطه)',
-      filled: 'پر شده',
-      color: 'رنگ',
-      colorB: 'B — سیاه',
-      colorW: 'W — سفید',
     },
     line: {
       angle: 'زاویه (°)',

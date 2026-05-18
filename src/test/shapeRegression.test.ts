@@ -8,7 +8,7 @@ import { shapeTestCases } from "../../tests/fixtures/shapeTestCases";
 import { renderShape } from "../lib/shapeRender";
 
 /**
- * Pixel regression for shape primitives (box / ellipse / circle / line),
+ * Pixel regression for shape primitives (box / ellipse / line),
  * the geometric counterpart of `visualRegression.test.ts` (which covers
  * barcodes via bwip-js). Each test:
  *

@@ -235,11 +235,6 @@ const el = {
     },
     circle: {
       diameter: 'Διάμετρος (κουκκίδες)',
-      thickness: 'Περίγραμμα (κουκκίδες)',
-      filled: 'Γεμάτο',
-      color: 'Χρώμα',
-      colorB: 'B — Μαύρο',
-      colorW: 'W — Λευκό',
     },
     line: {
       angle: 'Γωνία (°)',

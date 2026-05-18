@@ -235,11 +235,6 @@ const da = {
     },
     circle: {
       diameter: 'Diameter (punkter)',
-      thickness: 'Ramme (punkter)',
-      filled: 'Fyldt',
-      color: 'Farve',
-      colorB: 'B — Sort',
-      colorW: 'W — Hvid',
     },
     line: {
       angle: 'Vinkel (°)',

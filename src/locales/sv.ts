@@ -235,11 +235,6 @@ const sv = {
     },
     circle: {
       diameter: 'Diameter (punkter)',
-      thickness: 'Kant (punkter)',
-      filled: 'Fylld',
-      color: 'Färg',
-      colorB: 'B — Svart',
-      colorW: 'W — Vit',
     },
     line: {
       angle: 'Vinkel (°)',

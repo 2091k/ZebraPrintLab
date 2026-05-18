@@ -235,11 +235,6 @@ const et = {
     },
     circle: {
       diameter: 'Läbimõõt (punktid)',
-      thickness: 'Ääris (punktid)',
-      filled: 'Täidetud',
-      color: 'Värv',
-      colorB: 'B — Must',
-      colorW: 'W — Valge',
     },
     line: {
       angle: 'Nurk (°)',

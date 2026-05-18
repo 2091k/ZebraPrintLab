@@ -235,11 +235,6 @@ const lt = {
     },
     circle: {
       diameter: 'Skersmuo (taškai)',
-      thickness: 'Rėmelis (taškai)',
-      filled: 'Užpildytas',
-      color: 'Spalva',
-      colorB: 'B — Juoda',
-      colorW: 'W — Balta',
     },
     line: {
       angle: 'Kampas (°)',

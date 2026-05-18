@@ -235,11 +235,6 @@ const ar = {
     },
     circle: {
       diameter: 'القطر (نقاط)',
-      thickness: 'الحدود (نقاط)',
-      filled: 'ممتلئ',
-      color: 'اللون',
-      colorB: 'B — أسود',
-      colorW: 'W — أبيض',
     },
     line: {
       angle: 'الزاوية (°)',
