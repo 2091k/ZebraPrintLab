@@ -487,6 +487,11 @@ describe('parseZPL — ^GE ellipse', () => {
     const { objects } = parseZPL('^XA^FO0,0^GE100,80,80,B^FS^XZ', 8);
     expect(props(objects[0]).filled).toBe(true);
   });
+
+  it('preserves the original thickness on filled ^GE (lossless round-trip)', () => {
+    const { objects } = parseZPL('^XA^FO0,0^GE100,80,80,B^FS^XZ', 8);
+    expect(props(objects[0]).thickness).toBe(80);
+  });
 });
 
 describe('parseZPL — ^GC circle', () => {
@@ -503,6 +508,11 @@ describe('parseZPL — ^GC circle', () => {
   it('creates a filled circle when thickness >= diameter', () => {
     const { objects } = parseZPL('^XA^FO0,0^GC50,50,B^FS^XZ', 8);
     expect(props(objects[0]).filled).toBe(true);
+  });
+
+  it('preserves the original thickness on filled ^GC (lossless round-trip)', () => {
+    const { objects } = parseZPL('^XA^FO0,0^GC50,50,B^FS^XZ', 8);
+    expect(props(objects[0]).thickness).toBe(50);
   });
 });
 
