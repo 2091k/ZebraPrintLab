@@ -235,11 +235,6 @@ const pl = {
     },
     circle: {
       diameter: 'Średnica (punkty)',
-      thickness: 'Obramowanie (punkty)',
-      filled: 'Wypełniony',
-      color: 'Kolor',
-      colorB: 'B — Czarny',
-      colorW: 'W — Biały',
     },
     line: {
       angle: 'Kąt (°)',

@@ -235,11 +235,6 @@ const ko = {
     },
     circle: {
       diameter: '지름 (도트)',
-      thickness: '테두리 (도트)',
-      filled: '채움',
-      color: '색상',
-      colorB: 'B — 검정',
-      colorW: 'W — 흰색',
     },
     line: {
       angle: '각도 (°)',

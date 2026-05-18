@@ -4,7 +4,7 @@
  * Mirrors Zebra firmware's rendering semantics so that the on-screen
  * Konva canvas, the @napi-rs/canvas pixel-regression renderer, and the
  * ZPL output all describe the same shape:
- *   - Outlines (box / ellipse / circle) extrude thickness *inward* from
+ *   - Outlines (box / ellipse) extrude thickness *inward* from
  *     the declared bbox; thickness ≥ min(w, h)/2 collapses to solid.
  *   - Diagonal lines (^GD) place the conceptual line on the *left long
  *     edge* of a parallelogram and extrude thickness in +x only — both
@@ -16,7 +16,7 @@
  */
 
 /**
- * Inset values for an outline rectangle / ellipse / circle whose
+ * Inset values for an outline rectangle / ellipse whose
  * declared bbox is (0, 0, w, h) with stroke thickness t. The caller
  * uses these to position a *centred-stroke* primitive whose outer
  * edge lands on the declared bbox.

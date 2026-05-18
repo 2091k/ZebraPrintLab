@@ -235,11 +235,6 @@ const nl = {
     },
     circle: {
       diameter: 'Diameter (dots)',
-      thickness: 'Rand (dots)',
-      filled: 'Gevuld',
-      color: 'Kleur',
-      colorB: 'B — Zwart',
-      colorW: 'W — Wit',
     },
     line: {
       angle: 'Hoek (°)',

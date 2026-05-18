@@ -235,11 +235,6 @@ const es = {
     },
     circle: {
       diameter: 'Diámetro (puntos)',
-      thickness: 'Borde (puntos)',
-      filled: 'Relleno',
-      color: 'Color',
-      colorB: 'B — Negro',
-      colorW: 'W — Blanco',
     },
     line: {
       angle: 'Ángulo (°)',

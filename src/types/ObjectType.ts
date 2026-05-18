@@ -88,12 +88,14 @@ export interface ObjectTypeDefinition<P extends object = object> {
    */
   interpretationLocked?: boolean;
   /**
-   * True if the shape requires a 1:1 aspect ratio (e.g. circle: a single
-   * diameter). The transformer restricts to corner anchors and forces the
-   * resize bbox to stay square so visual feedback during drag matches the
-   * uniform `commitTransform` applied on release.
+   * Marks types whose resize must keep a 1:1 aspect ratio. The transformer
+   * restricts to corner anchors and forces the resize bbox to stay square,
+   * so visual feedback during drag matches the uniform `commitTransform`
+   * applied on release. A predicate form supports per-instance opt-in
+   * (e.g. ellipse with `lockAspect: true`); `true` applies to every
+   * instance of the type (e.g. QR / DataMatrix).
    */
-  uniformScale?: boolean;
+  uniformScale?: boolean | ((props: P) => boolean);
   toZPL: (obj: LabelObjectBase & { props: P }) => string;
   /**
    * Optional hook to enforce type-specific invariants on incoming changes

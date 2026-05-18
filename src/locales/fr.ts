@@ -235,11 +235,6 @@ const fr = {
     },
     circle: {
       diameter: 'Diamètre (points)',
-      thickness: 'Bordure (points)',
-      filled: 'Rempli',
-      color: 'Couleur',
-      colorB: 'B — Noir',
-      colorW: 'W — Blanc',
     },
     line: {
       angle: 'Angle (°)',

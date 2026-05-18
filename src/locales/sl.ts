@@ -235,11 +235,6 @@ const sl = {
     },
     circle: {
       diameter: 'Premer (točke)',
-      thickness: 'Obroba (točke)',
-      filled: 'Zapolnjeno',
-      color: 'Barva',
-      colorB: 'B — Črna',
-      colorW: 'W — Bela',
     },
     line: {
       angle: 'Kot (°)',

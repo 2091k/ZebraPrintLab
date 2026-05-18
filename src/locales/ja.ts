@@ -235,11 +235,6 @@ const ja = {
     },
     circle: {
       diameter: '直径 (ドット)',
-      thickness: '枠線 (ドット)',
-      filled: '塗りつぶし',
-      color: '色',
-      colorB: 'B — 黒',
-      colorW: 'W — 白',
     },
     line: {
       angle: '角度 (°)',

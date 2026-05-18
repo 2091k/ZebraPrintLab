@@ -235,11 +235,6 @@ const it = {
     },
     circle: {
       diameter: 'Diametro (punti)',
-      thickness: 'Bordo (punti)',
-      filled: 'Riempito',
-      color: 'Colore',
-      colorB: 'B — Nero',
-      colorW: 'W — Bianco',
     },
     line: {
       angle: 'Angolo (°)',

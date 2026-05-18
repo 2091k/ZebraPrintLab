@@ -235,11 +235,6 @@ const zhHans = {
     },
     circle: {
       diameter: '直径 (点)',
-      thickness: '边框 (点)',
-      filled: '填充',
-      color: '颜色',
-      colorB: 'B — 黑色',
-      colorW: 'W — 白色',
     },
     line: {
       angle: '角度 (°)',

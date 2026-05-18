@@ -235,11 +235,6 @@ const zhHant = {
     },
     circle: {
       diameter: '直徑 (點)',
-      thickness: '邊框 (點)',
-      filled: '填充',
-      color: '顏色',
-      colorB: 'B — 黑色',
-      colorW: 'W — 白色',
     },
     line: {
       angle: '角度 (°)',

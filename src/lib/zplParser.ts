@@ -1178,7 +1178,10 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
           {
             width: w,
             height: h,
-            thickness: filled ? 3 : t,
+            // Preserve the original thickness (same rationale as ^GB) so a
+            // ZPL round-trip is lossless. UI sets sensible defaults when
+            // the user toggles `filled` off; the parser stays faithful.
+            thickness: t,
             filled,
             color,
           } satisfies EllipseProps,
@@ -1201,9 +1204,10 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
           {
             width: d,
             height: d,
-            thickness: filled ? 3 : t,
+            thickness: t,
             filled,
             color,
+            lockAspect: true,
           } satisfies EllipseProps,
           undefined,
           takeComment(),

@@ -235,11 +235,6 @@ const tr = {
     },
     circle: {
       diameter: 'Çap (nokta)',
-      thickness: 'Kenarlık (nokta)',
-      filled: 'Dolu',
-      color: 'Renk',
-      colorB: 'B — Siyah',
-      colorW: 'W — Beyaz',
     },
     line: {
       angle: 'Açı (°)',

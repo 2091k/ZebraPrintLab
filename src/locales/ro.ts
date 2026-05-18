@@ -235,11 +235,6 @@ const ro = {
     },
     circle: {
       diameter: 'Diametru (puncte)',
-      thickness: 'Bordură (puncte)',
-      filled: 'Umplut',
-      color: 'Culoare',
-      colorB: 'B — Negru',
-      colorW: 'W — Alb',
     },
     line: {
       angle: 'Unghi (°)',

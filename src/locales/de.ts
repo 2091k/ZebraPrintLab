@@ -256,11 +256,6 @@ const de = {
     },
     circle: {
       diameter: 'Durchmesser (Punkte)',
-      thickness: 'Rahmen (Punkte)',
-      filled: 'Gefüllt',
-      color: 'Farbe',
-      colorB: 'B — Schwarz',
-      colorW: 'W — Weiß',
     },
     line: {
       angle: 'Winkel (°)',

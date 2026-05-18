@@ -142,7 +142,11 @@ interface LabelState {
   clipboard: LabelObject[];
   pasteCount: number;
 
-  addObject: (type: string, position?: { x: number; y: number }) => void;
+  addObject: (
+    type: string,
+    position?: { x: number; y: number },
+    propsOverride?: object,
+  ) => void;
   updateObject: (id: string, changes: ObjectChanges) => void;
   updateObjects: (updates: { id: string; changes: ObjectChanges }[]) => void;
   removeObject: (id: string) => void;
@@ -335,7 +339,7 @@ function cloneChildrenFresh(children: LabelObject[]): LabelObject[] {
   });
 }
 
-function migrateLegacy(persistedState: unknown, version: number): unknown {
+export function migrateLegacy(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
   let s = persistedState as Record<string, unknown>;
 
@@ -352,7 +356,47 @@ function migrateLegacy(persistedState: unknown, version: number): unknown {
     }
   }
 
+  // v2→v3: `circle` was folded into `ellipse` with `lockAspect:true`. Old
+  // saves still carry `type:'circle'` with `props.diameter`; rewrite them so
+  // the rest of the app only ever sees the unified ellipse shape.
+  if (version < 3) {
+    s = { ...s, pages: migrateCirclesInPages(s.pages) };
+  }
+
   return s;
+}
+
+function migrateCirclesInPages(pages: unknown): unknown {
+  if (!Array.isArray(pages)) return pages;
+  return pages.map((page) => {
+    if (!page || typeof page !== 'object') return page;
+    const p = page as { objects?: unknown };
+    if (!Array.isArray(p.objects)) return page;
+    return { ...p, objects: p.objects.map(migrateCircleObject) };
+  });
+}
+
+function migrateCircleObject(obj: unknown): unknown {
+  if (!obj || typeof obj !== 'object') return obj;
+  const o = obj as { type?: unknown; props?: unknown; children?: unknown };
+  if (Array.isArray(o.children)) {
+    return { ...o, children: o.children.map(migrateCircleObject) };
+  }
+  if (o.type !== 'circle' || !o.props || typeof o.props !== 'object') return obj;
+  const cp = o.props as { diameter?: number; thickness?: number; filled?: boolean; color?: 'B' | 'W' };
+  const d = typeof cp.diameter === 'number' ? cp.diameter : 100;
+  return {
+    ...o,
+    type: 'ellipse',
+    props: {
+      width: d,
+      height: d,
+      thickness: typeof cp.thickness === 'number' ? cp.thickness : 3,
+      filled: cp.filled === true,
+      color: cp.color === 'W' ? 'W' : 'B',
+      lockAspect: true,
+    },
+  };
 }
 
 export const useLabelStore = create<LabelState>()(
@@ -372,7 +416,7 @@ export const useLabelStore = create<LabelState>()(
       previewMode: { status: 'idle' },
       canvasSettings: { showGrid: false, snapEnabled: false, snapSizeMm: 1, zoom: 1, unit: 'mm', viewRotation: 0 },
 
-      addObject: (type, position = { x: 50, y: 50 }) => {
+      addObject: (type, position = { x: 50, y: 50 }, propsOverride) => {
         if (selectPreviewLocksEditor(get())) return;
         const definition = ObjectRegistry[type];
         if (!definition) return;
@@ -383,7 +427,7 @@ export const useLabelStore = create<LabelState>()(
           x: position.x,
           y: position.y,
           rotation: 0,
-          props: { ...definition.defaultProps },
+          props: { ...definition.defaultProps, ...propsOverride },
         } as LabelObject;
 
         set((state) => ({
@@ -923,7 +967,7 @@ export const useLabelStore = create<LabelState>()(
     }),
     {
       name: 'zpl-designer-session',
-      version: 2,
+      version: 3,
       migrate: (persistedState, version) => migrateLegacy(persistedState, version) as LabelState,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({

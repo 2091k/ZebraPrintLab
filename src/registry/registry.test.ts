@@ -160,7 +160,7 @@ describe('line.toZPL', () => {
 describe('ellipse.toZPL', () => {
   const def = defined(ObjectRegistry['ellipse']);
 
-  it('emits ^GE with correct dimensions', () => {
+  it('emits ^GE with correct dimensions for non-square axes', () => {
     const zpl = def.toZPL(makeObj('ellipse', {
       width: 150, height: 100, thickness: 3, filled: false, color: 'B',
     }));
@@ -173,45 +173,39 @@ describe('ellipse.toZPL', () => {
     }));
     expect(zpl).toContain('^GE150,100,100,B');
   });
-});
 
-// ── circle ────────────────────────────────────────────────────────────────────
-
-describe('circle.toZPL', () => {
-  const def = defined(ObjectRegistry['circle']);
-
-  it('emits ^GE with diameter for both axes', () => {
-    const zpl = def.toZPL(makeObj('circle', {
-      diameter: 80, thickness: 3, filled: false, color: 'B',
+  it('collapses to ^GC when width equals height', () => {
+    const zpl = def.toZPL(makeObj('ellipse', {
+      width: 80, height: 80, thickness: 3, filled: false, color: 'B',
     }));
-    expect(zpl).toContain('^GE80,80,3,B');
-  });
-
-  it('uses diameter as thickness when filled', () => {
-    const zpl = def.toZPL(makeObj('circle', {
-      diameter: 80, thickness: 3, filled: true, color: 'B',
-    }));
-    expect(zpl).toContain('^GE80,80,80,B');
+    expect(zpl).toContain('^GC80,3,B');
+    expect(zpl).not.toContain('^GE');
   });
 });
 
-describe('circle.commitTransform', () => {
-  const def = defined(ObjectRegistry['circle']);
+// ── ellipse (lockAspect) ─────────────────────────────────────────────────────
 
-  it('uses the smaller scale axis to keep the circle inside the drag box', () => {
+describe('ellipse with lockAspect (former circle)', () => {
+  const def = defined(ObjectRegistry['ellipse']);
+
+  it('keeps width === height via min(sx, sy) on commitTransform', () => {
     const result = def.commitTransform!(
-      makeObj('circle', { diameter: 100, thickness: 3, filled: false, color: 'B' }),
+      makeObj('ellipse', {
+        width: 100, height: 100, thickness: 3, filled: false, color: 'B', lockAspect: true,
+      }),
       { sx: 2, sy: 1.5, snap: (n) => n, nodeHeight: 0, anchor: null },
     );
-    expect(result).toEqual({ diameter: 150 });
+    expect(result).toEqual({ width: 150, height: 150 });
   });
 
-  it('clamps the diameter to at least 1', () => {
+  it('clamps diameter to at least 1 when scaled to zero', () => {
     const result = def.commitTransform!(
-      makeObj('circle', { diameter: 100, thickness: 3, filled: false, color: 'B' }),
+      makeObj('ellipse', {
+        width: 100, height: 100, thickness: 3, filled: false, color: 'B', lockAspect: true,
+      }),
       { sx: 0, sy: 0, snap: (n) => n, nodeHeight: 0, anchor: null },
     );
-    expect(result).toEqual({ diameter: 1 });
+    expect(result).toEqual({ width: 1, height: 1 });
   });
 });
 
@@ -417,7 +411,7 @@ describe('ObjectRegistry', () => {
   const expectedTypes = [
     'text', 'code128', 'code39', 'ean13', 'upca', 'ean8', 'upce',
     'interleaved2of5', 'code93', 'qrcode', 'datamatrix', 'pdf417',
-    'box', 'ellipse', 'circle', 'line', 'serial', 'image',
+    'box', 'ellipse', 'line', 'serial', 'image',
   ];
 
   it('contains all expected object types', () => {

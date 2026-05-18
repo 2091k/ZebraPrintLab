@@ -235,11 +235,6 @@ const cs = {
     },
     circle: {
       diameter: 'Průměr (body)',
-      thickness: 'Okraj (body)',
-      filled: 'Vyplněný',
-      color: 'Barva',
-      colorB: 'B — Černá',
-      colorW: 'W — Bílá',
     },
     line: {
       angle: 'Úhel (°)',

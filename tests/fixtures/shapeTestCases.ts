@@ -1,8 +1,8 @@
 import type { LabelObject } from "../../src/types/Group";
 
 /**
- * Pixel-regression cases for the geometric primitives (box, line, ellipse,
- * circle) — analogous to `testCases.ts` for barcodes. Each entry pairs a
+ * Pixel-regression cases for the geometric primitives (box, line, ellipse) —
+ * analogous to `testCases.ts` for barcodes. Each entry pairs a
  * canonical `LabelObject` (used by `renderShape` to produce the local
  * canvas) with the ZPL Labelary should render as the reference.
  *
@@ -17,7 +17,7 @@ import type { LabelObject } from "../../src/types/Group";
  * Initial set deliberately covers the geometry-asymmetry cases:
  *   - thick outline boxes (^GB thickness extrudes inward)
  *   - horizontal / vertical lines of varying thickness
- *   - ellipse + circle outline (^GE thickness behaviour)
+ *   - ellipse outline (^GE thickness behaviour) including square (^GC)
  * Anti-aliasing-only cases (thickness 1, filled solid) are kept too as a
  * baseline that should match trivially.
  *
@@ -117,11 +117,11 @@ export const shapeTestCases: ShapeTestCase[] = [
     id: "shape_circle_outline",
     obj: {
       id: "8",
-      type: "circle",
+      type: "ellipse",
       x: 100,
       y: 100,
       rotation: 0,
-      props: { diameter: 200, thickness: 8, filled: false, color: "B" },
+      props: { width: 200, height: 200, thickness: 8, filled: false, color: "B", lockAspect: true },
     },
     zpl_input: "^XA^FO100,100^GE200,200,8,B^FS^XZ",
     image_ref: "shape_circle_outline.png",

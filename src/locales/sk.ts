@@ -235,11 +235,6 @@ const sk = {
     },
     circle: {
       diameter: 'Priemer (body)',
-      thickness: 'Okraj (body)',
-      filled: 'Vyplnený',
-      color: 'Farba',
-      colorB: 'B — Čierna',
-      colorW: 'W — Biela',
     },
     line: {
       angle: 'Uhol (°)',

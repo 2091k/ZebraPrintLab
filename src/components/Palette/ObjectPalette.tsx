@@ -1,7 +1,8 @@
 import { useDraggable } from '@dnd-kit/core';
 import { ObjectRegistry } from '../../registry';
 import { PALETTE_GROUPS } from './paletteGroups';
-import type { ObjectTypeDefinition } from '../../types/ObjectType';
+import { VIRTUAL_PALETTE_ENTRIES, type VirtualPaletteEntry } from './virtualEntries';
+import type { ObjectGroup } from '../../types/ObjectType';
 import { useT } from '../../lib/useT';
 import { useLabelStore } from '../../store/labelStore';
 import { mmToDots } from '../../lib/coordinates';
@@ -10,24 +11,33 @@ import { CollapsibleSection } from '../ui/CollapsibleSection';
 import type { PaletteDragData } from '../../dnd/types';
 
 interface PaletteEntryProps {
+  /** Unique within the palette: registry type or virtual entry id. */
+  id: string;
+  /** Registry type to instantiate. Equals `id` for non-virtual entries. */
   type: string;
-  def: ObjectTypeDefinition;
+  icon: string;
+  label: string;
+  defaultSize: { width: number; height: number };
+  propsOverride?: object;
 }
 
-function PaletteEntry({ type, def }: PaletteEntryProps) {
-  const t = useT();
+function PaletteEntry({ id, type, icon, label, defaultSize, propsOverride }: PaletteEntryProps) {
   const addObject = useLabelStore((s) => s.addObject);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `palette-${type}`,
-    data: { type } satisfies PaletteDragData,
+    id: `palette-${id}`,
+    data: { type, propsOverride } satisfies PaletteDragData,
   });
 
   const handleDoubleClick = () => {
-    const { label } = useLabelStore.getState();
-    addObject(type, {
-      x: Math.round(mmToDots(label.widthMm, label.dpmm) / 2 - def.defaultSize.width / 2),
-      y: Math.round(mmToDots(label.heightMm, label.dpmm) / 2 - def.defaultSize.height / 2),
-    });
+    const { label: labelConfig } = useLabelStore.getState();
+    addObject(
+      type,
+      {
+        x: Math.round(mmToDots(labelConfig.widthMm, labelConfig.dpmm) / 2 - defaultSize.width / 2),
+        y: Math.round(mmToDots(labelConfig.heightMm, labelConfig.dpmm) / 2 - defaultSize.height / 2),
+      },
+      propsOverride,
+    );
   };
 
   return (
@@ -47,14 +57,45 @@ function PaletteEntry({ type, def }: PaletteEntryProps) {
       `}
     >
       <DragHandleIcon className="w-2 h-3.5 shrink-0 text-muted opacity-0 group-hover:opacity-60 transition-opacity" />
-      <span className="font-mono text-[11px] text-accent w-6 text-center shrink-0">
-        {def.icon}
-      </span>
-      <span className="text-xs text-text">
-        {(t.types as Record<string, string>)[type] ?? def.label}
-      </span>
+      <span className="font-mono text-[11px] text-accent w-6 text-center shrink-0">{icon}</span>
+      <span className="text-xs text-text">{label}</span>
     </div>
   );
+}
+
+interface ResolvedEntry {
+  id: string;
+  type: string;
+  icon: string;
+  label: string;
+  defaultSize: { width: number; height: number };
+  propsOverride?: object;
+}
+
+function resolveEntries(
+  group: ObjectGroup,
+  types: Record<string, string>,
+): ResolvedEntry[] {
+  const registry = Object.entries(ObjectRegistry)
+    .filter(([, def]) => def.group === group)
+    .map(([type, def]): ResolvedEntry => ({
+      id: type,
+      type,
+      icon: def.icon,
+      label: types[type] ?? def.label,
+      defaultSize: def.defaultSize,
+    }));
+  const virtual = VIRTUAL_PALETTE_ENTRIES
+    .filter((v) => v.group === group)
+    .map((v: VirtualPaletteEntry): ResolvedEntry => ({
+      id: v.id,
+      type: v.type,
+      icon: v.icon,
+      label: types[v.labelKey] ?? v.fallbackLabel,
+      defaultSize: v.defaultSize,
+      propsOverride: v.propsOverride,
+    }));
+  return [...registry, ...virtual];
 }
 
 export function ObjectPalette() {
@@ -63,9 +104,7 @@ export function ObjectPalette() {
   return (
     <div className="p-3 flex flex-col gap-3">
       {PALETTE_GROUPS.map((group) => {
-        const entries = Object.entries(ObjectRegistry).filter(
-          ([, def]) => def.group === group.key,
-        );
+        const entries = resolveEntries(group.key, t.types as Record<string, string>);
         if (entries.length === 0) return null;
         return (
           <CollapsibleSection
@@ -73,8 +112,16 @@ export function ObjectPalette() {
             id={`palette-${group.key}`}
             title={t.palette[group.labelKey]}
           >
-            {entries.map(([type, def]) => (
-              <PaletteEntry key={type} type={type} def={def} />
+            {entries.map((e) => (
+              <PaletteEntry
+                key={e.id}
+                id={e.id}
+                type={e.type}
+                icon={e.icon}
+                label={e.label}
+                defaultSize={e.defaultSize}
+                propsOverride={e.propsOverride}
+              />
             ))}
           </CollapsibleSection>
         );

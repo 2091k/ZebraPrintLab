@@ -235,11 +235,6 @@ const bg = {
     },
     circle: {
       diameter: 'Диаметър (точки)',
-      thickness: 'Рамка (точки)',
-      filled: 'Запълнено',
-      color: 'Цвят',
-      colorB: 'B — Черно',
-      colorW: 'W — Бяло',
     },
     line: {
       angle: 'Ъгъл (°)',
