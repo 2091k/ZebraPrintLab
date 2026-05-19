@@ -266,6 +266,23 @@ describe('generateZPL — printer params', () => {
     },
   );
 
+  it('rewrites ^A@ refs across any drive prefix the path uses', () => {
+    // The path is whatever the customFonts entry stores. Even if our
+    // text emit only ever writes E:, an imported label could carry
+    // R: / A: / B: paths that still need to be matched on re-emit.
+    const rRef = '^XA^FO0,0^A@N,30,0,R:FOO.TTF^FDhi^FS^XZ';
+    const aliasByPath: Record<string, string> = { 'R:FOO.TTF': 'Q' };
+    const rewritten = rRef.replace(
+      /\^A@([NIRB]),(\d+),(\d+),([A-Z]:[^^\n]+?)(?=\^|\n|$)/g,
+      (full, rot, h, w, path) => {
+        const alias = aliasByPath[path];
+        return alias ? `^A${alias}${rot},${h},${w}` : full;
+      },
+    );
+    expect(rewritten).toContain('^AQN,30,0');
+    expect(rewritten).not.toContain('^A@N,30,0,R:FOO.TTF');
+  });
+
   it('leaves ^A@ verbose when no matching ^CW alias is defined', () => {
     const text: LabelObject = {
       id: 't1',

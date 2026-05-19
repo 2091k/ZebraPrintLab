@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, type FocusEvent } from 'react';
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid';
 import { getAllFonts, loadFontFile, removeFont } from '../../lib/fontCache';
 import { useFontCacheVersion } from '../../hooks/useFontCacheVersion';
@@ -256,11 +256,20 @@ function ManualMappingsSection({
 }: ManualMappingsSectionProps) {
   const t = useT();
   // Auto-remove rows whose alias AND path are both empty when focus
-  // leaves them. requestAnimationFrame defers the check so tabbing
-  // between sibling inputs does not delete the row mid-traversal.
-  const handleBlur = (path: string, alias: string, value: string) => {
+  // actually leaves the row container. requestAnimationFrame defers
+  // the check until the new focus has landed, then we confirm the row
+  // no longer contains it — tabbing between the row's own inputs does
+  // not count as "leaving".
+  const handleBlur = (
+    e: FocusEvent<HTMLDivElement>,
+    path: string,
+    alias: string,
+  ) => {
+    const row = e.currentTarget;
     requestAnimationFrame(() => {
-      if (!alias && !value) onRemove(path);
+      if (!alias && !path && !row.contains(document.activeElement)) {
+        onRemove(path);
+      }
     });
   };
 
@@ -269,11 +278,16 @@ function ManualMappingsSection({
       <p className="text-xs text-muted px-1 leading-relaxed">{hint}</p>
       {mappings.map((m) => {
         const dup = isDuplicateAlias(m.alias);
+        // Key: stable across edits as long as alias and path don't
+        // change at the same time. For fresh empty rows the auto-
+        // assigned alias from nextFreeAlias is unique per row, which
+        // gives a stable identity until the user types a path.
+        const rowKey = m.path || `__alias__${m.alias}`;
         return (
           <div
-            key={m.path || `__new__${mappings.indexOf(m)}`}
+            key={rowKey}
             className="grid grid-cols-[3rem_1fr_auto] gap-2 items-center"
-            onBlur={() => handleBlur(m.path, m.alias, m.path)}
+            onBlur={(e) => handleBlur(e, m.path, m.alias)}
           >
             <input
               type="text"

@@ -648,6 +648,30 @@ describe('parseZPL — printer params', () => {
     expect(labelConfig.customFonts).toBeUndefined();
   });
 
+  it('upserts ^CW by alias, keeping the last mapping per alias', () => {
+    // Two ^CW lines for the same alias: the second should overwrite
+    // the first in customFonts, matching the runtime fontAliases.set
+    // last-wins semantics.
+    const { labelConfig } = parseZPL(
+      '^XA^CWM,E:OLD.TTF^CWM,E:NEW.TTF^XZ',
+      8,
+    );
+    expect(labelConfig.customFonts).toEqual([
+      { alias: 'M', path: 'E:NEW.TTF' },
+    ]);
+  });
+
+  it('keeps separate ^CW mappings that share a path but use different aliases', () => {
+    const { labelConfig } = parseZPL(
+      '^XA^CWM,E:FOO.TTF^CWN,E:FOO.TTF^XZ',
+      8,
+    );
+    expect(labelConfig.customFonts).toEqual([
+      { alias: 'M', path: 'E:FOO.TTF' },
+      { alias: 'N', path: 'E:FOO.TTF' },
+    ]);
+  });
+
   it('parses ~SD instant darkness', () => {
     expect(parseZPL('~SD07^XA^XZ', 8).labelConfig.instantDarkness).toBe(7);
     expect(parseZPL('~SD30^XA^XZ', 8).labelConfig.instantDarkness).toBe(30);

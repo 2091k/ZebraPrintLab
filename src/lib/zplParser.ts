@@ -1294,13 +1294,18 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     // ^CW {alias},{path} — register an alias for a printer-resident font.
     // Subsequent ^A{alias} fields resolve to {path} via the fontAliases
     // map. The mapping is also persisted on labelConfig so the generator
-    // can re-emit it on round-trip.
+    // can re-emit it on round-trip. Upsert by alias mirrors the
+    // Map-set semantics of fontAliases: a later ^CW for the same alias
+    // replaces the earlier mapping rather than accumulating duplicates.
     CW(p) {
       const alias = (p[0] ?? "").trim().toUpperCase();
       const path = (p[1] ?? "").trim();
       if (!/^[A-Z0-9]$/.test(alias) || !path) return;
       fontAliases.set(alias, path);
-      (labelConfig.customFonts ??= []).push({ alias, path });
+      const list = (labelConfig.customFonts ?? []).filter(
+        (m) => m.alias !== alias,
+      );
+      labelConfig.customFonts = [...list, { alias, path }];
     },
 
     // ── Browser-limit: printer-specific features ────────────────────────────
