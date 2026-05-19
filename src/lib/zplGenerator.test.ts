@@ -144,6 +144,27 @@ describe('generateZPL — printer params', () => {
     ).toContain('^CFA,30,20');
   });
 
+  it('emits ^CF with empty middle slot when only id + width are set', () => {
+    expect(
+      generateZPL(
+        { ...BASE_LABEL, defaultFontId: 'A', defaultFontWidth: 20 },
+        [],
+      ),
+    ).toContain('^CFA,,20');
+  });
+
+  it('emits ^CF with two empty slots when only width is set', () => {
+    expect(
+      generateZPL({ ...BASE_LABEL, defaultFontWidth: 20 }, []),
+    ).toContain('^CF,,20');
+  });
+
+  it('trims trailing empty ^CF slots', () => {
+    const zpl = generateZPL({ ...BASE_LABEL, defaultFontId: 'A' }, []);
+    expect(zpl).toContain('^CFA');
+    expect(zpl).not.toContain('^CFA,');
+  });
+
   it('emits ^PM when mirror is set', () => {
     expect(generateZPL({ ...BASE_LABEL, mirror: 'Y' }, [])).toContain('^PMY');
     expect(generateZPL({ ...BASE_LABEL, mirror: 'N' }, [])).toContain('^PMN');

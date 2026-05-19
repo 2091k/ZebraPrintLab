@@ -65,18 +65,21 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   if (label.labelShift) lines.push(`^LS${label.labelShift}`);
 
   // Default font ────────────────────────────────────────────────────────────
-  // ^CF f,h,w — emit each part when set.
+  // ^CF f,h,w — positional. Empty slots stay empty (^CFA,,20 sets font A
+  // and width 20, leaving height untouched). Trailing empty slots are
+  // trimmed for a tidier emit.
   if (
     label.defaultFontId ||
     label.defaultFontHeight !== undefined ||
     label.defaultFontWidth !== undefined
   ) {
-    const id = label.defaultFontId ?? "";
-    const height =
-      label.defaultFontHeight !== undefined ? `,${label.defaultFontHeight}` : "";
-    const width =
-      label.defaultFontWidth !== undefined ? `,${label.defaultFontWidth}` : "";
-    lines.push(`^CF${id}${height}${width}`);
+    const slots = [
+      label.defaultFontId ?? "",
+      label.defaultFontHeight !== undefined ? String(label.defaultFontHeight) : "",
+      label.defaultFontWidth !== undefined ? String(label.defaultFontWidth) : "",
+    ];
+    while (slots.length > 1 && slots[slots.length - 1] === "") slots.pop();
+    lines.push(`^CF${slots.join(",")}`);
   }
 
   // Apply ^LH/^LT compensation: subtract the offsets from each leaf's
