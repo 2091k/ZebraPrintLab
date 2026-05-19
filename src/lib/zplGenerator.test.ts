@@ -103,6 +103,78 @@ describe('generateZPL — printer params', () => {
     expect(generateZPL(BASE_LABEL, [])).not.toContain('^PO');
   });
 
+  it('emits ^PM when mirror is set', () => {
+    expect(generateZPL({ ...BASE_LABEL, mirror: 'Y' }, [])).toContain('^PMY');
+    expect(generateZPL({ ...BASE_LABEL, mirror: 'N' }, [])).toContain('^PMN');
+    expect(generateZPL(BASE_LABEL, [])).not.toContain('^PM');
+  });
+
+  it('emits ~SD before ^XA with zero-padded value', () => {
+    const zpl = generateZPL({ ...BASE_LABEL, instantDarkness: 7 }, []);
+    expect(zpl.startsWith('~SD07\n^XA')).toBe(true);
+    expect(generateZPL({ ...BASE_LABEL, instantDarkness: 30 }, []))
+      .toContain('~SD30');
+  });
+
+  it('emits ^PR when only slew or backfeed is set (printSpeed undefined)', () => {
+    expect(generateZPL({ ...BASE_LABEL, slewSpeed: 8 }, [])).toContain('^PR8');
+    // backfeed-only: ZPL has no positional skip, so slew slot repeats the
+    // (defaulted) print speed. Documented asymmetry — see roundtrip test.
+    expect(
+      generateZPL({ ...BASE_LABEL, backfeedSpeed: 4 }, []),
+    ).toContain('^PR4,4,4');
+  });
+
+  it('emits ^PR with slew and backfeed when set', () => {
+    expect(
+      generateZPL({ ...BASE_LABEL, printSpeed: 6, slewSpeed: 8 }, []),
+    ).toContain('^PR6,8');
+    // backfeed without slew → slew defaults to printSpeed so position is
+    // preserved.
+    expect(
+      generateZPL({ ...BASE_LABEL, printSpeed: 6, backfeedSpeed: 4 }, []),
+    ).toContain('^PR6,6,4');
+    expect(
+      generateZPL(
+        { ...BASE_LABEL, printSpeed: 6, slewSpeed: 8, backfeedSpeed: 4 },
+        [],
+      ),
+    ).toContain('^PR6,8,4');
+  });
+
+  it('^PR backfeed-only does not roundtrip cleanly (slew gets populated)', () => {
+    // Documented asymmetry: ZPL has no positional skip, so on emit the slew
+    // slot is filled with the print speed. On reparse, slewSpeed becomes
+    // defined even though it was undefined in the source. If this is ever
+    // changed to a normaliser-on-input approach, update both the generator
+    // and this test.
+    const original: LabelConfig = {
+      ...BASE_LABEL,
+      printSpeed: 6,
+      backfeedSpeed: 4,
+    };
+    const zpl = generateZPL(original, []);
+    const { labelConfig } = parseZPL(zpl, 8);
+    expect(labelConfig.printSpeed).toBe(6);
+    expect(labelConfig.slewSpeed).toBe(6);
+    expect(labelConfig.backfeedSpeed).toBe(4);
+  });
+
+  it('emits ^PQ with extended params when any are set', () => {
+    expect(
+      generateZPL({ ...BASE_LABEL, printQuantity: 5, pauseCount: 2 }, []),
+    ).toContain('^PQ5,2,0,N');
+    expect(
+      generateZPL(
+        { ...BASE_LABEL, printQuantity: 1, replicates: 3 },
+        [],
+      ),
+    ).toContain('^PQ1,0,3,N');
+    expect(
+      generateZPL({ ...BASE_LABEL, overridePauseCount: 'Y' }, []),
+    ).toContain('^PQ1,0,0,Y');
+  });
+
   it('emits ^CF when both defaultFontId and defaultFontHeight are set', () => {
     const zpl = generateZPL(
       { ...BASE_LABEL, defaultFontId: '0', defaultFontHeight: 30 },

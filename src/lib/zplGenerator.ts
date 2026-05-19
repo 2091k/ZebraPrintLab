@@ -17,19 +17,42 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   const widthDots = mmToDots(label.widthMm, label.dpmm);
   const heightDots = mmToDots(label.heightMm, label.dpmm);
 
-  const lines: string[] = [
+  const lines: string[] = [];
+
+  // ~SD is a tilde-prefix command that takes effect immediately on receipt,
+  // independently of the label block. Emit it before ^XA so the darkness
+  // change applies to the label that follows.
+  if (label.instantDarkness !== undefined) {
+    const v = String(label.instantDarkness).padStart(2, '0');
+    lines.push(`~SD${v}`);
+  }
+
+  lines.push(
     '^XA',
     `^PW${widthDots}`,
     `^LL${heightDots}`,
     '^CI28',
-  ];
+  );
 
   if (label.mediaMode) lines.push(`^MM${label.mediaMode}`);
   if (label.mediaType) lines.push(`^MT${label.mediaType}`);
-  if (label.printSpeed !== undefined) lines.push(`^PR${label.printSpeed}`);
+  // ^PR print,slew,backfeed — any of the three triggers emission. Slew and
+  // backfeed default to the print speed per Zebra spec; ZPL has no way to
+  // skip a positional param, so backfeed-only still has to repeat the print
+  // speed in the slew slot.
+  const fallback = label.printSpeed ?? label.slewSpeed ?? label.backfeedSpeed;
+  if (fallback !== undefined) {
+    const parts = [fallback];
+    if (label.slewSpeed !== undefined || label.backfeedSpeed !== undefined) {
+      parts.push(label.slewSpeed ?? fallback);
+    }
+    if (label.backfeedSpeed !== undefined) parts.push(label.backfeedSpeed);
+    lines.push(`^PR${parts.join(',')}`);
+  }
   // darkness=0 is a valid value (printer baseline), so check undefined explicitly.
   if (label.darkness !== undefined) lines.push(`^MD${label.darkness}`);
   if (label.printOrientation) lines.push(`^PO${label.printOrientation}`);
+  if (label.mirror) lines.push(`^PM${label.mirror}`);
   // ^CF parameters are individually optional per Zebra spec: ^CF0 sets the
   // font only, ^CF,30 sets the height only. Preserves round-trip fidelity
   // when an imported label used a partial command.
@@ -54,8 +77,17 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   };
   lines.push(...objects.flatMap(emitLeaf));
 
-  if (label.printQuantity && label.printQuantity > 1) {
-    lines.push(`^PQ${label.printQuantity}`);
+  // ^PQ q,p,r,o — emit if quantity > 1 OR any extended param is set.
+  // Defaults follow the Zebra spec: q=1, p=0, r=0, o=N.
+  const pq = label.printQuantity ?? 1;
+  const pause = label.pauseCount ?? 0;
+  const reps = label.replicates ?? 0;
+  const override = label.overridePauseCount ?? 'N';
+  const pqExtended = pause !== 0 || reps !== 0 || override !== 'N';
+  if (pqExtended) {
+    lines.push(`^PQ${pq},${pause},${reps},${override}`);
+  } else if (pq > 1) {
+    lines.push(`^PQ${pq}`);
   }
 
   lines.push('^XZ');

@@ -6,12 +6,26 @@ export const labelConfigSchema = z.object({
   heightMm: z.number(),
   dpmm: z.number(),
   printQuantity: z.number().optional(),
+  /** ^PQ p2: pause every N labels (0 = none). */
+  pauseCount: z.number().int().min(0).max(99999999).optional(),
+  /** ^PQ p3: replicates of each serialised label. */
+  replicates: z.number().int().min(0).max(99999999).optional(),
+  /** ^PQ p4: override pause count (cutter behaviour). */
+  overridePauseCount: z.enum(['Y', 'N']).optional(),
   mediaMode: z.enum(['T', 'V', 'D', 'K']).optional(),
   labelShift: z.number().optional(),
   printSpeed: z.number().int().min(2).max(14).optional(),
+  /** ^PR p2: slew (inter-label) speed. */
+  slewSpeed: z.number().int().min(2).max(14).optional(),
+  /** ^PR p3: backfeed speed. */
+  backfeedSpeed: z.number().int().min(2).max(14).optional(),
   darkness: z.number().int().min(-30).max(30).optional(),
+  /** ~SD: instant darkness set, emitted before ^XA. 0-30. */
+  instantDarkness: z.number().int().min(0).max(30).optional(),
   mediaType: z.enum(['T', 'D']).optional(),
   printOrientation: z.enum(['N', 'I']).optional(),
+  /** ^PM: mirror image (left/right flip). */
+  mirror: z.enum(['Y', 'N']).optional(),
   defaultFontId: z.string().min(1).optional(),
   defaultFontHeight: z.number().int().positive().optional(),
 });

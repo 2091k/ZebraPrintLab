@@ -430,7 +430,9 @@ function LabelConfigPanel({
         <CollapsibleSection
           id="label-output"
           title={t.label.outputHeading}
+          defaultOpen={false}
         >
+        <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <label className={labelCls}>{t.label.mediaMode}</label>
           <select
@@ -480,6 +482,57 @@ function LabelConfigPanel({
             }
           />
         </div>
+
+        </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          id="label-quantity-advanced"
+          title={t.label.quantityAdvancedHeading}
+          defaultOpen={false}
+        >
+        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.pauseCount}</label>
+          <input
+            type="number"
+            className={inputCls}
+            value={label.pauseCount ?? ""}
+            min={0}
+            max={99999999}
+            onChange={(e) =>
+              onUpdate({ pauseCount: parseIntOrUndef(e.target.value) })
+            }
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>{t.label.replicates}</label>
+          <input
+            type="number"
+            className={inputCls}
+            value={label.replicates ?? ""}
+            min={0}
+            max={99999999}
+            onChange={(e) =>
+              onUpdate({ replicates: parseIntOrUndef(e.target.value) })
+            }
+          />
+        </div>
+
+        <label className="flex items-center gap-2 text-xs">
+          <input
+            type="checkbox"
+            checked={label.overridePauseCount === "Y"}
+            onChange={(e) =>
+              onUpdate({
+                overridePauseCount: e.target.checked ? "Y" : undefined,
+              })
+            }
+          />
+          {t.label.overridePauseCount}
+        </label>
+        </div>
         </CollapsibleSection>
 
         <CollapsibleSection
@@ -487,44 +540,104 @@ function LabelConfigPanel({
           title={t.label.printerSettingsHeading}
           defaultOpen={false}
         >
+        <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <label className={labelCls}>
-            {t.label.printSpeed}
+            {t.label.speedHeading}
             <InformationCircleIcon
               className="w-3.5 h-3.5 ml-1 inline-block align-text-bottom text-muted cursor-help"
               title={t.label.printSpeedHint}
             />
           </label>
-          <input
-            type="number"
-            className={inputCls}
-            value={label.printSpeed ?? ""}
-            min={2}
-            max={14}
-            onChange={(e) =>
-              onUpdate({ printSpeed: parseIntOrUndef(e.target.value) })
-            }
-          />
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-muted">
+                {t.label.speedPrint}
+              </label>
+              <input
+                type="number"
+                className={inputCls}
+                value={label.printSpeed ?? ""}
+                min={2}
+                max={14}
+                onChange={(e) =>
+                  onUpdate({ printSpeed: parseIntOrUndef(e.target.value) })
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-muted">
+                {t.label.speedSlew}
+              </label>
+              <input
+                type="number"
+                className={inputCls}
+                value={label.slewSpeed ?? ""}
+                min={2}
+                max={14}
+                onChange={(e) =>
+                  onUpdate({ slewSpeed: parseIntOrUndef(e.target.value) })
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-muted">
+                {t.label.speedBackfeed}
+              </label>
+              <input
+                type="number"
+                className={inputCls}
+                value={label.backfeedSpeed ?? ""}
+                min={2}
+                max={14}
+                onChange={(e) =>
+                  onUpdate({ backfeedSpeed: parseIntOrUndef(e.target.value) })
+                }
+              />
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-1">
           <label className={labelCls}>
-            {t.label.darkness}
+            {t.label.darknessHeading}
             <InformationCircleIcon
               className="w-3.5 h-3.5 ml-1 inline-block align-text-bottom text-muted cursor-help"
               title={t.label.darknessHint}
             />
           </label>
-          <input
-            type="number"
-            className={inputCls}
-            value={label.darkness ?? ""}
-            min={-30}
-            max={30}
-            onChange={(e) =>
-              onUpdate({ darkness: parseIntOrUndef(e.target.value) })
-            }
-          />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-muted">
+                {t.label.darknessPermanent}
+              </label>
+              <input
+                type="number"
+                className={inputCls}
+                value={label.darkness ?? ""}
+                min={-30}
+                max={30}
+                onChange={(e) =>
+                  onUpdate({ darkness: parseIntOrUndef(e.target.value) })
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-muted">
+                {t.label.darknessInstant}
+              </label>
+              <input
+                type="number"
+                className={inputCls}
+                value={label.instantDarkness ?? ""}
+                min={0}
+                max={30}
+                onChange={(e) =>
+                  onUpdate({ instantDarkness: parseIntOrUndef(e.target.value) })
+                }
+              />
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-1">
@@ -562,6 +675,16 @@ function LabelConfigPanel({
             <option value="N">{t.label.printOrientationN}</option>
             <option value="I">{t.label.printOrientationI}</option>
           </select>
+          <label className="flex items-center gap-2 text-xs mt-1">
+            <input
+              type="checkbox"
+              checked={label.mirror === "Y"}
+              onChange={(e) =>
+                onUpdate({ mirror: e.target.checked ? "Y" : undefined })
+              }
+            />
+            {t.label.mirror}
+          </label>
         </div>
 
         <div className="flex flex-col gap-1">
@@ -598,6 +721,7 @@ function LabelConfigPanel({
               />
             </div>
           </div>
+        </div>
         </div>
         </CollapsibleSection>
       </div>
