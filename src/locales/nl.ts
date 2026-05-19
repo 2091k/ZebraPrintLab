@@ -448,9 +448,13 @@ const nl = {
     upload: 'Uploaden',
     cancel: 'Annuleren',
     delete: 'Verwijderen',
+    deleteConfirm: 'Dit lettertype uit het ontwerp verwijderen?',
     uploadError: 'Lettertypebestand kon niet worden geladen',
     aliasHint: 'ZPL-alias voor dit label (1 teken, A-Z of 0-9)',
     aliasAssigned: 'Toegewezen ZPL-alias voor dit label',
+    manualMappingsHeading: 'Lettertypen op de printer',
+    manualMappingsHint: 'Verwijs naar lettertypen die al op de printer staan maar hier niet zijn geüpload.',
+    addManualMapping: 'Printerlettertype toevoegen',
   },
   zebraPrint: {
     heading: 'Verzenden naar Zebra-printer',

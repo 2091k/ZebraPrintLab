@@ -448,9 +448,13 @@ const zhHans = {
     upload: '上传',
     cancel: '取消',
     delete: '删除',
+    deleteConfirm: '从设计中移除此字体？',
     uploadError: '无法加载字体文件',
     aliasHint: '此标签的 ZPL 别名 (1 字符, A-Z 或 0-9)',
     aliasAssigned: '此标签的已分配 ZPL 别名',
+    manualMappingsHeading: '打印机内置字体',
+    manualMappingsHint: '引用打印机中已有但未在此上传的字体。',
+    addManualMapping: '添加打印机字体',
   },
   zebraPrint: {
     heading: '发送到 Zebra 打印机',

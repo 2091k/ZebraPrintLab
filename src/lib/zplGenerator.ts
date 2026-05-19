@@ -141,5 +141,25 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
 
   lines.push('^XZ');
 
-  return lines.join('\n');
+  // Rewrite ^A@...E:NAME.TTF references to ^A{alias} for paths that the
+  // user has registered via ^CW. The ^CW lines are already in the
+  // header, so the printer resolves the short form against the alias
+  // table. Saves bytes and surfaces the user's alias choices in the
+  // output. ^A@ is the only emit pattern that references font files
+  // verbatim, so the regex stays scoped to a single shape.
+  const aliasByPath = new Map<string, string>();
+  for (const m of label.customFonts ?? []) {
+    if (m.alias) aliasByPath.set(m.path, m.alias);
+  }
+  let output = lines.join('\n');
+  if (aliasByPath.size > 0) {
+    output = output.replace(
+      /\^A@([NIRB]),(\d+),(\d+),(E:[^^\n]+?)(?=\^|\n|$)/g,
+      (full, rot, h, w, path) => {
+        const alias = aliasByPath.get(path);
+        return alias ? `^A${alias}${rot},${h},${w}` : full;
+      },
+    );
+  }
+  return output;
 }

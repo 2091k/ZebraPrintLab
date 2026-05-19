@@ -448,9 +448,13 @@ const zhHant = {
     upload: '上傳',
     cancel: '取消',
     delete: '刪除',
+    deleteConfirm: '從設計中移除此字型？',
     uploadError: '無法載入字體檔案',
     aliasHint: '此標籤的 ZPL 別名 (1 字元, A-Z 或 0-9)',
     aliasAssigned: '此標籤的已指派 ZPL 別名',
+    manualMappingsHeading: '印表機內建字型',
+    manualMappingsHint: '參照印表機中已有但未在此上傳的字型。',
+    addManualMapping: '新增印表機字型',
   },
   zebraPrint: {
     heading: '傳送至 Zebra 印表機',

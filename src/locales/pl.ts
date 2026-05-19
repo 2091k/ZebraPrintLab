@@ -448,9 +448,13 @@ const pl = {
     upload: 'Prześlij',
     cancel: 'Anuluj',
     delete: 'Usuń',
+    deleteConfirm: 'Usunąć tę czcionkę z projektu?',
     uploadError: 'Nie można załadować pliku czcionki',
     aliasHint: 'Alias ZPL dla tej etykiety (1 znak, A-Z lub 0-9)',
     aliasAssigned: 'Przypisany alias ZPL dla tej etykiety',
+    manualMappingsHeading: 'Czcionki w pamięci drukarki',
+    manualMappingsHint: 'Odwołuje się do czcionek już w drukarce, niewgranych tutaj.',
+    addManualMapping: 'Dodaj czcionkę drukarki',
   },
   zebraPrint: {
     heading: 'Wyślij do drukarki Zebra',

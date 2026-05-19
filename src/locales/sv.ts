@@ -448,9 +448,13 @@ const sv = {
     upload: 'Ladda upp',
     cancel: 'Avbryt',
     delete: 'Ta bort',
+    deleteConfirm: 'Ta bort detta typsnitt från designen?',
     uploadError: 'Det gick inte att ladda typsnittsfilen',
     aliasHint: 'ZPL-alias för denna etikett (1 tecken, A-Z eller 0-9)',
     aliasAssigned: 'Tilldelat ZPL-alias för denna etikett',
+    manualMappingsHeading: 'Typsnitt i skrivaren',
+    manualMappingsHint: 'Referera till typsnitt som redan finns på skrivaren men inte är uppladdade här.',
+    addManualMapping: 'Lägg till skrivartypsnitt',
   },
   zebraPrint: {
     heading: 'Skicka till Zebra-skrivare',

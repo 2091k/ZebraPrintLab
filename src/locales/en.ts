@@ -469,9 +469,13 @@ const en = {
     upload: 'Upload',
     cancel: 'Cancel',
     delete: 'Delete',
+    deleteConfirm: 'Remove this font from the design?',
     uploadError: 'Could not load font file',
     aliasHint: 'ZPL alias for this label (1 char, A-Z or 0-9)',
     aliasAssigned: 'Assigned ZPL alias for this label',
+    manualMappingsHeading: 'Printer-resident fonts',
+    manualMappingsHint: 'Reference fonts already on the printer that are not uploaded here.',
+    addManualMapping: 'Add printer font',
   },
 } as const;
 

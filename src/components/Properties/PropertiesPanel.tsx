@@ -1,6 +1,5 @@
 import type { RefObject } from "react";
 import { InformationCircleIcon, FolderPlusIcon } from "@heroicons/react/16/solid";
-import { CustomFontsSection } from "./CustomFontsSection";
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import type { LabelCanvasHandle } from "../Canvas/LabelCanvas";
 import type { AlignAxis } from "../../lib/alignment";
@@ -23,11 +22,7 @@ import { CollapsibleSection } from "../ui/CollapsibleSection";
 import { AlignButtons } from "./AlignButtons";
 import { inputCls, labelCls } from "./styles";
 import type { LabelConfig } from "../../types/ObjectType";
-
-/** Built-in alphanumeric font IDs the Zebra firmware ships with. Used as
- *  suggestions for ^CF — the input stays free-text so user-defined ^CW
- *  aliases (single letters) can still be entered. */
-const ZPL_BUILTIN_FONT_IDS = ['0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] as const;
+import { ZPL_BUILTIN_FONT_IDS } from "../../lib/customFonts";
 
 interface PropertiesPanelProps {
   /** Imperative handle on the canvas — used for actions that need live render
@@ -350,13 +345,27 @@ function LabelConfigPanel({
 
   // ^CF / ^A suggestions: built-in font letters plus every alias the
   // user has registered via ^CW. Set-based dedup keeps user-overridden
-  // built-ins from appearing twice.
+  // built-ins from appearing twice. The label on custom aliases shows
+  // the referenced path so a bare letter is not mistaken for a built-in.
+  const aliasPaths = new Map<string, string>();
+  for (const m of label.customFonts ?? []) {
+    if (m.alias) aliasPaths.set(m.alias, m.path);
+  }
   const fontIdOptions = Array.from(
     new Set([
       ...ZPL_BUILTIN_FONT_IDS,
-      ...(label.customFonts?.map((m) => m.alias).filter(Boolean) ?? []),
+      ...aliasPaths.keys(),
     ]),
-  );
+  ).map((id) => {
+    const path = aliasPaths.get(id);
+    // Strip the drive prefix (E:, R:, ...) from the display label;
+    // the full path stays in the underlying customFonts entry and is
+    // emitted verbatim to ZPL.
+    return {
+      value: id,
+      label: path ? path.replace(/^[A-Z]:/, '') : undefined,
+    };
+  });
 
   return (
     <div className="flex flex-col">
@@ -815,17 +824,10 @@ function LabelConfigPanel({
         </div>
         </div>
         </CollapsibleSection>
-
-        <CustomFontsSection
-          mappings={label.customFonts ?? []}
-          onChange={(customFonts) =>
-            onUpdate({ customFonts: customFonts.length > 0 ? customFonts : undefined })
-          }
-        />
       </div>
       <datalist id="zpl-default-font-ids">
-        {fontIdOptions.map((id) => (
-          <option key={id} value={id} />
+        {fontIdOptions.map((opt) => (
+          <option key={opt.value} value={opt.value} label={opt.label} />
         ))}
       </datalist>
     </div>

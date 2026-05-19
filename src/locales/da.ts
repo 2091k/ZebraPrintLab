@@ -448,9 +448,13 @@ const da = {
     upload: 'Upload',
     cancel: 'Annuller',
     delete: 'Slet',
+    deleteConfirm: 'Fjern denne skrifttype fra designet?',
     uploadError: 'Skriftfilen kunne ikke indlaeses',
     aliasHint: 'ZPL-alias for denne etiket (1 tegn, A-Z eller 0-9)',
     aliasAssigned: 'Tildelt ZPL-alias for denne etiket',
+    manualMappingsHeading: 'Skrifttyper på printeren',
+    manualMappingsHint: 'Reference til skrifttyper, der allerede er på printeren, men ikke uploadet her.',
+    addManualMapping: 'Tilføj printerskrifttype',
   },
   zebraPrint: {
     heading: 'Send til Zebra-printer',

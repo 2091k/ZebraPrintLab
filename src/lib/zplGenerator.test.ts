@@ -236,6 +236,59 @@ describe('generateZPL — printer params', () => {
     expect(zpl).toContain('^CWB,E:OK.TTF');
   });
 
+  it('rewrites ^A@ font refs to ^A{alias} when a ^CW mapping exists', () => {
+    const text: LabelObject = {
+      id: 't1',
+      type: 'text',
+      x: 10,
+      y: 10,
+      rotation: 0,
+      props: {
+        content: 'hi',
+        rotation: 'N',
+        fontHeight: 30,
+        fontWidth: 0,
+        printerFontName: 'ARIAL.TTF',
+      },
+    };
+    const zpl = generateZPL(
+      {
+        ...BASE_LABEL,
+        customFonts: [{ alias: 'M', path: 'E:ARIAL.TTF' }],
+      },
+      [text],
+    );
+    expect(zpl).toContain('^CWM,E:ARIAL.TTF');
+    expect(zpl).toContain('^AMN,30,0');
+    expect(zpl).not.toContain('^A@N,30,0,E:ARIAL.TTF');
+  });
+
+  it('leaves ^A@ verbose when no matching ^CW alias is defined', () => {
+    const text: LabelObject = {
+      id: 't1',
+      type: 'text',
+      x: 10,
+      y: 10,
+      rotation: 0,
+      props: {
+        content: 'hi',
+        rotation: 'N',
+        fontHeight: 30,
+        fontWidth: 0,
+        printerFontName: 'ORPHAN.TTF',
+      },
+    };
+    const zpl = generateZPL(
+      {
+        ...BASE_LABEL,
+        customFonts: [{ alias: 'M', path: 'E:OTHER.TTF' }],
+      },
+      [text],
+    );
+    expect(zpl).toContain('^A@N,30,0,E:ORPHAN.TTF');
+    expect(zpl).not.toContain('^AMN,30,0');
+  });
+
   it('emits ^PM when mirror is set', () => {
     expect(generateZPL({ ...BASE_LABEL, mirror: 'Y' }, [])).toContain('^PMY');
     expect(generateZPL({ ...BASE_LABEL, mirror: 'N' }, [])).toContain('^PMN');

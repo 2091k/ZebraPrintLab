@@ -12,6 +12,32 @@ export const ALIAS_CHAR_RE = /[^A-Z0-9]/g;
  *  Custom Fonts row directly. */
 export const DEFAULT_FONT_DRIVE = "E:";
 
+/** Standard Zebra storage drive prefixes for path suggestions:
+ *  E = flash, R = volatile RAM, A = removable (PCMCIA/CF), B = optional
+ *  on-board flash. The first entry matches `DEFAULT_FONT_DRIVE`. */
+export const ZPL_DRIVE_PREFIXES = ["E:", "R:", "A:", "B:"] as const;
+
+/** Built-in alphanumeric font IDs the Zebra firmware ships with.
+ *  Used as default-font suggestions and excluded from the auto-pick
+ *  range in `nextFreeAlias` so users do not accidentally override the
+ *  built-ins. */
+export const ZPL_BUILTIN_FONT_IDS = [
+  "0",
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+] as const;
+
+/** The printer-storage path emitted for a browser-uploaded font. */
+export function uploadedFontPath(name: string): string {
+  return `${DEFAULT_FONT_DRIVE}${name}`;
+}
+
 /** Normalise raw user input into a valid ^CW alias char (or empty
  *  string if no usable character is present). */
 export function normalizeAlias(raw: string): string {
@@ -29,4 +55,23 @@ export function upsertCustomFontMapping(
   const withoutPath = (list ?? []).filter((m) => m.path !== path);
   if (!alias) return withoutPath;
   return [...withoutPath, { alias, path }];
+}
+
+const ZPL_BUILTIN_FONT_LETTERS = '0ABCDEFGH';
+const ALIAS_PREFERRED_ORDER = 'IJKLMNOPQRSTUVWXYZ123456789';
+
+/** Pick the first alias character that is not already taken. Built-in
+ *  Zebra font letters (0, A-H) are tried only after the unreserved
+ *  range is exhausted; assigning one of them is a deliberate override
+ *  of the built-in font, which we avoid by default. Returns '' if all
+ *  36 valid alias characters are in use. */
+export function nextFreeAlias(taken: Iterable<string>): string {
+  const used = new Set(taken);
+  for (const c of ALIAS_PREFERRED_ORDER) {
+    if (!used.has(c)) return c;
+  }
+  for (const c of ZPL_BUILTIN_FONT_LETTERS) {
+    if (!used.has(c)) return c;
+  }
+  return '';
 }

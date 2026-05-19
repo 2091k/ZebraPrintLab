@@ -448,9 +448,13 @@ const lt = {
     upload: 'Įkelti',
     cancel: 'Atšaukti',
     delete: 'Ištrinti',
+    deleteConfirm: 'Pašalinti šį šriftą iš dizaino?',
     uploadError: 'Nepavyko įkelti šrifto failo',
     aliasHint: 'ZPL alias šiai etiketei (1 simbolis, A-Z arba 0-9)',
     aliasAssigned: 'Šiai etiketei priskirtas ZPL alias',
+    manualMappingsHeading: 'Spausdintuve esantys šriftai',
+    manualMappingsHint: 'Nuoroda į spausdintuve jau esančius šriftus, kurie čia neįkelti.',
+    addManualMapping: 'Pridėti spausdintuvo šriftą',
   },
   zebraPrint: {
     heading: 'Siųsti į Zebra spausdintuvą',

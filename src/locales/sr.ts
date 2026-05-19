@@ -448,9 +448,13 @@ const sr = {
     upload: 'Отпреми',
     cancel: 'Откажи',
     delete: 'Избриши',
+    deleteConfirm: 'Уклонити овај фонт из дизајна?',
     uploadError: 'Датотека фонта није могла бити учитана',
     aliasHint: 'ZPL алијас за ову етикету (1 знак, A-Z или 0-9)',
     aliasAssigned: 'Додељен ZPL алијас за ову етикету',
+    manualMappingsHeading: 'Фонтови на штампачу',
+    manualMappingsHint: 'Референца на фонтове који се већ налазе на штампачу, али нису пренети овде.',
+    addManualMapping: 'Додај фонт штампача',
   },
   zebraPrint: {
     heading: 'Пошаљи на Zebra штампач',

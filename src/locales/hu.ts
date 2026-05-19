@@ -448,9 +448,13 @@ const hu = {
     upload: 'Feltöltés',
     cancel: 'Mégse',
     delete: 'Törlés',
+    deleteConfirm: 'Eltávolítja ezt a betűtípust a tervből?',
     uploadError: 'A betűtípus-fájl nem tölthető be',
     aliasHint: 'ZPL alias ehhez a címkéhez (1 karakter, A-Z vagy 0-9)',
     aliasAssigned: 'Hozzárendelt ZPL alias ehhez a címkéhez',
+    manualMappingsHeading: 'Betűtípusok a nyomtatón',
+    manualMappingsHint: 'Hivatkozás a nyomtatón már lévő, itt fel nem töltött betűtípusokra.',
+    addManualMapping: 'Nyomtató betűtípus hozzáadása',
   },
   zebraPrint: {
     heading: 'Küldés Zebra nyomtatóra',

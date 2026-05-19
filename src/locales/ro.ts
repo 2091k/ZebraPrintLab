@@ -448,9 +448,13 @@ const ro = {
     upload: 'Încarcă',
     cancel: 'Anulează',
     delete: 'Șterge',
+    deleteConfirm: 'Eliminați acest font din design?',
     uploadError: 'Fisierul de font nu a putut fi incarcat',
     aliasHint: 'Alias ZPL pentru această etichetă (1 caracter, A-Z sau 0-9)',
     aliasAssigned: 'Alias ZPL atribuit acestei etichete',
+    manualMappingsHeading: 'Fonturi din imprimantă',
+    manualMappingsHint: 'Referință la fonturi deja prezente pe imprimantă, neîncărcate aici.',
+    addManualMapping: 'Adaugă font imprimantă',
   },
   zebraPrint: {
     heading: 'Trimite la imprimanta Zebra',

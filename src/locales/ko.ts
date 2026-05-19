@@ -448,9 +448,13 @@ const ko = {
     upload: '업로드',
     cancel: '취소',
     delete: '삭제',
+    deleteConfirm: '이 글꼴을 디자인에서 제거하시겠습니까?',
     uploadError: '글꼴 파일을 불러올 수 없습니다',
     aliasHint: '이 라벨의 ZPL 별칭 (1 글자, A-Z 또는 0-9)',
     aliasAssigned: '이 라벨에 할당된 ZPL 별칭',
+    manualMappingsHeading: '프린터 내 글꼴',
+    manualMappingsHint: '프린터에 이미 있지만 여기에 업로드되지 않은 글꼴을 참조합니다.',
+    addManualMapping: '프린터 글꼴 추가',
   },
   zebraPrint: {
     heading: 'Zebra 프린터로 전송',

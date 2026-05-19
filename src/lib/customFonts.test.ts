@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { normalizeAlias, upsertCustomFontMapping } from "./customFonts";
+import {
+  nextFreeAlias,
+  normalizeAlias,
+  upsertCustomFontMapping,
+} from "./customFonts";
 
 describe("normalizeAlias", () => {
   it("uppercases letters", () => {
@@ -62,5 +66,28 @@ describe("upsertCustomFontMapping", () => {
     expect(upsertCustomFontMapping(undefined, "E:X.TTF", "X")).toEqual([
       { alias: "X", path: "E:X.TTF" },
     ]);
+  });
+});
+
+describe("nextFreeAlias", () => {
+  it("returns I when nothing is taken (first non-built-in)", () => {
+    expect(nextFreeAlias([])).toBe("I");
+  });
+
+  it("skips taken aliases in the preferred range", () => {
+    expect(nextFreeAlias(["I", "J", "K"])).toBe("L");
+  });
+
+  it("avoids built-in font letters until the unreserved range is exhausted", () => {
+    // I-Z + 1-9 = 26 chars; if all are taken the helper falls back to
+    // the built-in letters.
+    const taken = "IJKLMNOPQRSTUVWXYZ123456789".split("");
+    expect(nextFreeAlias(taken)).toBe("0");
+  });
+
+  it("returns empty when all 36 valid characters are taken", () => {
+    const all =
+      "0ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789".split("");
+    expect(nextFreeAlias(all)).toBe("");
   });
 });

@@ -448,9 +448,13 @@ const cs = {
     upload: 'Nahrát',
     cancel: 'Zrušit',
     delete: 'Smazat',
+    deleteConfirm: 'Odebrat toto písmo z návrhu?',
     uploadError: 'Soubor písma se nepodařilo načíst',
     aliasHint: 'ZPL alias pro tento štítek (1 znak, A-Z nebo 0-9)',
     aliasAssigned: 'Přiřazený ZPL alias pro tento štítek',
+    manualMappingsHeading: 'Písma uložená v tiskárně',
+    manualMappingsHint: 'Odkaz na písma, která jsou již v tiskárně, ale zde nejsou nahrána.',
+    addManualMapping: 'Přidat písmo tiskárny',
   },
   zebraPrint: {
     heading: 'Odeslat na tiskárnu Zebra',

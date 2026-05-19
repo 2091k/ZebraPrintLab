@@ -448,9 +448,13 @@ const tr = {
     upload: 'Yükle',
     cancel: 'İptal',
     delete: 'Sil',
+    deleteConfirm: 'Bu yazı tipi tasarımdan kaldırılsın mı?',
     uploadError: 'Yazı tipi dosyası yüklenemedi',
     aliasHint: 'Bu etiket için ZPL takma adı (1 karakter, A-Z veya 0-9)',
     aliasAssigned: 'Bu etikete atanmış ZPL takma adı',
+    manualMappingsHeading: 'Yazıcıda kayıtlı yazı tipleri',
+    manualMappingsHint: 'Yazıcıda zaten bulunan ancak buraya yüklenmemiş yazı tiplerine referans verir.',
+    addManualMapping: 'Yazıcı yazı tipi ekle',
   },
   zebraPrint: {
     heading: 'Zebra yazıcıya gönder',

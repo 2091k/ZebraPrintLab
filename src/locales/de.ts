@@ -469,9 +469,13 @@ const de = {
     upload: 'Hochladen',
     cancel: 'Abbrechen',
     delete: 'Löschen',
+    deleteConfirm: 'Diese Schrift aus dem Design entfernen?',
     uploadError: 'Schriftdatei konnte nicht geladen werden',
     aliasHint: 'ZPL-Alias für dieses Label (1 Zeichen, A-Z oder 0-9)',
     aliasAssigned: 'Zugewiesener ZPL-Alias für dieses Label',
+    manualMappingsHeading: 'Schriften auf dem Drucker',
+    manualMappingsHint: 'Schriften referenzieren, die schon auf dem Drucker liegen, aber hier nicht hochgeladen sind.',
+    addManualMapping: 'Drucker-Schrift hinzufügen',
   },
 } as const;
 

@@ -448,9 +448,13 @@ const ja = {
     upload: 'アップロード',
     cancel: 'キャンセル',
     delete: '削除',
+    deleteConfirm: 'このフォントをデザインから削除しますか?',
     uploadError: 'フォントファイルを読み込めませんでした',
     aliasHint: 'このラベルの ZPL エイリアス (1 文字, A-Z または 0-9)',
     aliasAssigned: 'このラベルに割り当てられた ZPL エイリアス',
+    manualMappingsHeading: 'プリンター内蔵フォント',
+    manualMappingsHint: 'プリンターに既にあるがここにアップロードされていないフォントを参照します。',
+    addManualMapping: 'プリンターフォントを追加',
   },
   zebraPrint: {
     heading: 'Zebra プリンターへ送信',

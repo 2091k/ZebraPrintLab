@@ -448,9 +448,13 @@ const es = {
     upload: 'Subir',
     cancel: 'Cancelar',
     delete: 'Eliminar',
+    deleteConfirm: '¿Eliminar esta fuente del diseño?',
     uploadError: 'No se pudo cargar el archivo de fuente',
     aliasHint: 'Alias ZPL para esta etiqueta (1 carácter, A-Z o 0-9)',
     aliasAssigned: 'Alias ZPL asignado a esta etiqueta',
+    manualMappingsHeading: 'Fuentes residentes en la impresora',
+    manualMappingsHint: 'Referencia a fuentes ya presentes en la impresora pero no cargadas aquí.',
+    addManualMapping: 'Añadir fuente de impresora',
   },
   zebraPrint: {
     heading: 'Enviar a impresora Zebra',

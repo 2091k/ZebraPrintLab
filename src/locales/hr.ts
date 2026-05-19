@@ -448,9 +448,13 @@ const hr = {
     upload: 'Prenesi',
     cancel: 'Odustani',
     delete: 'Izbriši',
+    deleteConfirm: 'Ukloniti ovaj font iz dizajna?',
     uploadError: 'Datoteka fonta nije mogla biti učitana',
     aliasHint: 'ZPL alias za ovu etiketu (1 znak, A-Z ili 0-9)',
     aliasAssigned: 'Dodijeljen ZPL alias za ovu etiketu',
+    manualMappingsHeading: 'Fontovi na pisaču',
+    manualMappingsHint: 'Referenca na fontove koji se već nalaze na pisaču, ali nisu prenijeti ovdje.',
+    addManualMapping: 'Dodaj font pisača',
   },
   zebraPrint: {
     heading: 'Pošalji na Zebra pisač',

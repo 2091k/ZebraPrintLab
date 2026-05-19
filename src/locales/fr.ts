@@ -448,9 +448,13 @@ const fr = {
     upload: 'Téléverser',
     cancel: 'Annuler',
     delete: 'Supprimer',
+    deleteConfirm: 'Retirer cette police du design ?',
     uploadError: 'Impossible de charger le fichier de police',
     aliasHint: 'Alias ZPL pour cette étiquette (1 caractère, A-Z ou 0-9)',
     aliasAssigned: 'Alias ZPL assigné pour cette étiquette',
+    manualMappingsHeading: 'Polices résidentes',
+    manualMappingsHint: 'Référencer des polices déjà présentes sur l\'imprimante mais non téléversées ici.',
+    addManualMapping: 'Ajouter une police d\'imprimante',
   },
   zebraPrint: {
     heading: 'Envoyer à l’imprimante Zebra',
