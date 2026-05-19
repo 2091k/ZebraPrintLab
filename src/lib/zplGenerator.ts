@@ -88,9 +88,9 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   // and clamping would silently relocate them into the visible area,
   // breaking the editor's WYSIWYG promise. Groups recurse; their children
   // store absolute coords so the same shift applies per leaf.
-  const shiftLeaf = (obj: LabelObject): LabelObject[] => {
+  const shiftOrDrop = (obj: LabelObject): LabelObject[] => {
     if (isGroup(obj)) {
-      return [{ ...obj, children: obj.children.flatMap(shiftLeaf) }];
+      return [{ ...obj, children: obj.children.flatMap(shiftOrDrop) }];
     }
     const x = obj.x - homeX;
     const y = obj.y - homeY - top;
@@ -110,7 +110,7 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   };
   const shifted =
     homeX !== 0 || homeY !== 0 || top !== 0
-      ? objects.flatMap(shiftLeaf)
+      ? objects.flatMap(shiftOrDrop)
       : objects;
   lines.push(...shifted.flatMap(emitLeaf));
 

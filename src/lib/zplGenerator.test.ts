@@ -140,6 +140,33 @@ describe('generateZPL — printer params', () => {
     expect(zpl).not.toContain('^FO');
   });
 
+  it('drops a field when only one axis would go negative', () => {
+    // labelHomeY exceeds obj.y → y < 0 alone is enough to drop the leaf.
+    const zpl = generateZPL(
+      { ...BASE_LABEL, labelHomeX: 0, labelHomeY: 50 },
+      [boxAt(100, 10)],
+    );
+    expect(zpl).not.toContain('^GB');
+  });
+
+  it('drops only the clipped children of a group, keeping the rest', () => {
+    const group: GroupObject = {
+      id: 'g1',
+      type: 'group',
+      x: 0,
+      y: 0,
+      rotation: 0,
+      children: [boxAt(10, 5), boxAt(100, 100)],
+    };
+    const zpl = generateZPL(
+      { ...BASE_LABEL, labelHomeX: 30, labelHomeY: 20 },
+      [group],
+    );
+    // First child clips out, second survives at shifted FO.
+    expect(zpl).toContain('^FO70,80');
+    expect(zpl.match(/\^FO/g)?.length).toBe(1);
+  });
+
   it('emits ^CF with width as third positional param', () => {
     expect(
       generateZPL(
