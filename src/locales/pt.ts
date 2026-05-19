@@ -121,6 +121,14 @@ const pt = {
     defaultFontId: 'Fonte',
     defaultFontHeight: 'Altura (pontos)',
     defaultFontWidth: 'Largura (dots)',
+    customFontsHeading: 'Fontes personalizadas',
+    customFontsHint: 'Aliases para fontes armazenadas na impressora.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Um único caractere: A-Z ou 0-9',
+    customFontsDuplicateAlias: 'Alias duplicado, só o último mapeamento é aplicado.',
+    customFontsPath: 'Arquivo de fonte (ex. E:ARIAL.TTF)',
+    customFontsAdd: 'Adicionar mapeamento',
+    customFontsRemove: 'Remover',
   },
 
   app: {

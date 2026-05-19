@@ -121,6 +121,14 @@ const fa = {
     defaultFontId: 'قلم',
     defaultFontHeight: 'ارتفاع (نقطه)',
     defaultFontWidth: 'عرض (dots)',
+    customFontsHeading: 'فونت‌های سفارشی',
+    customFontsHint: 'نام‌های مستعار برای فونت‌های ذخیره‌شده در چاپگر.',
+    customFontsAlias: 'شناسه',
+    customFontsAliasHint: 'یک حرف: A-Z یا 0-9',
+    customFontsDuplicateAlias: 'شناسه تکراری, فقط آخرین نگاشت اعمال می‌شود.',
+    customFontsPath: 'فایل فونت (مثلاً E:ARIAL.TTF)',
+    customFontsAdd: 'افزودن نگاشت',
+    customFontsRemove: 'حذف',
   },
 
   app: {

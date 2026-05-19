@@ -121,6 +121,14 @@ const de = {
     defaultFontId: 'Schriftart',
     defaultFontHeight: 'Höhe (Punkte)',
     defaultFontWidth: 'Breite (dots)',
+    customFontsHeading: 'Eigene Schriften',
+    customFontsHint: 'Aliase für Schriften, die auf dem Drucker liegen.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Ein Zeichen: A-Z oder 0-9',
+    customFontsDuplicateAlias: 'Doppelter Alias, nur das letzte Mapping wird angewendet.',
+    customFontsPath: 'Schriftdatei (z. B. E:ARIAL.TTF)',
+    customFontsAdd: 'Mapping hinzufügen',
+    customFontsRemove: 'Entfernen',
   },
 
   app: {

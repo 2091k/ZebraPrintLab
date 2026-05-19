@@ -121,6 +121,14 @@ const sv = {
     defaultFontId: 'Typsnitt',
     defaultFontHeight: 'Höjd (punkter)',
     defaultFontWidth: 'Bredd (dots)',
+    customFontsHeading: 'Egna typsnitt',
+    customFontsHint: 'Alias för typsnitt som finns i skrivaren.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Ett tecken: A-Z eller 0-9',
+    customFontsDuplicateAlias: 'Dubblerat alias, endast den senaste mappningen gäller.',
+    customFontsPath: 'Typsnittsfil (t.ex. E:ARIAL.TTF)',
+    customFontsAdd: 'Lägg till mappning',
+    customFontsRemove: 'Ta bort',
   },
 
   app: {

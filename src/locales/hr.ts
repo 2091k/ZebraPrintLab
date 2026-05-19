@@ -121,6 +121,14 @@ const hr = {
     defaultFontId: 'Font',
     defaultFontHeight: 'Visina (točke)',
     defaultFontWidth: 'Širina (dots)',
+    customFontsHeading: 'Prilagođeni fontovi',
+    customFontsHint: 'Aliasi za fontove pohranjene na pisaču.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Jedan znak: A-Z ili 0-9',
+    customFontsDuplicateAlias: 'Duplikat aliasa, primjenjuje se samo posljednje mapiranje.',
+    customFontsPath: 'Datoteka fonta (npr. E:ARIAL.TTF)',
+    customFontsAdd: 'Dodaj mapiranje',
+    customFontsRemove: 'Ukloni',
   },
 
   app: {

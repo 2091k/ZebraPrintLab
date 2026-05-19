@@ -121,6 +121,14 @@ const tr = {
     defaultFontId: 'Yazı tipi',
     defaultFontHeight: 'Yükseklik (nokta)',
     defaultFontWidth: 'Genişlik (dots)',
+    customFontsHeading: 'Özel yazı tipleri',
+    customFontsHint: 'Yazıcıda kayıtlı yazı tipleri için takma adlar.',
+    customFontsAlias: 'Kimlik',
+    customFontsAliasHint: 'Tek karakter: A-Z veya 0-9',
+    customFontsDuplicateAlias: 'Yinelenen takma ad, yalnızca son eşleme geçerli olur.',
+    customFontsPath: 'Yazı tipi dosyası (örn. E:ARIAL.TTF)',
+    customFontsAdd: 'Eşleme ekle',
+    customFontsRemove: 'Kaldır',
   },
 
   app: {

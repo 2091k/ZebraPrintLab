@@ -121,6 +121,14 @@ const no = {
     defaultFontId: 'Skrift',
     defaultFontHeight: 'Høyde (punkter)',
     defaultFontWidth: 'Bredde (dots)',
+    customFontsHeading: 'Egendefinerte skrifter',
+    customFontsHint: 'Aliaser for skrifter som ligger på skriveren.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Ett tegn: A-Z eller 0-9',
+    customFontsDuplicateAlias: 'Duplisert alias, kun siste mapping gjelder.',
+    customFontsPath: 'Skriftfil (f.eks. E:ARIAL.TTF)',
+    customFontsAdd: 'Legg til mapping',
+    customFontsRemove: 'Fjern',
   },
 
   app: {

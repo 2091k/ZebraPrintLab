@@ -121,6 +121,14 @@ const pl = {
     defaultFontId: 'Czcionka',
     defaultFontHeight: 'Wysokość (punkty)',
     defaultFontWidth: 'Szerokość (dots)',
+    customFontsHeading: 'Niestandardowe czcionki',
+    customFontsHint: 'Aliasy dla czcionek zapisanych w pamięci drukarki.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Jeden znak: A-Z lub 0-9',
+    customFontsDuplicateAlias: 'Zduplikowany alias, działa tylko ostatnie mapowanie.',
+    customFontsPath: 'Plik czcionki (np. E:ARIAL.TTF)',
+    customFontsAdd: 'Dodaj mapowanie',
+    customFontsRemove: 'Usuń',
   },
 
   app: {

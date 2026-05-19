@@ -121,6 +121,14 @@ const bg = {
     defaultFontId: 'Шрифт',
     defaultFontHeight: 'Височина (точки)',
     defaultFontWidth: 'Ширина (dots)',
+    customFontsHeading: 'Персонализирани шрифтове',
+    customFontsHint: 'Псевдоними за шрифтове, съхранени в принтера.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Един знак: A-Z или 0-9',
+    customFontsDuplicateAlias: 'Дублиран псевдоним, действа само последното съпоставяне.',
+    customFontsPath: 'Файл с шрифт (напр. E:ARIAL.TTF)',
+    customFontsAdd: 'Добави съпоставяне',
+    customFontsRemove: 'Премахни',
   },
 
   app: {

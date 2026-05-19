@@ -121,6 +121,14 @@ const da = {
     defaultFontId: 'Skrifttype',
     defaultFontHeight: 'Højde (punkter)',
     defaultFontWidth: 'Bredde (dots)',
+    customFontsHeading: 'Tilpassede skrifttyper',
+    customFontsHint: 'Aliaser til skrifttyper på printeren.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Ét tegn: A-Z eller 0-9',
+    customFontsDuplicateAlias: 'Dublet alias, kun det sidste mapping gælder.',
+    customFontsPath: 'Skrifttypefil (f.eks. E:ARIAL.TTF)',
+    customFontsAdd: 'Tilføj mapping',
+    customFontsRemove: 'Fjern',
   },
 
   app: {

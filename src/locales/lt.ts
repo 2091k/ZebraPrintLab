@@ -121,6 +121,14 @@ const lt = {
     defaultFontId: 'Šriftas',
     defaultFontHeight: 'Aukštis (taškai)',
     defaultFontWidth: 'Plotis (dots)',
+    customFontsHeading: 'Pasirinktiniai šriftai',
+    customFontsHint: 'Aliasai spausdintuve saugomiems šriftams.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Vienas simbolis: A-Z arba 0-9',
+    customFontsDuplicateAlias: 'Pasikartojantis alias, taikomas tik paskutinis susiejimas.',
+    customFontsPath: 'Šrifto failas (pvz., E:ARIAL.TTF)',
+    customFontsAdd: 'Pridėti susiejimą',
+    customFontsRemove: 'Pašalinti',
   },
 
   app: {

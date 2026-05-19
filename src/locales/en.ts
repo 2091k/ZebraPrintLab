@@ -121,6 +121,14 @@ const en = {
     defaultFontId: 'Font',
     defaultFontHeight: 'Height (dots)',
     defaultFontWidth: 'Width (dots)',
+    customFontsHeading: 'Custom fonts',
+    customFontsHint: 'Aliases for fonts stored on the printer.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Single character: A-Z or 0-9',
+    customFontsDuplicateAlias: 'Duplicate alias, only the last mapping takes effect.',
+    customFontsPath: 'Font file (e.g. E:ARIAL.TTF)',
+    customFontsAdd: 'Add mapping',
+    customFontsRemove: 'Remove',
   },
 
   app: {

@@ -121,6 +121,14 @@ const sr = {
     defaultFontId: 'Фонт',
     defaultFontHeight: 'Висина (тачке)',
     defaultFontWidth: 'Ширина (dots)',
+    customFontsHeading: 'Прилагођени фонтови',
+    customFontsHint: 'Алијаси за фонтове сачуване у штампачу.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Један знак: A-Z или 0-9',
+    customFontsDuplicateAlias: 'Дупликат алијаса, примењује се само последње мапирање.',
+    customFontsPath: 'Датотека фонта (нпр. E:ARIAL.TTF)',
+    customFontsAdd: 'Додај мапирање',
+    customFontsRemove: 'Уклони',
   },
 
   app: {

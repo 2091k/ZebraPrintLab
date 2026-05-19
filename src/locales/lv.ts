@@ -121,6 +121,14 @@ const lv = {
     defaultFontId: 'Fonts',
     defaultFontHeight: 'Augstums (punkti)',
     defaultFontWidth: 'Platums (dots)',
+    customFontsHeading: 'Pielāgotie fonti',
+    customFontsHint: 'Aliasi printerī saglabātajiem fontiem.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Viena rakstzīme: A-Z vai 0-9',
+    customFontsDuplicateAlias: 'Dublēts aliass, darbojas tikai pēdējā piesaiste.',
+    customFontsPath: 'Fonta fails (piem., E:ARIAL.TTF)',
+    customFontsAdd: 'Pievienot piesaisti',
+    customFontsRemove: 'Noņemt',
   },
 
   app: {

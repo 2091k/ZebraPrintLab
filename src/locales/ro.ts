@@ -121,6 +121,14 @@ const ro = {
     defaultFontId: 'Font',
     defaultFontHeight: 'Înălțime (puncte)',
     defaultFontWidth: 'Lățime (dots)',
+    customFontsHeading: 'Fonturi personalizate',
+    customFontsHint: 'Aliasuri pentru fonturile stocate pe imprimantă.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Un singur caracter: A-Z sau 0-9',
+    customFontsDuplicateAlias: 'Alias duplicat, doar ultima mapare are efect.',
+    customFontsPath: 'Fișier font (ex. E:ARIAL.TTF)',
+    customFontsAdd: 'Adaugă mapare',
+    customFontsRemove: 'Elimină',
   },
 
   app: {

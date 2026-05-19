@@ -631,6 +631,23 @@ describe('parseZPL — printer params', () => {
     expect(labelConfig.defaultFontWidth).toBe(20);
   });
 
+  it('parses ^CW mapping and resolves ^A{alias} to the printer font', () => {
+    const { labelConfig, objects } = parseZPL(
+      '^XA^CWM,E:ARIAL.TTF^FO10,10^AMN,30,0^FDHi^FS^XZ',
+      8,
+    );
+    expect(labelConfig.customFonts).toEqual([
+      { alias: 'M', path: 'E:ARIAL.TTF' },
+    ]);
+    expect(objects).toHaveLength(1);
+    expect(props(objects[0]).printerFontName).toBe('ARIAL.TTF');
+  });
+
+  it('ignores invalid ^CW arguments', () => {
+    const { labelConfig } = parseZPL('^XA^CW,^XZ', 8);
+    expect(labelConfig.customFonts).toBeUndefined();
+  });
+
   it('parses ~SD instant darkness', () => {
     expect(parseZPL('~SD07^XA^XZ', 8).labelConfig.instantDarkness).toBe(7);
     expect(parseZPL('~SD30^XA^XZ', 8).labelConfig.instantDarkness).toBe(30);

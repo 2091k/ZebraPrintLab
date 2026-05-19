@@ -121,6 +121,14 @@ const ja = {
     defaultFontId: 'フォント',
     defaultFontHeight: '高さ (ドット)',
     defaultFontWidth: '幅 (dots)',
+    customFontsHeading: 'カスタムフォント',
+    customFontsHint: 'プリンターに保存されたフォントのエイリアス。',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: '1 文字: A-Z または 0-9',
+    customFontsDuplicateAlias: 'エイリアスが重複しています。最後のマッピングのみが適用されます。',
+    customFontsPath: 'フォントファイル (例: E:ARIAL.TTF)',
+    customFontsAdd: 'マッピングを追加',
+    customFontsRemove: '削除',
   },
 
   app: {

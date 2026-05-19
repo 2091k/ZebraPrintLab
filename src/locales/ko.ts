@@ -121,6 +121,14 @@ const ko = {
     defaultFontId: '글꼴',
     defaultFontHeight: '높이 (도트)',
     defaultFontWidth: '너비 (dots)',
+    customFontsHeading: '사용자 글꼴',
+    customFontsHint: '프린터에 저장된 글꼴의 별칭입니다.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: '한 글자: A-Z 또는 0-9',
+    customFontsDuplicateAlias: '중복된 별칭, 마지막 매핑만 적용됩니다.',
+    customFontsPath: '글꼴 파일 (예: E:ARIAL.TTF)',
+    customFontsAdd: '매핑 추가',
+    customFontsRemove: '제거',
   },
 
   app: {

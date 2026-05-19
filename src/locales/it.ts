@@ -121,6 +121,14 @@ const it = {
     defaultFontId: 'Carattere',
     defaultFontHeight: 'Altezza (punti)',
     defaultFontWidth: 'Larghezza (dots)',
+    customFontsHeading: 'Font personalizzati',
+    customFontsHint: 'Alias per i font memorizzati sulla stampante.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Un solo carattere: A-Z o 0-9',
+    customFontsDuplicateAlias: 'Alias duplicato — solo l\'ultima mappatura ha effetto.',
+    customFontsPath: 'File del font (es. E:ARIAL.TTF)',
+    customFontsAdd: 'Aggiungi mappatura',
+    customFontsRemove: 'Rimuovi',
   },
 
   app: {

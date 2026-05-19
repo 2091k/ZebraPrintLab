@@ -121,6 +121,14 @@ const fr = {
     defaultFontId: 'Police',
     defaultFontHeight: 'Hauteur (points)',
     defaultFontWidth: 'Largeur (dots)',
+    customFontsHeading: 'Polices personnalisées',
+    customFontsHint: 'Alias pour les polices stockées sur l\'imprimante.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Un seul caractère : A-Z ou 0-9',
+    customFontsDuplicateAlias: 'Alias en double, seul le dernier mappage est appliqué.',
+    customFontsPath: 'Fichier de police (ex. E:ARIAL.TTF)',
+    customFontsAdd: 'Ajouter un mappage',
+    customFontsRemove: 'Supprimer',
   },
 
   app: {

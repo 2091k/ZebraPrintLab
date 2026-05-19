@@ -121,6 +121,14 @@ const cs = {
     defaultFontId: 'Písmo',
     defaultFontHeight: 'Výška (body)',
     defaultFontWidth: 'Šířka (dots)',
+    customFontsHeading: 'Vlastní písma',
+    customFontsHint: 'Aliasy pro písma uložená v tiskárně.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Jeden znak: A-Z nebo 0-9',
+    customFontsDuplicateAlias: 'Duplicitní alias, uplatní se pouze poslední mapování.',
+    customFontsPath: 'Soubor písma (např. E:ARIAL.TTF)',
+    customFontsAdd: 'Přidat mapování',
+    customFontsRemove: 'Odebrat',
   },
 
   app: {

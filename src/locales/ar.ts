@@ -121,6 +121,14 @@ const ar = {
     defaultFontId: 'الخط',
     defaultFontHeight: 'الارتفاع (نقاط)',
     defaultFontWidth: 'العرض (dots)',
+    customFontsHeading: 'خطوط مخصصة',
+    customFontsHint: 'أسماء مستعارة للخطوط المخزنة في الطابعة.',
+    customFontsAlias: 'المعرف',
+    customFontsAliasHint: 'حرف واحد: A-Z أو 0-9',
+    customFontsDuplicateAlias: 'معرف مكرر, يُطبَّق التعيين الأخير فقط.',
+    customFontsPath: 'ملف الخط (مثال: E:ARIAL.TTF)',
+    customFontsAdd: 'إضافة تعيين',
+    customFontsRemove: 'إزالة',
   },
 
   app: {

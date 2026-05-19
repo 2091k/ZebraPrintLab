@@ -121,6 +121,14 @@ const el = {
     defaultFontId: 'Γραμματοσειρά',
     defaultFontHeight: 'Ύψος (κουκκίδες)',
     defaultFontWidth: 'Πλάτος (dots)',
+    customFontsHeading: 'Προσαρμοσμένες γραμματοσειρές',
+    customFontsHint: 'Ψευδώνυμα για γραμματοσειρές αποθηκευμένες στον εκτυπωτή.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Ένας χαρακτήρας: A-Z ή 0-9',
+    customFontsDuplicateAlias: 'Διπλό ψευδώνυμο, εφαρμόζεται μόνο η τελευταία αντιστοίχιση.',
+    customFontsPath: 'Αρχείο γραμματοσειράς (π.χ. E:ARIAL.TTF)',
+    customFontsAdd: 'Προσθήκη αντιστοίχισης',
+    customFontsRemove: 'Αφαίρεση',
   },
 
   app: {

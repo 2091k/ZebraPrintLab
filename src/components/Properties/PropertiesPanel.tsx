@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import { InformationCircleIcon, FolderPlusIcon } from "@heroicons/react/16/solid";
+import { CustomFontsSection } from "./CustomFontsSection";
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import type { LabelCanvasHandle } from "../Canvas/LabelCanvas";
 import type { AlignAxis } from "../../lib/alignment";
@@ -346,6 +347,16 @@ function LabelConfigPanel({
     if (!p) return;
     onUpdate({ widthMm: p.widthMm, heightMm: p.heightMm, dpmm: p.dpmm });
   };
+
+  // ^CF / ^A suggestions: built-in font letters plus every alias the
+  // user has registered via ^CW. Set-based dedup keeps user-overridden
+  // built-ins from appearing twice.
+  const fontIdOptions = Array.from(
+    new Set([
+      ...ZPL_BUILTIN_FONT_IDS,
+      ...(label.customFonts?.map((m) => m.alias).filter(Boolean) ?? []),
+    ]),
+  );
 
   return (
     <div className="flex flex-col">
@@ -804,12 +815,20 @@ function LabelConfigPanel({
         </div>
         </div>
         </CollapsibleSection>
+
+        <CustomFontsSection
+          mappings={label.customFonts ?? []}
+          onChange={(customFonts) =>
+            onUpdate({ customFonts: customFonts.length > 0 ? customFonts : undefined })
+          }
+        />
       </div>
       <datalist id="zpl-default-font-ids">
-        {ZPL_BUILTIN_FONT_IDS.map((id) => (
+        {fontIdOptions.map((id) => (
           <option key={id} value={id} />
         ))}
       </datalist>
     </div>
   );
 }
+

@@ -121,6 +121,14 @@ const hu = {
     defaultFontId: 'Betűtípus',
     defaultFontHeight: 'Magasság (pontok)',
     defaultFontWidth: 'Szélesség (dots)',
+    customFontsHeading: 'Egyéni betűtípusok',
+    customFontsHint: 'Aliasok a nyomtatón tárolt betűtípusokhoz.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Egy karakter: A-Z vagy 0-9',
+    customFontsDuplicateAlias: 'Ismétlődő alias, csak az utolsó hozzárendelés érvényes.',
+    customFontsPath: 'Betűtípusfájl (pl. E:ARIAL.TTF)',
+    customFontsAdd: 'Hozzárendelés hozzáadása',
+    customFontsRemove: 'Eltávolítás',
   },
 
   app: {

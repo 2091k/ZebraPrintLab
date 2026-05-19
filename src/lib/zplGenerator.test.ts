@@ -197,6 +197,45 @@ describe('generateZPL — printer params', () => {
     expect(zpl).not.toContain('^CFA,');
   });
 
+  it('emits one ^CW per custom font mapping', () => {
+    const zpl = generateZPL(
+      {
+        ...BASE_LABEL,
+        customFonts: [
+          { alias: 'M', path: 'E:ARIAL.TTF' },
+          { alias: 'B', path: 'E:BOLD.TTF' },
+        ],
+      },
+      [],
+    );
+    expect(zpl).toContain('^CWM,E:ARIAL.TTF');
+    expect(zpl).toContain('^CWB,E:BOLD.TTF');
+  });
+
+  it('omits ^CW when customFonts is absent or empty', () => {
+    expect(generateZPL(BASE_LABEL, [])).not.toContain('^CW');
+    expect(
+      generateZPL({ ...BASE_LABEL, customFonts: [] }, []),
+    ).not.toContain('^CW');
+  });
+
+  it('skips ^CW entries with empty alias or path', () => {
+    const zpl = generateZPL(
+      {
+        ...BASE_LABEL,
+        customFonts: [
+          { alias: '', path: 'E:ORPHAN.TTF' },
+          { alias: 'A', path: '' },
+          { alias: 'B', path: 'E:OK.TTF' },
+        ],
+      },
+      [],
+    );
+    expect(zpl).not.toContain('^CW,');
+    expect(zpl).not.toContain('^CWA,\n');
+    expect(zpl).toContain('^CWB,E:OK.TTF');
+  });
+
   it('emits ^PM when mirror is set', () => {
     expect(generateZPL({ ...BASE_LABEL, mirror: 'Y' }, [])).toContain('^PMY');
     expect(generateZPL({ ...BASE_LABEL, mirror: 'N' }, [])).toContain('^PMN');

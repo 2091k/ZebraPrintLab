@@ -121,6 +121,14 @@ const sl = {
     defaultFontId: 'Pisava',
     defaultFontHeight: 'Višina (točke)',
     defaultFontWidth: 'Širina (dots)',
+    customFontsHeading: 'Pisave po meri',
+    customFontsHint: 'Vzdevki za pisave shranjene v tiskalniku.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'En znak: A-Z ali 0-9',
+    customFontsDuplicateAlias: 'Podvojen vzdevek, uveljavi se le zadnja preslikava.',
+    customFontsPath: 'Datoteka pisave (npr. E:ARIAL.TTF)',
+    customFontsAdd: 'Dodaj preslikavo',
+    customFontsRemove: 'Odstrani',
   },
 
   app: {

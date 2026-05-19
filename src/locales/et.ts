@@ -121,6 +121,14 @@ const et = {
     defaultFontId: 'Font',
     defaultFontHeight: 'Kõrgus (punktid)',
     defaultFontWidth: 'Laius (dots)',
+    customFontsHeading: 'Kohandatud fondid',
+    customFontsHint: 'Aliased printeris salvestatud fontidele.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Üks märk: A-Z või 0-9',
+    customFontsDuplicateAlias: 'Korduv alias, kehtib ainult viimane vastendus.',
+    customFontsPath: 'Fondifail (nt E:ARIAL.TTF)',
+    customFontsAdd: 'Lisa vastendus',
+    customFontsRemove: 'Eemalda',
   },
 
   app: {

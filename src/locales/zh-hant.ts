@@ -121,6 +121,14 @@ const zhHant = {
     defaultFontId: '字型',
     defaultFontHeight: '高度 (點)',
     defaultFontWidth: '寬度 (dots)',
+    customFontsHeading: '自訂字型',
+    customFontsHint: '為印表機中已有的字型設定別名。',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: '單一字元：A-Z 或 0-9',
+    customFontsDuplicateAlias: '重複別名, 僅最後一個對應生效。',
+    customFontsPath: '字型檔案 (例如 E:ARIAL.TTF)',
+    customFontsAdd: '新增對應',
+    customFontsRemove: '移除',
   },
 
   app: {

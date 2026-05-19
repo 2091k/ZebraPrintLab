@@ -121,6 +121,14 @@ const fi = {
     defaultFontId: 'Fontti',
     defaultFontHeight: 'Korkeus (pisteet)',
     defaultFontWidth: 'Leveys (dots)',
+    customFontsHeading: 'Mukautetut fontit',
+    customFontsHint: 'Aliakset tulostimeen tallennetuille fonteille.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Yksi merkki: A-Z tai 0-9',
+    customFontsDuplicateAlias: 'Toistuva alias, vain viimeinen määritys vaikuttaa.',
+    customFontsPath: 'Fonttitiedosto (esim. E:ARIAL.TTF)',
+    customFontsAdd: 'Lisää määritys',
+    customFontsRemove: 'Poista',
   },
 
   app: {

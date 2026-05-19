@@ -121,6 +121,14 @@ const sk = {
     defaultFontId: 'Písmo',
     defaultFontHeight: 'Výška (body)',
     defaultFontWidth: 'Šírka (dots)',
+    customFontsHeading: 'Vlastné písma',
+    customFontsHint: 'Aliasy pre písma uložené v tlačiarni.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Jeden znak: A-Z alebo 0-9',
+    customFontsDuplicateAlias: 'Duplicitný alias, uplatní sa iba posledné mapovanie.',
+    customFontsPath: 'Súbor písma (napr. E:ARIAL.TTF)',
+    customFontsAdd: 'Pridať mapovanie',
+    customFontsRemove: 'Odstrániť',
   },
 
   app: {

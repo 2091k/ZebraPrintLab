@@ -121,6 +121,14 @@ const zhHans = {
     defaultFontId: '字体',
     defaultFontHeight: '高度 (点)',
     defaultFontWidth: '宽度 (dots)',
+    customFontsHeading: '自定义字体',
+    customFontsHint: '为打印机中已有的字体设置别名。',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: '单个字符：A-Z 或 0-9',
+    customFontsDuplicateAlias: '重复别名, 仅最后一个映射生效。',
+    customFontsPath: '字体文件 (例如 E:ARIAL.TTF)',
+    customFontsAdd: '添加映射',
+    customFontsRemove: '移除',
   },
 
   app: {

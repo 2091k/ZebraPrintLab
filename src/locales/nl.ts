@@ -121,6 +121,14 @@ const nl = {
     defaultFontId: 'Lettertype',
     defaultFontHeight: 'Hoogte (dots)',
     defaultFontWidth: 'Breedte (dots)',
+    customFontsHeading: 'Aangepaste lettertypen',
+    customFontsHint: 'Aliassen voor lettertypen op de printer.',
+    customFontsAlias: 'ID',
+    customFontsAliasHint: 'Eén teken: A-Z of 0-9',
+    customFontsDuplicateAlias: 'Dubbele alias, alleen de laatste mapping wordt toegepast.',
+    customFontsPath: 'Lettertypebestand (bv. E:ARIAL.TTF)',
+    customFontsAdd: 'Mapping toevoegen',
+    customFontsRemove: 'Verwijderen',
   },
 
   app: {
