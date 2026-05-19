@@ -449,6 +449,8 @@ const zhHans = {
     cancel: '取消',
     delete: '删除',
     uploadError: '无法加载字体文件',
+    aliasHint: '此标签的 ZPL 别名 (1 字符, A-Z 或 0-9)',
+    aliasAssigned: '此标签的已分配 ZPL 别名',
   },
   zebraPrint: {
     heading: '发送到 Zebra 打印机',

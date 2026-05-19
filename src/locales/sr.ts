@@ -449,6 +449,8 @@ const sr = {
     cancel: 'Откажи',
     delete: 'Избриши',
     uploadError: 'Датотека фонта није могла бити учитана',
+    aliasHint: 'ZPL алијас за ову етикету (1 знак, A-Z или 0-9)',
+    aliasAssigned: 'Додељен ZPL алијас за ову етикету',
   },
   zebraPrint: {
     heading: 'Пошаљи на Zebra штампач',

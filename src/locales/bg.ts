@@ -449,6 +449,8 @@ const bg = {
     cancel: 'Отказ',
     delete: 'Изтриване',
     uploadError: 'Неуспешно зареждане на шрифтов файл',
+    aliasHint: 'ZPL псевдоним за този етикет (1 знак, A-Z или 0-9)',
+    aliasAssigned: 'Зададен ZPL псевдоним за този етикет',
   },
   zebraPrint: {
     heading: 'Изпрати към принтер Zebra',

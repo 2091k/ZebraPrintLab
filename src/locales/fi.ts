@@ -449,6 +449,8 @@ const fi = {
     cancel: 'Peruuta',
     delete: 'Poista',
     uploadError: 'Fonttitiedostoa ei voitu ladata',
+    aliasHint: 'ZPL-alias tälle etiketille (1 merkki, A-Z tai 0-9)',
+    aliasAssigned: 'Tälle etiketille määritetty ZPL-alias',
   },
   zebraPrint: {
     heading: 'Lähetä Zebra-tulostimelle',

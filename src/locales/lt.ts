@@ -449,6 +449,8 @@ const lt = {
     cancel: 'Atšaukti',
     delete: 'Ištrinti',
     uploadError: 'Nepavyko įkelti šrifto failo',
+    aliasHint: 'ZPL alias šiai etiketei (1 simbolis, A-Z arba 0-9)',
+    aliasAssigned: 'Šiai etiketei priskirtas ZPL alias',
   },
   zebraPrint: {
     heading: 'Siųsti į Zebra spausdintuvą',

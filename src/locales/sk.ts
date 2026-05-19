@@ -449,6 +449,8 @@ const sk = {
     cancel: 'Zrušiť',
     delete: 'Odstrániť',
     uploadError: 'Súbor písma sa nepodarilo načítať',
+    aliasHint: 'ZPL alias pre tento štítok (1 znak, A-Z alebo 0-9)',
+    aliasAssigned: 'Priradený ZPL alias pre tento štítok',
   },
   zebraPrint: {
     heading: 'Odoslať na tlačiareň Zebra',

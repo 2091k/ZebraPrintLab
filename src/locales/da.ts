@@ -449,6 +449,8 @@ const da = {
     cancel: 'Annuller',
     delete: 'Slet',
     uploadError: 'Skriftfilen kunne ikke indlaeses',
+    aliasHint: 'ZPL-alias for denne etiket (1 tegn, A-Z eller 0-9)',
+    aliasAssigned: 'Tildelt ZPL-alias for denne etiket',
   },
   zebraPrint: {
     heading: 'Send til Zebra-printer',

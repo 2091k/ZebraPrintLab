@@ -449,6 +449,8 @@ const et = {
     cancel: 'Tühista',
     delete: 'Kustuta',
     uploadError: 'Fondifaili ei saanud laadida',
+    aliasHint: 'ZPL alias selle sildi jaoks (1 märk, A-Z või 0-9)',
+    aliasAssigned: 'Sellele sildile määratud ZPL alias',
   },
   zebraPrint: {
     heading: 'Saada Zebra printerile',

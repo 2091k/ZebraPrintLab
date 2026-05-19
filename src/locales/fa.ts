@@ -449,6 +449,8 @@ const fa = {
     cancel: 'لغو',
     delete: 'حذف',
     uploadError: 'بارگذاری فایل فونت ممکن نبود',
+    aliasHint: 'نام مستعار ZPL برای این برچسب (1 حرف، A-Z یا 0-9)',
+    aliasAssigned: 'نام مستعار ZPL اختصاص‌داده‌شده برای این برچسب',
   },
   zebraPrint: {
     heading: 'ارسال به چاپگر Zebra',

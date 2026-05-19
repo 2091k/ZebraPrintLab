@@ -449,6 +449,8 @@ const it = {
     cancel: 'Annulla',
     delete: 'Elimina',
     uploadError: 'Impossibile caricare il file del carattere',
+    aliasHint: 'Alias ZPL per questa etichetta (1 carattere, A-Z o 0-9)',
+    aliasAssigned: 'Alias ZPL assegnato a questa etichetta',
   },
   zebraPrint: {
     heading: 'Invia a stampante Zebra',

@@ -449,6 +449,8 @@ const es = {
     cancel: 'Cancelar',
     delete: 'Eliminar',
     uploadError: 'No se pudo cargar el archivo de fuente',
+    aliasHint: 'Alias ZPL para esta etiqueta (1 carácter, A-Z o 0-9)',
+    aliasAssigned: 'Alias ZPL asignado a esta etiqueta',
   },
   zebraPrint: {
     heading: 'Enviar a impresora Zebra',

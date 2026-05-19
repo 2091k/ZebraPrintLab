@@ -449,6 +449,8 @@ const zhHant = {
     cancel: '取消',
     delete: '刪除',
     uploadError: '無法載入字體檔案',
+    aliasHint: '此標籤的 ZPL 別名 (1 字元, A-Z 或 0-9)',
+    aliasAssigned: '此標籤的已指派 ZPL 別名',
   },
   zebraPrint: {
     heading: '傳送至 Zebra 印表機',

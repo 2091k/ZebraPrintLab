@@ -449,6 +449,8 @@ const pl = {
     cancel: 'Anuluj',
     delete: 'Usuń',
     uploadError: 'Nie można załadować pliku czcionki',
+    aliasHint: 'Alias ZPL dla tej etykiety (1 znak, A-Z lub 0-9)',
+    aliasAssigned: 'Przypisany alias ZPL dla tej etykiety',
   },
   zebraPrint: {
     heading: 'Wyślij do drukarki Zebra',

@@ -449,6 +449,8 @@ const he = {
     cancel: 'ביטול',
     delete: 'מחק',
     uploadError: 'לא ניתן לטעון את קובץ הגופן',
+    aliasHint: 'כינוי ZPL לתווית זו (תו אחד, A-Z או 0-9)',
+    aliasAssigned: 'כינוי ZPL מוקצה לתווית זו',
   },
   zebraPrint: {
     heading: 'שלח למדפסת Zebra',

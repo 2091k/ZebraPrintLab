@@ -449,6 +449,8 @@ const sv = {
     cancel: 'Avbryt',
     delete: 'Ta bort',
     uploadError: 'Det gick inte att ladda typsnittsfilen',
+    aliasHint: 'ZPL-alias för denna etikett (1 tecken, A-Z eller 0-9)',
+    aliasAssigned: 'Tilldelat ZPL-alias för denna etikett',
   },
   zebraPrint: {
     heading: 'Skicka till Zebra-skrivare',

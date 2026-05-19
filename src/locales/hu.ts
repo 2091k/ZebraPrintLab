@@ -449,6 +449,8 @@ const hu = {
     cancel: 'Mégse',
     delete: 'Törlés',
     uploadError: 'A betűtípus-fájl nem tölthető be',
+    aliasHint: 'ZPL alias ehhez a címkéhez (1 karakter, A-Z vagy 0-9)',
+    aliasAssigned: 'Hozzárendelt ZPL alias ehhez a címkéhez',
   },
   zebraPrint: {
     heading: 'Küldés Zebra nyomtatóra',

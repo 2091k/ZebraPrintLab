@@ -470,6 +470,8 @@ const de = {
     cancel: 'Abbrechen',
     delete: 'Löschen',
     uploadError: 'Schriftdatei konnte nicht geladen werden',
+    aliasHint: 'ZPL-Alias für dieses Label (1 Zeichen, A-Z oder 0-9)',
+    aliasAssigned: 'Zugewiesener ZPL-Alias für dieses Label',
   },
 } as const;
 

@@ -449,6 +449,8 @@ const nl = {
     cancel: 'Annuleren',
     delete: 'Verwijderen',
     uploadError: 'Lettertypebestand kon niet worden geladen',
+    aliasHint: 'ZPL-alias voor dit label (1 teken, A-Z of 0-9)',
+    aliasAssigned: 'Toegewezen ZPL-alias voor dit label',
   },
   zebraPrint: {
     heading: 'Verzenden naar Zebra-printer',

@@ -470,6 +470,8 @@ const en = {
     cancel: 'Cancel',
     delete: 'Delete',
     uploadError: 'Could not load font file',
+    aliasHint: 'ZPL alias for this label (1 char, A-Z or 0-9)',
+    aliasAssigned: 'Assigned ZPL alias for this label',
   },
 } as const;
 

@@ -449,6 +449,8 @@ const ja = {
     cancel: 'キャンセル',
     delete: '削除',
     uploadError: 'フォントファイルを読み込めませんでした',
+    aliasHint: 'このラベルの ZPL エイリアス (1 文字, A-Z または 0-9)',
+    aliasAssigned: 'このラベルに割り当てられた ZPL エイリアス',
   },
   zebraPrint: {
     heading: 'Zebra プリンターへ送信',

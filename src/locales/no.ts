@@ -449,6 +449,8 @@ const no = {
     cancel: 'Avbryt',
     delete: 'Slett',
     uploadError: 'Klarte ikke laste inn skriftfilen',
+    aliasHint: 'ZPL-alias for denne etiketten (1 tegn, A-Z eller 0-9)',
+    aliasAssigned: 'Tilordnet ZPL-alias for denne etiketten',
   },
   zebraPrint: {
     heading: 'Send til Zebra-skriver',

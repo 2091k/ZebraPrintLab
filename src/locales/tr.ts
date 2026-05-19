@@ -449,6 +449,8 @@ const tr = {
     cancel: 'İptal',
     delete: 'Sil',
     uploadError: 'Yazı tipi dosyası yüklenemedi',
+    aliasHint: 'Bu etiket için ZPL takma adı (1 karakter, A-Z veya 0-9)',
+    aliasAssigned: 'Bu etikete atanmış ZPL takma adı',
   },
   zebraPrint: {
     heading: 'Zebra yazıcıya gönder',

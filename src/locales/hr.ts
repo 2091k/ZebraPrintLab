@@ -449,6 +449,8 @@ const hr = {
     cancel: 'Odustani',
     delete: 'Izbriši',
     uploadError: 'Datoteka fonta nije mogla biti učitana',
+    aliasHint: 'ZPL alias za ovu etiketu (1 znak, A-Z ili 0-9)',
+    aliasAssigned: 'Dodijeljen ZPL alias za ovu etiketu',
   },
   zebraPrint: {
     heading: 'Pošalji na Zebra pisač',

@@ -449,6 +449,8 @@ const fr = {
     cancel: 'Annuler',
     delete: 'Supprimer',
     uploadError: 'Impossible de charger le fichier de police',
+    aliasHint: 'Alias ZPL pour cette étiquette (1 caractère, A-Z ou 0-9)',
+    aliasAssigned: 'Alias ZPL assigné pour cette étiquette',
   },
   zebraPrint: {
     heading: 'Envoyer à l’imprimante Zebra',

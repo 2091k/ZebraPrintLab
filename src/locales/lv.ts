@@ -449,6 +449,8 @@ const lv = {
     cancel: 'Atcelt',
     delete: 'Dzēst',
     uploadError: 'Neizdevās ielādēt fontu failu',
+    aliasHint: 'ZPL aliass šai etiķetei (1 rakstzīme, A-Z vai 0-9)',
+    aliasAssigned: 'Šai etiķetei piešķirts ZPL aliass',
   },
   zebraPrint: {
     heading: 'Sūtīt uz Zebra printeri',

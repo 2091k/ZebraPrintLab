@@ -449,6 +449,8 @@ const cs = {
     cancel: 'Zrušit',
     delete: 'Smazat',
     uploadError: 'Soubor písma se nepodařilo načíst',
+    aliasHint: 'ZPL alias pro tento štítek (1 znak, A-Z nebo 0-9)',
+    aliasAssigned: 'Přiřazený ZPL alias pro tento štítek',
   },
   zebraPrint: {
     heading: 'Odeslat na tiskárnu Zebra',

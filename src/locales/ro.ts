@@ -449,6 +449,8 @@ const ro = {
     cancel: 'Anulează',
     delete: 'Șterge',
     uploadError: 'Fisierul de font nu a putut fi incarcat',
+    aliasHint: 'Alias ZPL pentru această etichetă (1 caracter, A-Z sau 0-9)',
+    aliasAssigned: 'Alias ZPL atribuit acestei etichete',
   },
   zebraPrint: {
     heading: 'Trimite la imprimanta Zebra',

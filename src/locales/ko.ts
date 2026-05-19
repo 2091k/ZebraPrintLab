@@ -449,6 +449,8 @@ const ko = {
     cancel: '취소',
     delete: '삭제',
     uploadError: '글꼴 파일을 불러올 수 없습니다',
+    aliasHint: '이 라벨의 ZPL 별칭 (1 글자, A-Z 또는 0-9)',
+    aliasAssigned: '이 라벨에 할당된 ZPL 별칭',
   },
   zebraPrint: {
     heading: 'Zebra 프린터로 전송',

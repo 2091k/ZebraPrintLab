@@ -449,6 +449,8 @@ const sl = {
     cancel: 'Prekliči',
     delete: 'Izbriši',
     uploadError: 'Datoteke pisave ni bilo mogoče naložiti',
+    aliasHint: 'ZPL vzdevek za to etiketo (1 znak, A-Z ali 0-9)',
+    aliasAssigned: 'Dodeljen ZPL vzdevek za to etiketo',
   },
   zebraPrint: {
     heading: 'Pošlji na tiskalnik Zebra',

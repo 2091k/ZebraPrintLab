@@ -449,6 +449,8 @@ const ar = {
     cancel: 'إلغاء',
     delete: 'حذف',
     uploadError: 'تعذّر تحميل ملف الخط',
+    aliasHint: 'اسم مستعار ZPL لهذا الملصق (حرف واحد، A-Z أو 0-9)',
+    aliasAssigned: 'الاسم المستعار ZPL المعيَّن لهذا الملصق',
   },
   zebraPrint: {
     heading: 'إرسال إلى طابعة Zebra',
