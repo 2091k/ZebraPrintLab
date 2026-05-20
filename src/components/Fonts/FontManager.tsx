@@ -160,23 +160,24 @@ export function FontManager() {
   };
 
   // Built-in-preview rows are keyed by alias (one binding per ID).
+  // Patch is applied via spread so an explicit `undefined` actually
+  // clears the field — the previous `?? m.previewFontName` fallback
+  // turned "Pick a font…" into a no-op because Nullish-coalescing
+  // ignores undefined patches.
   const updateBuiltinPreview = (
     currentAlias: string,
     patch: Partial<CustomFontMapping>,
   ) => {
     const list = customFonts ?? [];
     replaceList(
-      list.map((m) =>
-        m.alias === currentAlias && m.path === undefined
-          ? {
-              ...m,
-              alias: patch.alias !== undefined
-                ? normalizeAlias(patch.alias) || m.alias
-                : m.alias,
-              previewFontName: patch.previewFontName ?? m.previewFontName,
-            }
-          : m,
-      ),
+      list.map((m) => {
+        if (m.alias !== currentAlias || m.path !== undefined) return m;
+        const next: CustomFontMapping = { ...m, ...patch };
+        if (patch.alias !== undefined) {
+          next.alias = normalizeAlias(patch.alias) || m.alias;
+        }
+        return next;
+      }),
     );
   };
 

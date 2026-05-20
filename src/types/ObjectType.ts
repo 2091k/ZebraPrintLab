@@ -18,20 +18,20 @@ import { z } from 'zod';
  *     declares "this alias maps to a file already on the printer";
  *     canvas falls back to PrintLab ZPL because it has no bytes.
  *
- *  `embedInZpl` toggles a `~DY{path}` upload of the local TTF bytes so
- *  the printer (and Labelary, if it honours `~DY`) renders with the
- *  uploaded font even when the file is not yet on the device. Requires
- *  both `path` and `previewFontName`. */
+ *  Both `path` and `previewFontName` allow empty strings: while the user
+ *  is editing a fresh row the value may transiently be blank, and we
+ *  want that state to survive a persist/rehydrate round-trip so the
+ *  reload lands on the same row instead of dropping it. Completeness
+ *  ("at least one of the two is non-empty") is enforced at emit time
+ *  via the existing `if (m.alias && m.path)` guards in zplGenerator —
+ *  not as a schema-level refine, because the schema fronts the
+ *  persisted store and the store has to allow in-progress edits. */
 export const customFontMappingSchema = z
   .object({
     alias: z.string().regex(/^[A-Z0-9]$/),
-    path: z.string().min(1).optional(),
-    previewFontName: z.string().min(1).optional(),
+    path: z.string().optional(),
+    previewFontName: z.string().optional(),
     embedInZpl: z.boolean().optional(),
-  })
-  .refine((m) => !!m.path || !!m.previewFontName, {
-    message:
-      "Custom font mapping needs at least a printer path or a preview TTF",
   })
   .refine((m) => !m.embedInZpl || (!!m.path && !!m.previewFontName), {
     message:
