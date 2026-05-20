@@ -221,7 +221,24 @@ export function FontManager() {
       </div>
 
       {adding ? (
-        <AddFontForm onDone={() => setAdding(false)} />
+        <AddFontForm
+          onDone={(uploadedName) => {
+            // Auto-assign the next free alias when the upload succeeds.
+            // Closes the "what now?" gap between the upload finishing
+            // and the embed toggle becoming usable: the user lands on
+            // a row that is already wired through to ^CW + canvas, with
+            // an editable alias if they want to override the default.
+            if (uploadedName) {
+              const path = uploadedFontPath(uploadedName);
+              const taken = (customFonts ?? [])
+                .map((m) => m.alias)
+                .filter(Boolean);
+              const alias = nextFreeAlias(taken);
+              if (alias) setAliasForPath(path, alias);
+            }
+            setAdding(false);
+          }}
+        />
       ) : (
         <button type="button" className={addBtnCls} onClick={() => setAdding(true)}>
           <span className="text-accent">+</span>
@@ -600,7 +617,10 @@ function BuiltinPreviewSection({
 // ── AddFontForm ────────────────────────────────────────────────────────────────
 
 interface AddFontFormProps {
-  onDone: () => void;
+  /** Called when the form closes. `uploadedName` is the printer-storage
+   *  name of the freshly-loaded font when the upload succeeded, or
+   *  undefined for cancel / upload-failed. */
+  onDone: (uploadedName?: string) => void;
 }
 
 function AddFontForm({ onDone }: AddFontFormProps) {
@@ -619,7 +639,7 @@ function AddFontForm({ onDone }: AddFontFormProps) {
     setUploadFailed(false);
     try {
       await loadFontFile(file, printerName);
-      onDone();
+      onDone(printerName);
     } catch {
       // Inline hint is the only signal (non-TTF/OTF, oversized, FileReader
       // failure). Codebase has no production logging path; specific causes
@@ -671,7 +691,7 @@ function AddFontForm({ onDone }: AddFontFormProps) {
         <button
           type="button"
           className="px-2 py-1.5 rounded text-xs font-mono border border-border text-muted hover:text-text transition-colors"
-          onClick={onDone}
+          onClick={() => onDone()}
           disabled={uploading}
         >
           {t.fonts.cancel}
