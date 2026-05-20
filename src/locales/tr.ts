@@ -263,6 +263,7 @@ const tr = {
       height: 'Yükseklik (nokta)',
       thickness: 'Kenarlık (nokta)',
       filled: 'Dolu',
+      lockAspect: 'Daire (en boy oranını kilitle)',
       color: 'Renk',
       colorB: 'B — Siyah',
       colorW: 'W — Beyaz',

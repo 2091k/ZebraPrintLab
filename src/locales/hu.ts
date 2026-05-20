@@ -263,6 +263,7 @@ const hu = {
       height: 'Magasság (pont)',
       thickness: 'Keret (pont)',
       filled: 'Kitöltött',
+      lockAspect: 'Kör (oldalarány rögzítése)',
       color: 'Szín',
       colorB: 'B — Fekete',
       colorW: 'W — Fehér',

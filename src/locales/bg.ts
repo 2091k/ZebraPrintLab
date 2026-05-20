@@ -263,6 +263,7 @@ const bg = {
       height: 'Височина (точки)',
       thickness: 'Рамка (точки)',
       filled: 'Запълнен',
+      lockAspect: 'Кръг (заключи съотношението)',
       color: 'Цвят',
       colorB: 'B — Черен',
       colorW: 'W — Бял',

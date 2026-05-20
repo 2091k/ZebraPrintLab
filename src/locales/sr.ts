@@ -263,6 +263,7 @@ const sr = {
       height: 'Visina (tačke)',
       thickness: 'Okvir (tačke)',
       filled: 'Popunjen',
+      lockAspect: 'Круг (закључај однос страница)',
       color: 'Boja',
       colorB: 'B — Crna',
       colorW: 'W — Bela',

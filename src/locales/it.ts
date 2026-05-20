@@ -263,6 +263,7 @@ const it = {
       height: 'Altezza (punti)',
       thickness: 'Bordo (punti)',
       filled: 'Riempito',
+      lockAspect: 'Cerchio (blocca proporzioni)',
       color: 'Colore',
       colorB: 'B — Nero',
       colorW: 'W — Bianco',

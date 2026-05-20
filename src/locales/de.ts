@@ -284,6 +284,7 @@ const de = {
       height: 'Höhe (Punkte)',
       thickness: 'Rahmen (Punkte)',
       filled: 'Gefüllt',
+      lockAspect: 'Kreis (Seitenverhältnis sperren)',
       color: 'Farbe',
       colorB: 'B — Schwarz',
       colorW: 'W — Weiß',

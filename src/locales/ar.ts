@@ -263,6 +263,7 @@ const ar = {
       height: 'الارتفاع (نقطة)',
       thickness: 'الحدود (نقطة)',
       filled: 'ممتلئ',
+      lockAspect: 'دائرة (تثبيت نسبة العرض إلى الارتفاع)',
       color: 'اللون',
       colorB: 'B — أسود',
       colorW: 'W — أبيض',

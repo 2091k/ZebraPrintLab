@@ -263,6 +263,7 @@ const no = {
       height: 'Høyde (punkter)',
       thickness: 'Kant (punkter)',
       filled: 'Fylt',
+      lockAspect: 'Sirkel (lås sideforhold)',
       color: 'Farge',
       colorB: 'B — Svart',
       colorW: 'W — Hvit',

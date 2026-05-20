@@ -263,6 +263,7 @@ const sv = {
       height: 'Höjd (punkter)',
       thickness: 'Kant (punkter)',
       filled: 'Fylld',
+      lockAspect: 'Cirkel (lås sidförhållande)',
       color: 'Färg',
       colorB: 'B — Svart',
       colorW: 'W — Vit',

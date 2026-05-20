@@ -263,6 +263,7 @@ const ro = {
       height: 'Înălțime (puncte)',
       thickness: 'Chenar (puncte)',
       filled: 'Umplut',
+      lockAspect: 'Cerc (blochează raportul de aspect)',
       color: 'Culoare',
       colorB: 'B — Negru',
       colorW: 'W — Alb',

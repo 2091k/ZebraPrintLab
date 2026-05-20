@@ -263,6 +263,7 @@ const fr = {
       height: 'Hauteur (points)',
       thickness: 'Bordure (points)',
       filled: 'Rempli',
+      lockAspect: 'Cercle (verrouiller le rapport d\'aspect)',
       color: 'Couleur',
       colorB: 'B — Noir',
       colorW: 'W — Blanc',

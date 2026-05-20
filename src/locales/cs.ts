@@ -263,6 +263,7 @@ const cs = {
       height: 'Výška (body)',
       thickness: 'Rámeček (body)',
       filled: 'Vyplněný',
+      lockAspect: 'Kruh (uzamknout poměr stran)',
       color: 'Barva',
       colorB: 'B — Černá',
       colorW: 'W — Bílá',

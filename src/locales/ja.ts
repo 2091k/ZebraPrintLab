@@ -263,6 +263,7 @@ const ja = {
       height: '高さ (ドット)',
       thickness: '枠線 (ドット)',
       filled: '塗りつぶし',
+      lockAspect: '円（アスペクト比を固定）',
       color: '色',
       colorB: 'B — 黒',
       colorW: 'W — 白',

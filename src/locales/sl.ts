@@ -263,6 +263,7 @@ const sl = {
       height: 'Višina (točke)',
       thickness: 'Okvir (točke)',
       filled: 'Zapolnjen',
+      lockAspect: 'Krog (zakleni razmerje stranic)',
       color: 'Barva',
       colorB: 'B — Črna',
       colorW: 'W — Bela',

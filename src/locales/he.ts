@@ -263,6 +263,7 @@ const he = {
       height: 'גובה (נקודות)',
       thickness: 'גבול (נקודות)',
       filled: 'מלא',
+      lockAspect: 'עיגול (נעל יחס גובה-רוחב)',
       color: 'צבע',
       colorB: 'B — שחור',
       colorW: 'W — לבן',

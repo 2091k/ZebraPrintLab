@@ -263,6 +263,7 @@ const lv = {
       height: 'Augstums (punkti)',
       thickness: 'Apmale (punkti)',
       filled: 'Aizpildīts',
+      lockAspect: 'Aplis (fiksēt malu attiecību)',
       color: 'Krāsa',
       colorB: 'B — Melna',
       colorW: 'W — Balta',

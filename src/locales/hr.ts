@@ -263,6 +263,7 @@ const hr = {
       height: 'Visina (točke)',
       thickness: 'Okvir (točke)',
       filled: 'Ispunjen',
+      lockAspect: 'Krug (zaključaj omjer stranica)',
       color: 'Boja',
       colorB: 'B — Crna',
       colorW: 'W — Bijela',

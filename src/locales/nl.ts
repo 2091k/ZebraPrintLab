@@ -263,6 +263,7 @@ const nl = {
       height: 'Hoogte (punten)',
       thickness: 'Rand (punten)',
       filled: 'Gevuld',
+      lockAspect: 'Cirkel (beeldverhouding vergrendelen)',
       color: 'Kleur',
       colorB: 'B — Zwart',
       colorW: 'W — Wit',

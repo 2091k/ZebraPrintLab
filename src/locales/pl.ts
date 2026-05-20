@@ -263,6 +263,7 @@ const pl = {
       height: 'Wysokość (punkty)',
       thickness: 'Kontur (punkty)',
       filled: 'Wypełniony',
+      lockAspect: 'Okrąg (zablokuj proporcje)',
       color: 'Kolor',
       colorB: 'B — Czarny',
       colorW: 'W — Biały',

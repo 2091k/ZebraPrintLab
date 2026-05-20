@@ -263,6 +263,7 @@ const es = {
       height: 'Alto (puntos)',
       thickness: 'Borde (puntos)',
       filled: 'Relleno',
+      lockAspect: 'Círculo (bloquear relación de aspecto)',
       color: 'Color',
       colorB: 'B — Negro',
       colorW: 'W — Blanco',

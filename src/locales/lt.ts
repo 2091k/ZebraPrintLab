@@ -263,6 +263,7 @@ const lt = {
       height: 'Aukštis (taškai)',
       thickness: 'Rėmelis (taškai)',
       filled: 'Užpildytas',
+      lockAspect: 'Apskritimas (užfiksuoti kraštinių santykį)',
       color: 'Spalva',
       colorB: 'B — Juoda',
       colorW: 'W — Balta',

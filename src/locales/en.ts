@@ -284,6 +284,7 @@ const en = {
       height: 'Height (dots)',
       thickness: 'Border (dots)',
       filled: 'Filled',
+      lockAspect: 'Circle (lock aspect ratio)',
       color: 'Color',
       colorB: 'B — Black',
       colorW: 'W — White',

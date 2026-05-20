@@ -263,6 +263,7 @@ const da = {
       height: 'Højde (punkter)',
       thickness: 'Kant (punkter)',
       filled: 'Udfyldt',
+      lockAspect: 'Cirkel (lås formatforhold)',
       color: 'Farve',
       colorB: 'B — Sort',
       colorW: 'W — Hvid',

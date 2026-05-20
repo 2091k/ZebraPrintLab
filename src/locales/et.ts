@@ -263,6 +263,7 @@ const et = {
       height: 'Kõrgus (punkti)',
       thickness: 'Ääris (punkti)',
       filled: 'Täidetud',
+      lockAspect: 'Ring (lukusta kuvasuhe)',
       color: 'Värvus',
       colorB: 'B — Must',
       colorW: 'W — Valge',

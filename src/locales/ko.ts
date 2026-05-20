@@ -263,6 +263,7 @@ const ko = {
       height: '높이 (점)',
       thickness: '테두리 (점)',
       filled: '채우기',
+      lockAspect: '원 (가로세로 비율 고정)',
       color: '색상',
       colorB: 'B — 검정',
       colorW: 'W — 흰색',

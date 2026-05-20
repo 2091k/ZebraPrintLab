@@ -263,6 +263,7 @@ const fa = {
       height: 'ارتفاع (نقطه)',
       thickness: 'حاشیه (نقطه)',
       filled: 'پر شده',
+      lockAspect: 'دایره (قفل کردن نسبت ابعاد)',
       color: 'رنگ',
       colorB: 'B — مشکی',
       colorW: 'W — سفید',

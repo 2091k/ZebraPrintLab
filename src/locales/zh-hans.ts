@@ -263,6 +263,7 @@ const zhHans = {
       height: '高度 (点)',
       thickness: '边框 (点)',
       filled: '填充',
+      lockAspect: '圆形（锁定纵横比）',
       color: '颜色',
       colorB: 'B — 黑色',
       colorW: 'W — 白色',

@@ -263,6 +263,7 @@ const sk = {
       height: 'Výška (body)',
       thickness: 'Rámček (body)',
       filled: 'Vyplnený',
+      lockAspect: 'Kruh (uzamknúť pomer strán)',
       color: 'Farba',
       colorB: 'B — Čierna',
       colorW: 'W — Biela',

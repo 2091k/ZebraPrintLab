@@ -263,6 +263,7 @@ const pt = {
       height: 'Altura (pontos)',
       thickness: 'Borda (pontos)',
       filled: 'Preenchido',
+      lockAspect: 'Círculo (bloquear proporção)',
       color: 'Cor',
       colorB: 'B — Preto',
       colorW: 'W — Branco',

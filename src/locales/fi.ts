@@ -263,6 +263,7 @@ const fi = {
       height: 'Korkeus (pistettä)',
       thickness: 'Reunus (pistettä)',
       filled: 'Täytetty',
+      lockAspect: 'Ympyrä (lukitse kuvasuhde)',
       color: 'Väri',
       colorB: 'B — Musta',
       colorW: 'W — Valkoinen',

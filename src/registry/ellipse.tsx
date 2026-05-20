@@ -90,6 +90,32 @@ export const ellipse: ObjectTypeDefinition<EllipseProps> = {
           <input
             type="checkbox"
             className="accent-accent"
+            checked={p.lockAspect ?? false}
+            onChange={(e) => {
+              if (e.target.checked) {
+                // Enabling lockAspect: collapse to the smaller axis so
+                // the resulting circle fits inside the current ellipse
+                // bbox. Picking max instead would push the shape past
+                // the user's prior visual extent on one axis, which is
+                // surprising; min keeps the move strictly inward.
+                const d = Math.min(p.width, p.height);
+                onChange({ lockAspect: true, width: d, height: d });
+              } else {
+                // Disabling: drop the flag (undefined keeps the model
+                // shape parser-emitted props share — they never carry
+                // an explicit `false`). Dimensions stay put so the
+                // user can adjust them independently from here.
+                onChange({ lockAspect: undefined });
+              }
+            }}
+          />
+          <span className={labelCls}>{t.registry.ellipse.lockAspect}</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            className="accent-accent"
             checked={p.filled}
             onChange={(e) => onChange({ filled: e.target.checked })}
           />

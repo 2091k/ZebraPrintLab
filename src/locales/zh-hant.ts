@@ -263,6 +263,7 @@ const zhHant = {
       height: '高度 (點)',
       thickness: '框線 (點)',
       filled: '填滿',
+      lockAspect: '圓形（鎖定長寬比）',
       color: '顏色',
       colorB: 'B — 黑色',
       colorW: 'W — 白色',
