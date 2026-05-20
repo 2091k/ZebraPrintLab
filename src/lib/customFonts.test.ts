@@ -110,6 +110,10 @@ describe("isBuiltinFontId", () => {
       expect(isBuiltinFontId(id)).toBe(false);
     },
   );
+
+  it("treats the empty string as non-built-in (String.includes trap)", () => {
+    expect(isBuiltinFontId("")).toBe(false);
+  });
 });
 
 describe("resolvePreviewFontName", () => {

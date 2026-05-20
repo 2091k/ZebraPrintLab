@@ -343,9 +343,9 @@ function FontEntry({
           type="text"
           className={`${inputCls} text-center ${
             duplicate
-              ? 'border-red-500'
+              ? '!border-red-500'
               : overridesBuiltin
-                ? 'border-amber-500'
+                ? '!border-amber-500'
                 : ''
           }`}
           maxLength={1}
@@ -468,7 +468,7 @@ function ManualMappingsSection({
           >
             <input
               type="text"
-              className={`${inputCls} text-center ${dup ? 'border-red-500' : ''}`}
+              className={`${inputCls} text-center ${dup ? '!border-red-500' : ''}`}
               maxLength={1}
               placeholder="A-Z"
               title={
@@ -543,7 +543,7 @@ function BuiltinPreviewSection({
             className="grid grid-cols-[4rem_1fr_auto] gap-2 items-center"
           >
             <select
-              className={`${inputCls} ${dup ? 'border-red-500' : ''}`}
+              className={`${inputCls} ${dup ? '!border-red-500' : ''}`}
               aria-invalid={dup || undefined}
               value={m.alias}
               onChange={(e) =>

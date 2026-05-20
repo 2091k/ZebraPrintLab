@@ -75,9 +75,11 @@ const ALIAS_PREFERRED_ORDER = 'IJKLMNOPQRSTUVWXYZ123456789';
 /** True when the alias is a Zebra built-in font (0, A-H). Built-ins
  *  cannot be ^CW-aliased to printer paths in a meaningful way (the
  *  printer already ships them); the UI uses this to decide whether the
- *  "On printer (path)" column applies. */
+ *  "On printer (path)" column applies. Guards against the empty-string
+ *  trap — `String.includes("")` is always `true`, which would let a
+ *  blank alias trip every "built-in" branch. */
 export function isBuiltinFontId(alias: string): boolean {
-  return ZPL_BUILTIN_FONT_LETTERS.includes(alias);
+  return alias.length === 1 && ZPL_BUILTIN_FONT_LETTERS.includes(alias);
 }
 
 /** Resolve a font identifier to the canvas-only preview TTF name (a
