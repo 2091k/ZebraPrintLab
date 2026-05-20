@@ -253,7 +253,7 @@ export function FontManager() {
       <CollapsibleSection
         id="fonts-printer-resident"
         title={t.fonts.manualMappingsHeading}
-        defaultOpen={false}
+        defaultOpen={manualMappings.length > 0}
       >
         <ManualMappingsSection
           mappings={manualMappings}
