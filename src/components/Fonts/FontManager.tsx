@@ -262,16 +262,15 @@ export function FontManager() {
         />
       </CollapsibleSection>
 
-      {fonts.length > 0 && builtinPreviews.length === 0 && (
-        <p className="text-[11px] text-muted px-1 leading-relaxed">
-          {t.fonts.builtinPreviewsTeaser}
-        </p>
-      )}
-
       <CollapsibleSection
         id="fonts-builtin-previews"
         title={t.fonts.builtinPreviewsHeading}
         defaultOpen={builtinPreviews.length > 0}
+        teaser={
+          fonts.length > 0 && builtinPreviews.length === 0
+            ? t.fonts.builtinPreviewsTeaser
+            : undefined
+        }
       >
         <BuiltinPreviewSection
           mappings={builtinPreviews}
@@ -348,7 +347,7 @@ function FontEntry({
   const overridesBuiltin = isBuiltinFontId(alias);
 
   return (
-    <div className="group flex flex-col gap-0.5 px-2 py-1.5 rounded border border-transparent hover:border-border-2 hover:bg-surface-2 transition-colors">
+    <div className="flex flex-col gap-0.5 px-2 py-1.5 rounded border border-transparent hover:border-border-2 hover:bg-surface-2 transition-colors">
       <div className="grid grid-cols-[1fr_3rem_auto_auto] items-center gap-2">
         <span
           className="font-mono text-xs text-text truncate"
@@ -398,11 +397,11 @@ function FontEntry({
         <button
           type="button"
           onClick={onRequestDelete}
-          className="opacity-0 group-hover:opacity-100 font-mono text-[10px] text-muted hover:text-red-400 transition-all px-1"
+          className="p-1 text-muted hover:text-red-400 transition-colors"
           title={t.fonts.delete}
           aria-label={t.fonts.delete}
         >
-          ×
+          <TrashIcon className="w-3.5 h-3.5" />
         </button>
       </div>
       {overridesBuiltin && (

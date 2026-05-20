@@ -7,6 +7,10 @@ interface CollapsibleSectionProps {
   title: ReactNode;
   defaultOpen?: boolean;
   children: ReactNode;
+  /** Optional one-liner shown below the header only when the section is
+   *  collapsed. Lets callers nudge users toward a sub-feature without
+   *  doubling the message when the section is already open. */
+  teaser?: ReactNode;
 }
 
 const LS_PREFIX = 'zpl:section:';
@@ -26,6 +30,7 @@ export function CollapsibleSection({
   title,
   defaultOpen = true,
   children,
+  teaser,
 }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(() => readStored(id, defaultOpen));
 
@@ -62,6 +67,9 @@ export function CollapsibleSection({
           className={`w-3 h-3 shrink-0 transition-transform ${open ? '' : '-rotate-90'}`}
         />
       </button>
+      {!open && teaser && (
+        <p className="text-[11px] text-muted px-1 leading-relaxed">{teaser}</p>
+      )}
       {open && (
         <div id={contentId} className="flex flex-col gap-0.5">
           {children}
