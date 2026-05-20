@@ -115,7 +115,7 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
   const emitLeaf = (obj: LabelObject): string[] => {
     if (obj.includeInExport === false) return [];
     if (isGroup(obj)) return obj.children.flatMap(emitLeaf);
-    const zpl = ObjectRegistry[obj.type]?.toZPL(obj) ?? '';
+    const zpl = ObjectRegistry[obj.type]?.toZPL(obj, { label }) ?? '';
     return obj.comment
       ? [`^FX${stripZplCommandChars(obj.comment)}\n${zpl}`]
       : [zpl];

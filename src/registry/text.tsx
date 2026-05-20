@@ -2,7 +2,7 @@ import { useRef, useState, useCallback } from "react";
 import type { ObjectTypeDefinition } from "../types/ObjectType";
 import { useT } from "../lib/useT";
 import { inputCls, labelCls } from "../components/Properties/styles";
-import { textFieldPos, fdField } from "./zplHelpers";
+import { textFieldPos, fdField, resolveFontCmd } from "./zplHelpers";
 import { effectiveScale } from "./transformHelpers";
 import { getFont, getAllFonts, loadFontFile } from "../lib/fontCache";
 import { useFontCacheVersion } from "../hooks/useFontCacheVersion";
@@ -60,11 +60,9 @@ export const text: ObjectTypeDefinition<TextProps> = {
     };
   },
 
-  toZPL: (obj) => {
+  toZPL: (obj, ctx) => {
     const p = obj.props;
-    const fontCmd = p.printerFontName
-      ? `^A@${p.rotation},${p.fontHeight},${p.fontWidth},E:${p.printerFontName}`
-      : `^A0${p.rotation},${p.fontHeight},${p.fontWidth}`;
+    const fontCmd = resolveFontCmd(p, ctx);
     const fbCmd = p.blockWidth
       ? `^FB${p.blockWidth},${p.blockLines ?? 1},${p.blockLineSpacing ?? 0},${p.blockJustify ?? "L"},0`
       : "";

@@ -133,6 +133,15 @@ export interface TransformContext {
   anchor: { nodeHeight: number; rowHeight: number } | null;
 }
 
+/** Context passed to `toZPL` so leaf emit functions can reach
+ *  label-wide state (default font ID, ^CW alias map, etc.). Optional —
+ *  most types ignore it; only text/serial currently care about the
+ *  default font fallback. Tests calling `toZPL` directly can omit
+ *  `ctx` and get the no-default-context branch. */
+export interface ZplEmitContext {
+  label: LabelConfig;
+}
+
 export interface ObjectTypeDefinition<P extends object = object> {
   label: string;
   icon: string;
@@ -162,7 +171,7 @@ export interface ObjectTypeDefinition<P extends object = object> {
    * instance of the type (e.g. QR / DataMatrix).
    */
   uniformScale?: boolean | ((props: P) => boolean);
-  toZPL: (obj: LabelObjectBase & { props: P }) => string;
+  toZPL: (obj: LabelObjectBase & { props: P }, ctx?: ZplEmitContext) => string;
   /**
    * Optional hook to enforce type-specific invariants on incoming changes
    * (e.g. clamp out-of-range coordinates). Called before changes are merged
