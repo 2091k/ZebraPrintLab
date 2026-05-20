@@ -287,6 +287,7 @@ const en = {
       color: 'Color',
       colorB: 'B — Black',
       colorW: 'W — White',
+      reverse: 'Invert',
     },
     circle: {
       diameter: 'Diameter (dots)',

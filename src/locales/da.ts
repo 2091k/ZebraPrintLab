@@ -266,6 +266,7 @@ const da = {
       color: 'Farve',
       colorB: 'B — Sort',
       colorW: 'W — Hvid',
+      reverse: 'Invertere',
     },
     circle: {
       diameter: 'Diameter (punkter)',

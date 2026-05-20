@@ -266,6 +266,7 @@ const nl = {
       color: 'Kleur',
       colorB: 'B — Zwart',
       colorW: 'W — Wit',
+      reverse: 'Inverteren',
     },
     circle: {
       diameter: 'Diameter (dots)',

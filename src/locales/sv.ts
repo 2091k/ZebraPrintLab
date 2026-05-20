@@ -266,6 +266,7 @@ const sv = {
       color: 'Färg',
       colorB: 'B — Svart',
       colorW: 'W — Vit',
+      reverse: 'Invertera',
     },
     circle: {
       diameter: 'Diameter (punkter)',

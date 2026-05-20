@@ -266,6 +266,7 @@ const bg = {
       color: 'Цвят',
       colorB: 'B — Черен',
       colorW: 'W — Бял',
+      reverse: 'Обърни',
     },
     circle: {
       diameter: 'Диаметър (точки)',

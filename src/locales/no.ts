@@ -266,6 +266,7 @@ const no = {
       color: 'Farge',
       colorB: 'B — Svart',
       colorW: 'W — Hvit',
+      reverse: 'Inverter',
     },
     circle: {
       diameter: 'Diameter (punkter)',

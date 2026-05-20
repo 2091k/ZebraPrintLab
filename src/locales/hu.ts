@@ -266,6 +266,7 @@ const hu = {
       color: 'Szín',
       colorB: 'B — Fekete',
       colorW: 'W — Fehér',
+      reverse: 'Invertálás',
     },
     circle: {
       diameter: 'Átmérő (pontok)',

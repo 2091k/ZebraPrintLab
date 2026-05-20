@@ -266,6 +266,7 @@ const ar = {
       color: 'اللون',
       colorB: 'B — أسود',
       colorW: 'W — أبيض',
+      reverse: 'عكس',
     },
     circle: {
       diameter: 'القطر (نقاط)',

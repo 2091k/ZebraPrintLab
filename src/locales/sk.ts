@@ -266,6 +266,7 @@ const sk = {
       color: 'Farba',
       colorB: 'B — Čierna',
       colorW: 'W — Biela',
+      reverse: 'Invertovať',
     },
     circle: {
       diameter: 'Priemer (body)',

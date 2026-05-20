@@ -266,6 +266,7 @@ const fa = {
       color: 'رنگ',
       colorB: 'B — مشکی',
       colorW: 'W — سفید',
+      reverse: 'معکوس کردن',
     },
     circle: {
       diameter: 'قطر (نقطه)',

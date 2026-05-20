@@ -266,6 +266,7 @@ const lt = {
       color: 'Spalva',
       colorB: 'B — Juoda',
       colorW: 'W — Balta',
+      reverse: 'Apversti',
     },
     circle: {
       diameter: 'Skersmuo (taškai)',

@@ -266,6 +266,7 @@ const ro = {
       color: 'Culoare',
       colorB: 'B — Negru',
       colorW: 'W — Alb',
+      reverse: 'Inversează',
     },
     circle: {
       diameter: 'Diametru (puncte)',

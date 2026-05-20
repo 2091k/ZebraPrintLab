@@ -266,6 +266,7 @@ const sr = {
       color: 'Boja',
       colorB: 'B — Crna',
       colorW: 'W — Bela',
+      reverse: 'Инвертуј',
     },
     circle: {
       diameter: 'Пречник (тачке)',

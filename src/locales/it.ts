@@ -266,6 +266,7 @@ const it = {
       color: 'Colore',
       colorB: 'B — Nero',
       colorW: 'W — Bianco',
+      reverse: 'Inverti',
     },
     circle: {
       diameter: 'Diametro (punti)',

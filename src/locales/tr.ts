@@ -266,6 +266,7 @@ const tr = {
       color: 'Renk',
       colorB: 'B — Siyah',
       colorW: 'W — Beyaz',
+      reverse: 'Tersine çevir',
     },
     circle: {
       diameter: 'Çap (nokta)',

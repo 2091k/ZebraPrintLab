@@ -266,6 +266,7 @@ const pl = {
       color: 'Kolor',
       colorB: 'B — Czarny',
       colorW: 'W — Biały',
+      reverse: 'Odwróć',
     },
     circle: {
       diameter: 'Średnica (punkty)',

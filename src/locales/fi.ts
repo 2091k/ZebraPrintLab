@@ -266,6 +266,7 @@ const fi = {
       color: 'Väri',
       colorB: 'B — Musta',
       colorW: 'W — Valkoinen',
+      reverse: 'Käännä',
     },
     circle: {
       diameter: 'Halkaisija (pisteet)',

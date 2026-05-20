@@ -266,6 +266,7 @@ const he = {
       color: 'צבע',
       colorB: 'B — שחור',
       colorW: 'W — לבן',
+      reverse: 'הפוך',
     },
     circle: {
       diameter: 'קוטר (נקודות)',

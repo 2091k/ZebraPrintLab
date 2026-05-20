@@ -266,6 +266,7 @@ const ja = {
       color: '色',
       colorB: 'B — 黒',
       colorW: 'W — 白',
+      reverse: '反転',
     },
     circle: {
       diameter: '直径 (ドット)',

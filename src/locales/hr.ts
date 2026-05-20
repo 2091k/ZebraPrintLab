@@ -266,6 +266,7 @@ const hr = {
       color: 'Boja',
       colorB: 'B — Crna',
       colorW: 'W — Bijela',
+      reverse: 'Invertiraj',
     },
     circle: {
       diameter: 'Promjer (točke)',

@@ -266,6 +266,7 @@ const et = {
       color: 'Värvus',
       colorB: 'B — Must',
       colorW: 'W — Valge',
+      reverse: 'Pööra',
     },
     circle: {
       diameter: 'Läbimõõt (punktid)',

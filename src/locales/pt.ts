@@ -266,6 +266,7 @@ const pt = {
       color: 'Cor',
       colorB: 'B — Preto',
       colorW: 'W — Branco',
+      reverse: 'Inverter',
     },
     circle: {
       diameter: 'Diâmetro (pontos)',

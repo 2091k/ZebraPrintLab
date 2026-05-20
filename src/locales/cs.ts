@@ -266,6 +266,7 @@ const cs = {
       color: 'Barva',
       colorB: 'B — Černá',
       colorW: 'W — Bílá',
+      reverse: 'Invertovat',
     },
     circle: {
       diameter: 'Průměr (body)',

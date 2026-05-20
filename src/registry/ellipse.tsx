@@ -11,10 +11,15 @@ export interface EllipseProps {
   thickness: number;
   filled: boolean;
   color: 'B' | 'W';
-  /** When true, resize keeps width === height. Set by the "Circle"
-   *  palette entry and by the parser when an object round-trips through
-   *  ^GC. Used by the transformer to force uniform scale anchors. */
+  /** When true, resize keeps width === height. Set by the parser when
+   *  an object round-trips through ^GC, by the "Circle" Properties-
+   *  Panel toggle, or by the user. The transformer reads this to
+   *  force uniform scale anchors. */
   lockAspect?: boolean;
+  /** Field-level inversion via `^LRY`/`^LRN` wrap on emit. Round-trips
+   *  through the parser's `^LR` state and matches the box/line/text
+   *  reverse semantics. */
+  reverse?: boolean;
 }
 
 export const ellipse: ObjectTypeDefinition<EllipseProps> = {
@@ -54,7 +59,13 @@ export const ellipse: ObjectTypeDefinition<EllipseProps> = {
       p.width === p.height
         ? `^GC${p.width},${thick},${p.color}`
         : `^GE${p.width},${p.height},${thick},${p.color}`;
-    return [fieldPos(obj), cmd, `^FS`].join('');
+    return [
+      p.reverse ? '^LRY' : '',
+      fieldPos(obj),
+      cmd,
+      '^FS',
+      p.reverse ? '^LRN' : '',
+    ].filter(Boolean).join('');
   },
 
   PropertiesPanel: ({ obj, onChange }) => {
@@ -142,6 +153,16 @@ export const ellipse: ObjectTypeDefinition<EllipseProps> = {
             <option value="W">{t.registry.ellipse.colorW}</option>
           </select>
         </div>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            className="accent-accent"
+            checked={p.reverse ?? false}
+            onChange={(e) => onChange({ reverse: e.target.checked })}
+          />
+          <span className={labelCls}>{t.registry.ellipse.reverse}</span>
+        </label>
       </div>
     );
   },

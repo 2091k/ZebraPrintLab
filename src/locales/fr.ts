@@ -266,6 +266,7 @@ const fr = {
       color: 'Couleur',
       colorB: 'B — Noir',
       colorW: 'W — Blanc',
+      reverse: 'Inverser',
     },
     circle: {
       diameter: 'Diamètre (points)',

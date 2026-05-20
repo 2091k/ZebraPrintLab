@@ -266,6 +266,7 @@ const sl = {
       color: 'Barva',
       colorB: 'B — Črna',
       colorW: 'W — Bela',
+      reverse: 'Obrni',
     },
     circle: {
       diameter: 'Premer (točke)',

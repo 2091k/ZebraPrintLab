@@ -266,6 +266,7 @@ const ko = {
       color: '색상',
       colorB: 'B — 검정',
       colorW: 'W — 흰색',
+      reverse: '반전',
     },
     circle: {
       diameter: '지름 (도트)',

@@ -266,6 +266,7 @@ const el = {
       color: 'Χρώμα',
       colorB: 'B — Μαύρο',
       colorW: 'W — Λευκό',
+      reverse: 'Αντιστροφή',
     },
     circle: {
       diameter: 'Διάμετρος (κουκκίδες)',

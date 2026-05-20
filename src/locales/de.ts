@@ -287,6 +287,7 @@ const de = {
       color: 'Farbe',
       colorB: 'B — Schwarz',
       colorW: 'W — Weiß',
+      reverse: 'Invertieren',
     },
     circle: {
       diameter: 'Durchmesser (Punkte)',

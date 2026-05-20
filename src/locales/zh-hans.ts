@@ -266,6 +266,7 @@ const zhHans = {
       color: '颜色',
       colorB: 'B — 黑色',
       colorW: 'W — 白色',
+      reverse: '反转',
     },
     circle: {
       diameter: '直径 (点)',

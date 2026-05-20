@@ -266,6 +266,7 @@ const lv = {
       color: 'Krāsa',
       colorB: 'B — Melna',
       colorW: 'W — Balta',
+      reverse: 'Apgriezt',
     },
     circle: {
       diameter: 'Diametrs (punkti)',
