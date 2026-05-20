@@ -456,6 +456,7 @@ const hu = {
     uploadError: 'A betűtípus-fájl nem tölthető be',
     aliasHint: 'ZPL alias ehhez a címkéhez (1 karakter, A-Z vagy 0-9)',
     aliasAssigned: 'Hozzárendelt ZPL alias ehhez a címkéhez',
+    builtinAliasWarning: 'Felülbírálja a nyomtató beépített betűtípusát. Csak szerkesztőhöz való kötéshez használd a „Beépített betűtípus előnézetek" lehetőséget.',
     embedInZpl: 'Küldés ZPL-lel',
     embedInZplHint: '~DY kibocsátása, hogy a nyomtató (és a Labelary) megkapja ezt a betűtípust a címkével. Aliast igényel.',
     manualMappingsHeading: 'Betűtípusok a nyomtatón',

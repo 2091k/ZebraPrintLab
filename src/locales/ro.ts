@@ -456,6 +456,7 @@ const ro = {
     uploadError: 'Fisierul de font nu a putut fi incarcat',
     aliasHint: 'Alias ZPL pentru această etichetă (1 caracter, A-Z sau 0-9)',
     aliasAssigned: 'Alias ZPL atribuit acestei etichete',
+    builtinAliasWarning: 'Suprascrie fontul integrat al imprimantei. Folosește „Previzualizări fonturi integrate" pentru legare doar în editor.',
     embedInZpl: 'Trimite cu ZPL',
     embedInZplHint: 'Emite ~DY pentru ca imprimanta (și Labelary) să primească acest font împreună cu eticheta. Necesită un alias.',
     manualMappingsHeading: 'Fonturi din imprimantă',

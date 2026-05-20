@@ -456,6 +456,7 @@ const sk = {
     uploadError: 'Súbor písma sa nepodarilo načítať',
     aliasHint: 'ZPL alias pre tento štítok (1 znak, A-Z alebo 0-9)',
     aliasAssigned: 'Priradený ZPL alias pre tento štítok',
+    builtinAliasWarning: 'Prepíše vstavané písmo tlačiarne. Pre väzbu len v editore použite „Náhľady vstavaných písiem".',
     embedInZpl: 'Posielať so ZPL',
     embedInZplHint: 'Vysiela ~DY, aby tlačiareň (a Labelary) prijala toto písmo so štítkom. Vyžaduje alias.',
     manualMappingsHeading: 'Písma uložené v tlačiarni',

@@ -456,6 +456,7 @@ const it = {
     uploadError: 'Impossibile caricare il file del carattere',
     aliasHint: 'Alias ZPL per questa etichetta (1 carattere, A-Z o 0-9)',
     aliasAssigned: 'Alias ZPL assegnato a questa etichetta',
+    builtinAliasWarning: 'Sovrascrive il carattere integrato della stampante. Usa "Anteprime caratteri integrati" per binding solo nell\'editor.',
     embedInZpl: 'Invia con ZPL',
     embedInZplHint: 'Emette ~DY in modo che stampante (e Labelary) ricevano questo carattere con l\'etichetta. Richiede un alias.',
     manualMappingsHeading: 'Font residenti sulla stampante',

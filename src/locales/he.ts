@@ -456,6 +456,7 @@ const he = {
     uploadError: 'לא ניתן לטעון את קובץ הגופן',
     aliasHint: 'כינוי ZPL לתווית זו (תו אחד, A-Z או 0-9)',
     aliasAssigned: 'כינוי ZPL מוקצה לתווית זו',
+    builtinAliasWarning: 'דורס גופן מובנה של המדפסת. השתמש ב-"תצוגות מקדימות של גופנים מובנים" לקישור רק בעורך.',
     embedInZpl: 'שלח עם ZPL',
     embedInZplHint: 'פולט ~DY כך שהמדפסת (ו-Labelary) יקבלו את הגופן הזה עם התווית. דורש כינוי.',
     manualMappingsHeading: 'גופנים השמורים במדפסת',

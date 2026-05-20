@@ -456,6 +456,7 @@ const ko = {
     uploadError: '글꼴 파일을 불러올 수 없습니다',
     aliasHint: '이 라벨의 ZPL 별칭 (1 글자, A-Z 또는 0-9)',
     aliasAssigned: '이 라벨에 할당된 ZPL 별칭',
+    builtinAliasWarning: '프린터 내장 글꼴을 재정의합니다. 편집기 전용 바인딩에는 "내장 글꼴 미리보기"를 사용하세요.',
     embedInZpl: 'ZPL과 함께 전송',
     embedInZplHint: '프린터(및 Labelary)가 라벨과 함께 이 글꼴을 받도록 ~DY를 내보냅니다. 별칭이 필요합니다.',
     manualMappingsHeading: '프린터 내 글꼴',

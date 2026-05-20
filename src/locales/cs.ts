@@ -456,6 +456,7 @@ const cs = {
     uploadError: 'Soubor písma se nepodařilo načíst',
     aliasHint: 'ZPL alias pro tento štítek (1 znak, A-Z nebo 0-9)',
     aliasAssigned: 'Přiřazený ZPL alias pro tento štítek',
+    builtinAliasWarning: 'Přepisuje vestavěné písmo tiskárny. Pro vazbu pouze v editoru použijte „Náhledy vestavěných písem".',
     embedInZpl: 'Posílat se ZPL',
     embedInZplHint: 'Vysílá ~DY, aby tiskárna (a Labelary) obdržela toto písmo se štítkem. Vyžaduje alias.',
     manualMappingsHeading: 'Písma uložená v tiskárně',

@@ -8,6 +8,7 @@ import {
   DEFAULT_FONT_DRIVE,
   ZPL_BUILTIN_FONT_IDS,
   ZPL_DRIVE_PREFIXES,
+  isBuiltinFontId,
   nextFreeAlias,
   normalizeAlias,
   uploadedFontPath,
@@ -305,55 +306,75 @@ function FontEntry({
   // no field can reference. Disable + tooltip when alias is empty so
   // the constraint is visible instead of silently failing at emit.
   const embedDisabled = !alias;
+  // Heads-up when the user picks a built-in letter (0, A-H): ^CW with
+  // a built-in alias overrides the factory font on the printer, which
+  // is rarely what the user wants — the "Built-in font previews"
+  // section is the right place for an editor-only binding.
+  const overridesBuiltin = isBuiltinFontId(alias);
 
   return (
-    <div className="group grid grid-cols-[1fr_3rem_auto_auto] items-center gap-2 px-2 py-1.5 rounded border border-transparent hover:border-border-2 hover:bg-surface-2 transition-colors">
-      <span
-        className="font-mono text-xs text-text truncate"
-        title={name}
-      >
-        {name}
-      </span>
-      <input
-        type="text"
-        className={`${inputCls} text-center ${duplicate ? 'border-red-500' : ''}`}
-        maxLength={1}
-        placeholder="A-Z"
-        title={
-          duplicate
-            ? t.label.customFontsDuplicateAlias
-            : alias
-              ? t.fonts.aliasAssigned
-              : t.fonts.aliasHint
-        }
-        aria-invalid={duplicate || undefined}
-        value={alias}
-        onChange={(e) => onAliasChange(e.target.value)}
-      />
-      <label
-        className={`flex items-center gap-1 text-[10px] font-mono ${
-          embedDisabled ? 'text-muted opacity-40 cursor-not-allowed' : 'text-muted hover:text-text cursor-pointer'
-        }`}
-        title={t.fonts.embedInZplHint}
-      >
+    <div className="group flex flex-col gap-0.5 px-2 py-1.5 rounded border border-transparent hover:border-border-2 hover:bg-surface-2 transition-colors">
+      <div className="grid grid-cols-[1fr_3rem_auto_auto] items-center gap-2">
+        <span
+          className="font-mono text-xs text-text truncate"
+          title={name}
+        >
+          {name}
+        </span>
         <input
-          type="checkbox"
-          className="accent-accent"
-          checked={embedInZpl && !embedDisabled}
-          disabled={embedDisabled}
-          onChange={(e) => onEmbedChange(e.target.checked)}
+          type="text"
+          className={`${inputCls} text-center ${
+            duplicate
+              ? 'border-red-500'
+              : overridesBuiltin
+                ? 'border-amber-500'
+                : ''
+          }`}
+          maxLength={1}
+          placeholder="A-Z"
+          title={
+            duplicate
+              ? t.label.customFontsDuplicateAlias
+              : alias
+                ? t.fonts.aliasAssigned
+                : t.fonts.aliasHint
+          }
+          aria-invalid={duplicate || undefined}
+          value={alias}
+          onChange={(e) => onAliasChange(e.target.value)}
         />
-        {t.fonts.embedInZpl}
-      </label>
-      <button
-        type="button"
-        onClick={onRequestDelete}
-        className="opacity-0 group-hover:opacity-100 font-mono text-[10px] text-muted hover:text-red-400 transition-all px-1"
-        title={t.fonts.delete}
-        aria-label={t.fonts.delete}
-      >
-        ×
-      </button>
+        <label
+          className={`flex items-center gap-1 text-[10px] font-mono ${
+            embedDisabled
+              ? 'text-muted opacity-40 cursor-not-allowed'
+              : 'text-muted hover:text-text cursor-pointer'
+          }`}
+          title={t.fonts.embedInZplHint}
+        >
+          <input
+            type="checkbox"
+            className="accent-accent"
+            checked={embedInZpl && !embedDisabled}
+            disabled={embedDisabled}
+            onChange={(e) => onEmbedChange(e.target.checked)}
+          />
+          {t.fonts.embedInZpl}
+        </label>
+        <button
+          type="button"
+          onClick={onRequestDelete}
+          className="opacity-0 group-hover:opacity-100 font-mono text-[10px] text-muted hover:text-red-400 transition-all px-1"
+          title={t.fonts.delete}
+          aria-label={t.fonts.delete}
+        >
+          ×
+        </button>
+      </div>
+      {overridesBuiltin && (
+        <p className="text-[10px] text-amber-500 leading-snug pl-1">
+          {t.fonts.builtinAliasWarning}
+        </p>
+      )}
     </div>
   );
 }

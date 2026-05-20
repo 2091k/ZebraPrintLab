@@ -456,6 +456,7 @@ const no = {
     uploadError: 'Klarte ikke laste inn skriftfilen',
     aliasHint: 'ZPL-alias for denne etiketten (1 tegn, A-Z eller 0-9)',
     aliasAssigned: 'Tilordnet ZPL-alias for denne etiketten',
+    builtinAliasWarning: 'Overstyrer innebygd skriverskrift. Bruk "Forhåndsvisninger av innebygde skrifter" for binding kun i editoren.',
     embedInZpl: 'Send med ZPL',
     embedInZplHint: 'Sender ~DY slik at skriveren (og Labelary) mottar denne skriften sammen med etiketten. Krever et alias.',
     manualMappingsHeading: 'Skrifter på skriveren',

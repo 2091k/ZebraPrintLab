@@ -456,6 +456,7 @@ const ja = {
     uploadError: 'フォントファイルを読み込めませんでした',
     aliasHint: 'このラベルの ZPL エイリアス (1 文字, A-Z または 0-9)',
     aliasAssigned: 'このラベルに割り当てられた ZPL エイリアス',
+    builtinAliasWarning: 'プリンターの内蔵フォントを上書きします。エディタのみのバインドには「内蔵フォントのプレビュー」を使用してください。',
     embedInZpl: 'ZPLと一緒に送信',
     embedInZplHint: '~DYを発信して、プリンター（とLabelary）がこのフォントをラベルと一緒に受け取れるようにします。エイリアスが必要です。',
     manualMappingsHeading: 'プリンター内蔵フォント',

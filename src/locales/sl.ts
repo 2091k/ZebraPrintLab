@@ -456,6 +456,7 @@ const sl = {
     uploadError: 'Datoteke pisave ni bilo mogoče naložiti',
     aliasHint: 'ZPL vzdevek za to etiketo (1 znak, A-Z ali 0-9)',
     aliasAssigned: 'Dodeljen ZPL vzdevek za to etiketo',
+    builtinAliasWarning: 'Prepiše vgrajeno pisavo tiskalnika. Za vezavo samo v urejevalniku uporabite „Predogledi vgrajenih pisav".',
     embedInZpl: 'Pošlji z ZPL',
     embedInZplHint: 'Oddaja ~DY, da tiskalnik (in Labelary) prejme to pisavo z oznako. Zahteva vzdevek.',
     manualMappingsHeading: 'Pisave v tiskalniku',

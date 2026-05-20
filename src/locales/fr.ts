@@ -456,6 +456,7 @@ const fr = {
     uploadError: 'Impossible de charger le fichier de police',
     aliasHint: 'Alias ZPL pour cette étiquette (1 caractère, A-Z ou 0-9)',
     aliasAssigned: 'Alias ZPL assigné pour cette étiquette',
+    builtinAliasWarning: 'Remplace la police intégrée de l\'imprimante. Utilise « Aperçus des polices intégrées » pour une liaison uniquement dans l\'éditeur.',
     embedInZpl: 'Envoyer avec ZPL',
     embedInZplHint: 'Émet ~DY pour que l\'imprimante (et Labelary) reçoivent cette police avec l\'étiquette. Nécessite un alias.',
     manualMappingsHeading: 'Polices résidentes',

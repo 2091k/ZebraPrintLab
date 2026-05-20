@@ -456,6 +456,7 @@ const nl = {
     uploadError: 'Lettertypebestand kon niet worden geladen',
     aliasHint: 'ZPL-alias voor dit label (1 teken, A-Z of 0-9)',
     aliasAssigned: 'Toegewezen ZPL-alias voor dit label',
+    builtinAliasWarning: 'Overschrijft ingebouwd printerlettertype. Gebruik "Voorvertoningen van ingebouwde lettertypen" voor binding alleen in de editor.',
     embedInZpl: 'Met ZPL meesturen',
     embedInZplHint: 'Verzendt ~DY zodat de printer (en Labelary) dit lettertype met het label ontvangen. Vereist een alias.',
     manualMappingsHeading: 'Lettertypen op de printer',

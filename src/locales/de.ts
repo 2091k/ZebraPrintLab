@@ -477,6 +477,7 @@ const de = {
     uploadError: 'Schriftdatei konnte nicht geladen werden',
     aliasHint: 'ZPL-Alias für dieses Label (1 Zeichen, A-Z oder 0-9)',
     aliasAssigned: 'Zugewiesener ZPL-Alias für dieses Label',
+    builtinAliasWarning: 'Überschreibt eingebaute Drucker-Schrift. Für reine Editor-Bindung „Vorschau für Drucker-Standardschriften" nutzen.',
     embedInZpl: 'Mit ZPL übertragen',
     embedInZplHint: 'Emittiert ~DY, damit Drucker (und Labelary) diese Schrift mit dem Etikett erhalten. Benötigt einen Alias.',
     manualMappingsHeading: 'Schriften auf dem Drucker',

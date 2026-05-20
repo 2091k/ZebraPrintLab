@@ -456,6 +456,7 @@ const lt = {
     uploadError: 'Nepavyko įkelti šrifto failo',
     aliasHint: 'ZPL alias šiai etiketei (1 simbolis, A-Z arba 0-9)',
     aliasAssigned: 'Šiai etiketei priskirtas ZPL alias',
+    builtinAliasWarning: 'Pakeičia įmontuotą spausdintuvo šriftą. Naudokite „Įmontuotų šriftų peržiūros" tik redaktoriaus susiejimui.',
     embedInZpl: 'Siųsti su ZPL',
     embedInZplHint: 'Siunčia ~DY, kad spausdintuvas (ir Labelary) gautų šį šriftą su etikete. Reikia slapyvardžio.',
     manualMappingsHeading: 'Spausdintuve esantys šriftai',

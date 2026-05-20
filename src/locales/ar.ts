@@ -456,6 +456,7 @@ const ar = {
     uploadError: 'تعذّر تحميل ملف الخط',
     aliasHint: 'اسم مستعار ZPL لهذا الملصق (حرف واحد، A-Z أو 0-9)',
     aliasAssigned: 'الاسم المستعار ZPL المعيَّن لهذا الملصق',
+    builtinAliasWarning: 'يستبدل خط الطابعة المدمج. استخدم "معاينات الخطوط المدمجة" للربط في المحرر فقط.',
     embedInZpl: 'إرسال مع ZPL',
     embedInZplHint: 'إصدار ~DY لكي تستلم الطابعة (و Labelary) هذا الخط مع الملصق. يتطلب اسماً مستعاراً.',
     manualMappingsHeading: 'خطوط الطابعة المقيمة',

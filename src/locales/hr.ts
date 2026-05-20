@@ -456,6 +456,7 @@ const hr = {
     uploadError: 'Datoteka fonta nije mogla biti učitana',
     aliasHint: 'ZPL alias za ovu etiketu (1 znak, A-Z ili 0-9)',
     aliasAssigned: 'Dodijeljen ZPL alias za ovu etiketu',
+    builtinAliasWarning: 'Nadjačava ugrađeni font pisača. Koristite "Pregledi ugrađenih fontova" za vezivanje samo u uređivaču.',
     embedInZpl: 'Pošalji sa ZPL-om',
     embedInZplHint: 'Emitira ~DY tako da pisač (i Labelary) prime ovaj font s oznakom. Zahtijeva alias.',
     manualMappingsHeading: 'Fontovi na pisaču',

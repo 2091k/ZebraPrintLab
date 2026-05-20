@@ -456,6 +456,7 @@ const sv = {
     uploadError: 'Det gick inte att ladda typsnittsfilen',
     aliasHint: 'ZPL-alias för denna etikett (1 tecken, A-Z eller 0-9)',
     aliasAssigned: 'Tilldelat ZPL-alias för denna etikett',
+    builtinAliasWarning: 'Skriver över inbyggt skrivartypsnitt. Använd "Förhandsvisningar av inbyggda typsnitt" för bindning endast i editorn.',
     embedInZpl: 'Skicka med ZPL',
     embedInZplHint: 'Sänder ~DY så att skrivaren (och Labelary) tar emot detta typsnitt med etiketten. Kräver ett alias.',
     manualMappingsHeading: 'Typsnitt i skrivaren',
