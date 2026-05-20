@@ -465,7 +465,6 @@ const zhHant = {
     builtinPreviewsHeading: '內建字型預覽',
     builtinPreviewsHint: '將本地TTF綁定到內建字型ID（0、A-H），使編輯器顯示該字型的實際外觀。不會發送到ZPL。',
     addBuiltinPreview: '綁定內建字型',
-    builtinPreviewsTeaser: '想看內建字型的樣子？請參見下方區塊。',
     usedAsPreview: '預覽',
     noPreviewFont: '選擇字型…',
   },

@@ -465,7 +465,6 @@ const sv = {
     builtinPreviewsHeading: 'Förhandsvisningar av inbyggda typsnitt',
     builtinPreviewsHint: 'Bind ett lokalt TTF till ett inbyggt typsnitts-ID (0, A-H) så att editorn visar hur det typsnittet faktiskt ser ut. Sänds inte till ZPL.',
     addBuiltinPreview: 'Bind inbyggt typsnitt',
-    builtinPreviewsTeaser: 'Vill du se hur inbyggda typsnitt ser ut? Se avsnittet nedan.',
     usedAsPreview: 'visning för',
     noPreviewFont: 'Välj ett typsnitt…',
   },

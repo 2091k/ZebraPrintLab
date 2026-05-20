@@ -273,11 +273,6 @@ export function FontManager() {
         id="fonts-builtin-previews"
         title={t.fonts.builtinPreviewsHeading}
         defaultOpen={builtinPreviews.length > 0}
-        teaser={
-          fonts.length > 0 && builtinPreviews.length === 0
-            ? t.fonts.builtinPreviewsTeaser
-            : undefined
-        }
       >
         <BuiltinPreviewSection
           mappings={builtinPreviews}

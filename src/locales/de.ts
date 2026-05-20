@@ -486,7 +486,6 @@ const de = {
     builtinPreviewsHeading: 'Vorschau für Drucker-Standardschriften',
     builtinPreviewsHint: 'Bindet eine lokale TTF an eine eingebaute Schrift-ID (0, A-H), damit der Editor zeigt, wie diese Schrift wirklich aussieht. Wird nicht ins ZPL emittiert.',
     addBuiltinPreview: 'Eingebaute Schrift binden',
-    builtinPreviewsTeaser: 'Sehen wie eingebaute Schriften aussehen? Siehe Sektion unten.',
     usedAsPreview: 'Vorschau für',
     noPreviewFont: 'Schrift wählen …',
   },
