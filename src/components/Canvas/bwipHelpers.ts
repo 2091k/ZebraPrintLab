@@ -304,7 +304,11 @@ export function buildBwipOptions(
   // needed.
   const rotation = objectRotation(obj.props);
 
-  let opts: Record<string, unknown> | null = null;
+  // Declared without an initializer because every reachable case
+  // assigns before `break` and the `default` arm returns early — the
+  // previous `= null` initializer is what ESLint 10's
+  // no-useless-assignment now flags as dead.
+  let opts: Record<string, unknown>;
 
   switch (obj.type) {
     case "ean13":
@@ -498,7 +502,7 @@ export function buildBwipOptions(
       return null;
   }
 
-  if (opts && rotation !== "N") {
+  if (rotation !== "N") {
     // ZPL uses N/R/I/B (B = 270° CW). bwip-js uses N/R/I/L (L = 90° CCW =
     // 270° CW). The other three letters mean the same thing in both.
     opts.rotate = rotation === "B" ? "L" : rotation;
