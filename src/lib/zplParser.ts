@@ -1,4 +1,4 @@
-import type { LabelConfig } from "../types/ObjectType";
+import type { CustomFontMapping, LabelConfig } from "../types/ObjectType";
 import { zplAnchorToModel } from "../components/Canvas/textPositionTransforms";
 import { computeTextRenderMetrics } from "../components/Canvas/textRenderMetrics";
 import type { LabelObject } from "../types/Group";
@@ -21,6 +21,7 @@ import type { AztecProps } from "../registry/aztec";
 import type { MicroPdf417Props } from "../registry/micropdf417";
 import type { CodablockProps } from "../registry/codablock";
 import { putImage } from "./imageCache";
+import { loadFontBytesSync } from "./fontCache";
 import { ZPL_BUILTIN_FONT_LETTERS } from "./customFonts";
 import { GS1_DATABAR_DEFAULT_SEGMENTS } from "./gs1";
 
@@ -313,6 +314,12 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
   // ^A{alias} field references back to the original font path. Built
   // as the parser walks the header, consulted on each ^A{X} encounter.
   const fontAliases = new Map<string, string>();
+
+  // Paths that arrived via ~DY in this stream. Used so a subsequent
+  // ^CW for the same path flips the mapping's `embedInZpl` flag —
+  // round-trip stability: emit then re-parse should preserve the
+  // user's "ship the bytes" intent.
+  const downloadedFontPaths = new Set<string>();
 
   // ^FH state (field hex indicator)
   let fhActive = false;
@@ -1325,7 +1332,92 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       const list = (labelConfig.customFonts ?? []).filter(
         (m) => m.alias !== alias,
       );
-      labelConfig.customFonts = [...list, { alias, path }];
+      const entry: CustomFontMapping = { alias, path };
+      if (downloadedFontPaths.has(path)) {
+        // The bytes already shipped via ~DY earlier in the stream;
+        // surface that intent on the model so re-emit will ~DY again.
+        entry.embedInZpl = true;
+        // The fontCache key is the filename portion of the path
+        // (drive prefix stripped), matching how ~DY registers fonts.
+        const colonIdx = path.indexOf(":");
+        const filename = colonIdx >= 0 ? path.slice(colonIdx + 1) : path;
+        if (filename) entry.previewFontName = filename;
+      }
+      labelConfig.customFonts = [...list, entry];
+    },
+
+    // ── ~DY downloaded TrueType payload ─────────────────────────────────────
+    // ~DY{drive}:{name},{fmt},{ext},{size},{bpr},{data}
+    // Decodes ASCII hex (format 'A') TTF/OTF bytes into the font cache
+    // so the canvas can preview the embedded font without a separate
+    // upload. The path reconstruction (stem + extension code) round-
+    // trips the same form the generator emits. Non-TTF extensions and
+    // non-hex formats are left untouched and fall through to the
+    // browser-limit bucket so the user sees what was dropped.
+    DY(_p, rest) {
+      // Parse manually because the data segment can be hundreds of
+      // KB of hex; we want to avoid splitting that into the rest of
+      // the params array. Param layout up to and including bytes-per-
+      // row is fixed-arity, so we walk commas until we've found 5.
+      const c: number[] = [];
+      for (let i = 0; i < rest.length && c.length < 5; i++) {
+        if (rest[i] === ",") c.push(i);
+      }
+      if (c.length < 5) {
+        browserLimit.push(`~DY${rest}`);
+        return;
+      }
+      const [c0, c1, c2, c3, c4] = c;
+      if (
+        c0 === undefined ||
+        c1 === undefined ||
+        c2 === undefined ||
+        c3 === undefined ||
+        c4 === undefined
+      ) {
+        browserLimit.push(`~DY${rest}`);
+        return;
+      }
+      const path = rest.slice(0, c0);
+      const fmt = rest.slice(c0 + 1, c1).toUpperCase();
+      const extCode = rest.slice(c1 + 1, c2).toUpperCase();
+      const size = parseInt(rest.slice(c2 + 1, c3), 10);
+      const data = rest.slice(c4 + 1);
+      // Only ASCII-hex TTF/OTF imports are supported. Z64 / compressed
+      // payloads need a CRC-checked decoder and stay out of scope.
+      if (fmt !== "A" || (extCode !== "T" && extCode !== "B")) {
+        browserLimit.push(`~DY${rest.slice(0, 80)}…`);
+        return;
+      }
+      if (!path || isNaN(size) || size <= 0 || data.length < size * 2) {
+        browserLimit.push(`~DY${rest.slice(0, 80)}…`);
+        return;
+      }
+      const bytes = new Uint8Array(size);
+      for (let i = 0; i < size; i++) {
+        const byteHex = data.substr(i * 2, 2);
+        const b = parseInt(byteHex, 16);
+        if (isNaN(b)) {
+          browserLimit.push(`~DY${rest.slice(0, 80)}…`);
+          return;
+        }
+        bytes[i] = b;
+      }
+      // Reconstruct the full filename with extension so the registered
+      // name matches what ^CW points at. Generator emits "{stem}" with
+      // the extension stripped, so we re-attach based on the code.
+      const ext = extCode === "T" ? ".TTF" : ".BIN";
+      const filename = path.includes(".")
+        ? path.slice(path.lastIndexOf(":") + 1)
+        : `${path.slice(path.indexOf(":") + 1)}${ext}`;
+      const fullPath = path.includes(".") ? path : `${path}${ext}`;
+      try {
+        loadFontBytesSync(bytes, filename);
+        downloadedFontPaths.add(fullPath);
+      } catch {
+        // Oversized or otherwise unloadable — surface as browser-limit.
+        browserLimit.push(`~DY${path}`);
+      }
     },
 
     // ── Browser-limit: printer-specific features ────────────────────────────
