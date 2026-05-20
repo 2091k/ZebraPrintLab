@@ -37,21 +37,23 @@ export function FontManager() {
   const uploadedNames = new Set(fonts.map((f) => f.name));
 
   // Partition customFonts into three buckets matched to the three UI
-  // sections. The same source list feeds all three views; entries are
-  // routed by shape: path → uploaded vs. manual, no path → built-in
-  // preview binding. Aliases stay globally unique across the label,
-  // so duplicate detection runs over the full list.
+  // sections. Discriminator is the *presence* of the `path` property
+  // (m.path === undefined), not its truthiness — a manual mapping
+  // freshly added carries an empty-string path while the user types,
+  // and we must keep that row in the manual section instead of
+  // mis-routing it into the built-in-preview bucket.
   const aliasByPath = new Map<string, string>();
   const manualMappings: CustomFontMapping[] = [];
   const builtinPreviews: CustomFontMapping[] = [];
   for (const m of customFonts ?? []) {
-    if (!m.path) {
-      // No path → ^CW is not emitted; the mapping exists only to bind
-      // a local TTF to a built-in font ID for canvas preview.
+    if (m.path === undefined) {
+      // No path field set → ^CW is not emitted; the mapping exists
+      // only to bind a local TTF to a built-in font ID for canvas
+      // preview.
       builtinPreviews.push(m);
       continue;
     }
-    aliasByPath.set(m.path, m.alias);
+    if (m.path) aliasByPath.set(m.path, m.alias);
     const isUploadedPath =
       m.path.startsWith(DEFAULT_FONT_DRIVE) &&
       uploadedNames.has(m.path.slice(DEFAULT_FONT_DRIVE.length));
@@ -146,7 +148,7 @@ export function FontManager() {
     // already bound, fall back to "0" — the user can edit it.
     const takenAliases = new Set(
       (customFonts ?? [])
-        .filter((m) => !m.path)
+        .filter((m) => m.path === undefined)
         .map((m) => m.alias),
     );
     const next =
@@ -162,7 +164,7 @@ export function FontManager() {
     const list = customFonts ?? [];
     replaceList(
       list.map((m) =>
-        m.alias === currentAlias && !m.path
+        m.alias === currentAlias && m.path === undefined
           ? {
               ...m,
               alias: patch.alias !== undefined
@@ -177,7 +179,9 @@ export function FontManager() {
 
   const removeBuiltinPreview = (alias: string) => {
     replaceList(
-      (customFonts ?? []).filter((m) => !(m.alias === alias && !m.path)),
+      (customFonts ?? []).filter(
+        (m) => !(m.alias === alias && m.path === undefined),
+      ),
     );
   };
 
