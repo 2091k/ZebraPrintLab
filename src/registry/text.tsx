@@ -5,7 +5,7 @@ import { inputCls, labelCls } from "../components/Properties/styles";
 import { textFieldPos, fdField, resolveFontCmd } from "./zplHelpers";
 import { effectiveScale } from "./transformHelpers";
 import { getFont, loadFontFile } from "../lib/fontCache";
-import { getAvailableFontIds } from "../lib/customFonts";
+import { getAvailableFontIds, stripDrivePrefix } from "../lib/customFonts";
 import { useFontCacheVersion } from "../hooks/useFontCacheVersion";
 import { useLabelStore } from "../store/labelStore";
 import { RotationSelect } from "../components/Properties/RotationSelect";
@@ -131,17 +131,17 @@ export const text: ObjectTypeDefinition<TextProps> = {
             <option value="">{t.registry.text.useLabelDefault}</option>
             {fontIdOptions.map((opt) => {
               const previewName =
-                opt.previewFontName ?? opt.path?.replace(/^[A-Z]:/, "");
-              const labelText = opt.builtin
-                ? previewName
-                  ? `${opt.id} — ${previewName}`
-                  : `${opt.id}  ${t.registry.text.builtinSuffix}`
-                : previewName
-                  ? `${opt.id} — ${previewName}`
-                  : opt.id;
+                opt.previewFontName ??
+                (opt.path ? stripDrivePrefix(opt.path) : undefined);
+              const suffix = previewName
+                ? ` — ${previewName}`
+                : opt.builtin
+                  ? `  ${t.registry.text.builtinSuffix}`
+                  : "";
               return (
                 <option key={opt.id} value={opt.id}>
-                  {labelText}
+                  {opt.id}
+                  {suffix}
                 </option>
               );
             })}

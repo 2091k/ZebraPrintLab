@@ -22,7 +22,7 @@ import { CollapsibleSection } from "../ui/CollapsibleSection";
 import { AlignButtons } from "./AlignButtons";
 import { inputCls, labelCls } from "./styles";
 import type { LabelConfig } from "../../types/ObjectType";
-import { ZPL_BUILTIN_FONT_IDS } from "../../lib/customFonts";
+import { ZPL_BUILTIN_FONT_IDS, stripDrivePrefix } from "../../lib/customFonts";
 
 interface PropertiesPanelProps {
   /** Imperative handle on the canvas — used for actions that need live render
@@ -363,7 +363,7 @@ function LabelConfigPanel({
     // emitted verbatim to ZPL.
     return {
       value: id,
-      label: path ? path.replace(/^[A-Z]:/, '') : undefined,
+      label: path ? stripDrivePrefix(path) : undefined,
     };
   });
 

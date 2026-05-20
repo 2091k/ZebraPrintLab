@@ -21,6 +21,7 @@ import type { AztecProps } from "../registry/aztec";
 import type { MicroPdf417Props } from "../registry/micropdf417";
 import type { CodablockProps } from "../registry/codablock";
 import { putImage } from "./imageCache";
+import { ZPL_BUILTIN_FONT_LETTERS } from "./customFonts";
 import { GS1_DATABAR_DEFAULT_SEGMENTS } from "./gs1";
 
 export type ImportFindingKind = "partial" | "browserLimit" | "unknown";
@@ -1432,7 +1433,10 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       } else {
         pendingFontId = fontChar;
       }
-      if (!fontAliases.has(fontChar) && !"0ABCDEFGH".includes(fontChar)) {
+      if (
+        !fontAliases.has(fontChar) &&
+        !ZPL_BUILTIN_FONT_LETTERS.includes(fontChar)
+      ) {
         partialCmds.add(`^${cmd}`);
       }
       continue;

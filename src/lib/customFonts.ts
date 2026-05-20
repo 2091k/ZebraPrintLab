@@ -38,6 +38,15 @@ export function uploadedFontPath(name: string): string {
   return `${DEFAULT_FONT_DRIVE}${name}`;
 }
 
+/** Drop the leading Zebra drive prefix (`E:`, `R:`, `A:`, `B:`) from a
+ *  storage path, returning the bare filename. Used by every surface
+ *  that shows a printer path to the user (font dropdowns, mapping
+ *  rows) — the drive letter is implementation detail; the filename is
+ *  what the user picked. */
+export function stripDrivePrefix(path: string): string {
+  return path.replace(/^[A-Z]:/, "");
+}
+
 /** Normalise raw user input into a valid ^CW alias char (or empty
  *  string if no usable character is present). */
 export function normalizeAlias(raw: string): string {
@@ -57,7 +66,10 @@ export function upsertCustomFontMapping(
   return [...withoutPath, { alias, path }];
 }
 
-const ZPL_BUILTIN_FONT_LETTERS = '0ABCDEFGH';
+/** The nine built-in Zebra font identifiers as a single string for
+ *  fast `.includes()` checks. Kept lowercase-named (no `_IDS` suffix)
+ *  because consumers iterate over it both as a list and as a set. */
+export const ZPL_BUILTIN_FONT_LETTERS = '0ABCDEFGH';
 const ALIAS_PREFERRED_ORDER = 'IJKLMNOPQRSTUVWXYZ123456789';
 
 /** True when the alias is a Zebra built-in font (0, A-H). Built-ins
@@ -86,7 +98,7 @@ export function resolvePreviewFontName(
   const entry = label.customFonts?.find((m) => m.alias === fontId);
   if (!entry) return undefined;
   if (entry.previewFontName) return entry.previewFontName;
-  if (entry.path) return entry.path.replace(/^[A-Z]:/, "");
+  if (entry.path) return stripDrivePrefix(entry.path);
   return undefined;
 }
 
