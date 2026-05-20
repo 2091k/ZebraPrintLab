@@ -1,4 +1,4 @@
-import type { CustomFontMapping } from "../types/ObjectType";
+import type { CustomFontMapping, LabelConfig } from "../types/ObjectType";
 
 /** Characters NOT allowed in a ^CW alias. Used as a strip-pattern on
  *  user input so a single source of truth feeds both UI surfaces (the
@@ -65,6 +65,24 @@ const ALIAS_PREFERRED_ORDER = 'IJKLMNOPQRSTUVWXYZ123456789';
  *  range is exhausted; assigning one of them is a deliberate override
  *  of the built-in font, which we avoid by default. Returns '' if all
  *  36 valid alias characters are in use. */
+/** Resolve `label.defaultFontId` to a printer font filename (the part
+ *  after the drive prefix, e.g. "ARIAL.TTF"), using the ^CW mappings on
+ *  the label. Returns undefined when the default font is a built-in
+ *  Zebra font ID (0, A-H) or otherwise unmapped. The filename matches
+ *  the `printerFontName` shape used by text props so it can drop
+ *  straight into the canvas font-cache lookup. Used only by the canvas
+ *  render path; emit and parser stay PrintLab ZPL-based to keep the
+ *  round-trip stable. */
+export function resolveDefaultPrinterFontName(
+  label: Pick<LabelConfig, "defaultFontId" | "customFonts">,
+): string | undefined {
+  const id = label.defaultFontId;
+  if (!id) return undefined;
+  const entry = label.customFonts?.find((m) => m.alias === id);
+  if (!entry?.path) return undefined;
+  return entry.path.replace(/^[A-Z]:/, "");
+}
+
 export function nextFreeAlias(taken: Iterable<string>): string {
   const used = new Set(taken);
   for (const c of ALIAS_PREFERRED_ORDER) {

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   nextFreeAlias,
   normalizeAlias,
+  resolveDefaultPrinterFontName,
   upsertCustomFontMapping,
 } from "./customFonts";
 
@@ -89,5 +90,48 @@ describe("nextFreeAlias", () => {
     const all =
       "0ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789".split("");
     expect(nextFreeAlias(all)).toBe("");
+  });
+});
+
+describe("resolveDefaultPrinterFontName", () => {
+  it("returns the filename for a default alias that maps to a custom font", () => {
+    expect(
+      resolveDefaultPrinterFontName({
+        defaultFontId: "M",
+        customFonts: [{ alias: "M", path: "E:MYFONT.TTF" }],
+      }),
+    ).toBe("MYFONT.TTF");
+  });
+
+  it("strips any single-letter drive prefix, not just E:", () => {
+    expect(
+      resolveDefaultPrinterFontName({
+        defaultFontId: "M",
+        customFonts: [{ alias: "M", path: "R:RAMFONT.TTF" }],
+      }),
+    ).toBe("RAMFONT.TTF");
+  });
+
+  it("returns undefined for a built-in font id with no matching mapping", () => {
+    expect(
+      resolveDefaultPrinterFontName({
+        defaultFontId: "0",
+        customFonts: [{ alias: "M", path: "E:MYFONT.TTF" }],
+      }),
+    ).toBeUndefined();
+  });
+
+  it("returns undefined when defaultFontId is unset", () => {
+    expect(
+      resolveDefaultPrinterFontName({
+        customFonts: [{ alias: "M", path: "E:MYFONT.TTF" }],
+      }),
+    ).toBeUndefined();
+  });
+
+  it("returns undefined when customFonts is missing", () => {
+    expect(
+      resolveDefaultPrinterFontName({ defaultFontId: "M" }),
+    ).toBeUndefined();
   });
 });

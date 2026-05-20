@@ -24,14 +24,21 @@ export interface TextMetricsInput {
   fontHeight: number;
   fontWidth: number;
   printerFontName?: string;
+  /** Canvas-only fallback used when `printerFontName` is empty. Lets
+   *  the renderer apply the label-wide default font (resolved from
+   *  ^CW / ^CF) to text fields that did not pick their own printer
+   *  font. Not passed by emit/parser, so the ZPL round-trip stays
+   *  PrintLab-ZPL based. */
+  defaultPrinterFontName?: string;
 }
 
 /** Compute metrics from raw text parameters. Pure once
  *  `measureInkWidthPx` and `getFontFamily` are pure. */
 export function computeTextRenderMetrics(input: TextMetricsInput): TextRenderMetrics {
-  const { content, fontHeight, fontWidth, printerFontName } = input;
-  const fontFamily = printerFontName
-    ? (getFontFamily(printerFontName) ?? "'PrintLab ZPL', sans-serif")
+  const { content, fontHeight, fontWidth, printerFontName, defaultPrinterFontName } = input;
+  const effectiveFontName = printerFontName || defaultPrinterFontName;
+  const fontFamily = effectiveFontName
+    ? (getFontFamily(effectiveFontName) ?? "'PrintLab ZPL', sans-serif")
     : "'PrintLab ZPL', sans-serif";
   const fontScaleX = fontWidth > 0 ? fontWidth / fontHeight : 1;
   const inkWidthDots =
@@ -45,10 +52,14 @@ export function computeTextRenderMetrics(input: TextMetricsInput): TextRenderMet
 
 /** Object-shaped wrapper used by the renderer and the resize commit
  *  path. `fontHeightOverride` lets the resize commit see the
- *  to-be-written fontHeight before it lands in obj.props. */
+ *  to-be-written fontHeight before it lands in obj.props.
+ *  `defaultPrinterFontName` is the canvas-only fallback for text
+ *  objects without their own `printerFontName`; see
+ *  `TextMetricsInput.defaultPrinterFontName`. */
 export function getTextRenderMetrics(
   obj: LabelObject,
   fontHeightOverride?: number,
+  defaultPrinterFontName?: string,
 ): TextRenderMetrics | null {
   if (obj.type !== "text" && obj.type !== "serial") return null;
   const p = obj.props;
@@ -57,5 +68,6 @@ export function getTextRenderMetrics(
     fontHeight: fontHeightOverride ?? p.fontHeight,
     fontWidth: p.fontWidth,
     printerFontName: obj.type === "text" ? obj.props.printerFontName : undefined,
+    defaultPrinterFontName,
   });
 }
