@@ -41,24 +41,24 @@ export function FontManager() {
   // (m.path === undefined), not its truthiness — a manual mapping
   // freshly added carries an empty-string path while the user types,
   // and we must keep that row in the manual section instead of
-  // mis-routing it into the built-in-preview bucket.
+  // mis-routing it into the built-in-preview bucket. We also remember
+  // each manual entry's index in the full `customFonts` array so the
+  // section's update / remove handlers can target a specific row even
+  // when two rows transiently share the same (empty) path.
   const aliasByPath = new Map<string, string>();
-  const manualMappings: CustomFontMapping[] = [];
+  const manualMappings: { entry: CustomFontMapping; index: number }[] = [];
   const builtinPreviews: CustomFontMapping[] = [];
-  for (const m of customFonts ?? []) {
+  (customFonts ?? []).forEach((m, index) => {
     if (m.path === undefined) {
-      // No path field set → ^CW is not emitted; the mapping exists
-      // only to bind a local TTF to a built-in font ID for canvas
-      // preview.
       builtinPreviews.push(m);
-      continue;
+      return;
     }
     if (m.path) aliasByPath.set(m.path, m.alias);
     const isUploadedPath =
       m.path.startsWith(DEFAULT_FONT_DRIVE) &&
       uploadedNames.has(m.path.slice(DEFAULT_FONT_DRIVE.length));
-    if (!isUploadedPath) manualMappings.push(m);
-  }
+    if (!isUploadedPath) manualMappings.push({ entry: m, index });
+  });
 
   const aliasCounts = new Map<string, number>();
   for (const m of customFonts ?? []) {
@@ -109,11 +109,14 @@ export function FontManager() {
     );
   };
 
-  const updateManualAt = (path: string, patch: Partial<CustomFontMapping>) => {
+  const updateManualAt = (
+    index: number,
+    patch: Partial<CustomFontMapping>,
+  ) => {
     const list = customFonts ?? [];
     replaceList(
-      list.map((m) =>
-        m.path === path
+      list.map((m, i) =>
+        i === index
           ? {
               ...m,
               alias:
@@ -127,8 +130,8 @@ export function FontManager() {
     );
   };
 
-  const removeByPath = (path: string) => {
-    replaceList((customFonts ?? []).filter((m) => m.path !== path));
+  const removeAt = (index: number) => {
+    replaceList((customFonts ?? []).filter((_, i) => i !== index));
   };
 
   const addManual = () => {
@@ -256,12 +259,12 @@ export function FontManager() {
         defaultOpen={manualMappings.length > 0}
       >
         <ManualMappingsSection
-          mappings={manualMappings}
+          rows={manualMappings}
           hint={t.fonts.manualMappingsHint}
           addLabel={t.fonts.addManualMapping}
           isDuplicateAlias={isDuplicateAlias}
           onUpdate={updateManualAt}
-          onRemove={removeByPath}
+          onRemove={removeAt}
           onAdd={addManual}
         />
       </CollapsibleSection>
@@ -429,17 +432,20 @@ function FontEntry({
 // ── ManualMappingsSection ──────────────────────────────────────────────────────
 
 interface ManualMappingsSectionProps {
-  mappings: CustomFontMapping[];
+  rows: { entry: CustomFontMapping; index: number }[];
   hint: string;
   addLabel: string;
   isDuplicateAlias: (alias: string) => boolean;
-  onUpdate: (currentPath: string, patch: Partial<CustomFontMapping>) => void;
-  onRemove: (path: string) => void;
+  /** `index` refers to the row's position in the full `customFonts`
+   *  list (not in this section's subset) so the parent updates the
+   *  correct entry even when two rows transiently share an empty path. */
+  onUpdate: (index: number, patch: Partial<CustomFontMapping>) => void;
+  onRemove: (index: number) => void;
   onAdd: () => void;
 }
 
 function ManualMappingsSection({
-  mappings,
+  rows,
   hint,
   addLabel,
   isDuplicateAlias,
@@ -455,13 +461,14 @@ function ManualMappingsSection({
   // not count as "leaving".
   const handleBlur = (
     e: FocusEvent<HTMLDivElement>,
+    index: number,
     path: string,
     alias: string,
   ) => {
     const row = e.currentTarget;
     requestAnimationFrame(() => {
       if (!alias && !path && !row.contains(document.activeElement)) {
-        onRemove(path);
+        onRemove(index);
       }
     });
   };
@@ -469,22 +476,14 @@ function ManualMappingsSection({
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-muted px-1 leading-relaxed">{hint}</p>
-      {mappings.map((m) => {
+      {rows.map(({ entry: m, index }) => {
         const dup = isDuplicateAlias(m.alias);
-        // Manual mappings always carry a path (preview-only entries
-        // live elsewhere). The empty string fallback only keeps TS happy
-        // and never reaches the user — the row is suppressed upstream.
         const path = m.path ?? '';
-        // Key: stable across edits as long as alias and path don't
-        // change at the same time. For fresh empty rows the auto-
-        // assigned alias from nextFreeAlias is unique per row, which
-        // gives a stable identity until the user types a path.
-        const rowKey = path || `__alias__${m.alias}`;
         return (
           <div
-            key={rowKey}
+            key={index}
             className="grid grid-cols-[3rem_1fr_auto] gap-2 items-center"
-            onBlur={(e) => handleBlur(e, path, m.alias)}
+            onBlur={(e) => handleBlur(e, index, path, m.alias)}
           >
             <input
               type="text"
@@ -498,7 +497,7 @@ function ManualMappingsSection({
               }
               aria-invalid={dup || undefined}
               value={m.alias}
-              onChange={(e) => onUpdate(path, { alias: e.target.value })}
+              onChange={(e) => onUpdate(index, { alias: e.target.value })}
             />
             <input
               type="text"
@@ -506,12 +505,12 @@ function ManualMappingsSection({
               list={PATHS_DATALIST_ID}
               placeholder={t.label.customFontsPath}
               value={path}
-              onChange={(e) => onUpdate(path, { path: e.target.value })}
+              onChange={(e) => onUpdate(index, { path: e.target.value })}
             />
             <button
               type="button"
               className="p-1 text-muted hover:text-text"
-              onClick={() => onRemove(path)}
+              onClick={() => onRemove(index)}
               aria-label={t.label.customFontsRemove}
             >
               <TrashIcon className="w-3.5 h-3.5" />
