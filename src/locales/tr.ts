@@ -202,6 +202,10 @@ const tr = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Yok',
+      useLabelDefault: '(etiket varsayılanını kullan)',
+      builtinSuffix: '(yerleşik)',
+      fontAdvanced: 'Gelişmiş',
+      fontFilenameLabel: 'Yazı tipi yolu (^A@)',
     },
     code128: {
       content: 'İçerik',

@@ -202,6 +202,10 @@ const fa = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'هیچ‌کدام',
+      useLabelDefault: '(استفاده از پیش‌فرض برچسب)',
+      builtinSuffix: '(داخلی)',
+      fontAdvanced: 'پیشرفته',
+      fontFilenameLabel: 'مسیر قلم (^A@)',
     },
     code128: {
       content: 'محتوا',

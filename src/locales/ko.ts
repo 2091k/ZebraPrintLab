@@ -202,6 +202,10 @@ const ko = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: '없음',
+      useLabelDefault: '(라벨 기본값 사용)',
+      builtinSuffix: '(내장)',
+      fontAdvanced: '고급',
+      fontFilenameLabel: '글꼴 경로 (^A@)',
     },
     code128: {
       content: '내용',

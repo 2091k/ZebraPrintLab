@@ -202,6 +202,10 @@ const pl = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Brak',
+      useLabelDefault: '(użyj domyślnego etykiety)',
+      builtinSuffix: '(wbudowany)',
+      fontAdvanced: 'Zaawansowane',
+      fontFilenameLabel: 'Ścieżka czcionki (^A@)',
     },
     code128: {
       content: 'Zawartość',

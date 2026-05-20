@@ -202,6 +202,10 @@ const sr = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Нема',
+      useLabelDefault: '(користи подразумевану ознаке)',
+      builtinSuffix: '(уграђено)',
+      fontAdvanced: 'Напредно',
+      fontFilenameLabel: 'Путања фонта (^A@)',
     },
     code128: {
       content: 'Sadržaj',

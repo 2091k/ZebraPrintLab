@@ -202,6 +202,10 @@ const hu = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Nincs',
+      useLabelDefault: '(címke alapértelmezett használata)',
+      builtinSuffix: '(beépített)',
+      fontAdvanced: 'Speciális',
+      fontFilenameLabel: 'Betűtípus útvonala (^A@)',
     },
     code128: {
       content: 'Tartalom',

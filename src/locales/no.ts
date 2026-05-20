@@ -202,6 +202,10 @@ const no = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Ingen',
+      useLabelDefault: '(bruk etikettstandard)',
+      builtinSuffix: '(innebygd)',
+      fontAdvanced: 'Avansert',
+      fontFilenameLabel: 'Skriftsti (^A@)',
     },
     code128: {
       content: 'Innhold',

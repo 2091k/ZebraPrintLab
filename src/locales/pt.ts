@@ -202,6 +202,10 @@ const pt = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Nenhuma',
+      useLabelDefault: '(usar padrão do rótulo)',
+      builtinSuffix: '(integrado)',
+      fontAdvanced: 'Avançado',
+      fontFilenameLabel: 'Caminho da fonte (^A@)',
     },
     code128: {
       content: 'Conteúdo',

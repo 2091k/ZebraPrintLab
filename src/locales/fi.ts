@@ -202,6 +202,10 @@ const fi = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Ei mitään',
+      useLabelDefault: '(käytä etiketin oletusta)',
+      builtinSuffix: '(sisäänrakennettu)',
+      fontAdvanced: 'Lisäasetukset',
+      fontFilenameLabel: 'Fontin polku (^A@)',
     },
     code128: {
       content: 'Sisältö',

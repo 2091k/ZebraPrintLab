@@ -223,6 +223,10 @@ const en = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'None',
+      useLabelDefault: '(use label default)',
+      builtinSuffix: '(built-in)',
+      fontAdvanced: 'Advanced',
+      fontFilenameLabel: 'Font path (^A@)',
     },
     code128: {
       content: 'Content',

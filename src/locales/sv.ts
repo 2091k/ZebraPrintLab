@@ -202,6 +202,10 @@ const sv = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Ingen',
+      useLabelDefault: '(använd etikettstandard)',
+      builtinSuffix: '(inbyggd)',
+      fontAdvanced: 'Avancerat',
+      fontFilenameLabel: 'Typsnittssökväg (^A@)',
     },
     code128: {
       content: 'Innehåll',

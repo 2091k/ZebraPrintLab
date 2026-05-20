@@ -202,6 +202,10 @@ const nl = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Geen',
+      useLabelDefault: '(labelstandaard gebruiken)',
+      builtinSuffix: '(ingebouwd)',
+      fontAdvanced: 'Geavanceerd',
+      fontFilenameLabel: 'Lettertypepad (^A@)',
     },
     code128: {
       content: 'Inhoud',

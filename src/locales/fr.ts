@@ -202,6 +202,10 @@ const fr = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Aucune',
+      useLabelDefault: '(utiliser le défaut de l\'étiquette)',
+      builtinSuffix: '(intégré)',
+      fontAdvanced: 'Avancé',
+      fontFilenameLabel: 'Chemin de police (^A@)',
     },
     code128: {
       content: 'Contenu',

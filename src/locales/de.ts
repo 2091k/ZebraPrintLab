@@ -223,6 +223,10 @@ const de = {
       fontLoaded: 'Schrift geladen',
       fontMissing: 'Schrift nicht geladen',
       noFont: 'Keine',
+      useLabelDefault: '(Label-Standard verwenden)',
+      builtinSuffix: '(eingebaut)',
+      fontAdvanced: 'Erweitert',
+      fontFilenameLabel: 'Schriftpfad (^A@)',
     },
     code128: {
       content: 'Inhalt',

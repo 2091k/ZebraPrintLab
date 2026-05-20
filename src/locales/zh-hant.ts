@@ -202,6 +202,10 @@ const zhHant = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: '無',
+      useLabelDefault: '（使用標籤預設）',
+      builtinSuffix: '（內建）',
+      fontAdvanced: '進階',
+      fontFilenameLabel: '字型路徑 (^A@)',
     },
     code128: {
       content: '內容',

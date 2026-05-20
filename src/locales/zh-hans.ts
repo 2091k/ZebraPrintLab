@@ -202,6 +202,10 @@ const zhHans = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: '无',
+      useLabelDefault: '（使用标签默认）',
+      builtinSuffix: '（内置）',
+      fontAdvanced: '高级',
+      fontFilenameLabel: '字体路径 (^A@)',
     },
     code128: {
       content: '内容',

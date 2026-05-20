@@ -202,6 +202,10 @@ const sl = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Brez',
+      useLabelDefault: '(uporabi privzeto oznake)',
+      builtinSuffix: '(vgrajeno)',
+      fontAdvanced: 'Napredno',
+      fontFilenameLabel: 'Pot pisave (^A@)',
     },
     code128: {
       content: 'Vsebina',

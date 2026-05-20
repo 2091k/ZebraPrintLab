@@ -202,6 +202,10 @@ const hr = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Nema',
+      useLabelDefault: '(koristi zadanu vrijednost oznake)',
+      builtinSuffix: '(ugrađeno)',
+      fontAdvanced: 'Napredno',
+      fontFilenameLabel: 'Putanja fonta (^A@)',
     },
     code128: {
       content: 'Sadržaj',

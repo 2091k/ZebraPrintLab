@@ -202,6 +202,10 @@ const lt = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Nėra',
+      useLabelDefault: '(naudoti etiketės numatytąjį)',
+      builtinSuffix: '(įmontuotas)',
+      fontAdvanced: 'Išplėstinis',
+      fontFilenameLabel: 'Šrifto kelias (^A@)',
     },
     code128: {
       content: 'Turinys',

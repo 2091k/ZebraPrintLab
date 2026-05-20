@@ -202,6 +202,10 @@ const da = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Ingen',
+      useLabelDefault: '(brug etiketstandard)',
+      builtinSuffix: '(indbygget)',
+      fontAdvanced: 'Avanceret',
+      fontFilenameLabel: 'Skriftsti (^A@)',
     },
     code128: {
       content: 'Indhold',

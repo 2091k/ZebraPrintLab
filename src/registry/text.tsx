@@ -4,8 +4,10 @@ import { useT } from "../lib/useT";
 import { inputCls, labelCls } from "../components/Properties/styles";
 import { textFieldPos, fdField, resolveFontCmd } from "./zplHelpers";
 import { effectiveScale } from "./transformHelpers";
-import { getFont, getAllFonts, loadFontFile } from "../lib/fontCache";
+import { getFont, loadFontFile } from "../lib/fontCache";
+import { getAvailableFontIds } from "../lib/customFonts";
 import { useFontCacheVersion } from "../hooks/useFontCacheVersion";
+import { useLabelStore } from "../store/labelStore";
 import { RotationSelect } from "../components/Properties/RotationSelect";
 import { NumberInput } from "../components/Properties/NumberInput";
 
@@ -84,10 +86,19 @@ export const text: ObjectTypeDefinition<TextProps> = {
     const fileRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     useFontCacheVersion();
+    const label = useLabelStore((s) => s.label);
 
-    const loadedFonts = getAllFonts();
+    // Font picker options: every alias the user can reference from this
+    // field, in this order — "(use label default)" → built-ins (0, A-H)
+    // → custom ^CW aliases. The selected fontId pins a specific ID on
+    // the field via the ^A{id} short form. The legacy filename-based
+    // override (printerFontName, ^A@…E:NAME.TTF) lives behind the
+    // advanced reveal because round-trip-imported labels still rely on
+    // it, but the alias dropdown covers every fresh design.
+    const fontIdOptions = getAvailableFontIds(label);
     const fontLoaded = !!p.printerFontName && !!getFont(p.printerFontName);
     const fontAssignedButMissing = !!p.printerFontName && !fontLoaded;
+    const [showAdvanced, setShowAdvanced] = useState(!!p.printerFontName);
 
     const handleFontUpload = useCallback(
       async (file: File) => {
@@ -108,53 +119,93 @@ export const text: ObjectTypeDefinition<TextProps> = {
           <label className={labelCls}>{t.registry.text.printerFont}</label>
           <select
             className={inputCls}
-            value={p.printerFontName ?? ""}
+            value={p.fontId ?? ""}
             onChange={(e) =>
-              onChange({ printerFontName: e.target.value || undefined })
+              onChange({
+                fontId: e.target.value || undefined,
+                // Selecting an alias supersedes the legacy filename form.
+                printerFontName: e.target.value ? undefined : p.printerFontName,
+              })
             }
           >
-            <option value="">{t.registry.text.noFont}</option>
-            {loadedFonts.map((f) => (
-              <option key={f.name} value={f.name}>
-                {f.name}
-              </option>
-            ))}
-            {p.printerFontName && !getFont(p.printerFontName) && (
-              <option value={p.printerFontName}>{p.printerFontName}</option>
-            )}
+            <option value="">{t.registry.text.useLabelDefault}</option>
+            {fontIdOptions.map((opt) => {
+              const previewName =
+                opt.previewFontName ?? opt.path?.replace(/^[A-Z]:/, "");
+              const labelText = opt.builtin
+                ? previewName
+                  ? `${opt.id} — ${previewName}`
+                  : `${opt.id}  ${t.registry.text.builtinSuffix}`
+                : previewName
+                  ? `${opt.id} — ${previewName}`
+                  : opt.id;
+              return (
+                <option key={opt.id} value={opt.id}>
+                  {labelText}
+                </option>
+              );
+            })}
           </select>
-          {fontLoaded && (
-            <span className="text-[10px] text-accent font-mono">
-              {t.registry.text.fontLoaded}
-            </span>
-          )}
-          {fontAssignedButMissing && (
-            <>
-              <span className="text-[10px] text-muted font-mono">
-                {t.registry.text.fontMissing}
-              </span>
+          <button
+            type="button"
+            className="text-[10px] text-muted hover:text-text text-left mt-1"
+            onClick={() => setShowAdvanced((v) => !v)}
+          >
+            {showAdvanced
+              ? `▾ ${t.registry.text.fontAdvanced}`
+              : `▸ ${t.registry.text.fontAdvanced}`}
+          </button>
+          {showAdvanced && (
+            <div className="flex flex-col gap-1 mt-1 pl-3 border-l border-border">
+              <label className="text-[10px] text-muted">
+                {t.registry.text.fontFilenameLabel}
+              </label>
               <input
-                ref={fileRef}
-                type="file"
-                accept=".ttf,.otf,.TTF,.OTF"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void handleFontUpload(file);
-                  e.target.value = "";
-                }}
+                type="text"
+                className={inputCls}
+                placeholder="ARIAL.TTF"
+                value={p.printerFontName ?? ""}
+                onChange={(e) =>
+                  onChange({
+                    printerFontName: e.target.value || undefined,
+                    fontId: e.target.value ? undefined : p.fontId,
+                  })
+                }
               />
-              <button
-                type="button"
-                className="px-3 py-1.5 rounded text-xs font-mono bg-surface-2 border border-border text-text hover:bg-border transition-colors"
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading
-                  ? t.registry.text.uploadingFont
-                  : t.registry.text.uploadFont}
-              </button>
-            </>
+              {fontLoaded && (
+                <span className="text-[10px] text-accent font-mono">
+                  {t.registry.text.fontLoaded}
+                </span>
+              )}
+              {fontAssignedButMissing && (
+                <>
+                  <span className="text-[10px] text-muted font-mono">
+                    {t.registry.text.fontMissing}
+                  </span>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept=".ttf,.otf,.TTF,.OTF"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void handleFontUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 rounded text-xs font-mono bg-surface-2 border border-border text-text hover:bg-border transition-colors"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading
+                      ? t.registry.text.uploadingFont
+                      : t.registry.text.uploadFont}
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
 

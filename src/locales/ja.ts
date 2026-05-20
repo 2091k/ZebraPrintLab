@@ -202,6 +202,10 @@ const ja = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'なし',
+      useLabelDefault: '（ラベルのデフォルトを使用）',
+      builtinSuffix: '（内蔵）',
+      fontAdvanced: '詳細設定',
+      fontFilenameLabel: 'フォントパス (^A@)',
     },
     code128: {
       content: 'コンテンツ',

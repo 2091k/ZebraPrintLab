@@ -202,6 +202,10 @@ const bg = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Няма',
+      useLabelDefault: '(използване на стандарт на етикета)',
+      builtinSuffix: '(вграден)',
+      fontAdvanced: 'Разширено',
+      fontFilenameLabel: 'Път до шрифта (^A@)',
     },
     code128: {
       content: 'Съдържание',

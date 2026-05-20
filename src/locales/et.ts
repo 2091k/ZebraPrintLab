@@ -202,6 +202,10 @@ const et = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Puudub',
+      useLabelDefault: '(kasuta sildi vaikeväärtust)',
+      builtinSuffix: '(sisseehitatud)',
+      fontAdvanced: 'Täpsem',
+      fontFilenameLabel: 'Fondi tee (^A@)',
     },
     code128: {
       content: 'Sisu',

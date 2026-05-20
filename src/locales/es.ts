@@ -202,6 +202,10 @@ const es = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Ninguna',
+      useLabelDefault: '(usar predeterminado de etiqueta)',
+      builtinSuffix: '(integrado)',
+      fontAdvanced: 'Avanzado',
+      fontFilenameLabel: 'Ruta de fuente (^A@)',
     },
     code128: {
       content: 'Contenido',

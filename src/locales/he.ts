@@ -202,6 +202,10 @@ const he = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'ללא',
+      useLabelDefault: '(השתמש בברירת המחדל של התווית)',
+      builtinSuffix: '(מובנה)',
+      fontAdvanced: 'מתקדם',
+      fontFilenameLabel: 'נתיב גופן (^A@)',
     },
     code128: {
       content: 'תוכן',

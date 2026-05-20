@@ -202,6 +202,10 @@ const lv = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Nav',
+      useLabelDefault: '(izmantot etiķetes noklusējumu)',
+      builtinSuffix: '(iebūvēts)',
+      fontAdvanced: 'Papildu',
+      fontFilenameLabel: 'Fonta ceļš (^A@)',
     },
     code128: {
       content: 'Saturs',

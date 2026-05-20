@@ -202,6 +202,10 @@ const ro = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Niciunul',
+      useLabelDefault: '(folosește implicit etichetă)',
+      builtinSuffix: '(integrat)',
+      fontAdvanced: 'Avansat',
+      fontFilenameLabel: 'Cale font (^A@)',
     },
     code128: {
       content: 'Conținut',

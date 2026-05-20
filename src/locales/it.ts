@@ -202,6 +202,10 @@ const it = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Nessuno',
+      useLabelDefault: '(usa predefinito etichetta)',
+      builtinSuffix: '(integrato)',
+      fontAdvanced: 'Avanzate',
+      fontFilenameLabel: 'Percorso del carattere (^A@)',
     },
     code128: {
       content: 'Contenuto',

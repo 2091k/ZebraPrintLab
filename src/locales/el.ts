@@ -202,6 +202,10 @@ const el = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Καμία',
+      useLabelDefault: '(χρήση προεπιλογής ετικέτας)',
+      builtinSuffix: '(ενσωματωμένο)',
+      fontAdvanced: 'Για προχωρημένους',
+      fontFilenameLabel: 'Διαδρομή γραμματοσειράς (^A@)',
     },
     code128: {
       content: 'Περιεχόμενο',

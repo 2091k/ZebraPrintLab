@@ -202,6 +202,10 @@ const cs = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Žádné',
+      useLabelDefault: '(použít výchozí štítku)',
+      builtinSuffix: '(vestavěné)',
+      fontAdvanced: 'Pokročilé',
+      fontFilenameLabel: 'Cesta k písmu (^A@)',
     },
     code128: {
       content: 'Obsah',

@@ -202,6 +202,10 @@ const sk = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'Žiadne',
+      useLabelDefault: '(použiť predvolené štítka)',
+      builtinSuffix: '(vstavané)',
+      fontAdvanced: 'Pokročilé',
+      fontFilenameLabel: 'Cesta písma (^A@)',
     },
     code128: {
       content: 'Obsah',

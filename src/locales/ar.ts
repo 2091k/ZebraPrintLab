@@ -202,6 +202,10 @@ const ar = {
       fontLoaded: 'Font loaded',
       fontMissing: 'Font not loaded',
       noFont: 'لا شيء',
+      useLabelDefault: '(استخدام افتراضي الملصق)',
+      builtinSuffix: '(مدمج)',
+      fontAdvanced: 'متقدم',
+      fontFilenameLabel: 'مسار الخط (^A@)',
     },
     code128: {
       content: 'المحتوى',
