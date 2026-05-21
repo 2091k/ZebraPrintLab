@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { zlibSync } from 'fflate';
 import { generateZPL, generateMultiPageZPL } from './zplGenerator';
 import { parseZPL } from './zplParser';
 import type { LabelConfig } from '../types/ObjectType';
@@ -573,21 +574,27 @@ describe('generateZPL — ~DY graphic upload + ^XG recall', () => {
     // Zebra firmware rejects format A with a :Z64: payload. The shared
     // cache uses ^GF{format} so the format letter survives both the GF
     // and DY round-trip paths.
-    const z64Payload = ':Z64:eJxjYAACBAAACgAB:1234';
+    const bytes = new Uint8Array([0, 0xff, 0xff, 0]);
+    const deflated = zlibSync(bytes);
+    let bin = '';
+    for (const b of deflated) bin += String.fromCharCode(b);
+    const b64 = btoa(bin);
+    function crc(s: string): string {
+      let c = 0;
+      for (const ch of s) {
+        c ^= ch.charCodeAt(0) << 8;
+        for (let j = 0; j < 8; j++)
+          c = (c & 0x8000) ? ((c << 1) ^ 0x1021) & 0xffff : (c << 1) & 0xffff;
+      }
+      return c.toString(16).padStart(4, '0').toUpperCase();
+    }
     const zpl =
-      `~DYR:CLOGO,C,G,4,1,${z64Payload}\n` +
+      `~DYR:CLOGO,C,G,4,1,:Z64:${b64}:${crc(b64)}\n` +
       `^XA^FO0,0^XGR:CLOGO.GRF,1,1^FS^XZ`;
     const parsed = parseZPL(zpl, 8);
-    // ^XG only resolves if ~DY was registered; in this case the Z64
-    // stream is malformed (junk base64) so the upload fails — the test
-    // is then about the parser surfacing that as browserLimit instead
-    // of mis-pairing format letters. We accept either path; if it does
-    // round-trip, the format letter must be C.
-    if (parsed.objects.length > 0) {
-      const out = generateZPL(BASE_LABEL, parsed.objects);
-      expect(out).toContain('~DYR:CLOGO,C,G,');
-      expect(out).not.toContain('~DYR:CLOGO,A,G,');
-    }
+    const out = generateZPL(BASE_LABEL, parsed.objects);
+    expect(out).toContain('~DYR:CLOGO,C,G,');
+    expect(out).not.toContain('~DYR:CLOGO,A,G,');
   });
 
   it('deduplicates the ~DY preamble when the same upload is referenced twice', () => {

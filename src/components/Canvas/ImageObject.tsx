@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Group, Image as KImage, Rect, Text } from "react-konva";
+import { useState, useEffect, useRef, type ReactElement } from "react";
+import { Group, Image as KImage, Path, Rect } from "react-konva";
 import type Konva from "konva";
 import type { LabelObject } from "../../types/Group";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
@@ -29,12 +29,13 @@ export function ImageObject({
   const colors = useColorScheme();
   const cached = getImage(p.imageId);
   const w = dotsToPx(p.widthDots, scale, dpmm);
-  // Guard against a 0-width cached image: the imageCache pipeline
-  // doesn't normally produce one, but a malformed file could leak
-  // through and div-by-zero would render NaN-sized canvas nodes.
+  // Aspect-lock when a real PNG is cached; fall back to `heightDots` for
+  // recall-only placeholders so the user can shape the box freely. Guard
+  // against 0-width cached images (malformed file edge case) — div-by-
+  // zero would otherwise render NaN-sized canvas nodes.
   const h = cached && cached.width > 0
     ? w * (cached.height / cached.width)
-    : w;
+    : dotsToPx(p.heightDots ?? p.widthDots, scale, dpmm);
   const x = offsetX + dotsToPx(obj.x, scale, dpmm);
   const y = offsetY + dotsToPx(obj.y, scale, dpmm);
 
@@ -120,13 +121,37 @@ export function ImageObject({
         strokeWidth={isSelected ? 2 : 1}
         dash={[4, 2]}
       />
-      <Text
-        x={6}
-        y={6}
-        text="🖼"
-        fontSize={Math.max(w * 0.3, 12)}
-        fill="#374151"
-      />
+      <PlaceholderIcon w={w} h={h} />
     </Group>
+  );
+}
+
+/** Heroicons "photo" outline rendered via Konva.Path so the placeholder
+ *  is OS-independent. We previously used the 🖼 emoji which rendered
+ *  inconsistently (color on macOS, monochrome on Linux, missing on
+ *  some Windows configurations). */
+const PHOTO_ICON_PATH =
+  "M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z";
+const PHOTO_ICON_VIEWBOX = 24;
+
+function PlaceholderIcon({ w, h }: { w: number; h: number }): ReactElement {
+  // Centre the icon at 60% of the smaller dimension; clamp so a thin
+  // image strip still shows something visible. Stroke-only mirrors
+  // Heroicons' outline style.
+  const target = Math.max(Math.min(w, h) * 0.6, 12);
+  const scale = target / PHOTO_ICON_VIEWBOX;
+  return (
+    <Path
+      data={PHOTO_ICON_PATH}
+      x={(w - target) / 2}
+      y={(h - target) / 2}
+      scaleX={scale}
+      scaleY={scale}
+      stroke="#6b7280"
+      strokeWidth={1.5 / scale}
+      fillEnabled={false}
+      lineCap="round"
+      lineJoin="round"
+    />
   );
 }

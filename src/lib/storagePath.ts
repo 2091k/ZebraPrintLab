@@ -8,6 +8,27 @@
  * drifting apart across the parser, emitter, and image registry.
  */
 
+/** Storage device prefixes Zebra firmware recognises. R: volatile RAM
+ *  (default, fastest); E: non-volatile flash; B: alternate flash;
+ *  A: alias drive on some models. All four round-trip through `~DY` and
+ *  `^XG`; the parser accepts them and the UI exposes them in the device
+ *  picker. */
+export const STORAGE_DEVICES = ["R", "E", "B", "A"] as const;
+export type StorageDevice = (typeof STORAGE_DEVICES)[number];
+
+/** Zebra DOS-style filename: up to 8 chars, uppercase alphanumeric +
+ *  underscore. Both constants are exported so input filters in the UI
+ *  and the parser stay in lockstep. */
+export const MAX_STORAGE_NAME_LEN = 8;
+export const STORAGE_NAME_FILTER_RE = /[^A-Z0-9_]/g;
+
+/** Default name when the user first enables printer-storage on an image.
+ *  Short UUID slice avoids collisions across multiple images on the same
+ *  label without forcing the user to pick a name up front. */
+export function defaultStorageName(): string {
+  return `IMG_${crypto.randomUUID().slice(0, 4).toUpperCase()}`;
+}
+
 export interface StoragePath {
   /** Storage device prefix without trailing colon: "R", "E", "B", "A". */
   device: string;
