@@ -199,15 +199,6 @@ function crc16Ccitt(s: string): number {
   return crc;
 }
 
-/** Convert a Uint8Array to an uppercase hex string. */
-function bytesToHex(bytes: Uint8Array): string {
-  let out = "";
-  for (const b of bytes) {
-    out += b.toString(16).padStart(2, "0").toUpperCase();
-  }
-  return out;
-}
-
 type GfWrapperKind = "b64" | "z64";
 
 interface GfWrapperDecoded {
@@ -218,15 +209,6 @@ interface GfWrapperDecoded {
   crcOk: boolean;
 }
 
-/**
- * Parse a `:B64:<base64>:<crc>` or `:Z64:<base64>:<crc>` wrapper. Returns
- * null if the payload doesn't carry a wrapper. Used inside `^GFA`/`^GFB`/
- * `^GFC` and similar commands where Zebra firmware accepts the same envelope.
- * The CRC is computed over the base64 string itself (CRC-16/CCITT-FALSE) and
- * surfaced as a flag rather than a hard reject — printers also tolerate
- * mismatches, and we'd rather render a slightly-suspect graphic than silently
- * drop it. The caller decides whether `:Z64:` (zlib-compressed) is supported.
- */
 /** CRC-16 emitted as 4 uppercase hex chars in the `:B64:`/`:Z64:` trailer. */
 const CRC_HEX_DIGITS = 4;
 const GF_WRAPPER_RE = new RegExp(
@@ -246,8 +228,20 @@ function base64ToBytes(b64: string): Uint8Array {
   return bytes;
 }
 
+/**
+ * Parse a `:B64:<base64>:<crc>` or `:Z64:<base64>:<crc>` wrapper. Returns
+ * null if the payload doesn't carry a wrapper. Used inside `^GFA`/`^GFB`/
+ * `^GFC` where Zebra firmware accepts the same envelope. The CRC is
+ * computed over the base64 string (CRC-16/CCITT-FALSE) and surfaced as a
+ * flag rather than a hard reject — printers tolerate mismatches, and
+ * we'd rather render a slightly-suspect graphic than silently drop it.
+ *
+ * `payload.trim()` because real-world ZPL is often line-broken between
+ * commands; the tokenizer keeps the trailing newline on `rest`, and an
+ * un-trimmed regex with a `$` anchor would miss every wrapper-in-the-wild.
+ */
 function parseGfWrapper(payload: string): GfWrapperDecoded | null {
-  const m = GF_WRAPPER_RE.exec(payload);
+  const m = GF_WRAPPER_RE.exec(payload.trim());
   if (!m) return null;
   const b64 = m[2] ?? "";
   const declaredCrc = parseInt(m[3] ?? "0", 16);
@@ -259,27 +253,16 @@ function parseGfWrapper(payload: string): GfWrapperDecoded | null {
 }
 
 /**
- * Result of `gfPayloadToHex`: either a usable hex bitmap plus the integrity
- * flag for the originating wrapper, or null if the payload can't be decoded.
- * `crcOk=false` means the field is rendered with a fidelity caveat (printers
- * tolerate this); `null` means surface as a browser limit and skip the
- * object.
+ * Result of `gfPayloadToBytes`: the raw bitmap bytes (one row = N bytes,
+ * each byte = 8 pixels, MSB first) plus the integrity flag for the
+ * originating wrapper. `crcOk=false` is rendered with a fidelity caveat;
+ * `null` from `gfPayloadToBytes` means the payload was undecodable.
  */
 interface GfPayloadDecoded {
-  hex: string;
+  data: Uint8Array;
   crcOk: boolean;
 }
 
-/**
- * Normalise a `^GF{A|B|C}` payload to a hex bitmap. Hides the format /
- * wrapper / compression dispatch from the command handler so the latter can
- * stay focused on positioning and pixel painting.
- *
- *  - `:B64:`/`:Z64:` wrapper → base64-decode (then zlib-inflate for Z64)
- *  - `format=A` without wrapper → existing RLE-hex path
- *  - `format=B`/`C` without wrapper → null (raw binary can't survive the
- *    text-based ZPL channel and the parser never sees intact bytes anyway)
- */
 /** Inflate `:Z64:` zlib payload; null on malformed deflate stream. */
 function tryInflateZlib(input: Uint8Array): Uint8Array | null {
   try {
@@ -289,7 +272,27 @@ function tryInflateZlib(input: Uint8Array): Uint8Array | null {
   }
 }
 
-function gfPayloadToHex(
+/** Decode the ASCII-hex output of `decompressGFA` into a packed byte array
+ *  so all three GF code paths converge on the same `Uint8Array` shape. */
+function gfaHexToBytes(hex: string): Uint8Array {
+  const out = new Uint8Array(hex.length >> 1);
+  for (let i = 0; i < out.length; i++) {
+    out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  return out;
+}
+
+/**
+ * Normalise a `^GF{A|B|C}` payload to packed bitmap bytes. Hides the
+ * format / wrapper / compression dispatch from the command handler so the
+ * latter can stay focused on positioning and pixel painting.
+ *
+ *  - `:B64:`/`:Z64:` wrapper → base64-decode (then zlib-inflate for Z64)
+ *  - `format=A` without wrapper → existing RLE-hex path → bytes
+ *  - `format=B`/`C` without wrapper → null (raw binary can't survive the
+ *    text-based ZPL channel and the parser never sees intact bytes anyway)
+ */
+function gfPayloadToBytes(
   rawData: string,
   format: "A" | "B" | "C",
   bytesPerRow: number,
@@ -299,10 +302,10 @@ function gfPayloadToHex(
     const bytes =
       wrapper.kind === "z64" ? tryInflateZlib(wrapper.bytes) : wrapper.bytes;
     if (!bytes) return null;
-    return { hex: bytesToHex(bytes), crcOk: wrapper.crcOk };
+    return { data: bytes, crcOk: wrapper.crcOk };
   }
   if (format === "A") {
-    return { hex: decompressGFA(rawData, bytesPerRow), crcOk: true };
+    return { data: gfaHexToBytes(decompressGFA(rawData, bytesPerRow)), crcOk: true };
   }
   return null;
 }
@@ -1275,7 +1278,7 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
         return;
       }
 
-      const decoded = gfPayloadToHex(gfRawData, format, gfBytesPerRow);
+      const decoded = gfPayloadToBytes(gfRawData, format, gfBytesPerRow);
       if (!decoded) {
         // Truncated summary because :B64:/:Z64: payloads can be many KB
         // and we don't want one entry dominating the import report.
@@ -1288,17 +1291,16 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
         // Render anyway (printers tolerate CRC drift) but flag the loss.
         partialCmds.add("^GF");
       }
-      const gfHex = decoded.hex;
+      const gfBytes = decoded.data;
       const gfWidthDots = gfBytesPerRow * 8;
-      const gfTotalBytes = gfHex.length / 2;
-      const gfHeightDots = Math.floor(gfTotalBytes / gfBytesPerRow);
+      const gfHeightDots = Math.floor(gfBytes.length / gfBytesPerRow);
 
       if (gfHeightDots <= 0) {
         skipped.push(`^GF${rest}`);
         return;
       }
 
-      // Convert hex → 1-bit bitmap → canvas → data URL
+      // Convert 1-bit bitmap → canvas → data URL
       const canvas = document.createElement("canvas");
       canvas.width = gfWidthDots;
       canvas.height = gfHeightDots;
@@ -1309,8 +1311,7 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
 
       for (let row = 0; row < gfHeightDots; row++) {
         for (let byteIdx = 0; byteIdx < gfBytesPerRow; byteIdx++) {
-          const hexOffset = (row * gfBytesPerRow + byteIdx) * 2;
-          const byte = parseInt(gfHex.slice(hexOffset, hexOffset + 2), 16) || 0;
+          const byte = gfBytes[row * gfBytesPerRow + byteIdx] ?? 0;
           for (let bit = 0; bit < 8; bit++) {
             const px = byteIdx * 8 + bit;
             const idx = (row * gfWidthDots + px) * 4;
@@ -1335,8 +1336,11 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
         height: gfHeightDots,
       });
 
-      // Store original compressed data for lossless re-export
-      const gfaCache = `^GFA,${Math.floor(gfTotalBytes)},${Math.floor(gfTotalBytes)},${gfBytesPerRow},${gfRawData}`;
+      // Store original compressed data for lossless re-export. Keep the
+      // source format letter (A/B/C) because Labelary and Zebra firmware
+      // reject e.g. `^GFA,…,:Z64:…` — `:Z64:` is canonical for `^GFC`
+      // only, so a hard-coded `^GFA` on the round-trip would corrupt it.
+      const gfaCache = `^GF${format},${gfBytes.length},${gfBytes.length},${gfBytesPerRow},${gfRawData}`;
 
       const posType: "FT" | "FO" = positionIsFT ? "FT" : "FO";
       objects.push(

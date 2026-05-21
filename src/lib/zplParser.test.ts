@@ -599,6 +599,18 @@ describe('parseZPL — ^GFA graphic field', () => {
     }
   });
 
+  it('tolerates trailing whitespace on wrapped GF payloads', () => {
+    // Real-world ZPL is often line-broken between commands; the tokenizer
+    // preserves the trailing newline on the field body, so the regex needs
+    // to accommodate that.
+    const zplWithNewline =
+      '^XA\n^FO0,0\n^GFA,8,8,1,:B64:AAAA//8AAAA=:DFF8\n^FS\n^XZ';
+    const { objects, importReport } = parseZPL(zplWithNewline, 8);
+    expect(objects).toHaveLength(1);
+    expect(objects[0]?.type).toBe('image');
+    expect(importReport.browserLimit).toHaveLength(0);
+  });
+
   it('imports a :Z64:-wrapped ^GFC payload by inflating zlib data', () => {
     // 8 bytes = [0,0,0,0xFF,0xFF,0,0,0] → zlib-compressed → base64 → CRC.
     const bytes = new Uint8Array([0, 0, 0, 0xff, 0xff, 0, 0, 0]);
