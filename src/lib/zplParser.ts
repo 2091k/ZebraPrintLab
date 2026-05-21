@@ -249,11 +249,10 @@ function base64ToBytes(b64: string): Uint8Array {
 function parseGfWrapper(payload: string): GfWrapperDecoded | null {
   const m = GF_WRAPPER_RE.exec(payload);
   if (!m) return null;
-  const kind = m[1] === "B64" ? "b64" : "z64";
   const b64 = m[2] ?? "";
   const declaredCrc = parseInt(m[3] ?? "0", 16);
   return {
-    kind,
+    kind: (m[1] ?? "").toLowerCase() as GfWrapperKind,
     bytes: base64ToBytes(b64),
     crcOk: crc16Ccitt(b64) === declaredCrc,
   };
