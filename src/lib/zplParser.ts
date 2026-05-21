@@ -170,6 +170,69 @@ function decodeFH(
 }
 
 /**
+ * CRC-16/CCITT-FALSE (poly 0x1021, init 0x0000) — Zebra's ZB64/ZB16 wrapper
+ * uses this variant. Computed over the base64 (or hex) payload between the
+ * `:B64:`/`:Z64:` prefix and the trailing `:CRC` suffix.
+ */
+function crc16Ccitt(s: string): number {
+  let crc = 0;
+  for (const ch of s) {
+    crc ^= ch.charCodeAt(0) << 8;
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
+    }
+  }
+  return crc;
+}
+
+/** Convert a Uint8Array to an uppercase hex string. */
+function bytesToHex(bytes: Uint8Array): string {
+  let out = "";
+  for (const b of bytes) {
+    out += b.toString(16).padStart(2, "0").toUpperCase();
+  }
+  return out;
+}
+
+export type GfWrapperKind = "b64" | "z64";
+
+export interface GfWrapperDecoded {
+  kind: GfWrapperKind;
+  /** Raw decoded bytes — for `:Z64:` this is still zlib-compressed. */
+  bytes: Uint8Array;
+  /** True if the trailing CRC matches the base64 payload. */
+  crcOk: boolean;
+}
+
+/**
+ * Parse a `:B64:<base64>:<crc>` or `:Z64:<base64>:<crc>` wrapper. Returns
+ * null if the payload doesn't carry a wrapper. Used inside `^GFA`/`^GFB`/
+ * `^GFC` and similar commands where Zebra firmware accepts the same envelope.
+ * The CRC is computed over the base64 string itself (CRC-16/CCITT-FALSE) and
+ * surfaced as a flag rather than a hard reject — printers also tolerate
+ * mismatches, and we'd rather render a slightly-suspect graphic than silently
+ * drop it. The caller decides whether `:Z64:` (zlib-compressed) is supported.
+ */
+export function parseGfWrapper(payload: string): GfWrapperDecoded | null {
+  const m = /^:(B64|Z64):([A-Za-z0-9+/=]+):([0-9A-Fa-f]{4})$/.exec(payload);
+  if (!m) return null;
+  const kind = m[1] === "B64" ? "b64" : "z64";
+  const b64 = m[2] ?? "";
+  const crcStr = m[3] ?? "0000";
+  const declaredCrc = parseInt(crcStr, 16);
+  const actualCrc = crc16Ccitt(b64);
+  let bytes: Uint8Array;
+  try {
+    const bin = atob(b64);
+    bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  } catch {
+    bytes = new Uint8Array(0);
+  }
+  return { kind, bytes, crcOk: actualCrc === declaredCrc };
+}
+
+/**
  * Decompress ZPL Alternative Data Compression used in ^GFA fields.
  *
  * Compression characters:
@@ -1100,10 +1163,16 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       );
     },
     GF(_, rest) {
-      // ^GFA,{totalBytes},{totalBytes},{bytesPerRow},{compressedOrHexData}
+      // ^GF{A|B|C},{totalBytes},{totalBytes},{bytesPerRow},{payload}
+      //
+      // Payload variants the parser understands:
+      //   - format=A + raw hex (optionally with G-Y/g-z/!/,/: RLE)
+      //   - any format + `:B64:<base64>:<crc>` wrapper (decoded → hex)
+      // `:Z64:` (zlib-compressed) is recognised but not yet decodable in the
+      // browser without an async refactor or a sync inflate dep; surfaced as
+      // `partial` so the import doesn't silently lose the field.
       const format = rest[0]?.toUpperCase();
-      if (format !== "A") {
-        // Non-A formats (binary, compressed) can't be rendered in the browser
+      if (format !== "A" && format !== "B" && format !== "C") {
         skipped.push(`^GF${rest}`);
         browserLimit.push(`^GF${rest}`);
         return;
@@ -1131,8 +1200,34 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
         return;
       }
 
-      // Decompress ZPL Alternative Data Compression for ^GFA
-      const gfHex = decompressGFA(gfRawData, gfBytesPerRow);
+      // Normalise payload to hex. Three sources, descending in real-world
+      // frequency for our parser: existing ^GFA RLE-hex, :B64:-wrapped binary
+      // (enterprise systems), and raw binary in ^GFB/^GFC (rare in text-paste
+      // UIs because tokenisation can't survive embedded ^/~/\0).
+      let gfHex: string;
+      const wrapper = parseGfWrapper(gfRawData);
+      if (wrapper) {
+        if (wrapper.kind === "z64") {
+          // zlib-compressed: would need sync inflate; bail. No object is
+          // created, so this is a browser-limit, not a partial import.
+          browserLimit.push(`^GF${rest.slice(0, 80)}…`);
+          skipped.push(`^GF${rest.slice(0, 80)}…`);
+          return;
+        }
+        if (!wrapper.crcOk) {
+          // Render anyway (printers tolerate this), but flag the fidelity loss.
+          partialCmds.add("^GF");
+        }
+        gfHex = bytesToHex(wrapper.bytes);
+      } else if (format === "A") {
+        gfHex = decompressGFA(gfRawData, gfBytesPerRow);
+      } else {
+        // Format B/C without :B64: wrapper: raw binary in a text channel —
+        // can't represent reliably. Surfaced as a limitation.
+        skipped.push(`^GF${rest.slice(0, 80)}…`);
+        browserLimit.push(`^GF${rest.slice(0, 80)}…`);
+        return;
+      }
       const gfWidthDots = gfBytesPerRow * 8;
       const gfTotalBytes = gfHex.length / 2;
       const gfHeightDots = Math.floor(gfTotalBytes / gfBytesPerRow);

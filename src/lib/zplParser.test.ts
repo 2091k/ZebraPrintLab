@@ -543,6 +543,50 @@ describe('parseZPL — ^GFA graphic field', () => {
     expect(props(objects[0])._gfaCache).toContain('^GFA,');
   });
 
+  it('imports a :B64:-wrapped ^GFA payload as an image (CRC valid)', () => {
+    // 8 bytes = [0,0,0,0xFF,0xFF,0,0,0] → base64 "AAAA//8AAAA="
+    // CRC-16/CCITT-FALSE over "AAAA//8AAAA=" = 0xDFF8
+    const { objects, importReport } = parseZPL(
+      '^XA^FO0,0^GFA,8,8,1,:B64:AAAA//8AAAA=:DFF8^FS^XZ',
+      8,
+    );
+    expect(objects).toHaveLength(1);
+    expect(objects[0]?.type).toBe('image');
+    expect(props(objects[0]).widthDots).toBe(8);
+    expect(importReport.partial).not.toContain('^GF');
+  });
+
+  it('still renders a :B64: payload with mismatched CRC but flags as partial', () => {
+    const { objects, importReport } = parseZPL(
+      '^XA^FO0,0^GFA,8,8,1,:B64:AAAA//8AAAA=:0000^FS^XZ',
+      8,
+    );
+    expect(objects).toHaveLength(1);
+    expect(importReport.partial).toContain('^GF');
+  });
+
+  it('accepts :B64: wrapper on ^GFB and ^GFC (no raw-binary path needed)', () => {
+    for (const fmt of ['B', 'C'] as const) {
+      const { objects } = parseZPL(
+        `^XA^FO0,0^GF${fmt},8,8,1,:B64:AAAA//8AAAA=:DFF8^FS^XZ`,
+        8,
+      );
+      expect(objects).toHaveLength(1);
+      expect(objects[0]?.type).toBe('image');
+    }
+  });
+
+  it('records :Z64: payload as browserLimit (zlib not yet supported)', () => {
+    // Arbitrary :Z64: payload — content doesn't matter, only the prefix.
+    const { objects, importReport } = parseZPL(
+      '^XA^FO0,0^GFC,8,8,1,:Z64:eJxjYGD4/5+BgQEACP8B/w==:95F4^FS^XZ',
+      8,
+    );
+    expect(objects).toHaveLength(0);
+    expect(importReport.browserLimit.some((s) => s.startsWith('^GF'))).toBe(true);
+    expect(importReport.partial).not.toContain('^GF');
+  });
+
   it('creates an image object from compressed ^GFA data', () => {
     // G=1 repeat → "GF" = repeat 'F' once, basically just 'F'
     // bytesPerRow=1, so we need 2 nibbles per row
