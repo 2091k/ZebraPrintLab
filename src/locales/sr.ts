@@ -118,6 +118,7 @@ const sr = {
     mirror: 'Огледална слика',
     defaultFont: 'Подразумевани стил текста',
     defaultFontId: 'Фонт',
+    defaultFontIdNone: '(ниједно)',
     defaultFontHeight: 'Висина (тачке)',
     defaultFontWidth: 'Ширина (dots)',
     customFontsHeading: 'Прилагођени фонтови',

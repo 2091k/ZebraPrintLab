@@ -118,6 +118,7 @@ const tr = {
     mirror: 'Ayna görüntüsü',
     defaultFont: 'Varsayılan metin stili',
     defaultFontId: 'Yazı tipi',
+    defaultFontIdNone: '(yok)',
     defaultFontHeight: 'Yükseklik (nokta)',
     defaultFontWidth: 'Genişlik (dots)',
     customFontsHeading: 'Özel yazı tipleri',

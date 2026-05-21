@@ -118,6 +118,7 @@ const lv = {
     mirror: 'Spoguļattēls',
     defaultFont: 'Noklusējuma teksta stils',
     defaultFontId: 'Fonts',
+    defaultFontIdNone: '(nav)',
     defaultFontHeight: 'Augstums (punkti)',
     defaultFontWidth: 'Platums (dots)',
     customFontsHeading: 'Pielāgotie fonti',

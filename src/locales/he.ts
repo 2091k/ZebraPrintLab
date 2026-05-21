@@ -118,6 +118,7 @@ const he = {
     mirror: 'תמונת ראי',
     defaultFont: 'סגנון טקסט ברירת מחדל',
     defaultFontId: 'גופן',
+    defaultFontIdNone: '(ללא)',
     defaultFontHeight: 'גובה (נקודות)',
     defaultFontWidth: 'רוחב (dots)',
     customFontsHeading: 'גופנים מותאמים',

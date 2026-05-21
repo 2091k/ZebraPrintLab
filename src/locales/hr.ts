@@ -118,6 +118,7 @@ const hr = {
     mirror: 'Zrcalna slika',
     defaultFont: 'Zadani stil teksta',
     defaultFontId: 'Font',
+    defaultFontIdNone: '(nijedan)',
     defaultFontHeight: 'Visina (točke)',
     defaultFontWidth: 'Širina (dots)',
     customFontsHeading: 'Prilagođeni fontovi',

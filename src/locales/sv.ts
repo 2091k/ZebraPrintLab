@@ -118,6 +118,7 @@ const sv = {
     mirror: 'Spegelbild',
     defaultFont: 'Standardtextstil',
     defaultFontId: 'Typsnitt',
+    defaultFontIdNone: '(ingen)',
     defaultFontHeight: 'Höjd (punkter)',
     defaultFontWidth: 'Bredd (dots)',
     customFontsHeading: 'Egna typsnitt',

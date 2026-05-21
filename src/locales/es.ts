@@ -118,6 +118,7 @@ const es = {
     mirror: 'Imagen reflejada',
     defaultFont: 'Estilo de texto predeterminado',
     defaultFontId: 'Fuente',
+    defaultFontIdNone: '(ninguna)',
     defaultFontHeight: 'Altura (puntos)',
     defaultFontWidth: 'Ancho (dots)',
     customFontsHeading: 'Fuentes personalizadas',

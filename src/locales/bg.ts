@@ -118,6 +118,7 @@ const bg = {
     mirror: 'Огледален образ',
     defaultFont: 'Стил на текст по подразбиране',
     defaultFontId: 'Шрифт',
+    defaultFontIdNone: '(няма)',
     defaultFontHeight: 'Височина (точки)',
     defaultFontWidth: 'Ширина (dots)',
     customFontsHeading: 'Персонализирани шрифтове',

@@ -118,6 +118,7 @@ const ro = {
     mirror: 'Imagine în oglindă',
     defaultFont: 'Stil text implicit',
     defaultFontId: 'Font',
+    defaultFontIdNone: '(niciuna)',
     defaultFontHeight: 'Înălțime (puncte)',
     defaultFontWidth: 'Lățime (dots)',
     customFontsHeading: 'Fonturi personalizate',

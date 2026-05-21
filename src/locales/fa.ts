@@ -118,6 +118,7 @@ const fa = {
     mirror: 'تصویر آینه‌ای',
     defaultFont: 'سبک متن پیش‌فرض',
     defaultFontId: 'قلم',
+    defaultFontIdNone: '(هیچ)',
     defaultFontHeight: 'ارتفاع (نقطه)',
     defaultFontWidth: 'عرض (dots)',
     customFontsHeading: 'فونت‌های سفارشی',

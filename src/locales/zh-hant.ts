@@ -118,6 +118,7 @@ const zhHant = {
     mirror: '鏡像',
     defaultFont: '預設文字樣式',
     defaultFontId: '字型',
+    defaultFontIdNone: '（無）',
     defaultFontHeight: '高度 (點)',
     defaultFontWidth: '寬度 (dots)',
     customFontsHeading: '自訂字型',

@@ -118,6 +118,7 @@ const sk = {
     mirror: 'Zrkadlový obraz',
     defaultFont: 'Predvolený štýl textu',
     defaultFontId: 'Písmo',
+    defaultFontIdNone: '(žiadne)',
     defaultFontHeight: 'Výška (body)',
     defaultFontWidth: 'Šírka (dots)',
     customFontsHeading: 'Vlastné písma',

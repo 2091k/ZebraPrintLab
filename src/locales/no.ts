@@ -118,6 +118,7 @@ const no = {
     mirror: 'Speilbilde',
     defaultFont: 'Standardtekststil',
     defaultFontId: 'Skrift',
+    defaultFontIdNone: '(ingen)',
     defaultFontHeight: 'Høyde (punkter)',
     defaultFontWidth: 'Bredde (dots)',
     customFontsHeading: 'Egendefinerte skrifter',

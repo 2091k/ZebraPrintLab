@@ -118,6 +118,7 @@ const et = {
     mirror: 'Peegelpilt',
     defaultFont: 'Vaikimisi teksti stiil',
     defaultFontId: 'Font',
+    defaultFontIdNone: '(puudub)',
     defaultFontHeight: 'Kõrgus (punktid)',
     defaultFontWidth: 'Laius (dots)',
     customFontsHeading: 'Kohandatud fondid',

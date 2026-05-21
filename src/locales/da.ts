@@ -118,6 +118,7 @@ const da = {
     mirror: 'Spejlbillede',
     defaultFont: 'Standardtekststil',
     defaultFontId: 'Skrifttype',
+    defaultFontIdNone: '(ingen)',
     defaultFontHeight: 'Højde (punkter)',
     defaultFontWidth: 'Bredde (dots)',
     customFontsHeading: 'Tilpassede skrifttyper',

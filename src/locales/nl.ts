@@ -118,6 +118,7 @@ const nl = {
     mirror: 'Spiegelbeeld',
     defaultFont: 'Standaard tekststijl',
     defaultFontId: 'Lettertype',
+    defaultFontIdNone: '(geen)',
     defaultFontHeight: 'Hoogte (dots)',
     defaultFontWidth: 'Breedte (dots)',
     customFontsHeading: 'Aangepaste lettertypen',

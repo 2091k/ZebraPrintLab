@@ -118,6 +118,7 @@ const pl = {
     mirror: 'Lustrzane odbicie',
     defaultFont: 'Domyślny styl tekstu',
     defaultFontId: 'Czcionka',
+    defaultFontIdNone: '(brak)',
     defaultFontHeight: 'Wysokość (punkty)',
     defaultFontWidth: 'Szerokość (dots)',
     customFontsHeading: 'Niestandardowe czcionki',

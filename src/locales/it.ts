@@ -118,6 +118,7 @@ const it = {
     mirror: 'Immagine speculare',
     defaultFont: 'Stile di testo predefinito',
     defaultFontId: 'Carattere',
+    defaultFontIdNone: '(nessuno)',
     defaultFontHeight: 'Altezza (punti)',
     defaultFontWidth: 'Larghezza (dots)',
     customFontsHeading: 'Font personalizzati',

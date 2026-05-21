@@ -118,6 +118,7 @@ const fi = {
     mirror: 'Peilikuva',
     defaultFont: 'Oletustekstityyli',
     defaultFontId: 'Fontti',
+    defaultFontIdNone: '(ei mitään)',
     defaultFontHeight: 'Korkeus (pisteet)',
     defaultFontWidth: 'Leveys (dots)',
     customFontsHeading: 'Mukautetut fontit',

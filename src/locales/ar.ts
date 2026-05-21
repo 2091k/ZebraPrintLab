@@ -118,6 +118,7 @@ const ar = {
     mirror: 'صورة معكوسة',
     defaultFont: 'نمط النص الافتراضي',
     defaultFontId: 'الخط',
+    defaultFontIdNone: '(لا شيء)',
     defaultFontHeight: 'الارتفاع (نقاط)',
     defaultFontWidth: 'العرض (dots)',
     customFontsHeading: 'خطوط مخصصة',
