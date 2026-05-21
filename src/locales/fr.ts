@@ -118,6 +118,7 @@ const fr = {
     mirror: 'Image miroir',
     defaultFont: 'Style de texte par défaut',
     defaultFontId: 'Police',
+    defaultFontIdNone: '(aucune)',
     defaultFontHeight: 'Hauteur (points)',
     defaultFontWidth: 'Largeur (dots)',
     customFontsHeading: 'Polices personnalisées',

@@ -118,6 +118,7 @@ const cs = {
     mirror: 'Zrcadlový obraz',
     defaultFont: 'Výchozí styl textu',
     defaultFontId: 'Písmo',
+    defaultFontIdNone: '(žádné)',
     defaultFontHeight: 'Výška (body)',
     defaultFontWidth: 'Šířka (dots)',
     customFontsHeading: 'Vlastní písma',

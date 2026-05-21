@@ -769,16 +769,21 @@ function LabelConfigPanel({
               <label className="text-[10px] text-muted">
                 {t.label.defaultFontId}
               </label>
-              <input
-                type="text"
+              <select
                 className={inputCls}
-                maxLength={2}
-                list="zpl-default-font-ids"
                 value={label.defaultFontId ?? ""}
                 onChange={(e) =>
                   onUpdate({ defaultFontId: e.target.value || undefined })
                 }
-              />
+              >
+                <option value="">{t.label.defaultFontIdNone}</option>
+                {fontIdOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.value}
+                    {opt.label ? ` — ${opt.label}` : ""}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] text-muted">
@@ -817,11 +822,6 @@ function LabelConfigPanel({
         </div>
         </CollapsibleSection>
       </div>
-      <datalist id="zpl-default-font-ids">
-        {fontIdOptions.map((opt) => (
-          <option key={opt.value} value={opt.value} label={opt.label} />
-        ))}
-      </datalist>
     </div>
   );
 }

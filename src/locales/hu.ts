@@ -118,6 +118,7 @@ const hu = {
     mirror: 'Tükörkép',
     defaultFont: 'Alapértelmezett szövegstílus',
     defaultFontId: 'Betűtípus',
+    defaultFontIdNone: '(nincs)',
     defaultFontHeight: 'Magasság (pontok)',
     defaultFontWidth: 'Szélesség (dots)',
     customFontsHeading: 'Egyéni betűtípusok',

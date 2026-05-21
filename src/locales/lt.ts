@@ -118,6 +118,7 @@ const lt = {
     mirror: 'Veidrodinis vaizdas',
     defaultFont: 'Numatytasis teksto stilius',
     defaultFontId: 'Šriftas',
+    defaultFontIdNone: '(jokio)',
     defaultFontHeight: 'Aukštis (taškai)',
     defaultFontWidth: 'Plotis (dots)',
     customFontsHeading: 'Pasirinktiniai šriftai',

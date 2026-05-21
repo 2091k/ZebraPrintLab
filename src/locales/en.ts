@@ -118,6 +118,7 @@ const en = {
     mirror: 'Mirror image',
     defaultFont: 'Default text style',
     defaultFontId: 'Font',
+    defaultFontIdNone: '(none)',
     defaultFontHeight: 'Height (dots)',
     defaultFontWidth: 'Width (dots)',
     customFontsHeading: 'Custom fonts',

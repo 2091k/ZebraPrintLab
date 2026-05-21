@@ -118,6 +118,7 @@ const de = {
     mirror: 'Spiegelbild',
     defaultFont: 'Standard-Textstil',
     defaultFontId: 'Schriftart',
+    defaultFontIdNone: '(keine)',
     defaultFontHeight: 'Höhe (Punkte)',
     defaultFontWidth: 'Breite (dots)',
     customFontsHeading: 'Eigene Schriften',

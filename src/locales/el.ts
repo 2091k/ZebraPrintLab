@@ -118,6 +118,7 @@ const el = {
     mirror: 'Καθρεπτική εικόνα',
     defaultFont: 'Προεπιλεγμένο στυλ κειμένου',
     defaultFontId: 'Γραμματοσειρά',
+    defaultFontIdNone: '(κανένα)',
     defaultFontHeight: 'Ύψος (κουκκίδες)',
     defaultFontWidth: 'Πλάτος (dots)',
     customFontsHeading: 'Προσαρμοσμένες γραμματοσειρές',

@@ -118,6 +118,7 @@ const ko = {
     mirror: '거울 이미지',
     defaultFont: '기본 텍스트 스타일',
     defaultFontId: '글꼴',
+    defaultFontIdNone: '(없음)',
     defaultFontHeight: '높이 (도트)',
     defaultFontWidth: '너비 (dots)',
     customFontsHeading: '사용자 글꼴',

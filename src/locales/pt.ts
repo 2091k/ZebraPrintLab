@@ -118,6 +118,7 @@ const pt = {
     mirror: 'Imagem espelhada',
     defaultFont: 'Estilo de texto predefinido',
     defaultFontId: 'Fonte',
+    defaultFontIdNone: '(nenhuma)',
     defaultFontHeight: 'Altura (pontos)',
     defaultFontWidth: 'Largura (dots)',
     customFontsHeading: 'Fontes personalizadas',

@@ -118,6 +118,7 @@ const sl = {
     mirror: 'Zrcalna slika',
     defaultFont: 'Privzeti slog besedila',
     defaultFontId: 'Pisava',
+    defaultFontIdNone: '(brez)',
     defaultFontHeight: 'Višina (točke)',
     defaultFontWidth: 'Širina (dots)',
     customFontsHeading: 'Pisave po meri',

@@ -118,6 +118,7 @@ const zhHans = {
     mirror: '镜像',
     defaultFont: '默认文本样式',
     defaultFontId: '字体',
+    defaultFontIdNone: '（无）',
     defaultFontHeight: '高度 (点)',
     defaultFontWidth: '宽度 (dots)',
     customFontsHeading: '自定义字体',

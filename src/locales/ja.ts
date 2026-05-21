@@ -118,6 +118,7 @@ const ja = {
     mirror: '鏡像',
     defaultFont: '既定のテキストスタイル',
     defaultFontId: 'フォント',
+    defaultFontIdNone: '(なし)',
     defaultFontHeight: '高さ (ドット)',
     defaultFontWidth: '幅 (dots)',
     customFontsHeading: 'カスタムフォント',
