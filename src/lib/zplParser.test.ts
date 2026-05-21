@@ -3,9 +3,10 @@ import { zlibSync } from 'fflate';
 import { parseZPL } from './zplParser';
 import { props } from '../test/helpers';
 
-/** CRC-16/CCITT-FALSE — same variant used by the parser to validate
- *  :B64:/:Z64: wrappers. Duplicated here so tests can build valid CRC
- *  values without exporting the parser's internal helper. */
+/** CRC-16/XMODEM — same variant used by the parser to validate
+ *  :B64:/:Z64: wrappers (poly 0x1021, init 0x0000). Duplicated here so
+ *  tests can build valid CRC values without exporting the parser's
+ *  internal helper. */
 function testCrc16(s: string): string {
   let crc = 0;
   for (const ch of s) {
@@ -597,6 +598,16 @@ describe('parseZPL — ^GFA graphic field', () => {
       expect(objects).toHaveLength(1);
       expect(objects[0]?.type).toBe('image');
     }
+  });
+
+  it('tolerates embedded whitespace inside a :B64: base64 payload', () => {
+    // ZPL generators often line-break long base64 blocks every N chars.
+    // Labelary accepts this; we should too.
+    const zpl =
+      '^XA^FO0,0^GFA,8,8,1,:B64:AAAA\n//8AAAA=:DFF8^FS^XZ';
+    const { objects, importReport } = parseZPL(zpl, 8);
+    expect(objects).toHaveLength(1);
+    expect(importReport.partial).not.toContain('^GF');
   });
 
   it('tolerates trailing whitespace on wrapped GF payloads', () => {

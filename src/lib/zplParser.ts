@@ -171,10 +171,12 @@ function decodeFH(
 }
 
 /**
- * CRC-16/CCITT-FALSE (poly 0x1021, init 0x0000, no reflect, no xorout) —
+ * CRC-16/XMODEM (poly 0x1021, init 0x0000, no reflect, no xorout) —
  * Zebra's ZB64/ZB16 wrapper uses this variant. Computed over the base64
  * (or hex) payload between the `:B64:`/`:Z64:` prefix and the trailing
- * `:CRC` suffix.
+ * `:CRC` suffix. (Note: this is *not* CRC-16/CCITT-FALSE, which uses
+ * init=0xFFFF — empirically verified against Labelary: payloads with the
+ * XMODEM CRC are accepted, CCITT-FALSE CRC is rejected.)
  */
 /** Characters of a `^GF`/`~DY` payload retained in browserLimit/skipped
  *  findings; rest is replaced with an ellipsis so a single multi-KB
@@ -186,7 +188,7 @@ const CRC16_MSB_MASK = 0x8000; // 1 << 15
 const CRC16_MASK = 0xffff;
 const BITS_PER_BYTE = 8;
 
-function crc16Ccitt(s: string): number {
+function crc16Xmodem(s: string): number {
   let crc = 0;
   for (const ch of s) {
     crc ^= ch.charCodeAt(0) << BITS_PER_BYTE;
@@ -211,8 +213,10 @@ interface GfWrapperDecoded {
 
 /** CRC-16 emitted as 4 uppercase hex chars in the `:B64:`/`:Z64:` trailer. */
 const CRC_HEX_DIGITS = 4;
+// \s in the base64 char class tolerates the line-break-every-N-chars
+// formatting that some ZPL generators apply to long ^GF payloads.
 const GF_WRAPPER_RE = new RegExp(
-  `^:(B64|Z64):([A-Za-z0-9+/=]+):([0-9A-Fa-f]{${CRC_HEX_DIGITS}})$`,
+  `^:(B64|Z64):([A-Za-z0-9+/=\\s]+):([0-9A-Fa-f]{${CRC_HEX_DIGITS}})$`,
 );
 
 /** Decode a base64 string to bytes; empty array on malformed input. */
@@ -243,12 +247,15 @@ function base64ToBytes(b64: string): Uint8Array {
 function parseGfWrapper(payload: string): GfWrapperDecoded | null {
   const m = GF_WRAPPER_RE.exec(payload.trim());
   if (!m) return null;
-  const b64 = m[2] ?? "";
+  // atob and the CRC both fail on embedded whitespace — strip after match
+  // so the wrapper-form regex above can stay permissive for line-broken
+  // payloads but the downstream decoders see pure base64.
+  const b64 = (m[2] ?? "").replace(/\s/g, "");
   const declaredCrc = parseInt(m[3] ?? "0", 16);
   return {
     kind: (m[1] ?? "").toLowerCase() as GfWrapperKind,
     bytes: base64ToBytes(b64),
-    crcOk: crc16Ccitt(b64) === declaredCrc,
+    crcOk: crc16Xmodem(b64) === declaredCrc,
   };
 }
 
@@ -273,11 +280,15 @@ function tryInflateZlib(input: Uint8Array): Uint8Array | null {
 }
 
 /** Decode the ASCII-hex output of `decompressGFA` into a packed byte array
- *  so all three GF code paths converge on the same `Uint8Array` shape. */
+ *  so all three GF code paths converge on the same `Uint8Array` shape.
+ *  Indexed access + nibble shift instead of `parseInt(slice)` because the
+ *  per-byte slice/parseInt pair is the dominant cost on multi-KB bitmaps. */
 function gfaHexToBytes(hex: string): Uint8Array {
   const out = new Uint8Array(hex.length >> 1);
   for (let i = 0; i < out.length; i++) {
-    out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+    const hi = parseInt(hex[i * 2] ?? "0", 16);
+    const lo = parseInt(hex[i * 2 + 1] ?? "0", 16);
+    out[i] = (hi << 4) | lo;
   }
   return out;
 }
@@ -1245,10 +1256,10 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       //
       // Payload variants the parser understands:
       //   - format=A + raw hex (optionally with G-Y/g-z/!/,/: RLE)
-      //   - any format + `:B64:<base64>:<crc>` wrapper (decoded → hex)
-      // `:Z64:` (zlib-compressed) is recognised but not yet decodable in the
-      // browser without an async refactor or a sync inflate dep; surfaced as
-      // `partial` so the import doesn't silently lose the field.
+      //   - any format + `:B64:<base64>:<crc>` wrapper (base64-decoded)
+      //   - any format + `:Z64:<base64>:<crc>` wrapper (zlib-inflated via
+      //     fflate). CRC mismatch → partial finding (printers tolerate),
+      //     inflate failure → browserLimit (payload unrecoverable).
       const format = rest[0]?.toUpperCase();
       if (format !== "A" && format !== "B" && format !== "C") {
         skipped.push(`^GF${rest}`);
