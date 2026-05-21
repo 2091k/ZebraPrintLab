@@ -194,9 +194,9 @@ function bytesToHex(bytes: Uint8Array): string {
   return out;
 }
 
-export type GfWrapperKind = "b64" | "z64";
+type GfWrapperKind = "b64" | "z64";
 
-export interface GfWrapperDecoded {
+interface GfWrapperDecoded {
   kind: GfWrapperKind;
   /** Raw decoded bytes — for `:Z64:` this is still zlib-compressed. */
   bytes: Uint8Array;
@@ -213,7 +213,7 @@ export interface GfWrapperDecoded {
  * mismatches, and we'd rather render a slightly-suspect graphic than silently
  * drop it. The caller decides whether `:Z64:` (zlib-compressed) is supported.
  */
-export function parseGfWrapper(payload: string): GfWrapperDecoded | null {
+function parseGfWrapper(payload: string): GfWrapperDecoded | null {
   const m = /^:(B64|Z64):([A-Za-z0-9+/=]+):([0-9A-Fa-f]{4})$/.exec(payload);
   if (!m) return null;
   const kind = m[1] === "B64" ? "b64" : "z64";
@@ -1200,6 +1200,11 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
         return;
       }
 
+      // Token used when we have to surface the field rather than render it.
+      // Truncated because :B64:/:Z64: payloads can be many KB and we don't
+      // want the import report dominated by one entry.
+      const gfSummary = `^GF${rest.slice(0, 80)}…`;
+
       // Normalise payload to hex. Three sources, descending in real-world
       // frequency for our parser: existing ^GFA RLE-hex, :B64:-wrapped binary
       // (enterprise systems), and raw binary in ^GFB/^GFC (rare in text-paste
@@ -1210,8 +1215,8 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
         if (wrapper.kind === "z64") {
           // zlib-compressed: would need sync inflate; bail. No object is
           // created, so this is a browser-limit, not a partial import.
-          browserLimit.push(`^GF${rest.slice(0, 80)}…`);
-          skipped.push(`^GF${rest.slice(0, 80)}…`);
+          browserLimit.push(gfSummary);
+          skipped.push(gfSummary);
           return;
         }
         if (!wrapper.crcOk) {
@@ -1224,8 +1229,8 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       } else {
         // Format B/C without :B64: wrapper: raw binary in a text channel —
         // can't represent reliably. Surfaced as a limitation.
-        skipped.push(`^GF${rest.slice(0, 80)}…`);
-        browserLimit.push(`^GF${rest.slice(0, 80)}…`);
+        skipped.push(gfSummary);
+        browserLimit.push(gfSummary);
         return;
       }
       const gfWidthDots = gfBytesPerRow * 8;
