@@ -113,6 +113,10 @@ export function generateZPL(label: LabelConfig, objects: LabelObject[]): string 
     if (obj.type !== 'image') continue;
     const p = obj.props as ImageProps;
     if (!p.storedAs || !p._gfaCache) continue;
+    // Recall-only mode: the printer already has the bytes (admin uploaded
+    // them out-of-band), so skip the ~DY preamble. Image stays a preview
+    // in the designer; ZPL output only carries the ^XG references.
+    if (p.storedAs.embedInZpl === false) continue;
     const key = formatStoragePath(p.storedAs, false);
     if (seenGraphics.has(key)) continue;
     seenGraphics.add(key);

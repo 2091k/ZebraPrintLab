@@ -1468,41 +1468,56 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     // ── Recall stored graphic ──────────────────────────────────────────────
     XG(_, rest) {
       // ^XGd:f.x,mx,my — references a graphic uploaded earlier via ~DY.
-      // We look the path up in downloadedGraphics; if found, instantiate an
-      // image object at the current ^FO/^FT and tag it with storedAs so
-      // re-emit produces the same upload+recall pair.
+      // Two valid imports:
+      //  - With preceding ~DY in the stream: full image (bytes + storedAs
+      //    with embedInZpl=true) so re-emit produces the same upload+recall.
+      //  - Without ~DY: the printer is assumed to host the file out-of-band
+      //    (admin pre-loaded). Object gets storedAs.embedInZpl=false and
+      //    no cached bitmap; the canvas falls back to a placeholder, the
+      //    emitter skips the ~DY preamble but keeps the ^XG reference.
       const firstComma = rest.indexOf(",");
       const xgPath = firstComma === -1 ? rest : rest.slice(0, firstComma);
-      const surfaceXgFailure = (): void => {
-        skipped.push(`^XG${rest}`);
-        browserLimit.push(`^XG${rest}`);
-      };
-      // ^XG omitting the `.GRF` suffix is valid ZPL (Labelary accepts
-      // `^XGR:LOGO,…` for an upload stored as `R:LOGO.GRF`). Normalise
-      // through the storage-path helpers so the map lookup matches the
-      // canonical key the ~DY side wrote.
       const parsed = parseStoragePath(xgPath);
       if (!parsed) {
-        surfaceXgFailure();
+        skipped.push(`^XG${rest}`);
+        browserLimit.push(`^XG${rest}`);
         return;
       }
       const uploaded = downloadedGraphics.get(formatStoragePath(parsed, true));
-      if (!uploaded) {
-        surfaceXgFailure();
+      const posType: "FT" | "FO" = positionIsFT ? "FT" : "FO";
+      if (uploaded) {
+        objects.push(
+          makeObj(
+            "image",
+            x,
+            y,
+            {
+              imageId: uploaded.imageId,
+              widthDots: uploaded.widthDots,
+              threshold: 128,
+              _gfaCache: uploaded.gfaCache,
+              storedAs: { ...parsed, embedInZpl: true },
+            } satisfies ImageProps,
+            posType,
+            takeComment(),
+          ),
+        );
         return;
       }
-      const posType: "FT" | "FO" = positionIsFT ? "FT" : "FO";
+      // Recall-only: no bytes available, but the ZPL is valid and the
+      // printer side is assumed to resolve. Surface as partial so the
+      // import report flags the degraded preview.
+      partialCmds.add("^XG");
       objects.push(
         makeObj(
           "image",
           x,
           y,
           {
-            imageId: uploaded.imageId,
-            widthDots: uploaded.widthDots,
+            imageId: "",
+            widthDots: 200,
             threshold: 128,
-            _gfaCache: uploaded.gfaCache,
-            storedAs: parsed,
+            storedAs: { ...parsed, embedInZpl: false },
           } satisfies ImageProps,
           posType,
           takeComment(),

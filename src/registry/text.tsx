@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import type { ObjectTypeDefinition } from "../types/ObjectType";
 import { useT } from "../lib/useT";
-import { inputCls, labelCls } from "../components/Properties/styles";
+import { buttonCls, inputCls, labelCls } from "../components/Properties/styles";
 import { textFieldPos, fdField, resolveFontCmd, wrapReverse } from "./zplHelpers";
 import { effectiveScale } from "./transformHelpers";
 import { getFont, loadFontFile } from "../lib/fontCache";
@@ -189,7 +189,7 @@ export const text: ObjectTypeDefinition<TextProps> = {
                   />
                   <button
                     type="button"
-                    className="px-3 py-1.5 rounded text-xs font-mono bg-surface-2 border border-border text-text hover:bg-border transition-colors"
+                    className={buttonCls}
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}
                   >

@@ -676,7 +676,7 @@ describe('parseZPL — ~DY + ^XG graphic upload/recall', () => {
     expect(objects).toHaveLength(1);
     expect(objects[0]?.type).toBe('image');
     expect(props(objects[0]).widthDots).toBe(8);
-    expect(props(objects[0]).storedAs).toEqual({ device: 'R', name: 'LOGO' });
+    expect(props(objects[0]).storedAs).toEqual({ device: 'R', name: 'LOGO', embedInZpl: true });
     expect(objects[0]?.x).toBe(50);
     expect(objects[0]?.y).toBe(80);
     expect(importReport.browserLimit).toHaveLength(0);
@@ -690,15 +690,22 @@ describe('parseZPL — ~DY + ^XG graphic upload/recall', () => {
       `^XA^FO50,80^XGR:LOGO,1,1^FS^XZ`;
     const { objects, importReport } = parseZPL(zpl, 8);
     expect(objects).toHaveLength(1);
-    expect(props(objects[0]).storedAs).toEqual({ device: 'R', name: 'LOGO' });
+    expect(props(objects[0]).storedAs).toEqual({ device: 'R', name: 'LOGO', embedInZpl: true });
     expect(importReport.browserLimit).toHaveLength(0);
   });
 
-  it('^XG without a preceding ~DY surfaces as browserLimit', () => {
+  it('^XG without a preceding ~DY imports as recall-only image', () => {
+    // Admin pre-loaded the file on the printer; we just emit the ^XG
+    // reference without ~DY bytes. Object is created so the user can
+    // position/edit it; embedInZpl=false stops the emitter from
+    // re-uploading bytes we never received.
     const zpl = `^XA^FO0,0^XGR:MISSING.GRF,1,1^FS^XZ`;
     const { objects, importReport } = parseZPL(zpl, 8);
-    expect(objects).toHaveLength(0);
-    expect(importReport.browserLimit.some((s) => s.startsWith('^XG'))).toBe(true);
+    expect(objects).toHaveLength(1);
+    expect(props(objects[0]).storedAs).toEqual({
+      device: 'R', name: 'MISSING', embedInZpl: false,
+    });
+    expect(importReport.partial).toContain('^XG');
   });
 
   it('accepts :Z64:-wrapped graphic payloads in ~DY (format C)', () => {
@@ -709,7 +716,7 @@ describe('parseZPL — ~DY + ^XG graphic upload/recall', () => {
       `^XA^FO0,0^XG${PATH}.GRF,1,1^FS^XZ`;
     const { objects, importReport } = parseZPL(zpl, 8);
     expect(objects).toHaveLength(1);
-    expect(props(objects[0]).storedAs).toEqual({ device: 'R', name: 'LOGO' });
+    expect(props(objects[0]).storedAs).toEqual({ device: 'R', name: 'LOGO', embedInZpl: true });
     expect(importReport.partial).not.toContain('~DY');
   });
 });
