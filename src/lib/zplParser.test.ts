@@ -1,6 +1,29 @@
 import { describe, it, expect, beforeAll } from 'vitest';
+import { zlibSync } from 'fflate';
 import { parseZPL } from './zplParser';
 import { props } from '../test/helpers';
+
+/** CRC-16/CCITT-FALSE — same variant used by the parser to validate
+ *  :B64:/:Z64: wrappers. Duplicated here so tests can build valid CRC
+ *  values without exporting the parser's internal helper. */
+function testCrc16(s: string): string {
+  let crc = 0;
+  for (const ch of s) {
+    crc ^= ch.charCodeAt(0) << 8;
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
+    }
+  }
+  return crc.toString(16).padStart(4, '0').toUpperCase();
+}
+
+function makeZ64Field(bytes: Uint8Array): string {
+  const deflated = zlibSync(bytes);
+  let bin = '';
+  for (const b of deflated) bin += String.fromCharCode(b);
+  const b64 = btoa(bin);
+  return `:Z64:${b64}:${testCrc16(b64)}`;
+}
 
 // ── label config ──────────────────────────────────────────────────────────────
 
@@ -576,15 +599,32 @@ describe('parseZPL — ^GFA graphic field', () => {
     }
   });
 
-  it('records :Z64: payload as browserLimit (zlib not yet supported)', () => {
-    // Arbitrary :Z64: payload — content doesn't matter, only the prefix.
+  it('imports a :Z64:-wrapped ^GFC payload by inflating zlib data', () => {
+    // 8 bytes = [0,0,0,0xFF,0xFF,0,0,0] → zlib-compressed → base64 → CRC.
+    const bytes = new Uint8Array([0, 0, 0, 0xff, 0xff, 0, 0, 0]);
+    const field = makeZ64Field(bytes);
     const { objects, importReport } = parseZPL(
-      '^XA^FO0,0^GFC,8,8,1,:Z64:eJxjYGD4/5+BgQEACP8B/w==:95F4^FS^XZ',
+      `^XA^FO0,0^GFC,8,8,1,${field}^FS^XZ`,
+      8,
+    );
+    expect(objects).toHaveLength(1);
+    expect(objects[0]?.type).toBe('image');
+    expect(props(objects[0]).widthDots).toBe(8);
+    expect(importReport.partial).not.toContain('^GF');
+  });
+
+  it('records :Z64: with corrupt deflate stream as browserLimit', () => {
+    // Valid base64 but garbage bytes that fflate will reject as a deflate
+    // stream. CRC must match so we know the failure is in inflate, not the
+    // wrapper-shape detection.
+    const b64 = btoa('not a valid zlib stream');
+    const field = `:Z64:${b64}:${testCrc16(b64)}`;
+    const { objects, importReport } = parseZPL(
+      `^XA^FO0,0^GFC,8,8,1,${field}^FS^XZ`,
       8,
     );
     expect(objects).toHaveLength(0);
     expect(importReport.browserLimit.some((s) => s.startsWith('^GF'))).toBe(true);
-    expect(importReport.partial).not.toContain('^GF');
   });
 
   it('creates an image object from compressed ^GFA data', () => {

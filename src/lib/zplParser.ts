@@ -20,6 +20,7 @@ import { isZplRotation, type ZplRotation } from "../registry/rotation";
 import type { AztecProps } from "../registry/aztec";
 import type { MicroPdf417Props } from "../registry/micropdf417";
 import type { CodablockProps } from "../registry/codablock";
+import { unzlibSync } from "fflate";
 import { putImage } from "./imageCache";
 import { loadFontBytesSync } from "./fontCache";
 import { ZPL_BUILTIN_FONT_LETTERS } from "./customFonts";
@@ -170,16 +171,29 @@ function decodeFH(
 }
 
 /**
- * CRC-16/CCITT-FALSE (poly 0x1021, init 0x0000) — Zebra's ZB64/ZB16 wrapper
- * uses this variant. Computed over the base64 (or hex) payload between the
- * `:B64:`/`:Z64:` prefix and the trailing `:CRC` suffix.
+ * CRC-16/CCITT-FALSE (poly 0x1021, init 0x0000, no reflect, no xorout) —
+ * Zebra's ZB64/ZB16 wrapper uses this variant. Computed over the base64
+ * (or hex) payload between the `:B64:`/`:Z64:` prefix and the trailing
+ * `:CRC` suffix.
  */
+/** Characters of a `^GF`/`~DY` payload retained in browserLimit/skipped
+ *  findings; rest is replaced with an ellipsis so a single multi-KB
+ *  base64 blob doesn't drown out the import report. */
+const IMPORT_FINDING_PAYLOAD_LIMIT = 80;
+
+const CRC16_CCITT_POLY = 0x1021;
+const CRC16_MSB_MASK = 0x8000; // 1 << 15
+const CRC16_MASK = 0xffff;
+const BITS_PER_BYTE = 8;
+
 function crc16Ccitt(s: string): number {
   let crc = 0;
   for (const ch of s) {
-    crc ^= ch.charCodeAt(0) << 8;
-    for (let j = 0; j < 8; j++) {
-      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
+    crc ^= ch.charCodeAt(0) << BITS_PER_BYTE;
+    for (let j = 0; j < BITS_PER_BYTE; j++) {
+      crc = (crc & CRC16_MSB_MASK)
+        ? ((crc << 1) ^ CRC16_CCITT_POLY) & CRC16_MASK
+        : (crc << 1) & CRC16_MASK;
     }
   }
   return crc;
@@ -213,8 +227,14 @@ interface GfWrapperDecoded {
  * mismatches, and we'd rather render a slightly-suspect graphic than silently
  * drop it. The caller decides whether `:Z64:` (zlib-compressed) is supported.
  */
+/** CRC-16 emitted as 4 uppercase hex chars in the `:B64:`/`:Z64:` trailer. */
+const CRC_HEX_DIGITS = 4;
+const GF_WRAPPER_RE = new RegExp(
+  `^:(B64|Z64):([A-Za-z0-9+/=]+):([0-9A-Fa-f]{${CRC_HEX_DIGITS}})$`,
+);
+
 function parseGfWrapper(payload: string): GfWrapperDecoded | null {
-  const m = /^:(B64|Z64):([A-Za-z0-9+/=]+):([0-9A-Fa-f]{4})$/.exec(payload);
+  const m = GF_WRAPPER_RE.exec(payload);
   if (!m) return null;
   const kind = m[1] === "B64" ? "b64" : "z64";
   const b64 = m[2] ?? "";
@@ -1203,7 +1223,7 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       // Token used when we have to surface the field rather than render it.
       // Truncated because :B64:/:Z64: payloads can be many KB and we don't
       // want the import report dominated by one entry.
-      const gfSummary = `^GF${rest.slice(0, 80)}…`;
+      const gfSummary = `^GF${rest.slice(0, IMPORT_FINDING_PAYLOAD_LIMIT)}…`;
 
       // Normalise payload to hex. Three sources, descending in real-world
       // frequency for our parser: existing ^GFA RLE-hex, :B64:-wrapped binary
@@ -1212,18 +1232,25 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       let gfHex: string;
       const wrapper = parseGfWrapper(gfRawData);
       if (wrapper) {
-        if (wrapper.kind === "z64") {
-          // zlib-compressed: would need sync inflate; bail. No object is
-          // created, so this is a browser-limit, not a partial import.
-          browserLimit.push(gfSummary);
-          skipped.push(gfSummary);
-          return;
-        }
         if (!wrapper.crcOk) {
           // Render anyway (printers tolerate this), but flag the fidelity loss.
           partialCmds.add("^GF");
         }
-        gfHex = bytesToHex(wrapper.bytes);
+        let rawBytes = wrapper.bytes;
+        if (wrapper.kind === "z64") {
+          // zlib-compressed payload. fflate.unzlibSync handles the zlib
+          // wrapper (RFC 1950) — Zebra's `:Z64:` is *not* raw deflate. If
+          // inflate throws (truncation, wrong header), the payload is
+          // unrecoverable: surface and bail.
+          try {
+            rawBytes = unzlibSync(wrapper.bytes);
+          } catch {
+            browserLimit.push(gfSummary);
+            skipped.push(gfSummary);
+            return;
+          }
+        }
+        gfHex = bytesToHex(rawBytes);
       } else if (format === "A") {
         gfHex = decompressGFA(gfRawData, gfBytesPerRow);
       } else {
