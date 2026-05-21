@@ -233,23 +233,30 @@ const GF_WRAPPER_RE = new RegExp(
   `^:(B64|Z64):([A-Za-z0-9+/=]+):([0-9A-Fa-f]{${CRC_HEX_DIGITS}})$`,
 );
 
+/** Decode a base64 string to bytes; empty array on malformed input. */
+function base64ToBytes(b64: string): Uint8Array {
+  let bin: string;
+  try {
+    bin = atob(b64);
+  } catch {
+    return new Uint8Array(0);
+  }
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
 function parseGfWrapper(payload: string): GfWrapperDecoded | null {
   const m = GF_WRAPPER_RE.exec(payload);
   if (!m) return null;
   const kind = m[1] === "B64" ? "b64" : "z64";
   const b64 = m[2] ?? "";
-  const crcStr = m[3] ?? "0000";
-  const declaredCrc = parseInt(crcStr, 16);
-  const actualCrc = crc16Ccitt(b64);
-  let bytes: Uint8Array;
-  try {
-    const bin = atob(b64);
-    bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  } catch {
-    bytes = new Uint8Array(0);
-  }
-  return { kind, bytes, crcOk: actualCrc === declaredCrc };
+  const declaredCrc = parseInt(m[3] ?? "0", 16);
+  return {
+    kind,
+    bytes: base64ToBytes(b64),
+    crcOk: crc16Ccitt(b64) === declaredCrc,
+  };
 }
 
 /**
@@ -274,6 +281,15 @@ interface GfPayloadDecoded {
  *  - `format=B`/`C` without wrapper → null (raw binary can't survive the
  *    text-based ZPL channel and the parser never sees intact bytes anyway)
  */
+/** Inflate `:Z64:` zlib payload; null on malformed deflate stream. */
+function tryInflateZlib(input: Uint8Array): Uint8Array | null {
+  try {
+    return unzlibSync(input);
+  } catch {
+    return null;
+  }
+}
+
 function gfPayloadToHex(
   rawData: string,
   format: "A" | "B" | "C",
@@ -281,14 +297,9 @@ function gfPayloadToHex(
 ): GfPayloadDecoded | null {
   const wrapper = parseGfWrapper(rawData);
   if (wrapper) {
-    let bytes = wrapper.bytes;
-    if (wrapper.kind === "z64") {
-      try {
-        bytes = unzlibSync(wrapper.bytes);
-      } catch {
-        return null;
-      }
-    }
+    const bytes =
+      wrapper.kind === "z64" ? tryInflateZlib(wrapper.bytes) : wrapper.bytes;
+    if (!bytes) return null;
     return { hex: bytesToHex(bytes), crcOk: wrapper.crcOk };
   }
   if (format === "A") {
