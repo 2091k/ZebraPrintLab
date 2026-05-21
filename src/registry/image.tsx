@@ -338,8 +338,8 @@ export const image: ObjectTypeDefinition<ImageProps> = {
                   onChange={(e) =>
                     onChange({
                       storedAs: {
+                        ...storedAs,
                         device: e.target.value as StorageDevice,
-                        name: storedAs.name,
                       },
                     })
                   }
@@ -363,7 +363,7 @@ export const image: ObjectTypeDefinition<ImageProps> = {
                     // is a clearer constraint signal than a tooltip.
                     if (!next) return;
                     onChange({
-                      storedAs: { device: storedAs.device, name: next },
+                      storedAs: { ...storedAs, name: next },
                     });
                   }}
                 />
