@@ -55,7 +55,7 @@ export function VariableBindingControl({ obj }: Props) {
       return;
     }
     // Seed the new variable's default with whatever literal content the
-    // field is currently carrying — preserves the canvas state across
+    // field is currently carrying, preserving the canvas state across
     // the binding transition. Every bindable type's first ^FD emission
     // comes from `props.content` (see registry implementations).
     const props = (obj as { props?: { content?: unknown } }).props;
@@ -166,7 +166,7 @@ export function VariableBindingControl({ obj }: Props) {
   );
 }
 
-/** Render `{name} — "{default}"`, truncating long defaults so the
+/** Render `{name}: "{default}"`, truncating long defaults so the
  *  <option> stays scannable in narrow dropdowns. Empty default uses
  *  the locale's `emptyDefault` label so users see the state explicitly. */
 const OPTION_DEFAULT_MAX = 24;
@@ -175,10 +175,10 @@ function formatVariableOption(
   defaultValue: string,
   emptyLabel: string,
 ): string {
-  if (defaultValue === '') return `${name} — ${emptyLabel}`;
+  if (defaultValue === '') return `${name}: ${emptyLabel}`;
   const truncated =
     defaultValue.length > OPTION_DEFAULT_MAX
       ? `${defaultValue.slice(0, OPTION_DEFAULT_MAX)}…`
       : defaultValue;
-  return `${name} — "${truncated}"`;
+  return `${name}: "${truncated}"`;
 }

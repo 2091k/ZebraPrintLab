@@ -67,12 +67,10 @@ export function VariablesPanel() {
     } else {
       setRowError((prev) => {
         if (!(id in prev)) return prev;
-        // Rebuild without the cleared key — dynamic delete is linted out
-        // for hot-paths; this rebuild is fine for a per-row state update.
-        const next: Record<string, string> = {};
-        for (const [k, msg] of Object.entries(prev)) {
-          if (k !== id) next[k] = msg;
-        }
+        // Destructure-omit the cleared key. Dynamic `delete` is linted
+        // out for hot-paths; rest-spread is the idiomatic alternative.
+        const { [id]: _drop, ...next } = prev;
+        void _drop;
         return next;
       });
     }
@@ -174,7 +172,7 @@ function VariableRow({
   // (empty name, mid-edit number) without the store snapping them back on
   // each keystroke. Commit on blur. Known limitation: an external store
   // update to the same id (undo, file load) does not flow back into this
-  // local mirror — the user would need to blur and re-focus. Accepted
+  // local mirror; the user would need to blur and re-focus. Accepted
   // for Phase 1 because the alternative (effect-based sync) introduced
   // focus-stealing and setState-in-render bugs.
   const [name, setName] = useState(variable.name);

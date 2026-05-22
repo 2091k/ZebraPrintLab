@@ -23,7 +23,7 @@ export function lookupBoundVariable(
  * optimisations stay effective.
  *
  * Every bindable type today exposes `props.content` (text + 8 barcode
- * types — see `bindable: true` in the registry). Non-bindable types
+ * types; see `bindable: true` in the registry). Non-bindable types
  * never have a `variableId`, so the early return covers them.
  */
 export function applyBindingToObject<T extends LabelObject>(
@@ -36,7 +36,7 @@ export function applyBindingToObject<T extends LabelObject>(
   if (!props || typeof props.content !== "string") return obj;
   if (props.content === variable.defaultValue) return obj;
   // The discriminated union doesn't narrow through a spread, so we cast
-  // back to T. Runtime shape preserves the original variant — only
+  // back to T. Runtime shape preserves the original variant; only
   // `props.content` changes.
   return {
     ...obj,

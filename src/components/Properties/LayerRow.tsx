@@ -74,7 +74,7 @@ export function LayerRow({
   // Variable badge: small {x} glyph next to the type icon when the leaf
   // is bound, with the variable name as a tooltip. Lets the user scan
   // the layers list for slot usage without selecting each row. The
-  // selector subscribes the row to variable changes — cheap because
+  // selector subscribes the row to variable changes; cheap because
   // each row already re-renders on selection / visibility flips.
   const boundVariable = useLabelStore((s) =>
     lookupBoundVariable(obj, s.variables),

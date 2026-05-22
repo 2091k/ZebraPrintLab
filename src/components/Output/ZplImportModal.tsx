@@ -42,7 +42,7 @@ export function ZplImportModal({ onClose }: Props) {
     if (appendMode && hasExistingContent) {
       // Keep the current label config: the user opted to keep the
       // existing design's dimensions, so any imported ^PW/^LL is
-      // intentionally discarded. Imported variables are dropped too —
+      // intentionally discarded. Imported variables are dropped too:
       // append-mode preserves the current Variables tab; merging here
       // would risk name/fnNumber collisions the user can't see in the
       // dialog. Round-trip from a saved design uses Save/Load, not Append.
