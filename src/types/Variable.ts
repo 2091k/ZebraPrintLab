@@ -33,3 +33,18 @@ export function nextFreeFnNumber(used: readonly number[]): number | null {
   }
   return null;
 }
+
+/** Append `_2`, `_3`, … to `base` until it no longer collides with any
+ *  existing variable's name. Shared between the parser (auto-naming from
+ *  ^FX comments) and the importer (merging across multi-page blocks)
+ *  so both paths produce the same disambiguation pattern. */
+export function uniqueVariableName(
+  base: string,
+  existing: readonly Variable[],
+): string {
+  const taken = new Set(existing.map((v) => v.name));
+  if (!taken.has(base)) return base;
+  let i = 2;
+  while (taken.has(`${base}_${i}`)) i++;
+  return `${base}_${i}`;
+}

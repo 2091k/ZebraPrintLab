@@ -1,5 +1,6 @@
 import type React from 'react';
 import { z } from 'zod';
+import type { Variable } from './Variable';
 
 /** A single font mapping. Three row shapes are supported so the editor
  *  can stay 1:1 with what the printer renders:
@@ -139,12 +140,18 @@ export interface TransformContext {
 }
 
 /** Context passed to `toZPL` so leaf emit functions can reach
- *  label-wide state (default font ID, ^CW alias map, etc.). Optional —
- *  most types ignore it; only text/serial currently care about the
- *  default font fallback. Tests calling `toZPL` directly can omit
- *  `ctx` and get the no-default-context branch. */
+ *  label-wide state (default font ID, ^CW alias map, variables, etc.).
+ *  Optional — most types ignore it; text/serial use it for the default
+ *  font fallback, text/barcode emitters consult `variables` when an
+ *  object's `variableId` is set. Tests calling `toZPL` directly can omit
+ *  `ctx` and get the no-binding / no-default-context branches. */
 export interface ZplEmitContext {
   label: LabelConfig;
+  /** Document-level variables. When a field carries `variableId` pointing
+   *  at one of these, the emitter writes `^FN{n}^FD{default}^FS` so the
+   *  printer treats the field as a template slot. Absent / empty: every
+   *  field emits its own literal content. */
+  variables?: readonly Variable[];
 }
 
 export interface ObjectTypeDefinition<P extends object = object> {

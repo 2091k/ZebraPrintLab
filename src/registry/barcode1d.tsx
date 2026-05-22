@@ -2,7 +2,7 @@ import type { ObjectTypeDefinition, ObjectGroup, LabelObjectBase } from '../type
 import { useT } from '../lib/useT';
 import type { Translations } from '../locales';
 import { inputCls, labelCls } from '../components/Properties/styles';
-import { fieldPos, fdField } from './zplHelpers';
+import { fieldPos, fdFieldFor } from './zplHelpers';
 import { commitBarcodeWidthHeightTransform } from './transformHelpers';
 import { filterContent, type ContentSpec } from './contentSpec';
 import { type ZplRotation } from './rotation';
@@ -79,7 +79,7 @@ export function createBarcode1D(config: Barcode1DConfig): ObjectTypeDefinition<B
       ? undefined
       : commitBarcodeWidthHeightTransform,
 
-    toZPL: (obj: LabelObjectBase & { props: Barcode1DProps }) => {
+    toZPL: (obj: LabelObjectBase & { props: Barcode1DProps }, ctx) => {
       // Normalize printInterpretation for symbologies that have no HRI in ZPL
       // (e.g. ^BR). This protects against legacy saved objects that still carry
       // printInterpretation: true from emitting an out-of-spec interpretation flag.
@@ -93,7 +93,7 @@ export function createBarcode1D(config: Barcode1DConfig): ObjectTypeDefinition<B
         byCmd,
         fieldPos(obj),
         config.zplCommand(p),
-        fdField(p.content),
+        fdFieldFor(obj, p.content, ctx),
       ].filter(Boolean).join('');
     },
 

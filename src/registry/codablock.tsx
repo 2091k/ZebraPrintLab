@@ -1,7 +1,7 @@
 import type { ObjectTypeDefinition } from "../types/ObjectType";
 import { useT } from "../lib/useT";
 import { inputCls, labelCls } from "../components/Properties/styles";
-import { fieldPos, fdField } from "./zplHelpers";
+import { fieldPos, fdFieldFor } from "./zplHelpers";
 import { commitStacked2DTransform } from "./transformHelpers";
 import { type ZplRotation } from "./rotation";
 import { RotationSelect } from "../components/Properties/RotationSelect";
@@ -30,14 +30,14 @@ export const codablock: ObjectTypeDefinition<CodablockProps> = {
 
   commitTransform: commitStacked2DTransform,
 
-  toZPL: (obj) => {
+  toZPL: (obj, ctx) => {
     const p = obj.props;
     // ^BB{orientation},{rowHeight},{security},{numCharsPerRow},{numRows},{mode}
     return [
       `^BY${p.moduleWidth}`,
       fieldPos(obj),
       `^BB${p.rotation},${p.rowHeight},${p.securityLevel}`,
-      fdField(p.content),
+      fdFieldFor(obj, p.content, ctx),
     ]
       .filter(Boolean)
       .join("");

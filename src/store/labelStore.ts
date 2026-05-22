@@ -1019,7 +1019,7 @@ export const useLabelStore = create<LabelState>()(
           return;
         }
         const objs = currentObjects(state);
-        const zpl = generateZPL(state.label, objs);
+        const zpl = generateZPL(state.label, objs, state.variables);
         // Toggling preview off then on for a side-by-side pixel compare
         // shouldn't burn an API call when nothing changed.
         const cachedUrl = previewCache.get(zpl);

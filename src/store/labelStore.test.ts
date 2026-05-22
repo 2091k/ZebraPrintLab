@@ -1268,12 +1268,10 @@ describe('variables', () => {
     state().removeVariable(varId);
 
     expect(state().variables).toHaveLength(0);
-    const page0 = state().pages[0]?.objects[0] as LabelObject & { variableId?: string };
-    expect(page0.variableId).toBeUndefined();
+    expect(state().pages[0]?.objects[0]?.variableId).toBeUndefined();
     const group = state().pages[1]?.objects[0];
     if (!group || !isGroup(group)) throw new Error('expected group');
-    const inner = group.children[0] as LabelObject & { variableId?: string };
-    expect(inner.variableId).toBeUndefined();
+    expect(group.children[0]?.variableId).toBeUndefined();
   });
 
   it('removeVariable leaves pages untouched when no field referenced the variable', () => {
