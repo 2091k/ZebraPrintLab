@@ -11,40 +11,12 @@ import { walkObjects, type LabelObject } from '../../types/Group';
 import { inputCls } from '../Properties/styles';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { FieldLabel } from '../ui/FieldLabel';
-
-/* i18n: literal strings in this file are scheduled for locale extraction in
- *  Phase 1 step 3d. Keep them in one place so the sweep is mechanical. */
-const COPY = {
-  panelHint:
-    'Defaults that get filled in at print time. Bind a field from its Properties tab.',
-  add: 'Add variable',
-  empty: 'No variables yet.',
-  emptyExample:
-    'Useful for sequential SKUs, batch numbers, or customer names.',
-  nameLabel: 'Name',
-  nameHelp:
-    'Free-text identifier shown in the Properties dropdown when binding a field. For you, not the printer.',
-  fnLabel: 'Slot',
-  fnHelp:
-    'ZPL ^FN slot number (1-99) the printer uses to address this variable. Auto-assigned; only change when integrating with a system that injects data via ^FV at print time.',
-  defaultLabel: 'Default',
-  defaultHelp:
-    'Value rendered on the canvas and emitted as the ZPL ^FD payload. External systems can override it at print time.',
-  removeAria: (name: string) => `Remove variable ${name}`,
-  bindingsBadge: (n: number) => (n === 1 ? '1 binding' : `${n} bindings`),
-  noBindings: 'unused',
-  deleteMessage: (name: string, count: number) =>
-    count === 0
-      ? `Delete variable "${name}"? It is not bound to any field.`
-      : `Delete variable "${name}"? It is bound to ${count} field${count === 1 ? '' : 's'}; they will be unbound and fall back to their last literal value.`,
-  deleteConfirm: 'Delete',
-  deleteCancel: 'Cancel',
-  noSlotsLeft: 'All 99 slots are taken.',
-  nameInUse: 'Name already in use.',
-  slotInUse: 'Slot already in use.',
-} as const;
+import { useT } from '../../lib/useT';
+import type { Translations } from '../../locales';
 
 export function VariablesPanel() {
+  const t = useT();
+  const tv = t.variables;
   const variables = useLabelStore((s) => s.variables);
   const pages = useLabelStore((s) => s.pages);
   const addVariable = useLabelStore((s) => s.addVariable);
@@ -73,7 +45,7 @@ export function VariablesPanel() {
       // Name collisions on a fresh `var_n` are essentially impossible
       // since `n` is unique; the only realistic null path is exhausted
       // ^FN slots.
-      setPanelError(COPY.noSlotsLeft);
+      setPanelError(tv.noSlotsLeft);
       return;
     }
     setPanelError(null);
@@ -109,34 +81,35 @@ export function VariablesPanel() {
   return (
     <div className="flex flex-col gap-3 p-3">
       <p className="font-mono text-[10px] text-muted leading-relaxed">
-        {COPY.panelHint}
+        {tv.panelHint}
       </p>
 
       {variables.length === 0 ? (
         <div className="flex flex-col gap-2">
-          <p className="font-mono text-[10px] text-muted italic">{COPY.empty}</p>
+          <p className="font-mono text-[10px] text-muted italic">{tv.empty}</p>
           <p className="font-mono text-[10px] text-muted leading-relaxed">
-            {COPY.emptyExample}
+            {tv.emptyExample}
           </p>
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
-          {variables.map((v) => (
+          {variables.map((entry) => (
             <VariableRow
-              key={v.id}
-              variable={v}
-              bindings={bindingCounts.get(v.id) ?? 0}
-              error={rowError[v.id]}
+              key={entry.id}
+              variable={entry}
+              bindings={bindingCounts.get(entry.id) ?? 0}
+              error={rowError[entry.id]}
+              tv={tv}
               onChangeName={(name) =>
-                tryUpdate(v.id, { name }, COPY.nameInUse)
+                tryUpdate(entry.id, { name }, tv.nameInUse)
               }
               onChangeFnNumber={(fnNumber) =>
-                tryUpdate(v.id, { fnNumber }, COPY.slotInUse)
+                tryUpdate(entry.id, { fnNumber }, tv.slotInUse)
               }
               onChangeDefault={(defaultValue) =>
-                tryUpdate(v.id, { defaultValue }, '')
+                tryUpdate(entry.id, { defaultValue }, '')
               }
-              onRequestDelete={() => setPendingDelete(v)}
+              onRequestDelete={() => setPendingDelete(entry)}
             />
           ))}
         </ul>
@@ -148,7 +121,7 @@ export function VariablesPanel() {
         className="flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-mono border border-dashed border-border text-muted hover:text-text hover:border-border-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <PlusIcon className="w-3.5 h-3.5" />
-        {COPY.add}
+        {tv.add}
       </button>
 
       {panelError && (
@@ -157,12 +130,13 @@ export function VariablesPanel() {
 
       {pendingDelete && (
         <ConfirmDialog
-          message={COPY.deleteMessage(
+          message={formatDeleteMessage(
+            tv,
             pendingDelete.name,
             bindingCounts.get(pendingDelete.id) ?? 0,
           )}
-          confirmLabel={COPY.deleteConfirm}
-          cancelLabel={COPY.deleteCancel}
+          confirmLabel={tv.confirmDelete}
+          cancelLabel={tv.cancel}
           destructive
           onConfirm={() => {
             removeVariable(pendingDelete.id);
@@ -179,6 +153,7 @@ interface RowProps {
   variable: Variable;
   bindings: number;
   error?: string;
+  tv: Translations['variables'];
   onChangeName: (next: string) => void;
   onChangeFnNumber: (next: number) => void;
   onChangeDefault: (next: string) => void;
@@ -189,6 +164,7 @@ function VariableRow({
   variable,
   bindings,
   error,
+  tv,
   onChangeName,
   onChangeFnNumber,
   onChangeDefault,
@@ -232,7 +208,7 @@ function VariableRow({
     <li className="flex flex-col gap-1.5">
       <div className="flex items-end gap-2">
         <div className="flex-1 flex flex-col gap-0.5">
-          <FieldLabel text={COPY.nameLabel} help={COPY.nameHelp} />
+          <FieldLabel text={tv.nameLabel} help={tv.nameHelp} />
           <input
             className={inputCls}
             value={name}
@@ -241,7 +217,7 @@ function VariableRow({
           />
         </div>
         <div className="w-14 flex flex-col gap-0.5">
-          <FieldLabel text={COPY.fnLabel} help={COPY.fnHelp} />
+          <FieldLabel text={tv.fnLabel} help={tv.fnHelp} />
           <input
             type="number"
             min={FN_NUMBER_MIN}
@@ -254,14 +230,14 @@ function VariableRow({
         </div>
         <button
           onClick={onRequestDelete}
-          aria-label={COPY.removeAria(variable.name)}
+          aria-label={tv.removeAriaFmt.replace('{name}', variable.name)}
           className="p-1.5 rounded text-muted hover:text-amber-400 hover:bg-surface-2 transition-colors"
         >
           <TrashIcon className="w-3.5 h-3.5" />
         </button>
       </div>
       <div className="flex flex-col gap-0.5">
-        <FieldLabel text={COPY.defaultLabel} help={COPY.defaultHelp} />
+        <FieldLabel text={tv.defaultLabel} help={tv.defaultHelp} />
         <input
           className={inputCls}
           value={def}
@@ -271,12 +247,28 @@ function VariableRow({
       </div>
       <div className="flex justify-between items-center font-mono text-[9px] uppercase tracking-wider text-muted">
         <span>
-          {bindings === 0 ? COPY.noBindings : COPY.bindingsBadge(bindings)}
+          {bindings === 0
+            ? tv.noBindings
+            : bindings === 1
+              ? tv.bindingsSingular
+              : tv.bindingsPluralFmt.replace('{n}', String(bindings))}
         </span>
         {error && <span className="text-amber-400">{error}</span>}
       </div>
     </li>
   );
+}
+
+/** Build the delete-confirmation message from the parameterised locale
+ *  templates. Lives outside the component so the locale format is a
+ *  pure transformation, not a hook-bound side effect. */
+function formatDeleteMessage(
+  tv: Translations['variables'],
+  name: string,
+  count: number,
+): string {
+  const template = count === 0 ? tv.deleteUnboundFmt : tv.deleteBoundFmt;
+  return template.replace('{name}', name).replace('{n}', String(count));
 }
 
 /** Walk every page (groups too) and tally how many fields reference each

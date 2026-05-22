@@ -4,25 +4,7 @@ import { useLabelStore } from '../../store/labelStore';
 import type { LabelObject } from '../../types/Group';
 import { inputCls } from '../Properties/styles';
 import { FieldLabel } from '../ui/FieldLabel';
-
-/* i18n: literal strings here belong to the end-of-branch locale sweep;
- *  see docs/variables-plan.local.md. */
-const COPY = {
-  label: 'Variable',
-  help:
-    'Bind this field to a Variable. The field will display the variable\'s default value and emit it as a ZPL ^FN slot at print time.',
-  unbound: 'Not bound',
-  createNew: '+ Create new variable…',
-  unbindAria: 'Unbind variable',
-  newNamePlaceholder: 'Name for new variable',
-  cancel: 'Cancel',
-  create: 'Create',
-  noSlotsLeft: 'All 99 ^FN slots are taken; remove an unused variable first.',
-  nameRequired: 'Name required.',
-  nameInUse: 'Name already in use.',
-  boundHint: 'Default editable in the Variables tab.',
-  emptyDefault: '(empty)',
-} as const;
+import { useT } from '../../lib/useT';
 
 const CREATE_NEW_SENTINEL = '__create_new__';
 
@@ -31,6 +13,8 @@ interface Props {
 }
 
 export function VariableBindingControl({ obj }: Props) {
+  const t = useT();
+  const tv = t.variables;
   const variables = useLabelStore((s) => s.variables);
   const updateObject = useLabelStore((s) => s.updateObject);
   const addVariable = useLabelStore((s) => s.addVariable);
@@ -67,7 +51,7 @@ export function VariableBindingControl({ obj }: Props) {
   const commitCreate = () => {
     const trimmed = newName.trim();
     if (trimmed === '') {
-      setError(COPY.nameRequired);
+      setError(tv.nameRequired);
       return;
     }
     // Seed the new variable's default with whatever literal content the
@@ -84,8 +68,8 @@ export function VariableBindingControl({ obj }: Props) {
       // which to fix.
       setError(
         variables.some((v) => v.name === trimmed)
-          ? COPY.nameInUse
-          : COPY.noSlotsLeft,
+          ? tv.nameInUse
+          : tv.noSlotsLeft,
       );
       return;
     }
@@ -103,14 +87,14 @@ export function VariableBindingControl({ obj }: Props) {
 
   return (
     <div className="flex flex-col gap-1">
-      <FieldLabel text={COPY.label} help={COPY.help} />
+      <FieldLabel text={tv.sectionTitle} help={tv.bindingHelp} />
 
       {creating ? (
         <div className="flex flex-col gap-1">
           <input
             autoFocus
             className={inputCls}
-            placeholder={COPY.newNamePlaceholder}
+            placeholder={tv.newNamePlaceholder}
             value={newName}
             onChange={(e) => {
               setNewName(e.target.value);
@@ -126,13 +110,13 @@ export function VariableBindingControl({ obj }: Props) {
               onClick={commitCreate}
               className="px-2 py-1 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 transition-opacity"
             >
-              {COPY.create}
+              {tv.create}
             </button>
             <button
               onClick={cancelCreate}
               className="px-2 py-1 rounded text-xs font-mono text-muted hover:text-text transition-colors"
             >
-              {COPY.cancel}
+              {tv.cancel}
             </button>
           </div>
         </div>
@@ -143,19 +127,19 @@ export function VariableBindingControl({ obj }: Props) {
             value={boundVariable?.id ?? ''}
             onChange={handleSelect}
           >
-            <option value="">{COPY.unbound}</option>
-            {variables.map((v) => (
-              <option key={v.id} value={v.id}>
-                {formatVariableOption(v.name, v.defaultValue)}
+            <option value="">{tv.notBound}</option>
+            {variables.map((entry) => (
+              <option key={entry.id} value={entry.id}>
+                {formatVariableOption(entry.name, entry.defaultValue, tv.emptyDefault)}
               </option>
             ))}
-            <option value={CREATE_NEW_SENTINEL}>{COPY.createNew}</option>
+            <option value={CREATE_NEW_SENTINEL}>{tv.createNew}</option>
           </select>
           {boundVariable && (
             <button
               onClick={() => updateObject(obj.id, { variableId: undefined })}
-              aria-label={COPY.unbindAria}
-              title={COPY.unbindAria}
+              aria-label={tv.unbindAria}
+              title={tv.unbindAria}
               className="p-1 rounded text-muted hover:text-amber-400 hover:bg-surface-2 transition-colors"
             >
               <XMarkIcon className="w-3.5 h-3.5" />
@@ -172,10 +156,10 @@ export function VariableBindingControl({ obj }: Props) {
         <p className="font-mono text-[10px] text-muted leading-relaxed">
           <span className="text-text">
             {boundVariable.defaultValue === ''
-              ? COPY.emptyDefault
+              ? tv.emptyDefault
               : `"${boundVariable.defaultValue}"`}
           </span>{' '}
-          {COPY.boundHint}
+          {tv.boundHint}
         </p>
       )}
     </div>
@@ -183,12 +167,15 @@ export function VariableBindingControl({ obj }: Props) {
 }
 
 /** Render `{name} — "{default}"`, truncating long defaults so the
- *  <option> stays scannable in narrow dropdowns. Empty default is
- *  surfaced as `{name} — (empty)` rather than a trailing em-dash so
- *  users see the state explicitly. */
+ *  <option> stays scannable in narrow dropdowns. Empty default uses
+ *  the locale's `emptyDefault` label so users see the state explicitly. */
 const OPTION_DEFAULT_MAX = 24;
-function formatVariableOption(name: string, defaultValue: string): string {
-  if (defaultValue === '') return `${name} — (empty)`;
+function formatVariableOption(
+  name: string,
+  defaultValue: string,
+  emptyLabel: string,
+): string {
+  if (defaultValue === '') return `${name} — ${emptyLabel}`;
   const truncated =
     defaultValue.length > OPTION_DEFAULT_MAX
       ? `${defaultValue.slice(0, OPTION_DEFAULT_MAX)}…`

@@ -220,8 +220,7 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
           <>
             <CollapsibleSection
               id={obj.variableId ? 'properties-variable-bound' : 'properties-variable-unbound'}
-              // i18n: extracted in the end-of-branch locale sweep.
-              title="Variable"
+              title={t.variables.sectionTitle}
               defaultOpen={!!obj.variableId}
             >
               <VariableBindingControl obj={obj} />

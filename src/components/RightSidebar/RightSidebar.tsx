@@ -34,8 +34,7 @@ export function RightSidebar({ canvasRef }: Props) {
   const tabs: TabDef[] = [
     { id: 'properties', label: t.layers.propertiesTab, Icon: AdjustmentsHorizontalIcon },
     { id: 'layers', label: t.layers.layersTab, Icon: RectangleStackIcon },
-    // i18n: variables tab label gets a locale key in Phase 1 step 3d.
-    { id: 'variables', label: 'Variables', Icon: VariableIcon },
+    { id: 'variables', label: t.layers.variablesTab, Icon: VariableIcon },
     { id: 'fonts', label: t.layers.fontsTab, Icon: AaIcon },
   ];
 
