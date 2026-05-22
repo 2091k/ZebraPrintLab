@@ -19,6 +19,8 @@ const COPY = {
   noSlotsLeft: 'All 99 ^FN slots are taken; remove an unused variable first.',
   nameRequired: 'Name required.',
   nameInUse: 'Name already in use.',
+  boundHint: 'Default editable in the Variables tab.',
+  emptyDefault: '(empty)',
 } as const;
 
 const CREATE_NEW_SENTINEL = '__create_new__';
@@ -69,13 +71,11 @@ export function VariableBindingControl({ obj }: Props) {
     }
     // Seed the new variable's default with whatever literal content the
     // field is currently carrying — preserves the canvas state across
-    // the binding transition. For barcodes/qr the prop key isn't
-    // 'content' for every type, but every bindable type's first ^FD
-    // emission comes from `props.content` (see registry implementations).
+    // the binding transition. Every bindable type's first ^FD emission
+    // comes from `props.content` (see registry implementations).
+    const props = (obj as { props?: { content?: unknown } }).props;
     const defaultValue =
-      typeof (obj as { props?: { content?: unknown } }).props?.content === 'string'
-        ? ((obj as { props: { content: string } }).props.content)
-        : '';
+      typeof props?.content === 'string' ? props.content : '';
     const id = addVariable({ name: trimmed, defaultValue });
     if (id === null) {
       // Two reasons addVariable returns null: name collision or no free
@@ -171,6 +171,17 @@ export function VariableBindingControl({ obj }: Props) {
 
       {error && (
         <p className="font-mono text-[10px] text-amber-400">{error}</p>
+      )}
+
+      {boundVariable && !creating && (
+        <p className="font-mono text-[10px] text-muted leading-relaxed">
+          <span className="text-text">
+            {boundVariable.defaultValue === ''
+              ? COPY.emptyDefault
+              : `"${boundVariable.defaultValue}"`}
+          </span>{' '}
+          {COPY.boundHint}
+        </p>
       )}
     </div>
   );
