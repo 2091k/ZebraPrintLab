@@ -27,6 +27,19 @@ import {
   type Variable,
   type VariableInput,
 } from '../types/Variable';
+import type { CsvParseResult } from '../lib/csvImport';
+
+/** Snapshot of an imported CSV plus the row the canvas is currently
+ *  previewing. Distinct from the Variable→header mapping (which lives
+ *  in the design file): this struct is the data itself, transient. */
+export interface CsvDataset {
+  headers: string[];
+  rows: string[][];
+  source: CsvParseResult['source'];
+  /** Index into `rows`. Clamped to [0, rows.length - 1] by setters.
+   *  Meaningless when `rows.length === 0`, callers should guard. */
+  activeRowIndex: number;
+}
 
 export type { ObjectChanges };
 export type { Variable, VariableInput };
@@ -156,6 +169,16 @@ interface LabelState {
    *  Order is user-controlled and surfaces in the Variables panel. */
   variables: Variable[];
 
+  /** Session-only CSV data feeding the template variables. Holds the
+   *  most-recently-imported file's headers + rows plus the
+   *  active-row index the canvas previews. Intentionally NOT in
+   *  persist-partialize: the file path can't be reopened on rehydrate,
+   *  and persisting raw rows would bloat localStorage and leak
+   *  customer data into the design file. User re-imports per session.
+   *  Mapping (which variable maps to which header) lives in the
+   *  design file separately. */
+  csvDataset: CsvDataset | null;
+
   addObject: (
     type: string,
     position?: { x: number; y: number },
@@ -215,6 +238,17 @@ interface LabelState {
    *  every page. The field's own content prop (kept since binding) takes
    *  over on render/export. */
   removeVariable: (id: string) => void;
+
+  /** Replace the entire CSV dataset and reset the active row to 0. */
+  loadCsv: (result: CsvParseResult) => void;
+  /** Drop the current CSV dataset. Phase-2b: also unbinds the design's
+   *  csvMapping headerSnapshot since it would point at a file the user
+   *  is no longer working with. */
+  clearCsv: () => void;
+  /** Move the canvas preview to a different row. Out-of-range indices
+   *  are silently clamped to [0, rows.length - 1]; no-op when no CSV
+   *  is loaded. */
+  setActiveRow: (index: number) => void;
   moveObjectForward: (id: string) => void;
   moveObjectBackward: (id: string) => void;
   moveObjectToFront: (id: string) => void;
@@ -438,6 +472,7 @@ export const useLabelStore = create<LabelState>()(
       clipboard: [],
       pasteCount: 0,
       variables: [],
+      csvDataset: null,
       locale: detectLocale(),
       theme: detectInitialTheme(),
       thirdParty: thirdPartyDefaults(),
@@ -1011,6 +1046,27 @@ export const useLabelStore = create<LabelState>()(
             variables: state.variables.filter((v) => v.id !== id),
             ...(pagesChanged ? { pages: nextPages } : {}),
           };
+        }),
+
+      loadCsv: (result) =>
+        set(() => ({
+          csvDataset: {
+            headers: result.headers,
+            rows: result.rows,
+            source: result.source,
+            activeRowIndex: 0,
+          },
+        })),
+
+      clearCsv: () => set({ csvDataset: null }),
+
+      setActiveRow: (index) =>
+        set((state) => {
+          const ds = state.csvDataset;
+          if (!ds || ds.rows.length === 0) return {};
+          const clamped = Math.max(0, Math.min(index, ds.rows.length - 1));
+          if (clamped === ds.activeRowIndex) return {};
+          return { csvDataset: { ...ds, activeRowIndex: clamped } };
         }),
 
       enterPreviewMode: async () => {

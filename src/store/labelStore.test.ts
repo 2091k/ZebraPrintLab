@@ -40,6 +40,7 @@ function reset() {
     clipboard: [],
     pasteCount: 0,
     variables: [],
+    csvDataset: null,
     previewMode: { status: 'idle' },
     canvasSettings: {
       showGrid: false,
@@ -1297,5 +1298,68 @@ describe('variables', () => {
     state().addVariable({ name: 'a' });
     state().loadDesign({ widthMm: 50, heightMm: 30, dpmm: 8 }, [{ objects: [] }]);
     expect(state().variables).toEqual([]);
+  });
+});
+
+describe('csvDataset', () => {
+  beforeEach(reset);
+
+  const sampleResult = {
+    headers: ['sku', 'qty'],
+    rows: [['A1', '10'], ['B2', '5'], ['C3', '7']],
+    source: {
+      filename: 'test.csv',
+      importedAt: '2026-05-23T00:00:00.000Z',
+      encoding: 'utf-8',
+      delimiter: ',',
+      rowCount: 3,
+    },
+  };
+
+  it('loadCsv stores headers, rows, source and resets activeRowIndex to 0', () => {
+    state().loadCsv(sampleResult);
+    const ds = state().csvDataset;
+    expect(ds?.headers).toEqual(['sku', 'qty']);
+    expect(ds?.rows).toHaveLength(3);
+    expect(ds?.source.filename).toBe('test.csv');
+    expect(ds?.activeRowIndex).toBe(0);
+  });
+
+  it('clearCsv drops the dataset', () => {
+    state().loadCsv(sampleResult);
+    state().clearCsv();
+    expect(state().csvDataset).toBeNull();
+  });
+
+  it('setActiveRow updates within bounds', () => {
+    state().loadCsv(sampleResult);
+    state().setActiveRow(2);
+    expect(state().csvDataset?.activeRowIndex).toBe(2);
+  });
+
+  it('setActiveRow clamps below 0 and above rows.length - 1', () => {
+    state().loadCsv(sampleResult);
+    state().setActiveRow(-5);
+    expect(state().csvDataset?.activeRowIndex).toBe(0);
+    state().setActiveRow(99);
+    expect(state().csvDataset?.activeRowIndex).toBe(2);
+  });
+
+  it('setActiveRow is a no-op when no CSV is loaded', () => {
+    state().setActiveRow(5);
+    expect(state().csvDataset).toBeNull();
+  });
+
+  it('loadCsv with subsequent loadCsv replaces dataset and resets activeRowIndex', () => {
+    state().loadCsv(sampleResult);
+    state().setActiveRow(2);
+    state().loadCsv({
+      ...sampleResult,
+      rows: [['X', '1']],
+      source: { ...sampleResult.source, rowCount: 1, filename: 'other.csv' },
+    });
+    expect(state().csvDataset?.source.filename).toBe('other.csv');
+    expect(state().csvDataset?.activeRowIndex).toBe(0);
+    expect(state().csvDataset?.rows).toHaveLength(1);
   });
 });

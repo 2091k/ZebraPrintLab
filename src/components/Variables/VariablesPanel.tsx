@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from 'react';
-import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid';
+import { PlusIcon, TrashIcon, XMarkIcon } from '@heroicons/react/16/solid';
 import { useLabelStore } from '../../store/labelStore';
 import {
   FN_NUMBER_MIN,
@@ -22,6 +22,8 @@ export function VariablesPanel() {
   const addVariable = useLabelStore((s) => s.addVariable);
   const updateVariable = useLabelStore((s) => s.updateVariable);
   const removeVariable = useLabelStore((s) => s.removeVariable);
+  const csvDataset = useLabelStore((s) => s.csvDataset);
+  const clearCsv = useLabelStore((s) => s.clearCsv);
 
   const [pendingDelete, setPendingDelete] = useState<Variable | null>(null);
 
@@ -81,6 +83,24 @@ export function VariablesPanel() {
       <p className="font-mono text-[10px] text-muted leading-relaxed">
         {tv.panelHint}
       </p>
+
+      {csvDataset && (
+        <div className="flex items-center gap-2 px-2 py-1.5 rounded border border-border bg-surface-2 font-mono text-[10px] text-text">
+          {/* i18n: Phase-2 strings here get locale keys at end-of-branch sweep. */}
+          <span className="text-accent">CSV:</span>
+          <span className="truncate flex-1">
+            {csvDataset.source.filename} ({csvDataset.source.rowCount} rows)
+          </span>
+          <button
+            onClick={clearCsv}
+            className="text-muted hover:text-amber-400 transition-colors"
+            aria-label="Clear CSV data"
+            title="Clear CSV data"
+          >
+            <XMarkIcon className="w-3 h-3" />
+          </button>
+        </div>
+      )}
 
       {variables.length === 0 ? (
         <div className="flex flex-col gap-2">

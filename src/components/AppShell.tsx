@@ -22,6 +22,7 @@ import {
   DocumentDuplicateIcon,
   FolderOpenIcon,
   DocumentArrowDownIcon,
+  TableCellsIcon,
   PrinterIcon,
   PaperAirplaneIcon,
   GlobeAltIcon,
@@ -38,6 +39,7 @@ import { useT } from "../lib/useT";
 import { kbd } from "../lib/kbd";
 import { useGlobalShortcuts } from "../hooks/useGlobalShortcuts";
 import { useDesignFileActions } from "../hooks/useDesignFileActions";
+import { useCsvImportActions } from "../hooks/useCsvImportActions";
 import { useZplImportExport } from "../hooks/useZplImportExport";
 import { useOutputPanel, OUTPUT_DEFAULT_H } from "../hooks/useOutputPanel";
 
@@ -75,6 +77,7 @@ export function AppShell() {
 
   useGlobalShortcuts();
   const { handleNew, handleSave, handleLoad, loadInputRef, loadError, dismissLoadError } = useDesignFileActions();
+  const { csvInputRef, handleCsvImport, csvError, dismissCsvError } = useCsvImportActions();
   const {
     showZplImport,
     openZplImport,
@@ -208,6 +211,13 @@ export function AppShell() {
             >
               {t.app.saveDesign}
             </DropdownItem>
+            <DropdownItem
+              icon={TableCellsIcon}
+              onClick={() => csvInputRef.current?.click()}
+            >
+              {/* i18n: locale key gets added in the end-of-branch sweep. */}
+              Import CSV data
+            </DropdownItem>
             <DropdownSeparator />
             {/* Print routes through Labelary. The button is shown whenever
                 the Labelary gate is on; clicking it before the notice has
@@ -237,13 +247,20 @@ export function AppShell() {
             className="hidden"
             onChange={handleLoad}
           />
+          <input
+            ref={csvInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleCsvImport}
+          />
         </div>
       </header>
 
       {/* Notices */}
-      {(loadError ?? printError) && (
+      {(loadError ?? printError ?? csvError) && (
         <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-red-950/40 border-b border-red-800/50 font-mono text-[10px] text-red-300">
-          <span className="flex-1">{loadError ?? printError}</span>
+          <span className="flex-1">{loadError ?? printError ?? csvError}</span>
           {printError && (
             <button
               onClick={handleDownload}
@@ -254,7 +271,7 @@ export function AppShell() {
             </button>
           )}
           <button
-            onClick={loadError ? dismissLoadError : dismissPrintError}
+            onClick={loadError ? dismissLoadError : csvError ? dismissCsvError : dismissPrintError}
             className="text-red-400 hover:text-red-200 transition-colors"
             aria-label="Dismiss"
           >
