@@ -9,6 +9,7 @@ import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 import {
   buildBwipOptions,
   getDisplaySize,
+  getRotatedTextAnchor,
   eanCheckDigit,
   upceCheckDigit,
   get1DBwipScale,
@@ -21,6 +22,7 @@ import {
   QR_FO_Y_OFFSET_DOTS,
   QR_FT_MODULE_OFFSET,
   LOGMARS_TEXT_ABOVE_GAP_DOTS,
+  UPC_SUPP_TEXT_ABOVE_GAP_DOTS,
   EAN_UPC_TYPES,
 } from "./bwipConstants";
 
@@ -171,17 +173,10 @@ export function BarcodeObject({
     // Bitmap is drawn at the bar sub-rectangle of the bbox so the bars
     // render at their true height. The text-zone padding (which side
     // depends on rotation) stays empty inside the bbox.
-    // ^BS supplements: bwip-js draws the digits INSIDE the bitmap
-    // (textyalign:'above'), so the bitmap already spans the full bbox
-    // including the text zone. Drawing it into the bar sub-rect would
-    // squash both the bars and the text into the bar-height. Render the
-    // bitmap at full bbox extents instead; the Group is still anchored
-    // at bbox top-left via dim.barTopPx, so bars land at the FO row.
-    const fillFullBbox = obj.type === "upcEanExtension";
-    const bw = fillFullBbox ? Math.max(dim.w, 1) : Math.max(dim.barW, 1);
-    const bh = fillFullBbox ? Math.max(dim.h, 1) : Math.max(dim.barH, 1);
-    const btX = fillFullBbox ? 0 : dim.barLeftPx;
-    const btY = fillFullBbox ? 0 : dim.barTopPx;
+    const bw = Math.max(dim.barW, 1);
+    const bh = Math.max(dim.barH, 1);
+    const btX = dim.barLeftPx;
+    const btY = dim.barTopPx;
     // Konva crop prop is undefined when no cropping is needed; passing it
     // selectively skips bwip's internal padding (e.g. GS1 DataBar's
     // paddingheight rows) so bars fill the bbox at firmware-correct height.
@@ -242,7 +237,7 @@ export function BarcodeObject({
             width={ldW}
             text={allDigits[0]}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -255,7 +250,7 @@ export function BarcodeObject({
             width={halfW13}
             text={allDigits.slice(1, 7)}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -268,7 +263,7 @@ export function BarcodeObject({
             width={halfW13}
             text={allDigits.slice(7, 13)}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -293,7 +288,7 @@ export function BarcodeObject({
             width={halfW8}
             text={allDigits.slice(0, 4)}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -306,7 +301,7 @@ export function BarcodeObject({
             width={halfW8}
             text={allDigits.slice(4, 8)}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -334,7 +329,7 @@ export function BarcodeObject({
             width={ldW}
             text={allDigits[0]}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -348,7 +343,7 @@ export function BarcodeObject({
             width={halfUpca}
             text={allDigits.slice(1, 6)}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -362,7 +357,7 @@ export function BarcodeObject({
             width={halfUpca}
             text={allDigits.slice(6, 11)}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -390,7 +385,7 @@ export function BarcodeObject({
             width={ldW}
             text="0"
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -403,7 +398,7 @@ export function BarcodeObject({
             width={midW}
             text={digits6}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -416,7 +411,7 @@ export function BarcodeObject({
             width={ldW}
             text={checkDigit}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="left"
             wrap="none"
             fill="#000000"
@@ -458,14 +453,10 @@ export function BarcodeObject({
       );
     }
 
-    // ── Other 1D: separate Konva Text below bars ──────────────────────────
-    // upcEanExtension lets bwip-js render the HRI digits above the bars
-    // (via textyalign:'above'), so there's no Konva text overlay; the
-    // default render path below covers the bitmap placement.
+    // ── Other 1D: separate Konva Text below (or above) the bars ──────────
     const showText =
       BARCODE_1D_TYPES.has(obj.type) &&
-      printInterp &&
-      obj.type !== "upcEanExtension";
+      printInterp;
     // Rotated 1D: text overlay rotated to match the barcode orientation.
     const showRotatedText =
       !isUpright &&
@@ -473,7 +464,12 @@ export function BarcodeObject({
       BARCODE_1D_TYPES.has(obj.type);
 
     let displayText = rawContent;
-    if (obj.type === "code39") {
+    if (obj.type === "upcEanExtension") {
+      // ^BS supplements show the data as a single 2- or 5-digit string,
+      // padded to whichever variant bwip ended up rendering.
+      const t = rawContent.replace(/\D/g, "");
+      displayText = (t.length === 2 ? t : t.slice(0, 5).padEnd(5, "0"));
+    } else if (obj.type === "code39") {
       displayText = `*${rawContent}*`;
     } else if (obj.type === "logmars") {
       const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%";
@@ -489,15 +485,26 @@ export function BarcodeObject({
       // LOGMARS renders the human-readable line above the bars (per spec).
       // ^FO Y refers to the bar top, so text is drawn at negative y to extend
       // above the group origin into the visual zone above the bars.
-      const isTextAbove = obj.type === "logmars";
-      const aboveGap = isTextAbove
-        ? Math.max(dotsToPx(LOGMARS_TEXT_ABOVE_GAP_DOTS, scale, dpmm), 3)
-        : textGap;
+      const isTextAbove = obj.type === "logmars" || obj.type === "upcEanExtension";
+      // Per-type above-bars gap. logmars spec leaves a noticeable air
+      // gap (10 dots); ^BS sits very tight to the bars (~2 dots,
+      // matching Labelary). Below-bars uses the universal textGap.
+      const aboveGap =
+        obj.type === "logmars"
+          ? Math.max(dotsToPx(LOGMARS_TEXT_ABOVE_GAP_DOTS, scale, dpmm), 3)
+          : obj.type === "upcEanExtension"
+            ? Math.max(dotsToPx(UPC_SUPP_TEXT_ABOVE_GAP_DOTS, scale, dpmm), 1)
+            : textGap;
       // Local y for the HRI text. The /sy form keeps a constant *visual* offset
       // when the group is being scaled (sy = 1 at rest, ≠ 1 during a drag).
+      // Anchor against the BAR top (btY) for text-above, not the group
+      // origin: when the firmware reserves a text zone above the bars
+      // (logmars: 20 dots, ^BS f=Y: 18 dots) the group origin sits
+      // text-zone above the bar top, and ignoring btY pushes the text
+      // a full text-zone above where it should sit.
       const textLocalY = (sy: number) =>
         isTextAbove
-          ? -(textFontSize + aboveGap) / sy
+          ? btY - (textFontSize + aboveGap) / sy
           : Math.max(bh, 1) + textGap / sy;
       const txtY = textLocalY(1);
 
@@ -563,7 +570,7 @@ export function BarcodeObject({
             width={Math.max(w, 1)}
             text={displayText}
             fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center"
             wrap="none"
             fill="#000000"
@@ -583,12 +590,29 @@ export function BarcodeObject({
       // Text "side" for 90°/270°: standard 1D text is below bars in upright,
       //   so after 90°CW it's on the LEFT; after 270°CW on the RIGHT.
       //   LOGMARS is mirrored (text above in upright → right for 90°, left for 270°).
-      const isTextAbove = obj.type === "logmars";
-      // x-anchor for R/B (shared by all text nodes for a given rotation)
-      const sideX =
-        rotation === "R"
-          ? isTextAbove ? w + textGap + textFontSize : -textGap
-          : isTextAbove ? -(textGap + textFontSize) : w + textGap;
+      const isTextAbove = obj.type === "logmars" || obj.type === "upcEanExtension";
+      // Match the upright gap so rotated and N stay visually consistent
+      // per type: logmars wide (10 dots), ^BS very tight (2 dots),
+      // everything else uses textGap.
+      const rotGap =
+        obj.type === "logmars"
+          ? Math.max(dotsToPx(LOGMARS_TEXT_ABOVE_GAP_DOTS, scale, dpmm), 3)
+          : obj.type === "upcEanExtension"
+            ? Math.max(dotsToPx(UPC_SUPP_TEXT_ABOVE_GAP_DOTS, scale, dpmm), 1)
+            : textGap;
+      // x/y anchor for the rotated text. Helper anchors against the bar
+      // sub-rectangle, not the bbox edge — without that the firmware
+      // text-zone (EAN/UPC: 13 dots, logmars: 20 dots) is added to the
+      // gap and the text drifts that many dots away from the bars.
+      // sideX is the R/B x-anchor (and the I tx for sysNode/trailNode);
+      // topY is the I y-anchor (replaces -textGap for I).
+      const { sideX, topY } = getRotatedTextAnchor(
+        rotation,
+        isTextAbove,
+        dim,
+        rotGap,
+        textFontSize,
+      );
       const tRot = rotation === "R" ? 90 : rotation === "I" ? 180 : -90;
 
       // ── EAN/UPC: reproduce upright digit layout along the rotated axis ──
@@ -605,6 +629,7 @@ export function BarcodeObject({
         const tStyle = {
           fontSize: textFontSize,
           fontFamily: "'Courier New', monospace" as const,
+          fontStyle: "bold" as const,
           wrap: "none" as const,
           fill: "#000000",
           listening: false,
@@ -616,7 +641,7 @@ export function BarcodeObject({
         // For I: encPos → screen-x leftward from right (start=right), anchor-x = w - encPos.
         const node = (key: string, encPos: number, size: number, text: string) => {
           const tx = rotation === "I" ? w - encPos : sideX;
-          const ty = rotation === "R" ? encPos : rotation === "B" ? h - encPos : -textGap;
+          const ty = rotation === "R" ? encPos : rotation === "B" ? h - encPos : topY;
           return <Text key={key} x={tx} y={ty} rotation={tRot} width={Math.max(size, 1)} text={text} align="center" {...tStyle} />;
         };
 
@@ -624,7 +649,7 @@ export function BarcodeObject({
         const sysNode = (key: string, text: string) => {
           // R: above top (y=-ldW); B: below bottom (y=h+ldW); I: right of barcode (x=w+ldW).
           const tx = rotation === "I" ? w + ldW : sideX;
-          const ty = rotation === "R" ? -ldW : rotation === "B" ? h + ldW : -textGap;
+          const ty = rotation === "R" ? -ldW : rotation === "B" ? h + ldW : topY;
           return <Text key={key} x={tx} y={ty} rotation={tRot} width={Math.max(ldW, 1)} text={text} align="center" {...tStyle} />;
         };
 
@@ -632,7 +657,7 @@ export function BarcodeObject({
         const trailNode = (key: string, text: string) => {
           // R: below bottom (y≈encDisplay); B: above top (y≈h-encDisplay); I: left of x=0.
           const tx = rotation === "I" ? -ldW : sideX;
-          const ty = rotation === "R" ? encDisplay : rotation === "B" ? h - encDisplay : -textGap;
+          const ty = rotation === "R" ? encDisplay : rotation === "B" ? h - encDisplay : topY;
           return <Text key={key} x={tx} y={ty} rotation={tRot} width={Math.max(ldW, 1)} text={text} align="left" {...tStyle} />;
         };
 
@@ -677,9 +702,7 @@ export function BarcodeObject({
         if (rotation === "R") {
           txtX = sideX; txtY = 0; txtWidth = h;
         } else if (rotation === "I") {
-          txtX = w;
-          txtY = isTextAbove ? bh + textGap + textFontSize : -textGap;
-          txtWidth = w;
+          txtX = w; txtY = topY; txtWidth = w;
         } else {
           txtX = sideX; txtY = h; txtWidth = h;
         }
@@ -688,7 +711,7 @@ export function BarcodeObject({
           <Text
             x={txtX} y={txtY} rotation={tRot} width={Math.max(txtWidth, 1)}
             text={displayText} fontSize={textFontSize}
-            fontFamily="'Courier New', monospace"
+            fontFamily="'Courier New', monospace" fontStyle="bold"
             align="center" wrap="none" fill="#000000" listening={false}
           />
         );

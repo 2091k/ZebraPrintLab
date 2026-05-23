@@ -16,6 +16,11 @@ export const UPC_SUPP_TEXT_ZONE_DOTS = 18;
 // wider than the standard textGap used for text below other 1D barcodes.
 export const LOGMARS_TEXT_ABOVE_GAP_DOTS = 10;
 
+// ^BS UPC/EAN supplement: text sits tight against the bars in Labelary,
+// noticeably tighter than logmars and even slightly tighter than the
+// standard 5-dot textGap. Empirically ~2 dots.
+export const UPC_SUPP_TEXT_ABOVE_GAP_DOTS = 2;
+
 // Total LOGMARS text-zone reserved by firmware (regardless of printInterpretation):
 // glyph height + LOGMARS_TEXT_ABOVE_GAP_DOTS. Empirically 20 dots — used as part
 // of the ZPL-correct bbox so selection-handles match the printed footprint.
