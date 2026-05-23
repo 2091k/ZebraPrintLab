@@ -32,6 +32,7 @@ import {
   LOGMARS_TEXT_ZONE_DOTS,
   MICROPDF417_QUIET_ZONE_ROWS,
   PLESSEY_BWIP_TO_ZEBRA_WIDTH_RATIO,
+  UPC_SUPP_TEXT_ZONE_DOTS,
 } from "./bwipConstants";
 
 /**
@@ -93,6 +94,9 @@ const BCID: Partial<Record<LabelObject["type"], string>> = {
   aztec: "azteccodecompact",
   micropdf417: "micropdf417",
   codablock: "codablockf",
+  // Placeholder — actual bcid (ean2 vs ean5) is resolved from the
+  // content length in the per-type switch in buildBwipOptions.
+  upcEanExtension: "ean5",
 };
 
 export const BWIP_SCALE = 2;
@@ -325,6 +329,33 @@ export function buildBwipOptions(
         text = p.content || "0";
       }
       opts = { bcid, text, scale, height: 10 };
+      break;
+    }
+    case "upcEanExtension": {
+      const p = obj.props;
+      const scale = bwipScale1D(p.moduleWidth, renderScale, renderDpmm);
+      // ZPL ^BS uses one command for both lengths; bwip splits the
+      // bcid. Anything that isn't a 2-digit supplement is rendered
+      // as the 5-digit variant — matches printer behaviour where
+      // the 5-digit form is the common case (ISBN price, magazine
+      // sequence) and bwip-js rejects other lengths outright.
+      // `textyalign: above` flips the human-readable line to sit
+      // above the bars, matching Zebra firmware (and Labelary) for
+      // UPC/EAN supplements — bwip-js's default puts it below.
+      const text = p.content || "00000";
+      const variantBcid = text.length === 2 ? "ean2" : "ean5";
+      opts = {
+        bcid: variantBcid,
+        text,
+        scale,
+        height: 10,
+        // bwip's ean2/ean5 default is bars-only. Zebra firmware
+        // prints the digits when ^BSf=Y and places them above the
+        // bars (unlike main EAN/UPC where they sit below). Forward
+        // the prop so f=N renders bars-only, matching Labelary.
+        includetext: p.printInterpretation,
+        textyalign: 'above',
+      };
       break;
     }
     case "code128": {
@@ -583,8 +614,19 @@ export function getDisplaySize(
 
   // Text-zone reservation in upright orientation, on the "below" side of
   // the bars per Labelary's bbox. Zero for symbologies without one.
-  const textZoneDots = TEXT_ZONE_DOTS_BY_TYPE[obj.type] ?? 0;
+  // ^BS supplements reserve the zone ABOVE the bars in upright (N);
+  // bookkeeping reuses the same px value but flips which side gets
+  // the offset.
+  // ^BS reserves the text zone only when printInterpretation=Y; with
+  // f=N the printer prints bars only and bbox = bar height. Other
+  // EAN/UPC reserve the 13-dot zone unconditionally (Zebra firmware
+  // ships a fixed text guard even when N).
+  const textZoneDots =
+    obj.type === "upcEanExtension"
+      ? obj.props.printInterpretation ? UPC_SUPP_TEXT_ZONE_DOTS : 0
+      : TEXT_ZONE_DOTS_BY_TYPE[obj.type] ?? 0;
   const textZonePx = dotsToPx(textZoneDots, scale, dpmm);
+  const isTextAbove = obj.type === "upcEanExtension";
 
   // Map the upright "below the bars" zone onto the rotated bbox: it travels
   // around the rectangle as the symbol rotates.
@@ -597,11 +639,23 @@ export function getDisplaySize(
   let barW = w;
   let barH = h;
   if (textZonePx > 0) {
-    switch (rotation) {
-      case "N": barH = h - textZonePx; break;
-      case "R": barLeftPx = textZonePx; barW = w - textZonePx; break;
-      case "I": barTopPx = textZonePx; barH = h - textZonePx; break;
-      case "B": barW = w - textZonePx; break;
+    // isTextAbove flips the upright zone from "below the bars" to "above
+    // the bars" (and the corresponding rotated edges) without duplicating
+    // the rotation table.
+    if (!isTextAbove) {
+      switch (rotation) {
+        case "N": barH = h - textZonePx; break;
+        case "R": barLeftPx = textZonePx; barW = w - textZonePx; break;
+        case "I": barTopPx = textZonePx; barH = h - textZonePx; break;
+        case "B": barW = w - textZonePx; break;
+      }
+    } else {
+      switch (rotation) {
+        case "N": barTopPx = textZonePx; barH = h - textZonePx; break;
+        case "R": barW = w - textZonePx; break;
+        case "I": barH = h - textZonePx; break;
+        case "B": barLeftPx = textZonePx; barW = w - textZonePx; break;
+      }
     }
   }
 
@@ -734,6 +788,21 @@ function getUprightDisplaySize(
       const extraPx = bwipSc === 1 ? 1 : 0;
       const w = ((cw - extraPx) / bwipSc) * modulePx;
       const h = dotsToPx(obj.props.height + EAN_TEXT_ZONE_DOTS, scale, dpmm);
+      return { w, h };
+    }
+    case "upcEanExtension": {
+      // ^BS prints the human-readable digits ABOVE the bars (unlike the
+      // main EAN/UPC text band below), and Zebra reserves a larger
+      // vertical zone for it only when printInterpretation=Y. With
+      // f=N the bbox collapses to bar height (no guard reservation,
+      // unlike main UPC/EAN which always reserves 13). Measured
+      // against Labelary at 80-bar height: Y → 98, N → 80.
+      const modulePx = dotsToPx(obj.props.moduleWidth, scale, dpmm);
+      const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
+      const extraPx = bwipSc === 1 ? 1 : 0;
+      const w = ((cw - extraPx) / bwipSc) * modulePx;
+      const zone = obj.props.printInterpretation ? UPC_SUPP_TEXT_ZONE_DOTS : 0;
+      const h = dotsToPx(obj.props.height + zone, scale, dpmm);
       return { w, h };
     }
     case "logmars": {

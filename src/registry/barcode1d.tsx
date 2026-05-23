@@ -4,7 +4,7 @@ import type { Translations } from '../locales';
 import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos, fdFieldFor } from './zplHelpers';
 import { commitBarcodeWidthHeightTransform } from './transformHelpers';
-import { filterContent, type ContentSpec } from './contentSpec';
+import { filterContent, hasValidLength, type ContentSpec } from './contentSpec';
 import { type ZplRotation } from './rotation';
 import { RotationSelect } from '../components/Properties/RotationSelect';
 import { NumberInput } from '../components/Properties/NumberInput';
@@ -113,6 +113,9 @@ export function createBarcode1D(config: Barcode1DConfig): ObjectTypeDefinition<B
               placeholder={loc.placeholder}
               onChange={(e) => onChange({ content: filterContent(e.target.value, config.contentSpec) })}
             />
+            {!hasValidLength(p.content, config.contentSpec) && loc.placeholder && (
+              <p className="font-mono text-[10px] text-amber-400">{loc.placeholder}</p>
+            )}
           </div>
 
           <NumberInput

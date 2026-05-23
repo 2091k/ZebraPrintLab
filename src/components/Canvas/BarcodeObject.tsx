@@ -171,10 +171,17 @@ export function BarcodeObject({
     // Bitmap is drawn at the bar sub-rectangle of the bbox so the bars
     // render at their true height. The text-zone padding (which side
     // depends on rotation) stays empty inside the bbox.
-    const bw = Math.max(dim.barW, 1);
-    const bh = Math.max(dim.barH, 1);
-    const btX = dim.barLeftPx;
-    const btY = dim.barTopPx;
+    // ^BS supplements: bwip-js draws the digits INSIDE the bitmap
+    // (textyalign:'above'), so the bitmap already spans the full bbox
+    // including the text zone. Drawing it into the bar sub-rect would
+    // squash both the bars and the text into the bar-height. Render the
+    // bitmap at full bbox extents instead; the Group is still anchored
+    // at bbox top-left via dim.barTopPx, so bars land at the FO row.
+    const fillFullBbox = obj.type === "upcEanExtension";
+    const bw = fillFullBbox ? Math.max(dim.w, 1) : Math.max(dim.barW, 1);
+    const bh = fillFullBbox ? Math.max(dim.h, 1) : Math.max(dim.barH, 1);
+    const btX = fillFullBbox ? 0 : dim.barLeftPx;
+    const btY = fillFullBbox ? 0 : dim.barTopPx;
     // Konva crop prop is undefined when no cropping is needed; passing it
     // selectively skips bwip's internal padding (e.g. GS1 DataBar's
     // paddingheight rows) so bars fill the bbox at firmware-correct height.
@@ -452,7 +459,13 @@ export function BarcodeObject({
     }
 
     // ── Other 1D: separate Konva Text below bars ──────────────────────────
-    const showText = BARCODE_1D_TYPES.has(obj.type) && printInterp;
+    // upcEanExtension lets bwip-js render the HRI digits above the bars
+    // (via textyalign:'above'), so there's no Konva text overlay; the
+    // default render path below covers the bitmap placement.
+    const showText =
+      BARCODE_1D_TYPES.has(obj.type) &&
+      printInterp &&
+      obj.type !== "upcEanExtension";
     // Rotated 1D: text overlay rotated to match the barcode orientation.
     const showRotatedText =
       !isUpright &&

@@ -5,6 +5,12 @@ export const QR_FT_MODULE_OFFSET = 3;
 // (even with printInterpretation=false). Verified at 8 and 12 dpmm: constant 13 dots.
 export const EAN_TEXT_ZONE_DOTS = 13;
 
+// ^BS UPC/EAN supplements print the digits ABOVE the bars (Zebra spec), with
+// a larger reserved zone than the main EAN/UPC text band. Measured against
+// Labelary for FO 50,50 ^BSN,80,Y: bbox top sits 18 dots above the FO anchor
+// (bbox height 98 = bar height 80 + 18).
+export const UPC_SUPP_TEXT_ZONE_DOTS = 18;
+
 // LOGMARS renders the human-readable line ABOVE the bars (per spec).
 // Empirically Labelary leaves ~10 dots between visible text bottom and bar top,
 // wider than the standard textGap used for text below other 1D barcodes.
