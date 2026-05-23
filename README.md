@@ -109,6 +109,12 @@ Both `.zpl` and `.json` round-trip cleanly. `.zpl` preserves all printable conte
 
 ---
 
+## Roadmap
+
+See [docs/zpl-roadmap.md](docs/zpl-roadmap.md) for ZPL II command coverage.
+
+---
+
 ## Limitations
 
 - The canvas is a design preview, not a pixel-perfect simulation. Shapes, spacing, and positions match the print; text approximates Zebra's built-in font to within a few dots, but exact letterforms and anti-aliasing differ. For a faithful render, use the **Preview** in the bottom-right panel (powered by Labelary).
