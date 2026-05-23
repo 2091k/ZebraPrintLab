@@ -3,6 +3,22 @@ import { fetchPreview } from "./labelary";
 import type { LabelConfig } from "../types/ObjectType";
 import type { LabelObject } from "../types/Group";
 import type { Variable } from "../types/Variable";
+import { applyBindingToTree, type ActiveCsvRow } from "./variableBinding";
+
+/** Generate the ZPL we hand to Labelary: row-substituted + flat
+ *  (no ^FN), so the rendered preview matches what would print for
+ *  the active CSV row (or the variable defaults when no row is
+ *  loaded). Shared by `printLabel` (new window with image) and
+ *  `enterPreviewMode` (canvas overlay) so the two stay in lockstep. */
+export function buildPreviewZpl(
+  label: LabelConfig,
+  objects: LabelObject[],
+  variables: readonly Variable[],
+  active: ActiveCsvRow | null,
+): string {
+  const substituted = applyBindingToTree(objects, variables, active);
+  return generateZPL(label, substituted, []);
+}
 
 export function buildLoadingHtml(): string {
   return `<html><head><style>
@@ -25,6 +41,7 @@ export async function printLabel(
   label: LabelConfig,
   objects: LabelObject[],
   variables: readonly Variable[] = [],
+  active: ActiveCsvRow | null = null,
 ): Promise<void> {
   // Open the window synchronously (inside the user-click call stack) so browsers
   // don't treat it as a popup. Fill it in once the Labelary preview arrives.
@@ -34,7 +51,7 @@ export async function printLabel(
   win.document.close();
 
   try {
-    const zpl = generateZPL(label, objects, variables);
+    const zpl = buildPreviewZpl(label, objects, variables, active);
     const url = await fetchPreview(zpl, label);
     win.document.open();
     win.document.write(buildPrintHtml(url));
