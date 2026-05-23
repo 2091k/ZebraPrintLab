@@ -118,7 +118,7 @@ See [docs/zpl-roadmap.md](docs/zpl-roadmap.md) for ZPL II command coverage.
 ## Limitations
 
 - The canvas is a design preview, not a pixel-perfect simulation. Shapes, spacing, and positions match the print; text approximates Zebra's built-in font to within a few dots, but exact letterforms and anti-aliasing differ. For a faithful render, use the **Preview** in the bottom-right panel (powered by Labelary).
-- Label preview requires a connection to `api.labelary.com`.
+- Label preview is rendered by Labelary. The default build calls `api.labelary.com`; self-hosters can point at a private endpoint or turn it off.
 - The Labelary preview doesn't render every ZPL feature. Some less common elements (e.g. Codablock F barcodes) may be missing or wrong in the preview even when the actual print is fine.
 - The Labelary preview shows only the current page; the printed/exported ZPL still contains every page.
 

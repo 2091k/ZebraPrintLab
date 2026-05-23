@@ -53,9 +53,9 @@ export const ZPL_COMMANDS: readonly ZplCommandInfo[] = [
   { cmd: 'FC', status: 'unsupported', description: 'Field clock — inserts date/time into field data' },
   { cmd: 'FE', status: 'unsupported', description: 'Field concatenation — appends data to the current field' },
   { cmd: 'FM', status: 'unsupported', description: 'Multiple field origin locations' },
-  { cmd: 'FN', status: 'unsupported', description: 'Field number — variable field placeholder for recall/merge' },
+  { cmd: 'FN', status: 'supported', description: 'Field number — variable field placeholder, lands in the Variables tab on import and emits as ^FN{slot} on export' },
   { cmd: 'FP', status: 'unsupported', description: 'Field parameter — sets character-by-character text direction' },
-  { cmd: 'FV', status: 'unsupported', description: 'Field variable — supplies data for a ^FN field at print time' },
+  { cmd: 'FV', status: 'supported', description: 'Field variable — supplies data for a ^FN field at print time; populates the bound Variable\'s default on import' },
 
   // ── Fonts & text ──────────────────────────────────────────────────────────
   { cmd: 'A0', status: 'supported', description: 'Scalable/bitmap font 0 — primary designer font' },
@@ -171,6 +171,13 @@ export const ZPL_COMMANDS: readonly ZplCommandInfo[] = [
     description: 'Download graphic to printer storage (~DG)',
     loss: 'Stores data on the physical printer; not relevant for canvas label design',
   },
+
+  // ── Templates & batch merge (round-trip on parse; emit as ^DFR/^XFR
+  // for CSV-driven batch printing) ──────────────────────────────────────────
+  { cmd: 'DF', status: 'supported', description: 'Download format — used as ^DFR:LBL.ZPL to store the design template once, recalled per CSV row during batch export' },
+  { cmd: 'XF', status: 'supported', description: 'Recall format — pulled per row in batch export, paired with ^FN overrides' },
+  { cmd: 'XG', status: 'supported', description: 'Recall graphic — used together with ~DY for printer-resident images' },
+  { cmd: 'DY', status: 'supported', description: 'Download object (~DY) — embeds custom fonts and graphics so the printer can resolve ^A aliases and ^XG recalls' },
 ] as const;
 
 /** O(1) lookup map: command code → info */

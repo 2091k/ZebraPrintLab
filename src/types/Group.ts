@@ -24,6 +24,14 @@ export type GroupObject = LabelObjectBase & {
  *  consumers — keeping it here breaks the registry ↔ types cycle. */
 export type LabelObject = LeafObject | GroupObject;
 
+/** One page of label objects. The store holds a list of these; consumers
+ *  that emit ZPL per-page (zplGenerator, design-file save) take the
+ *  `Page` shape directly so the lib layer doesn't have to depend on
+ *  the store. */
+export interface Page {
+  objects: LabelObject[];
+}
+
 export function isGroup(obj: LabelObject): obj is GroupObject {
   return obj.type === 'group';
 }

@@ -2,9 +2,8 @@ import { mmToDots } from './coordinates';
 import { ObjectRegistry } from '../registry';
 import { fdField, stripZplCommandChars } from '../registry/zplHelpers';
 import type { CustomFontMapping, LabelConfig } from '../types/ObjectType';
-import type { Page } from '../store/labelStore';
 import type { Variable } from '../types/Variable';
-import { isGroup, type LabelObject } from '../types/Group';
+import { isGroup, type LabelObject, type Page } from '../types/Group';
 import { getFontBytes } from './fontCache';
 import type { ImageProps } from '../registry/image';
 import { formatStoragePath } from './storagePath';
@@ -91,30 +90,23 @@ export function generateMultiPageZPL(
   return pages.map((p) => generateZPL(label, p.objects, variables)).join('\n');
 }
 
+/** Drive + filename used to stash the batch template on the printer.
+ *  R: is RAM (volatile, dropped on power cycle), which matches a
+ *  single-run batch scope. 8.3 filename avoids stomping on
+ *  user-managed stored forms. */
+const BATCH_TEMPLATE_PATH = 'R:LBL.ZPL';
+
 /**
  * Batch-print form for a single page-design driven by a CSV dataset.
- * Emits two parts:
- *
- *  1. The template once, wrapped in `^DFR:LBL.ZPL` so the printer
- *     stores it under R:LBL.ZPL. The body keeps its `^FN` slots,
- *     so the printer treats it as a reusable form file.
- *  2. One small `^XA^XFR:LBL.ZPL^FN…^FD…^FS…^XZ` block per CSV row
- *     that recalls the stored format and supplies per-row values
- *     via `^FN` overrides.
- *
- * This is the idiomatic ZPL data-merge pattern: the printer parses
- * the heavy template once and applies cheap field overrides per
- * label, so a 10k-row batch isn't 10k full copies of the design.
+ * Emits the template once (wrapped in `^DF{path}` so the printer
+ * stores it under `BATCH_TEMPLATE_PATH`) and then one small recall
+ * block per CSV row: `^XA^XF{path}^FN..^FD..^FS..^XZ`. This is the
+ * idiomatic ZPL data-merge pattern, so a 10k-row batch isn't 10k
+ * full copies of the design.
  *
  * Variables with no binding (or whose bound header is missing from
  * the current dataset) emit no override; the printer falls back to
- * the variable's `^FD` default that's baked into the stored template.
- *
- * The drive choice is R: (volatile RAM) so the stored format gets
- * dropped on printer power-cycle — a single print run is the
- * intended scope, not permanent provisioning. Filename `LBL.ZPL`
- * keeps the printer's 8.3 limit and avoids stomping on user
- * filenames that follow design conventions.
+ * the variable's `^FD` default baked into the stored template.
  */
 export function generateBatchZpl(
   label: LabelConfig,
@@ -132,7 +124,10 @@ export function generateBatchZpl(
   // darkness) emit before ^XA, and a start-anchored regex would silently
   // skip the inject — recall blocks below would then reference a form
   // file the printer never stored.
-  const templateStored = baseZpl.replace(/\^XA\n/, '^XA\n^DFR:LBL.ZPL\n');
+  const templateStored = baseZpl.replace(
+    /\^XA\r?\n/,
+    `^XA\n^DF${BATCH_TEMPLATE_PATH}\n`,
+  );
 
   // Pre-compute (variable.fnNumber, columnIdx) per mapped variable so
   // the per-row loop is a tight zip. Variables with no binding or whose
@@ -149,7 +144,7 @@ export function generateBatchZpl(
   }
 
   const recallBlocks = csvDataset.rows.map((row) => {
-    const lines: string[] = ['^XA', '^XFR:LBL.ZPL'];
+    const lines: string[] = ['^XA', `^XF${BATCH_TEMPLATE_PATH}`];
     for (const { fn, colIdx } of overrides) {
       const value = row[colIdx] ?? '';
       // Route through `fdField` so values containing `^`/`~` get the

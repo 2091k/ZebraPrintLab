@@ -137,7 +137,7 @@ export function useCsvImportActions() {
 function applyImport(p: ParsedImport, opts: { keepMapping: boolean }): void {
   const { loadCsv, setCsvMapping, openCsvMappingModal, csvMapping } =
     useLabelStore.getState();
-  rememberImport(p.file, p.bytes, p.text);
+  rememberImport(p.bytes, p.text);
   const effectiveMapping: CsvMapping | null = opts.keepMapping ? csvMapping : null;
   if (!opts.keepMapping) setCsvMapping(null);
   loadCsv(p.result);
