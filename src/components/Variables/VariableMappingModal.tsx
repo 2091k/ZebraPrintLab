@@ -240,17 +240,21 @@ export function VariableMappingModal({ onClose }: Props) {
   };
 
   const handleAddVariable = () => {
-    // Read latest draft inside the setter so rapid clicks (or future
-    // batched updaters) compute slot/name from the up-to-date list
-    // instead of a stale closure. Without this, two clicks in one
-    // React batch both pick `var_1` / fnNumber 1 and collide.
-    let failed = false;
+    // Eligibility check first against the current snapshot so the
+    // error message doesn't depend on closure mutation from inside
+    // setDraftVariables (StrictMode runs updaters twice, concurrent
+    // rendering may defer them). The updater itself re-checks against
+    // prev so chained adds compute slot/name from the up-to-date
+    // list and don't collide. Residual edge case: two clicks in one
+    // batch both pass the outer check, but only the first commits a
+    // new row; no error surfaces for the swallowed second.
+    if (nextFreeFnNumber(draftVariables.map((v) => v.fnNumber)) === null) {
+      setAddError(tv.noSlotsLeft);
+      return;
+    }
     setDraftVariables((prev) => {
       const fn = nextFreeFnNumber(prev.map((v) => v.fnNumber));
-      if (fn === null) {
-        failed = true;
-        return prev;
-      }
+      if (fn === null) return prev;
       const newVar: Variable = {
         id: crypto.randomUUID(),
         name: nextDefaultVariableName(prev),
@@ -259,7 +263,7 @@ export function VariableMappingModal({ onClose }: Props) {
       };
       return [...prev, newVar];
     });
-    setAddError(failed ? tv.noSlotsLeft : null);
+    setAddError(null);
   };
 
   const handleConfirm = () => {
