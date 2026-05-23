@@ -26,8 +26,9 @@ import {
   FN_NUMBER_MAX,
   type Variable,
   type VariableInput,
+  type CsvMapping,
 } from '../types/Variable';
-import type { CsvParseResult } from '../lib/csvImport';
+import { forgetImport, type CsvParseResult } from '../lib/csvImport';
 
 /** Snapshot of an imported CSV plus the row the canvas is currently
  *  previewing. Distinct from the Variable→header mapping (which lives
@@ -175,9 +176,16 @@ interface LabelState {
    *  persist-partialize: the file path can't be reopened on rehydrate,
    *  and persisting raw rows would bloat localStorage and leak
    *  customer data into the design file. User re-imports per session.
-   *  Mapping (which variable maps to which header) lives in the
-   *  design file separately. */
+   *  Mapping (which variable maps to which header) lives separately
+   *  in `csvMapping` and round-trips with the design. */
   csvDataset: CsvDataset | null;
+
+  /** Persistent mapping between Variables and CSV column names.
+   *  Lives in the design file (round-tripped via Save/Load) so a
+   *  user can re-import the same CSV structure later without
+   *  re-mapping. Null when no CSV has ever been imported into this
+   *  design. */
+  csvMapping: CsvMapping | null;
 
   addObject: (
     type: string,
@@ -222,7 +230,12 @@ interface LabelState {
   setThirdPartyEnabled: (service: 'labelary', enabled: boolean) => void;
   acknowledgeLabelaryNotice: () => void;
   setCanvasSettings: (settings: Partial<CanvasSettings>) => void;
-  loadDesign: (label: LabelConfig, pages: Page[], variables?: Variable[]) => void;
+  loadDesign: (
+    label: LabelConfig,
+    pages: Page[],
+    variables?: Variable[],
+    csvMapping?: CsvMapping | null,
+  ) => void;
   appendPages: (pages: Page[]) => void;
 
   /** Create a new variable. Returns the new id, or null when all 99
@@ -238,17 +251,35 @@ interface LabelState {
    *  every page. The field's own content prop (kept since binding) takes
    *  over on render/export. */
   removeVariable: (id: string) => void;
+  /** Bulk-replace the entire variables list. Used by the mapping
+   *  modal's Apply path so add-variable-inline can commit atomically
+   *  with the new mapping. No cleanup of bindings or fields: callers
+   *  are expected to only append (every existing id stays in the
+   *  array); removals still go through `removeVariable` for the
+   *  full strip-and-unbind dance. */
+  setVariables: (variables: Variable[]) => void;
 
   /** Replace the entire CSV dataset and reset the active row to 0. */
   loadCsv: (result: CsvParseResult) => void;
-  /** Drop the current CSV dataset. Phase-2b: also unbinds the design's
-   *  csvMapping headerSnapshot since it would point at a file the user
-   *  is no longer working with. */
+  /** Drop the current CSV dataset (session-only data). Does not touch
+   *  `csvMapping`; the mapping persists in the design so the next CSV
+   *  with the same headers reuses it silently. */
   clearCsv: () => void;
   /** Move the canvas preview to a different row. Out-of-range indices
    *  are silently clamped to [0, rows.length - 1]; no-op when no CSV
    *  is loaded. */
   setActiveRow: (index: number) => void;
+  /** Set or replace the CSV mapping on the current design. Passing
+   *  null clears the mapping (e.g. user picks "Reset mapping"). */
+  setCsvMapping: (mapping: CsvMapping | null) => void;
+
+  /** Whether the CSV mapping modal is currently open. Lives in the
+   *  store so the auto-open trigger (after import, on header
+   *  mismatch) and the manual-open trigger (button in Variables
+   *  panel) can share one flag without prop drilling. */
+  csvMappingModalOpen: boolean;
+  openCsvMappingModal: () => void;
+  closeCsvMappingModal: () => void;
   moveObjectForward: (id: string) => void;
   moveObjectBackward: (id: string) => void;
   moveObjectToFront: (id: string) => void;
@@ -473,6 +504,8 @@ export const useLabelStore = create<LabelState>()(
       pasteCount: 0,
       variables: [],
       csvDataset: null,
+      csvMapping: null,
+      csvMappingModalOpen: false,
       locale: detectLocale(),
       theme: detectInitialTheme(),
       thirdParty: thirdPartyDefaults(),
@@ -856,17 +889,21 @@ export const useLabelStore = create<LabelState>()(
           });
         }),
 
-      loadDesign: (label, pages, variables) =>
-        set((state) => {
-          if (selectPreviewLocksEditor(state)) return {};
-          return {
-            label,
-            pages: pages.length > 0 ? pages : [{ objects: [] }],
-            currentPageIndex: 0,
-            selectedIds: [],
-            variables: variables ?? [],
-          };
-        }),
+      loadDesign: (label, pages, variables, csvMapping) => {
+        if (selectPreviewLocksEditor(get())) return;
+        // Drop the prior design's CSV cache too: the raw text in the
+        // module cache belongs to that file, not the one being loaded.
+        forgetImport();
+        set({
+          label,
+          pages: pages.length > 0 ? pages : [{ objects: [] }],
+          currentPageIndex: 0,
+          selectedIds: [],
+          variables: variables ?? [],
+          csvMapping: csvMapping ?? null,
+          csvDataset: null,
+        });
+      },
 
       // Append-mode counterpart to loadDesign: keeps the current label
       // config (the user opted into the existing design's dimensions /
@@ -1031,6 +1068,28 @@ export const useLabelStore = create<LabelState>()(
           };
         }),
 
+      setVariables: (variables) =>
+        set((state) => {
+          if (selectPreviewLocksEditor(state)) return {};
+          // Mirror addVariable's validation. Bulk-replace bypasses
+          // per-entry guards so we re-check here; a stray duplicate
+          // would leave the Variables panel in an unfixable state
+          // (two rows with identical name or slot, neither
+          // editable to the other's value).
+          const names = new Set<string>();
+          const fns = new Set<number>();
+          for (const v of variables) {
+            const trimmed = v.name.trim();
+            if (trimmed === '') return {};
+            if (names.has(trimmed)) return {};
+            names.add(trimmed);
+            if (v.fnNumber < FN_NUMBER_MIN || v.fnNumber > FN_NUMBER_MAX) return {};
+            if (fns.has(v.fnNumber)) return {};
+            fns.add(v.fnNumber);
+          }
+          return { variables };
+        }),
+
       removeVariable: (id) =>
         set((state) => {
           if (selectPreviewLocksEditor(state)) return {};
@@ -1042,9 +1101,19 @@ export const useLabelStore = create<LabelState>()(
             pagesChanged = true;
             return { ...p, objects: stripped };
           });
+          // Mapping-cleanup: drop any csvMapping entry pointing at the
+          // deleted variable so the design file doesn't carry orphan
+          // references. Other entries stay intact.
+          let nextMapping = state.csvMapping;
+          if (state.csvMapping && id in state.csvMapping.bindings) {
+            const { [id]: _drop, ...rest } = state.csvMapping.bindings;
+            void _drop;
+            nextMapping = { ...state.csvMapping, bindings: rest };
+          }
           return {
             variables: state.variables.filter((v) => v.id !== id),
             ...(pagesChanged ? { pages: nextPages } : {}),
+            ...(nextMapping !== state.csvMapping ? { csvMapping: nextMapping } : {}),
           };
         }),
 
@@ -1058,7 +1127,10 @@ export const useLabelStore = create<LabelState>()(
           },
         })),
 
-      clearCsv: () => set({ csvDataset: null }),
+      clearCsv: () => {
+        forgetImport();
+        set({ csvDataset: null });
+      },
 
       setActiveRow: (index) =>
         set((state) => {
@@ -1068,6 +1140,11 @@ export const useLabelStore = create<LabelState>()(
           if (clamped === ds.activeRowIndex) return {};
           return { csvDataset: { ...ds, activeRowIndex: clamped } };
         }),
+
+      setCsvMapping: (mapping) => set({ csvMapping: mapping }),
+
+      openCsvMappingModal: () => set({ csvMappingModalOpen: true }),
+      closeCsvMappingModal: () => set({ csvMappingModalOpen: false }),
 
       enterPreviewMode: async () => {
         const state = get();
@@ -1137,6 +1214,7 @@ export const useLabelStore = create<LabelState>()(
         labelaryNoticeAcknowledged: state.labelaryNoticeAcknowledged,
         canvasSettings: state.canvasSettings,
         variables: state.variables,
+        csvMapping: state.csvMapping,
       }),
     }
     ),
@@ -1146,6 +1224,7 @@ export const useLabelStore = create<LabelState>()(
         pages: state.pages,
         currentPageIndex: state.currentPageIndex,
         variables: state.variables,
+        csvMapping: state.csvMapping,
       }),
     }
   )

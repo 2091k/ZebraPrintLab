@@ -204,5 +204,45 @@ describe('parseDesignFile', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.variables).toEqual([]);
+    expect(result.value.csvMapping).toBeNull();
+  });
+
+  it('roundtrips csvMapping when present', () => {
+    const mapping = {
+      bindings: { v1: 'SKU', v2: 'Quantity' },
+      headerSnapshot: ['SKU', 'Quantity', 'Notes'],
+    };
+    const json = serializeDesign(
+      { widthMm: 100, heightMm: 60, dpmm: 8 },
+      [{ objects: SAMPLE_OBJECTS }],
+      [],
+      mapping,
+    );
+    const result = parseDesignFile(json);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.csvMapping).toEqual(mapping);
+  });
+
+  it('omits csvMapping from JSON when null (back-compat)', () => {
+    const json = serializeDesign(
+      { widthMm: 100, heightMm: 60, dpmm: 8 },
+      [{ objects: SAMPLE_OBJECTS }],
+      [],
+      null,
+    );
+    const parsed = JSON.parse(json) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('csvMapping');
+  });
+
+  it('defaults to null csvMapping when JSON lacks the field', () => {
+    const json = serializeDesign(
+      { widthMm: 100, heightMm: 60, dpmm: 8 },
+      [{ objects: SAMPLE_OBJECTS }],
+    );
+    const result = parseDesignFile(json);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.csvMapping).toBeNull();
   });
 });

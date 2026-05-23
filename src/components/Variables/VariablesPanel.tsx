@@ -1,10 +1,17 @@
 import { useState, type ChangeEvent } from 'react';
-import { PlusIcon, TrashIcon, XMarkIcon } from '@heroicons/react/16/solid';
+import {
+  Cog6ToothIcon,
+  PlusIcon,
+  TableCellsIcon,
+  TrashIcon,
+  XMarkIcon,
+} from '@heroicons/react/16/solid';
 import { useLabelStore } from '../../store/labelStore';
 import {
   FN_NUMBER_MIN,
   FN_NUMBER_MAX,
   nextFreeFnNumber,
+  nextDefaultVariableName,
   type Variable,
 } from '../../types/Variable';
 import { walkObjects, type LabelObject } from '../../types/Group';
@@ -23,7 +30,19 @@ export function VariablesPanel() {
   const updateVariable = useLabelStore((s) => s.updateVariable);
   const removeVariable = useLabelStore((s) => s.removeVariable);
   const csvDataset = useLabelStore((s) => s.csvDataset);
+  const csvMapping = useLabelStore((s) => s.csvMapping);
   const clearCsv = useLabelStore((s) => s.clearCsv);
+  const openCsvMappingModal = useLabelStore((s) => s.openCsvMappingModal);
+  const [pendingCsvDiscard, setPendingCsvDiscard] = useState(false);
+
+  // Mapping completeness for the badge's secondary line. Counts only
+  // bindings whose header still exists in the active dataset, since
+  // stale entries (header dropped) don't actually map anything.
+  const mappedCount = (() => {
+    if (!csvMapping || !csvDataset) return 0;
+    const headerSet = new Set(csvDataset.headers);
+    return Object.values(csvMapping.bindings).filter((h) => headerSet.has(h)).length;
+  })();
 
   const [pendingDelete, setPendingDelete] = useState<Variable | null>(null);
 
@@ -41,7 +60,7 @@ export function VariablesPanel() {
     nextFreeFnNumber(variables.map((v) => v.fnNumber)) === null;
 
   const handleAdd = () => {
-    const base = nextDefaultName(variables);
+    const base = nextDefaultVariableName(variables);
     const id = addVariable({ name: base });
     if (id === null) {
       // Name collisions on a fresh `var_n` are essentially impossible
@@ -85,20 +104,36 @@ export function VariablesPanel() {
       </p>
 
       {csvDataset && (
-        <div className="flex items-center gap-2 px-2 py-1.5 rounded border border-border bg-surface-2 font-mono text-[10px] text-text">
+        <div className="flex flex-col gap-1 px-2 py-1.5 rounded border border-border bg-surface-2 font-mono text-[10px] text-text">
           {/* i18n: Phase-2 strings here get locale keys at end-of-branch sweep. */}
-          <span className="text-accent">CSV:</span>
-          <span className="truncate flex-1">
-            {csvDataset.source.filename} ({csvDataset.source.rowCount} rows)
-          </span>
-          <button
-            onClick={clearCsv}
-            className="text-muted hover:text-amber-400 transition-colors"
-            aria-label="Clear CSV data"
-            title="Clear CSV data"
-          >
-            <XMarkIcon className="w-3 h-3" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <TableCellsIcon className="w-3 h-3 shrink-0 text-muted" />
+            <span
+              className="truncate flex-1 min-w-0"
+              title={csvDataset.source.filename}
+            >
+              {csvDataset.source.filename}
+            </span>
+            <button
+              onClick={openCsvMappingModal}
+              aria-label="Configure mapping"
+              title="Configure mapping"
+              className="shrink-0 text-muted hover:text-text transition-colors"
+            >
+              <Cog6ToothIcon className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setPendingCsvDiscard(true)}
+              aria-label="Discard CSV"
+              title="Discard CSV"
+              className="shrink-0 text-muted hover:text-amber-400 transition-colors"
+            >
+              <XMarkIcon className="w-3 h-3" />
+            </button>
+          </div>
+          <p className="text-muted">
+            {csvDataset.source.rowCount} rows · {mappedCount} of {variables.length} mapped
+          </p>
         </div>
       )}
 
@@ -161,6 +196,20 @@ export function VariablesPanel() {
             setPendingDelete(null);
           }}
           onCancel={() => setPendingDelete(null)}
+        />
+      )}
+
+      {pendingCsvDiscard && csvDataset && (
+        <ConfirmDialog
+          message={`Discard CSV data from "${csvDataset.source.filename}"? The mapping stays so re-importing the same file restores everything.`}
+          confirmLabel="Discard"
+          cancelLabel={tv.cancel}
+          destructive
+          onConfirm={() => {
+            clearCsv();
+            setPendingCsvDiscard(false);
+          }}
+          onCancel={() => setPendingCsvDiscard(false)}
         />
       )}
     </div>
@@ -308,12 +357,3 @@ function countBindings(
   return counts;
 }
 
-/** `var_{n}` where n is the lowest integer that yields a unique name.
- *  Keeps the user from having to type a name to add an entry while still
- *  giving each one a distinct default. */
-function nextDefaultName(existing: readonly Variable[]): string {
-  const taken = new Set(existing.map((v) => v.name));
-  let i = 1;
-  while (taken.has(`var_${i}`)) i++;
-  return `var_${i}`;
-}

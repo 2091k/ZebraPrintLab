@@ -6,6 +6,7 @@ import type { LabelCanvasHandle } from "./Canvas/LabelCanvas";
 import { RightSidebar } from "./RightSidebar/RightSidebar";
 import { ZPLOutput } from "./Output/ZPLOutput";
 import { ZplImportModal } from "./Output/ZplImportModal";
+import { VariableMappingModal } from "./Variables/VariableMappingModal";
 import { PrintToZebraDialog } from "./Output/PrintToZebraDialog";
 import {
   DropdownMenu,
@@ -78,6 +79,8 @@ export function AppShell() {
   useGlobalShortcuts();
   const { handleNew, handleSave, handleLoad, loadInputRef, loadError, dismissLoadError } = useDesignFileActions();
   const { csvInputRef, handleCsvImport, csvError, dismissCsvError } = useCsvImportActions();
+  const csvMappingModalOpen = useLabelStore((s) => s.csvMappingModalOpen);
+  const closeCsvMappingModal = useLabelStore((s) => s.closeCsvMappingModal);
   const {
     showZplImport,
     openZplImport,
@@ -327,6 +330,9 @@ export function AppShell() {
       </div>
 
       {showZplImport && <ZplImportModal onClose={closeZplImport} />}
+      {csvMappingModalOpen && (
+        <VariableMappingModal onClose={closeCsvMappingModal} />
+      )}
       {showZebraPrint && (
         <PrintToZebraDialog zpl={currentZpl()} onClose={closeZebraPrint} />
       )}

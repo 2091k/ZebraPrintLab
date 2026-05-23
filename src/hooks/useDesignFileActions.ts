@@ -8,6 +8,7 @@ export function useDesignFileActions() {
   const label = useLabelStore((s) => s.label);
   const pages = useLabelStore((s) => s.pages);
   const variables = useLabelStore((s) => s.variables);
+  const csvMapping = useLabelStore((s) => s.csvMapping);
   const loadDesign = useLabelStore((s) => s.loadDesign);
   const [loadError, setLoadError] = useState<string | null>(null);
   const loadInputRef = useRef<HTMLInputElement>(null);
@@ -17,7 +18,7 @@ export function useDesignFileActions() {
   };
 
   const handleSave = () => {
-    const data = serializeDesign(label, pages, variables);
+    const data = serializeDesign(label, pages, variables, csvMapping);
     triggerDownload(new Blob([data], { type: "application/json" }), "label.json");
   };
 
@@ -41,7 +42,12 @@ export function useDesignFileActions() {
     }
 
     setLoadError(null);
-    loadDesign(result.value.label, result.value.pages, result.value.variables);
+    loadDesign(
+      result.value.label,
+      result.value.pages,
+      result.value.variables,
+      result.value.csvMapping,
+    );
   };
 
   return {

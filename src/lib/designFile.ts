@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { labelConfigSchema, labelObjectBaseSchema, type LabelConfig } from "../types/ObjectType";
-import { variableSchema, type Variable } from "../types/Variable";
+import {
+  variableSchema,
+  csvMappingSchema,
+  type Variable,
+  type CsvMapping,
+} from "../types/Variable";
 import type { LabelObject } from "../types/Group";
 import { ok, err, type Result } from "./result";
 
@@ -10,6 +15,10 @@ export interface DesignFile {
   label: LabelConfig;
   pages: DesignFilePage[];
   variables: Variable[];
+  /** Optional: present only when the user has imported a CSV and set
+   *  up a mapping for the current design. Round-trips with the design;
+   *  rows themselves are session-only and not part of the save. */
+  csvMapping: CsvMapping | null;
 }
 
 // Two distinct shapes share the base fields:
@@ -41,6 +50,8 @@ const designFileSchema = z.object({
   pages: z.array(pageSchema),
   // Optional so designs saved before the variables feature still load.
   variables: z.array(variableSchema).optional(),
+  // Optional: designs without a CSV import omit the field entirely.
+  csvMapping: csvMappingSchema.optional(),
 });
 
 const legacyDesignFileSchema = z.object({
@@ -65,6 +76,7 @@ export function parseDesignFile(text: string): Result<DesignFile, DesignFileErro
       label: current.data.label,
       pages: current.data.pages as unknown as DesignFilePage[],
       variables: current.data.variables ?? [],
+      csvMapping: current.data.csvMapping ?? null,
     });
   }
 
@@ -76,24 +88,31 @@ export function parseDesignFile(text: string): Result<DesignFile, DesignFileErro
       label: legacy.data.label,
       pages: [{ objects: legacy.data.objects as unknown as LabelObject[] }],
       variables: [],
+      csvMapping: null,
     });
   }
 
   return err("invalid_schema");
 }
 
+interface SerializedDesign {
+  label: LabelConfig;
+  pages: DesignFilePage[];
+  variables?: Variable[];
+  csvMapping?: CsvMapping;
+}
+
 export function serializeDesign(
   label: LabelConfig,
   pages: DesignFilePage[],
   variables: Variable[] = [],
+  csvMapping: CsvMapping | null = null,
 ): string {
-  // Omit `variables` from the output when empty so older versions of the
-  // app that lack the field can keep round-tripping designs untouched.
-  const payload: { label: LabelConfig; pages: DesignFilePage[]; variables?: Variable[] } = {
-    label,
-    pages,
-  };
+  // Omit optional fields when empty so older versions of the app that
+  // lack them can keep round-tripping designs untouched.
+  const payload: SerializedDesign = { label, pages };
   if (variables.length > 0) payload.variables = variables;
+  if (csvMapping) payload.csvMapping = csvMapping;
   return JSON.stringify(payload, null, 2);
 }
 

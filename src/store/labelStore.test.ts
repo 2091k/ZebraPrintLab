@@ -41,6 +41,8 @@ function reset() {
     pasteCount: 0,
     variables: [],
     csvDataset: null,
+    csvMapping: null,
+    csvMappingModalOpen: false,
     previewMode: { status: 'idle' },
     canvasSettings: {
       showGrid: false,
