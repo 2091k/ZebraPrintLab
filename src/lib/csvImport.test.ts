@@ -138,28 +138,25 @@ describe('encoding cache', () => {
   });
 
   it('rememberImport + decodeImportedText round-trips UTF-8', () => {
-    const file = new File([''], 't.csv', { type: 'text/csv' });
     const bytes = new TextEncoder().encode('sku,qty\n');
-    rememberImport(file, bytes, new TextDecoder('utf-8').decode(bytes));
+    rememberImport(bytes, new TextDecoder('utf-8').decode(bytes));
     expect(getImportedBytes()).toBe(bytes);
     expect(decodeImportedText('utf-8')).toBe('sku,qty\n');
     forgetImport();
   });
 
   it('decodeImportedText with windows-1252 turns 0xE4 into ä', () => {
-    const file = new File([''], 't.csv', { type: 'text/csv' });
     // 0xE4 in windows-1252 (ANSI) is "ä". The same byte in UTF-8 is
     // a continuation byte (invalid as a standalone), so the two
     // decodings of the same bytes should differ.
     const bytes = new Uint8Array([0x73, 0xE4, 0x6F]); // s ä o (CP1252)
-    rememberImport(file, bytes, new TextDecoder('utf-8').decode(bytes));
+    rememberImport(bytes, new TextDecoder('utf-8').decode(bytes));
     expect(decodeImportedText('windows-1252')).toBe('säo');
     forgetImport();
   });
 
   it('forgetImport clears the cache', () => {
-    const file = new File([''], 't.csv', { type: 'text/csv' });
-    rememberImport(file, new Uint8Array([1, 2, 3]), 'abc');
+    rememberImport(new Uint8Array([1, 2, 3]), 'abc');
     forgetImport();
     expect(getImportedBytes()).toBeNull();
     expect(decodeImportedText('utf-8')).toBeNull();

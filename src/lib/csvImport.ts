@@ -154,24 +154,17 @@ export function parseCsvText(
  * mapping modal needs synchronous re-parse on every option-change
  * keystroke. Mirrors the previewCache pattern in labelStore.ts.
  */
-let lastImportedFile: File | null = null;
 let lastImportedBytes: Uint8Array | null = null;
 let lastImportedText: string | null = null;
 
-export function rememberImport(file: File, bytes: Uint8Array, text: string): void {
-  lastImportedFile = file;
+export function rememberImport(bytes: Uint8Array, text: string): void {
   lastImportedBytes = bytes;
   lastImportedText = text;
 }
 
 export function forgetImport(): void {
-  lastImportedFile = null;
   lastImportedBytes = null;
   lastImportedText = null;
-}
-
-export function getImportedFile(): File | null {
-  return lastImportedFile;
 }
 
 export function getImportedText(): string | null {

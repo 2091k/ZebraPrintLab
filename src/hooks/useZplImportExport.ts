@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { useLabelStore, useCurrentObjects } from "../store/labelStore";
+import {
+  currentObjects,
+  selectBatchInputs,
+  selectCanBatchExport,
+  useLabelStore,
+} from "../store/labelStore";
 import { generateMultiPageZPL, generateBatchZpl } from "../lib/zplGenerator";
 import { printLabel } from "../lib/printPreview";
 import { triggerDownload } from "../lib/triggerDownload";
@@ -7,33 +12,31 @@ import { labelaryErrorMessage } from "../lib/labelary";
 import { buildActiveCsvRow } from "../lib/variableBinding";
 
 export function useZplImportExport() {
-  const label = useLabelStore((s) => s.label);
-  const pages = useLabelStore((s) => s.pages);
-  const variables = useLabelStore((s) => s.variables);
-  const csvDataset = useLabelStore((s) => s.csvDataset);
-  const csvMapping = useLabelStore((s) => s.csvMapping);
-  const objects = useCurrentObjects();
+  // Reactive: only what the UI rendering needs (menu enable +
+  // label-count text). Event handlers below all read a fresh
+  // snapshot via `useLabelStore.getState()` so generator inputs
+  // come from the same point in time and the hook doesn't re-
+  // render on every label / page / variable edit.
+  const canBatchExport = useLabelStore(selectCanBatchExport);
+  const batchRowCount = useLabelStore((s) => s.csvDataset?.rows.length ?? 0);
+
   const [showZplImport, setShowZplImport] = useState(false);
   const [showZebraPrint, setShowZebraPrint] = useState(false);
   const [printError, setPrintError] = useState<string | null>(null);
 
-  // Batch export is only meaningful with both a dataset and at least one
-  // mapped variable. Without either, the output would be identical to a
-  // single label and surfacing the action just clutters the menu.
-  const canBatchExport =
-    csvDataset !== null &&
-    csvDataset.rows.length > 0 &&
-    csvMapping !== null &&
-    Object.keys(csvMapping.bindings).length > 0;
-
   const handleDownload = () => {
-    const zpl = generateMultiPageZPL(label, pages, variables);
+    const s = useLabelStore.getState();
+    const zpl = generateMultiPageZPL(s.label, s.pages, s.variables);
     triggerDownload(new Blob([zpl], { type: "text/plain" }), "label.zpl");
   };
 
   const handleExportBatch = () => {
-    if (!canBatchExport) return;
-    const zpl = generateBatchZpl(label, objects, variables, csvDataset, csvMapping);
+    const s = useLabelStore.getState();
+    const batch = selectBatchInputs(s);
+    if (!batch) return;
+    const zpl = generateBatchZpl(
+      s.label, currentObjects(s), s.variables, batch.dataset, batch.mapping,
+    );
     triggerDownload(new Blob([zpl], { type: "text/plain" }), "label-batch.zpl");
   };
 
@@ -42,9 +45,10 @@ export function useZplImportExport() {
   // active CSV row (if any) is substituted into bound fields so the
   // preview reflects what would actually print for the selected row.
   const handlePrint = async () => {
+    const s = useLabelStore.getState();
     try {
-      const active = buildActiveCsvRow(csvDataset, csvMapping);
-      await printLabel(label, objects, variables, active);
+      const active = buildActiveCsvRow(s.csvDataset, s.csvMapping);
+      await printLabel(s.label, currentObjects(s), s.variables, active);
     } catch (e) {
       setPrintError(labelaryErrorMessage(e));
     }
@@ -53,10 +57,15 @@ export function useZplImportExport() {
   // ZPL surfaced to direct-print: batch form when a CSV is in play (so
   // sending to the printer produces N labels), otherwise the same
   // template the editor displays.
-  const currentZpl = () =>
-    canBatchExport
-      ? generateBatchZpl(label, objects, variables, csvDataset, csvMapping)
-      : generateMultiPageZPL(label, pages, variables);
+  const currentZpl = () => {
+    const s = useLabelStore.getState();
+    const batch = selectBatchInputs(s);
+    return batch
+      ? generateBatchZpl(
+          s.label, currentObjects(s), s.variables, batch.dataset, batch.mapping,
+        )
+      : generateMultiPageZPL(s.label, s.pages, s.variables);
+  };
 
   return {
     showZplImport,
@@ -71,7 +80,7 @@ export function useZplImportExport() {
     handleDownload,
     handleExportBatch,
     canBatchExport,
-    batchRowCount: csvDataset?.rows.length ?? 0,
+    batchRowCount,
     handlePrint,
   };
 }

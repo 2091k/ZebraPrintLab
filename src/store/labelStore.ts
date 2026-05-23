@@ -15,6 +15,7 @@ import {
   stripVariableIdFromObjects,
   type GroupObject,
   type LabelObject,
+  type Page,
 } from '../types/Group';
 import { locales } from '../locales';
 import type { LocaleCode } from '../locales';
@@ -45,10 +46,6 @@ export interface CsvDataset {
 
 export type { ObjectChanges };
 export type { Variable, VariableInput };
-
-export interface Page {
-  objects: LabelObject[];
-}
 
 /** Meta fields that remain editable on a locked object so the user can
  *  release the lock or annotate without unlocking first. Everything else
@@ -347,6 +344,25 @@ export const selectLabelaryNoticeRequired = (s: LabelState): boolean =>
  *  can keep working after dismissing a failure. */
 export const selectPreviewLocksEditor = (s: LabelState): boolean =>
   s.previewMode.status === 'loading' || s.previewMode.status === 'active';
+
+/** The dataset + mapping pair that batch emit needs, or null when
+ *  batch emit would produce nothing different from a single label.
+ *  Requires a loaded CSV with rows and at least one mapped Variable.
+ *  Co-narrows the two store fields so callers don't repeat the
+ *  null-checks for TS. */
+export const selectBatchInputs = (
+  s: LabelState,
+): { dataset: CsvDataset; mapping: CsvMapping } | null => {
+  const { csvDataset, csvMapping } = s;
+  if (!csvDataset || csvDataset.rows.length === 0) return null;
+  if (!csvMapping || Object.keys(csvMapping.bindings).length === 0) return null;
+  return { dataset: csvDataset, mapping: csvMapping };
+};
+
+/** Boolean form of {@link selectBatchInputs} — feeds the File menu
+ *  enable state without triggering re-renders on the inner refs. */
+export const selectCanBatchExport = (s: LabelState): boolean =>
+  selectBatchInputs(s) !== null;
 
 function updateCurrentObjects(
   state: PageState,
