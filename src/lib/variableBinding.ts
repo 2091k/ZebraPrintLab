@@ -67,6 +67,28 @@ export function getVariableSource(
   return csvDataset.headers.includes(header) ? "csv" : "orphan";
 }
 
+/** Whether a Konva-rendered bound object should be marked as
+ *  rendering fallback data (not from CSV). Encapsulates the render-
+ *  mode + dataset-presence + source-classification rule so the canvas
+ *  component stays a thin dispatcher and the rule is testable
+ *  without React/Konva.
+ *
+ *  Returns false when: no CSV is loaded, mode is `schema` (which
+ *  already shows «name» — fallback isn't ambiguous), the object
+ *  isn't variable-bound, or the resolved variable doesn't exist
+ *  (orphan variableId — handled upstream). */
+export function shouldShowFallbackTint(
+  variable: Variable | undefined,
+  csvDataset: { headers: readonly string[] } | null,
+  csvMapping: CsvMapping | null,
+  mode: RenderMode,
+): boolean {
+  if (mode !== "preview") return false;
+  if (!csvDataset) return false;
+  if (!variable) return false;
+  return getVariableSource(variable, csvDataset, csvMapping) !== "csv";
+}
+
 /** Recurse through a tree of objects and apply `applyBindingToObject`
  *  to every leaf. Group structure is preserved. Used by ZPL
  *  consumers (Labelary preview, generic flat-ZPL emit) that need the

@@ -37,6 +37,7 @@ export function VariablesPanel() {
   const csvMapping = useLabelStore((s) => s.csvMapping);
   const clearCsv = useLabelStore((s) => s.clearCsv);
   const setActiveRow = useLabelStore((s) => s.setActiveRow);
+  const setCsvMapping = useLabelStore((s) => s.setCsvMapping);
   const openCsvMappingModal = useLabelStore((s) => s.openCsvMappingModal);
   const csvRenderMode = useLabelStore((s) => s.canvasSettings.csvRenderMode);
   const setCanvasSettings = useLabelStore((s) => s.setCanvasSettings);
@@ -121,9 +122,9 @@ export function VariablesPanel() {
             title={
               csvRenderMode === 'preview'
                 ? csvDataset
-                  ? 'Showing CSV row data (or defaultValue when unmapped). Click to show «variable» placeholders.'
-                  : 'Showing defaultValue. Click to show «variable» placeholders.'
-                : 'Showing «variable» placeholders. Click to preview values.'
+                  ? tv.csvBadgePreviewTip
+                  : tv.csvBadgePreviewTipNoCsv
+                : tv.csvBadgeSchemaTip
             }
             className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${
               csvRenderMode === 'preview'
@@ -131,10 +132,39 @@ export function VariablesPanel() {
                 : 'text-muted hover:text-text hover:bg-surface-2 border border-border'
             }`}
           >
-            {csvRenderMode === 'preview' ? 'Preview' : 'Schema'}
+            {csvRenderMode === 'preview' ? tv.csvBadgePreviewMode : tv.csvBadgeSchemaMode}
           </button>
         )}
       </div>
+
+      {!csvDataset && csvMapping && Object.keys(csvMapping.bindings).length > 0 && (
+        /* Mapping persisted (design.json or localStorage) but no CSV
+           data in this session — reload, Discard CSV, or opening a
+           saved design. Surface it so the saved bindings don't look
+           lost. User re-imports via the File menu's "Import CSV data"
+           to bring values back; the X here drops the mapping entirely. */
+        <div className="flex flex-col gap-1 px-2 py-1.5 rounded border border-amber-500/40 bg-amber-500/5 font-mono text-[10px] text-text">
+          <div className="flex items-center gap-1.5">
+            <TableCellsIcon className="w-3 h-3 shrink-0 text-amber-400" />
+            <span className="flex-1 min-w-0 text-amber-300">
+              {tv.csvSavedMappingTitle}
+            </span>
+            <button
+              onClick={() => setCsvMapping(null)}
+              aria-label={tv.csvSavedMappingDiscard}
+              title={tv.csvSavedMappingDiscard}
+              className="shrink-0 text-muted hover:text-amber-400 transition-colors"
+            >
+              <XMarkIcon className="w-3 h-3" />
+            </button>
+          </div>
+          <p className="text-muted">
+            {tv.csvSavedMappingDescFmt
+              .replace('{mapped}', String(Object.keys(csvMapping.bindings).length))
+              .replace('{total}', String(variables.length))}
+          </p>
+        </div>
+      )}
 
       {csvDataset && (
         <div className="flex flex-col gap-1 px-2 py-1.5 rounded border border-border bg-surface-2 font-mono text-[10px] text-text">
@@ -149,23 +179,26 @@ export function VariablesPanel() {
             </span>
             <button
               onClick={openCsvMappingModal}
-              aria-label="Configure mapping"
-              title="Configure mapping"
+              aria-label={tv.csvBadgeConfigureMapping}
+              title={tv.csvBadgeConfigureMapping}
               className="shrink-0 text-muted hover:text-text transition-colors"
             >
               <Cog6ToothIcon className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setPendingCsvDiscard(true)}
-              aria-label="Discard CSV"
-              title="Discard CSV"
+              aria-label={tv.csvBadgeDiscardCsv}
+              title={tv.csvBadgeDiscardCsv}
               className="shrink-0 text-muted hover:text-amber-400 transition-colors"
             >
               <XMarkIcon className="w-3 h-3" />
             </button>
           </div>
           <p className="text-muted">
-            {csvDataset.source.rowCount} rows · {mappedCount} of {variables.length} mapped
+            {tv.csvBadgeRowsMappedFmt
+              .replace('{rowCount}', String(csvDataset.source.rowCount))
+              .replace('{mapped}', String(mappedCount))
+              .replace('{total}', String(variables.length))}
           </p>
           {csvDataset.rows.length > 0 && (
             <div className="flex items-center gap-1 pt-0.5">
@@ -174,13 +207,13 @@ export function VariablesPanel() {
                 disabled={
                   csvDataset.activeRowIndex === 0 || csvRenderMode === 'schema'
                 }
-                aria-label="Previous row"
-                title="Previous row"
+                aria-label={tv.csvBadgePrevRow}
+                title={tv.csvBadgePrevRow}
                 className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeftIcon className="w-3.5 h-3.5" />
               </button>
-              <span className="text-muted">row</span>
+              <span className="text-muted">{tv.csvBadgeRowLabel}</span>
               <input
                 type="number"
                 min={1}
@@ -200,8 +233,8 @@ export function VariablesPanel() {
                   csvDataset.activeRowIndex === csvDataset.rows.length - 1 ||
                   csvRenderMode === 'schema'
                 }
-                aria-label="Next row"
-                title="Next row"
+                aria-label={tv.csvBadgeNextRow}
+                title={tv.csvBadgeNextRow}
                 className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -242,6 +275,14 @@ export function VariablesPanel() {
                   tryUpdate(entry.id, { defaultValue }, '')
                 }
                 onRequestDelete={() => setPendingDelete(entry)}
+                onDirtyChange={() =>
+                  setRowError((prev) => {
+                    if (!(entry.id in prev)) return prev;
+                    const { [entry.id]: _drop, ...rest } = prev;
+                    void _drop;
+                    return rest;
+                  })
+                }
               />
             );
           })}
@@ -281,8 +322,11 @@ export function VariablesPanel() {
 
       {pendingCsvDiscard && csvDataset && (
         <ConfirmDialog
-          message={`Discard CSV data from "${csvDataset.source.filename}"? The mapping stays so re-importing the same file restores everything.`}
-          confirmLabel="Discard"
+          message={tv.csvDiscardConfirmFmt.replace(
+            '{filename}',
+            csvDataset.source.filename,
+          )}
+          confirmLabel={tv.csvDiscardConfirmAction}
           cancelLabel={tv.cancel}
           destructive
           onConfirm={() => {
@@ -307,6 +351,10 @@ interface RowProps {
   onChangeFnNumber: (next: number) => void;
   onChangeDefault: (next: string) => void;
   onRequestDelete: () => void;
+  /** Called when any input value diverges from the committed value so
+   *  the panel can clear a stale rowError. Without this a duplicate-
+   *  name rejection would linger after the user kept typing. */
+  onDirtyChange: () => void;
 }
 
 function VariableRow({
@@ -320,6 +368,7 @@ function VariableRow({
   onChangeFnNumber,
   onChangeDefault,
   onRequestDelete,
+  onDirtyChange,
 }: RowProps) {
   // Mirror inputs locally so the user can transiently type invalid values
   // (empty name, mid-edit number) without the store snapping them back on
@@ -363,7 +412,10 @@ function VariableRow({
           <input
             className={inputCls}
             value={name}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setName(e.target.value);
+              onDirtyChange();
+            }}
             onBlur={commitName}
           />
         </div>
@@ -375,7 +427,10 @@ function VariableRow({
             max={FN_NUMBER_MAX}
             className={inputCls}
             value={fn}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setFn(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setFn(e.target.value);
+              onDirtyChange();
+            }}
             onBlur={commitFn}
           />
         </div>
@@ -396,18 +451,24 @@ function VariableRow({
           onBlur={commitDef}
         />
       </div>
-      <div className="flex justify-between items-center font-mono text-[9px] uppercase tracking-wider text-muted">
-        <span className="flex items-center gap-1.5">
-          <VariableSourceBadge source={source} boundHeader={boundHeader} size="xs" />
-          <span>
-            {bindings === 0
-              ? tv.noBindings
-              : bindings === 1
-                ? tv.bindingsSingular
-                : tv.bindingsPluralFmt.replace('{n}', String(bindings))}
-          </span>
+      <div className="flex justify-between items-center font-mono text-[9px] uppercase tracking-wider text-muted gap-2">
+        <span>
+          {bindings === 0
+            ? tv.noBindings
+            : bindings === 1
+              ? tv.bindingsSingular
+              : tv.bindingsPluralFmt.replace('{n}', String(bindings))}
         </span>
-        {error && <span className="text-amber-400">{error}</span>}
+        {error ? (
+          <span className="text-amber-400">{error}</span>
+        ) : (
+          <VariableSourceBadge
+            source={source}
+            boundHeader={boundHeader}
+            size="xs"
+            showLabel
+          />
+        )}
       </div>
     </li>
   );

@@ -5,6 +5,21 @@ import type { LabelObject } from "../types/Group";
 import type { Variable } from "../types/Variable";
 import { applyBindingToTree, type ActiveCsvRow } from "./variableBinding";
 
+/** Generate the ZPL we hand to Labelary: row-substituted + flat
+ *  (no ^FN), so the rendered preview matches what would print for
+ *  the active CSV row (or the variable defaults when no row is
+ *  loaded). Shared by `printLabel` (new window with image) and
+ *  `enterPreviewMode` (canvas overlay) so the two stay in lockstep. */
+export function buildPreviewZpl(
+  label: LabelConfig,
+  objects: LabelObject[],
+  variables: readonly Variable[],
+  active: ActiveCsvRow | null,
+): string {
+  const substituted = applyBindingToTree(objects, variables, active);
+  return generateZPL(label, substituted, []);
+}
+
 export function buildLoadingHtml(): string {
   return `<html><head><style>
     body { margin: 0; display: flex; justify-content: center; align-items: center;
@@ -36,14 +51,7 @@ export async function printLabel(
   win.document.close();
 
   try {
-    // Labelary renders a single label image — there's no print-side
-    // merge to apply, so substitute the active CSV row (or defaults
-    // when no row is loaded) into bound fields before emit. Emit
-    // with `variables=[]` so the substituted content lands in the
-    // ZPL literally instead of as a ^FN template slot Labelary
-    // would render as the default.
-    const substituted = applyBindingToTree(objects, variables, active);
-    const zpl = generateZPL(label, substituted, []);
+    const zpl = buildPreviewZpl(label, objects, variables, active);
     const url = await fetchPreview(zpl, label);
     win.document.open();
     win.document.write(buildPrintHtml(url));

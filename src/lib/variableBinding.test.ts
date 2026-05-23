@@ -5,6 +5,7 @@ import {
   applyBindingToObject,
   applyBindingToTree,
   getVariableSource,
+  shouldShowFallbackTint,
   type ActiveCsvRow,
 } from './variableBinding';
 import type { CsvMapping, Variable } from '../types/Variable';
@@ -257,5 +258,37 @@ describe('applyBindingToTree', () => {
     const out = applyBindingToTree(objs, [variable({ name: 'sku' })], null, 'schema');
     const g = out[0]! as unknown as { children: { props: { content: string } }[] };
     expect(g.children[0]!.props.content).toBe('«sku»');
+  });
+});
+
+describe('shouldShowFallbackTint', () => {
+  const v = variable();
+  const ds = (headers: string[]) => ({ headers });
+  const map = (bindings: Record<string, string>): CsvMapping => ({
+    bindings, headerSnapshot: [],
+  });
+
+  it('returns false in schema mode regardless of state', () => {
+    expect(shouldShowFallbackTint(v, ds(['x']), map({ v1: 'x' }), 'schema')).toBe(false);
+  });
+
+  it('returns false when no CSV is loaded', () => {
+    expect(shouldShowFallbackTint(v, null, map({ v1: 'x' }), 'preview')).toBe(false);
+  });
+
+  it('returns false when no variable resolves (orphan variableId)', () => {
+    expect(shouldShowFallbackTint(undefined, ds(['x']), map({}), 'preview')).toBe(false);
+  });
+
+  it('returns false when bound + header exists (csv source)', () => {
+    expect(shouldShowFallbackTint(v, ds(['sku']), map({ v1: 'sku' }), 'preview')).toBe(false);
+  });
+
+  it('returns true when bound + header missing (orphan source)', () => {
+    expect(shouldShowFallbackTint(v, ds(['qty']), map({ v1: 'sku' }), 'preview')).toBe(true);
+  });
+
+  it('returns true when unbound + CSV loaded (default source)', () => {
+    expect(shouldShowFallbackTint(v, ds(['sku']), map({}), 'preview')).toBe(true);
   });
 });

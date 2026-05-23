@@ -19,7 +19,6 @@ import {
 import { locales } from '../locales';
 import type { LocaleCode } from '../locales';
 import { isDefaultLabelaryHost, fetchPreview, labelaryErrorMessage } from '../lib/labelary';
-import { generateZPL } from '../lib/zplGenerator';
 import {
   nextFreeFnNumber,
   FN_NUMBER_MIN,
@@ -29,7 +28,8 @@ import {
   type CsvMapping,
 } from '../types/Variable';
 import { forgetImport, type CsvParseResult } from '../lib/csvImport';
-import { applyBindingToTree, buildActiveCsvRow } from '../lib/variableBinding';
+import { buildActiveCsvRow } from '../lib/variableBinding';
+import { buildPreviewZpl } from '../lib/printPreview';
 
 /** Snapshot of an imported CSV plus the row the canvas is currently
  *  previewing. Distinct from the Variable→header mapping (which lives
@@ -281,6 +281,17 @@ interface LabelState {
   /** Set or replace the CSV mapping on the current design. Passing
    *  null clears the mapping (e.g. user picks "Reset mapping"). */
   setCsvMapping: (mapping: CsvMapping | null) => void;
+
+  /** Atomic commit for the mapping-modal Apply path: updates
+   *  variables, dataset, mapping and active row in a single store
+   *  mutation so zundo records one undo step (instead of four) and
+   *  no intermediate state ever leaks. */
+  applyMappingDraft: (input: {
+    variables: Variable[];
+    dataset: CsvParseResult;
+    mapping: CsvMapping;
+    activeRowIndex: number;
+  }) => void;
 
   /** Whether the CSV mapping modal is currently open. Lives in the
    *  store so the auto-open trigger (after import, on header
@@ -1162,6 +1173,38 @@ export const useLabelStore = create<LabelState>()(
 
       setCsvMapping: (mapping) => set({ csvMapping: mapping }),
 
+      applyMappingDraft: ({ variables, dataset, mapping, activeRowIndex }) =>
+        set((state) => {
+          if (selectPreviewLocksEditor(state)) return {};
+          // Mirror setVariables' validation; bulk-replace with a
+          // duplicate would leave the panel unfixable.
+          const names = new Set<string>();
+          const fns = new Set<number>();
+          for (const v of variables) {
+            const trimmed = v.name.trim();
+            if (trimmed === '' || names.has(trimmed)) return {};
+            names.add(trimmed);
+            if (v.fnNumber < FN_NUMBER_MIN || v.fnNumber > FN_NUMBER_MAX) return {};
+            if (fns.has(v.fnNumber)) return {};
+            fns.add(v.fnNumber);
+          }
+          const rows = dataset.rows;
+          const clampedIdx =
+            rows.length === 0
+              ? 0
+              : Math.max(0, Math.min(activeRowIndex, rows.length - 1));
+          return {
+            variables,
+            csvDataset: {
+              headers: dataset.headers,
+              rows: dataset.rows,
+              source: dataset.source,
+              activeRowIndex: clampedIdx,
+            },
+            csvMapping: mapping,
+          };
+        }),
+
       openCsvMappingModal: () => set({ csvMappingModalOpen: true }),
       closeCsvMappingModal: () => set({ csvMappingModalOpen: false }),
 
@@ -1171,13 +1214,8 @@ export const useLabelStore = create<LabelState>()(
           return;
         }
         const objs = currentObjects(state);
-        // Pre-substitute active CSV row (or defaults) so the Labelary
-        // overlay shows what would print for the selected row, not
-        // empty ^FN slots. Generate with `variables=[]` so substituted
-        // content lands as literal ^FD instead of a ^FN template.
         const active = buildActiveCsvRow(state.csvDataset, state.csvMapping);
-        const substituted = applyBindingToTree(objs, state.variables, active);
-        const zpl = generateZPL(state.label, substituted, []);
+        const zpl = buildPreviewZpl(state.label, objs, state.variables, active);
         // Toggling preview off then on for a side-by-side pixel compare
         // shouldn't burn an API call when nothing changed.
         const cachedUrl = previewCache.get(zpl);

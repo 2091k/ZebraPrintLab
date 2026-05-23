@@ -51,8 +51,6 @@ export function useCsvImportActions() {
     if (!file) return;
     setCsvError(null);
 
-    const { csvMapping, csvDataset } = useLabelStore.getState();
-
     let bytes: Uint8Array;
     try {
       bytes = new Uint8Array(await file.arrayBuffer());
@@ -61,6 +59,10 @@ export function useCsvImportActions() {
       return;
     }
 
+    // Re-read store state AFTER the await so a discard/replace that
+    // happened during file I/O doesn't drive the decision off a stale
+    // snapshot.
+    const { csvMapping, csvDataset } = useLabelStore.getState();
     // Re-use the parse options the mapping was last applied with so a
     // headerless / windows-1252 / semicolon-delimited dataset doesn't
     // get re-parsed under defaults and falsely flagged as "different".

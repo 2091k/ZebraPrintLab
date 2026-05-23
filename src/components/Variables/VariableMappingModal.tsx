@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/16/solid';
 import { useLabelStore } from '../../store/labelStore';
+import { useT } from '../../lib/useT';
 import {
   nextDefaultVariableName,
   nextFreeFnNumber,
@@ -20,46 +21,6 @@ import { inputCls } from '../Properties/styles';
 import { getVariableSource } from '../../lib/variableBinding';
 import { VariableSourceBadge } from './VariableSourceBadge';
 
-/* i18n: literal strings here get locale keys at the end-of-branch sweep. */
-const COPY = {
-  title: 'CSV mapping',
-  hint:
-    'Match each Variable to a CSV column. Leave a Variable unmapped to keep using its default.',
-  variableHeader: 'Variable',
-  columnHeader: 'CSV column',
-  ignoreOption: '(unmapped)',
-  nameEmpty: 'Required',
-  nameDuplicate: 'Duplicate',
-  willBeCreated: 'will be created',
-  removeDraftAria: 'Discard from draft',
-  noVariables:
-    'No variables defined yet. Add one below or in the Variables panel.',
-  addVariable: 'Add variable',
-  noSlotsLeft: 'All 99 ^FN slots are taken.',
-  activeRowLabel: 'Preview row',
-  activeRowOf: 'of',
-  activeRowTooltip: 'Which row the canvas previews. Switch any time.',
-  confirm: 'Apply',
-  cancel: 'Cancel',
-  close: 'Close',
-  headerMismatchWarning:
-    'CSV headers have changed since the last mapping was saved. Check CSV options below if the file structure looks off.',
-  csvOptionsTitle: 'CSV options',
-  delimiterLabel: 'Delimiter',
-  delimiterAuto: 'Auto-detect',
-  delimiterComma: 'Comma (,)',
-  delimiterSemicolon: 'Semicolon (;)',
-  delimiterTab: 'Tab',
-  hasHeaderRow: 'First row contains headers',
-  skipRowsLabel: 'Skip first N rows',
-  encodingLabel: 'Text encoding',
-  encodingUtf8: 'UTF-8 (default)',
-  encodingWin1252: 'Windows-1252 (ANSI / Western European)',
-  encodingIso88591: 'ISO-8859-1 (Latin 1)',
-  encodingUtf16le: 'UTF-16 LE',
-  noCsvLoaded: 'Import a CSV from the File menu first.',
-  parseError: 'Could not parse with current options.',
-} as const;
 
 interface Props {
   onClose: () => void;
@@ -84,13 +45,12 @@ interface DraftOptions {
  *  Live re-parse of the cached raw text drives the table whenever
  *  options change, so the user sees the effect immediately. */
 export function VariableMappingModal({ onClose }: Props) {
+  const t = useT();
+  const tv = t.variables;
   const variables = useLabelStore((s) => s.variables);
   const csvMapping = useLabelStore((s) => s.csvMapping);
   const csvDataset = useLabelStore((s) => s.csvDataset);
-  const setVariables = useLabelStore((s) => s.setVariables);
-  const setCsvMapping = useLabelStore((s) => s.setCsvMapping);
-  const setActiveRow = useLabelStore((s) => s.setActiveRow);
-  const loadCsv = useLabelStore((s) => s.loadCsv);
+  const applyMappingDraft = useLabelStore((s) => s.applyMappingDraft);
 
   // Draft state, initialised once at modal-open. The init-from-prop
   // pattern is the React-blessed way to seed local state from props
@@ -174,8 +134,14 @@ export function VariableMappingModal({ onClose }: Props) {
         if (headerSet.has(header)) filtered[varId] = header;
         else changed = true;
       }
-      // Auto-suggest for variables that have no binding yet.
-      const unboundVars = draftVariables.filter((v) => !(v.id in filtered));
+      // Auto-suggest only for variables that existed at modal-open
+      // and don't yet have a binding. Inline-added drafts stay
+      // unbound so the user isn't surprised by a header silently
+      // attaching to a freshly added row whose default name
+      // happens to fuzzy-match a column.
+      const unboundVars = draftVariables.filter(
+        (v) => initialVariableIds.has(v.id) && !(v.id in filtered),
+      );
       const usedHeaders = new Set(Object.values(filtered));
       const freeHeaders = virtualHeaders.filter((h) => !usedHeaders.has(h));
       const suggested = suggestCsvMapping(unboundVars, freeHeaders);
@@ -183,7 +149,7 @@ export function VariableMappingModal({ onClose }: Props) {
       if (!changed && Object.keys(suggested).length === 0) return prev;
       return merged;
     });
-  }, [virtualHeaders, draftVariables]);
+  }, [virtualHeaders, draftVariables, initialVariableIds]);
 
   // Clamp active-row to virtual rows length (option-change may have
   // shrunk the dataset).
@@ -191,6 +157,19 @@ export function VariableMappingModal({ onClose }: Props) {
     if (virtualRows.length === 0) return;
     setDraftRow((r) => Math.min(r, virtualRows.length - 1));
   }, [virtualRows.length]);
+
+  // Headers that are bound by more than one variable. Almost always a
+  // mistake (the same column would feed two slots and produce confusing
+  // labels); flagged inline so the user notices before Apply.
+  const duplicateHeaders = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const h of Object.values(draftBindings)) {
+      counts.set(h, (counts.get(h) ?? 0) + 1);
+    }
+    const dups = new Set<string>();
+    for (const [h, n] of counts) if (n > 1) dups.add(h);
+    return dups;
+  }, [draftBindings]);
 
   // Compute name validity per row. Empty-name is always invalid;
   // duplicate-name is invalid for every row sharing the same trimmed
@@ -206,11 +185,11 @@ export function VariableMappingModal({ onClose }: Props) {
     const errors: Record<string, string> = {};
     for (const v of draftVariables) {
       const t = v.name.trim();
-      if (t === '') errors[v.id] = COPY.nameEmpty;
-      else if ((counts.get(t) ?? 0) > 1) errors[v.id] = COPY.nameDuplicate;
+      if (t === '') errors[v.id] = tv.csvNameEmpty;
+      else if ((counts.get(t) ?? 0) > 1) errors[v.id] = tv.csvNameDuplicate;
     }
     return errors;
-  }, [draftVariables]);
+  }, [draftVariables, tv.csvNameEmpty, tv.csvNameDuplicate]);
   const hasNameError = Object.keys(nameErrors).length > 0;
 
   if (!rawText || !csvDataset) {
@@ -224,12 +203,12 @@ export function VariableMappingModal({ onClose }: Props) {
         boxClassName="bg-surface border border-border rounded-lg w-80 shadow-2xl"
       >
         <div className="p-4 font-mono text-xs text-muted">
-          <p className="mb-3">{COPY.noCsvLoaded}</p>
+          <p className="mb-3">{tv.csvNoCsvLoaded}</p>
           <button
             onClick={onClose}
             className="px-3 py-1.5 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 transition-opacity"
           >
-            {COPY.close}
+            {tv.csvClose}
           </button>
         </div>
       </DialogShell>
@@ -280,22 +259,22 @@ export function VariableMappingModal({ onClose }: Props) {
       };
       return [...prev, newVar];
     });
-    setAddError(failed ? COPY.noSlotsLeft : null);
+    setAddError(failed ? tv.noSlotsLeft : null);
   };
 
   const handleConfirm = () => {
     if (!draftParse?.ok) return;
     const parse = draftParse.value;
-    setVariables(draftVariables);
-    loadCsv(parse);
-    setCsvMapping({
-      bindings: draftBindings,
-      headerSnapshot: parse.headers,
-      parseOptions: persistableParseOptions(draftOptions),
+    applyMappingDraft({
+      variables: draftVariables,
+      dataset: parse,
+      mapping: {
+        bindings: draftBindings,
+        headerSnapshot: parse.headers,
+        parseOptions: persistableParseOptions(draftOptions),
+      },
+      activeRowIndex: draftRow,
     });
-    // loadCsv resets activeRowIndex to 0; re-apply the draft row
-    // clamped to the new rows.length.
-    setActiveRow(Math.min(draftRow, Math.max(0, parse.rows.length - 1)));
     onClose();
   };
 
@@ -319,11 +298,11 @@ export function VariableMappingModal({ onClose }: Props) {
           id="variable-mapping-title"
           className="font-mono text-xs text-muted uppercase tracking-widest"
         >
-          {COPY.title}
+          {tv.csvMappingTitle}
         </span>
         <button
           onClick={onClose}
-          aria-label={COPY.close}
+          aria-label={tv.csvClose}
           className="p-0.5 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors"
         >
           <XMarkIcon className="w-4 h-4" />
@@ -332,18 +311,18 @@ export function VariableMappingModal({ onClose }: Props) {
 
       <div className="flex flex-col gap-4 px-4 py-4 overflow-y-auto">
         <p className="font-mono text-[10px] text-muted leading-relaxed">
-          {COPY.hint}
+          {tv.csvMappingHint}
         </p>
 
         {showMismatchWarning && (
           <p className="font-mono text-[10px] text-amber-400 leading-relaxed">
-            {COPY.headerMismatchWarning}
+            {tv.csvHeaderMismatchWarning}
           </p>
         )}
 
         {parseError && (
           <p className="font-mono text-[10px] text-amber-400">
-            {COPY.parseError}
+            {tv.csvParseError}
           </p>
         )}
 
@@ -352,21 +331,25 @@ export function VariableMappingModal({ onClose }: Props) {
         <table className="w-full text-xs font-mono">
           <thead className="sticky top-0 bg-surface z-10">
             <tr className="text-left text-muted uppercase text-[10px] tracking-wider">
-              <th className="pb-2 pt-2 px-3 font-medium">{COPY.variableHeader}</th>
-              <th className="pb-2 pt-2 pr-3 font-medium">{COPY.columnHeader}</th>
+              <th className="pb-2 pt-2 px-3 font-medium">{tv.csvVariableHeader}</th>
+              <th className="pb-2 pt-2 pr-3 font-medium">{tv.csvColumnHeader}</th>
+              <th className="pb-2 pt-2 pr-3 font-medium">{tv.csvSampleHeader}</th>
             </tr>
           </thead>
           <tbody>
             {draftVariables.length === 0 ? (
               <tr>
-                <td colSpan={2} className="py-3 px-3 text-muted italic text-[10px]">
-                  {COPY.noVariables}
+                <td colSpan={3} className="py-3 px-3 text-muted italic text-[10px]">
+                  {tv.csvNoVariables}
                 </td>
               </tr>
             ) : (
               draftVariables.map((v) => {
                 const nameError = nameErrors[v.id];
                 const isNew = !initialVariableIds.has(v.id);
+                const boundHeader = draftBindings[v.id];
+                const isDuplicate =
+                  boundHeader !== undefined && duplicateHeaders.has(boundHeader);
                 // Classify against the draft (not the committed store
                 // state) so the badge reflects live binding edits before
                 // Apply. Both inputs synthesised here have the minimal
@@ -398,8 +381,8 @@ export function VariableMappingModal({ onClose }: Props) {
                         {isNew && (
                           <button
                             onClick={() => handleRemoveDraftVariable(v.id)}
-                            aria-label={COPY.removeDraftAria}
-                            title={COPY.removeDraftAria}
+                            aria-label={tv.csvRemoveDraftAria}
+                            title={tv.csvRemoveDraftAria}
                             className="shrink-0 p-1 rounded text-muted hover:text-amber-400 hover:bg-surface-2 transition-colors"
                           >
                             <XMarkIcon className="w-3 h-3" />
@@ -412,23 +395,61 @@ export function VariableMappingModal({ onClose }: Props) {
                         </p>
                       ) : isNew ? (
                         <p className="mt-0.5 font-mono text-[9px] text-accent/70 italic">
-                          {COPY.willBeCreated}
+                          {tv.csvWillBeCreated}
                         </p>
                       ) : null}
                     </td>
                     <td className="py-1.5 pr-3">
                       <select
-                        className={inputCls}
-                        value={draftBindings[v.id] ?? ''}
+                        className={`${inputCls} ${isDuplicate ? 'border-amber-400' : ''}`}
+                        value={boundHeader ?? ''}
                         onChange={handleChangeBinding(v.id)}
                       >
-                        <option value="">{COPY.ignoreOption}</option>
+                        <option value="">{tv.csvIgnoreOption}</option>
                         {virtualHeaders.map((h) => (
                           <option key={h} value={h}>
                             {h}
                           </option>
                         ))}
                       </select>
+                      {isDuplicate && (
+                        <p className="mt-0.5 font-mono text-[9px] text-amber-400">
+                          {tv.csvDuplicateColumn}
+                        </p>
+                      )}
+                    </td>
+                    <td className="py-1.5 pr-3 align-middle">
+                      {(() => {
+                        // Sample value for the active preview row. When
+                        // bound + header present in current parse →
+                        // cell from virtualRows[draftRow]. Otherwise
+                        // show the variable's default (or empty marker)
+                        // so the user always knows what would print.
+                        if (boundHeader !== undefined) {
+                          const colIdx = virtualHeaders.indexOf(boundHeader);
+                          const cell =
+                            colIdx >= 0
+                              ? virtualRows[draftRow]?.[colIdx] ?? ''
+                              : '';
+                          return cell === '' ? (
+                            <span className="text-[10px] text-muted italic">
+                              {tv.csvSampleEmpty}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-text truncate block max-w-[120px]" title={cell}>
+                              {cell}
+                            </span>
+                          );
+                        }
+                        return (
+                          <span
+                            className="text-[10px] text-muted italic truncate block max-w-[120px]"
+                            title={v.defaultValue || tv.csvSamplePlaceholder}
+                          >
+                            {v.defaultValue || tv.csvSamplePlaceholder}
+                          </span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 );
@@ -444,7 +465,7 @@ export function VariableMappingModal({ onClose }: Props) {
             className="self-start flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono border border-dashed border-border text-muted hover:text-text hover:border-border-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <PlusIcon className="w-3.5 h-3.5" />
-            {COPY.addVariable}
+            {tv.add}
           </button>
           {addError && (
             <p className="font-mono text-[10px] text-amber-400">{addError}</p>
@@ -455,10 +476,10 @@ export function VariableMappingModal({ onClose }: Props) {
         {virtualRows.length > 0 && (
           <div
             className="flex items-center gap-2 font-mono text-xs text-text"
-            title={COPY.activeRowTooltip}
+            title={tv.csvActiveRowTooltip}
           >
             <label htmlFor="variable-mapping-preview-row" className="text-muted">
-              {COPY.activeRowLabel}:
+              {tv.csvActiveRowLabel}:
             </label>
             <input
               id="variable-mapping-preview-row"
@@ -478,14 +499,14 @@ export function VariableMappingModal({ onClose }: Props) {
               }}
             />
             <span className="text-muted">
-              {COPY.activeRowOf} {virtualRows.length}
+              {tv.csvActiveRowOf} {virtualRows.length}
             </span>
           </div>
         )}
 
         <CollapsibleSection
           id="variable-mapping-csv-options"
-          title={COPY.csvOptionsTitle}
+          title={tv.csvOptionsTitle}
           defaultOpen={false}
         >
           <CsvOptionsEditor
@@ -500,14 +521,14 @@ export function VariableMappingModal({ onClose }: Props) {
           onClick={onClose}
           className="px-3 py-1.5 rounded text-xs font-mono text-muted hover:text-text hover:bg-surface-2 transition-colors"
         >
-          {COPY.cancel}
+          {tv.cancel}
         </button>
         <button
           onClick={handleConfirm}
           disabled={!draftParse?.ok || hasNameError}
           className="px-3 py-1.5 rounded text-xs font-mono bg-accent text-bg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
-          {COPY.confirm}
+          {tv.csvApply}
         </button>
       </div>
     </DialogShell>
@@ -520,21 +541,22 @@ interface CsvOptionsEditorProps {
 }
 
 function CsvOptionsEditor({ value, onChange }: CsvOptionsEditorProps) {
+  const tv = useT().variables;
   return (
     <div className="flex flex-col gap-2 pt-2">
       <div className="flex flex-col gap-1">
         <label className="font-mono text-[10px] text-muted uppercase tracking-wider">
-          {COPY.delimiterLabel}
+          {tv.csvDelimiterLabel}
         </label>
         <select
           className={inputCls}
           value={value.delimiter}
           onChange={(e) => onChange({ ...value, delimiter: e.target.value })}
         >
-          <option value="">{COPY.delimiterAuto}</option>
-          <option value=",">{COPY.delimiterComma}</option>
-          <option value=";">{COPY.delimiterSemicolon}</option>
-          <option value={'\t'}>{COPY.delimiterTab}</option>
+          <option value="">{tv.csvDelimiterAuto}</option>
+          <option value=",">{tv.csvDelimiterComma}</option>
+          <option value=";">{tv.csvDelimiterSemicolon}</option>
+          <option value={'\t'}>{tv.csvDelimiterTab}</option>
         </select>
       </div>
 
@@ -545,12 +567,12 @@ function CsvOptionsEditor({ value, onChange }: CsvOptionsEditorProps) {
           checked={value.hasHeaderRow}
           onChange={(e) => onChange({ ...value, hasHeaderRow: e.target.checked })}
         />
-        {COPY.hasHeaderRow}
+        {tv.csvHasHeaderRow}
       </label>
 
       <div className="flex flex-col gap-1">
         <label className="font-mono text-[10px] text-muted uppercase tracking-wider">
-          {COPY.skipRowsLabel}
+          {tv.csvSkipRowsLabel}
         </label>
         <input
           type="number"
@@ -566,17 +588,17 @@ function CsvOptionsEditor({ value, onChange }: CsvOptionsEditorProps) {
 
       <div className="flex flex-col gap-1">
         <label className="font-mono text-[10px] text-muted uppercase tracking-wider">
-          {COPY.encodingLabel}
+          {tv.csvEncodingLabel}
         </label>
         <select
           className={inputCls}
           value={value.encoding}
           onChange={(e) => onChange({ ...value, encoding: e.target.value })}
         >
-          <option value="utf-8">{COPY.encodingUtf8}</option>
-          <option value="windows-1252">{COPY.encodingWin1252}</option>
-          <option value="iso-8859-1">{COPY.encodingIso88591}</option>
-          <option value="utf-16le">{COPY.encodingUtf16le}</option>
+          <option value="utf-8">{tv.csvEncodingUtf8}</option>
+          <option value="windows-1252">{tv.csvEncodingWin1252}</option>
+          <option value="iso-8859-1">{tv.csvEncodingIso88591}</option>
+          <option value="utf-16le">{tv.csvEncodingUtf16le}</option>
         </select>
       </div>
     </div>

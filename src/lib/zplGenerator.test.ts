@@ -880,6 +880,35 @@ describe('generateBatchZpl', () => {
     expect(result).toContain('^FN1^FD^FS');
   });
 
+  it('injects ^DFR even when ~DY/~SD preamble lines precede ^XA', () => {
+    const variables = [{ id: 'v1', name: 'sku', fnNumber: 1, defaultValue: '' }];
+    const objects = [textObj('v1')];
+    const dataset = { headers: ['sku'], rows: [['A1']] };
+    const mapping = { bindings: { v1: 'sku' } };
+    // instantDarkness adds a `~SD` preamble line before ^XA — start-
+    // anchored regex would silently skip the inject.
+    const labelWithPreamble: LabelConfig = { ...baseLabel, instantDarkness: 5 };
+    const result = generateBatchZpl(
+      labelWithPreamble, objects, variables, dataset, mapping,
+    );
+    expect(result).toContain('~SD05');
+    // ^DFR must still be present immediately inside the ^XA block.
+    expect(result).toMatch(/\^XA\n\^DFR:LBL\.ZPL/);
+  });
+
+  it('hex-escapes ^ and ~ in CSV cell values via ^FH', () => {
+    const variables = [{ id: 'v1', name: 'name', fnNumber: 1, defaultValue: '' }];
+    const objects = [textObj('v1')];
+    const dataset = { headers: ['name'], rows: [['A^B~C Corp']] };
+    const mapping = { bindings: { v1: 'name' } };
+    const result = generateBatchZpl(baseLabel, objects, variables, dataset, mapping);
+    const recall = result.split('^XFR:LBL.ZPL').slice(1).join('^XFR:LBL.ZPL');
+    // Raw ^ or ~ in the value must not appear in the recall payload —
+    // they would terminate the field early on the printer.
+    expect(recall).toContain('^FH_');
+    expect(recall).not.toContain('A^B~C Corp');
+  });
+
   it('zero rows yields template-only output (no recall blocks)', () => {
     const variables = [{ id: 'v1', name: 'sku', fnNumber: 1, defaultValue: '' }];
     const objects = [textObj('v1')];

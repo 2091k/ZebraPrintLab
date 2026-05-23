@@ -1,6 +1,6 @@
 import { mmToDots } from './coordinates';
 import { ObjectRegistry } from '../registry';
-import { stripZplCommandChars } from '../registry/zplHelpers';
+import { fdField, stripZplCommandChars } from '../registry/zplHelpers';
 import type { CustomFontMapping, LabelConfig } from '../types/ObjectType';
 import type { Page } from '../store/labelStore';
 import type { Variable } from '../types/Variable';
@@ -127,10 +127,12 @@ export function generateBatchZpl(
   csvMapping: { bindings: Record<string, string> },
 ): string {
   const baseZpl = generateZPL(label, objects, variables);
-  // Inject ^DFR right after the first ^XA. The template ZPL itself is
-  // unchanged — the printer stores the entire ^XA…^XZ payload that
-  // follows ^DFR as a recallable form file.
-  const templateStored = baseZpl.replace(/^\^XA\n/, '^XA\n^DFR:LBL.ZPL\n');
+  // Inject ^DFR after the first ^XA so it lands inside the label block.
+  // Don't anchor to start: ~DY/~SD preamble lines (custom fonts, instant
+  // darkness) emit before ^XA, and a start-anchored regex would silently
+  // skip the inject — recall blocks below would then reference a form
+  // file the printer never stored.
+  const templateStored = baseZpl.replace(/\^XA\n/, '^XA\n^DFR:LBL.ZPL\n');
 
   // Pre-compute (variable.fnNumber, columnIdx) per mapped variable so
   // the per-row loop is a tight zip. Variables with no binding or whose
@@ -150,7 +152,9 @@ export function generateBatchZpl(
     const lines: string[] = ['^XA', '^XFR:LBL.ZPL'];
     for (const { fn, colIdx } of overrides) {
       const value = row[colIdx] ?? '';
-      lines.push(`^FN${fn}^FD${value}^FS`);
+      // Route through `fdField` so values containing `^`/`~` get the
+      // ^FH hex-escape treatment instead of terminating the field early.
+      lines.push(`^FN${fn}${fdField(value)}`);
     }
     lines.push('^XZ');
     return lines.join('\n');

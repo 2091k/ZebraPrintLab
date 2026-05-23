@@ -213,12 +213,12 @@ export function AppShell() {
               {t.app.exportZpl}
             </DropdownItem>
             {canBatchExport && (
-              /* i18n: locale key gets added in the end-of-branch sweep. */
               <DropdownItem
                 icon={ArrowDownTrayIcon}
                 onClick={handleExportBatch}
+                disabled={!hasObjects}
               >
-                Export batch ZPL ({batchRowCount} labels)
+                {t.app.exportBatchZplFmt.replace('{n}', String(batchRowCount))}
               </DropdownItem>
             )}
             <DropdownSeparator />
@@ -239,8 +239,7 @@ export function AppShell() {
               icon={TableCellsIcon}
               onClick={() => csvInputRef.current?.click()}
             >
-              {/* i18n: locale key gets added in the end-of-branch sweep. */}
-              Import CSV data
+              {t.app.importCsvData}
             </DropdownItem>
             <DropdownSeparator />
             {/* Print routes through Labelary. The button is shown whenever

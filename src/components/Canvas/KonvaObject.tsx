@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useFontCacheVersion } from "../../hooks/useFontCacheVersion";
 import { Ellipse, Group, Rect, Text } from "react-konva";
-import { getVariableSource, lookupBoundVariable } from "../../lib/variableBinding";
+import { lookupBoundVariable, shouldShowFallbackTint } from "../../lib/variableBinding";
 import { BarcodeObject } from "./BarcodeObject";
 import { LineObject } from "./LineObject";
 import { ImageObject } from "./ImageObject";
@@ -128,20 +128,13 @@ export function KonvaObject(props_: Props) {
   const obj = applyBindingToObject(props_.obj, variables, active, csvRenderMode);
   const renderProps = obj === props_.obj ? props_ : { ...props_, obj };
 
-  // Fallback-tint: bound field is rendering its defaultValue (or empty)
-  // instead of a CSV cell. Surface this as a translucent amber bbox
-  // behind the shape so the user sees "this is not data" without
-  // having to inspect the Variables panel. Only meaningful in
-  // preview mode with a CSV loaded; schema mode already says «name»
-  // and pre-CSV everything renders default by design. Orphaned
-  // variableId (variable was deleted) skips the tint too — the field
-  // is already in an invalid state and gets its own badge upstream.
+  // Bounds-tint when bound field is rendering fallback (no CSV cell
+  // for this variable). The rule lives in lib so it's testable
+  // without Konva; see shouldShowFallbackTint for the full predicate.
   const boundVariable = lookupBoundVariable(obj, variables);
-  const showFallbackTint =
-    csvRenderMode === "preview" &&
-    csvDataset !== null &&
-    boundVariable !== undefined &&
-    getVariableSource(boundVariable, csvDataset, csvMapping) !== "csv";
+  const showFallbackTint = shouldShowFallbackTint(
+    boundVariable, csvDataset, csvMapping, csvRenderMode,
+  );
 
   const shape =
     obj.type === "line" ? <LineObject {...renderProps} obj={obj} /> :

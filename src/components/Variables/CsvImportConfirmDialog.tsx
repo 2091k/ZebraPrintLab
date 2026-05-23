@@ -1,4 +1,5 @@
 import { DialogShell } from '../ui/DialogShell';
+import { useT } from '../../lib/useT';
 import type { PendingImport } from '../../hooks/useCsvImportActions';
 
 interface Props {
@@ -6,26 +7,6 @@ interface Props {
   onConfirm: (opts: { keepMapping: boolean }) => void;
   onCancel: () => void;
 }
-
-/* i18n: Phase-2 strings here get locale keys at end-of-branch sweep. */
-const COPY = {
-  title: 'Replace CSV data',
-  // {old} replaced by old filename, {new} by new filename.
-  bodyReplacePrefixFmt: 'Replace "{old}" with "{new}"?',
-  // Filled when headers/columns line up (mapping carries over).
-  bodySameHeaders: 'Same column names. Mapping stays intact.',
-  bodySameColumnsHeaderlessFmt:
-    'Same column count ({n}). Mapping stays intact.',
-  // Filled when headers/columns diverge (mapping needs review).
-  bodyDifferentHeaders:
-    'The new file has different column names. The current mapping will not match cleanly.',
-  bodyDifferentColumnsHeaderlessFmt:
-    'The new file has a different column count (was {n}). The current mapping will not match cleanly.',
-  cancel: 'Cancel',
-  replace: 'Replace',
-  discardMapping: 'Discard mapping',
-  keepAndRemap: 'Keep & remap',
-} as const;
 
 /** Three-state confirmation surfaced from `useCsvImportActions` when
  *  the user picks a new CSV while one is already loaded.
@@ -35,25 +16,26 @@ const COPY = {
  *  instead of the shared ConfirmDialog because that component only
  *  supports a single confirm action. */
 export function CsvImportConfirmDialog({ pending, onConfirm, onCancel }: Props) {
+  const tv = useT().variables;
   const newFilename = pending.parsed.file.name;
   const oldFilename = pending.replacingFilename ?? '';
-  const headline = COPY.bodyReplacePrefixFmt
+  const headline = tv.csvReplaceCsvBodyFmt
     .replace('{old}', oldFilename)
     .replace('{new}', newFilename);
   const detail =
     pending.kind === 'same'
       ? pending.wasHeaderless
-        ? COPY.bodySameColumnsHeaderlessFmt.replace(
+        ? tv.csvReplaceCsvSameColumnsFmt.replace(
             '{n}',
             String(pending.previousColumnCount),
           )
-        : COPY.bodySameHeaders
+        : tv.csvReplaceCsvSameHeaders
       : pending.wasHeaderless
-        ? COPY.bodyDifferentColumnsHeaderlessFmt.replace(
+        ? tv.csvReplaceCsvDifferentColumnsFmt.replace(
             '{n}',
             String(pending.previousColumnCount),
           )
-        : COPY.bodyDifferentHeaders;
+        : tv.csvReplaceCsvDifferentHeaders;
 
   return (
     <DialogShell
@@ -65,7 +47,7 @@ export function CsvImportConfirmDialog({ pending, onConfirm, onCancel }: Props) 
     >
       <div className="px-5 py-5 flex flex-col gap-2">
         <p className="font-mono text-xs uppercase tracking-widest text-muted">
-          {COPY.title}
+          {tv.csvReplaceCsvTitle}
         </p>
         <p
           id="csv-import-confirm-message"
@@ -81,7 +63,7 @@ export function CsvImportConfirmDialog({ pending, onConfirm, onCancel }: Props) 
           onClick={onCancel}
           className="px-4 py-1.5 rounded text-xs font-mono whitespace-nowrap border border-border text-text hover:bg-surface-2 transition-colors"
         >
-          {COPY.cancel}
+          {tv.cancel}
         </button>
         {pending.kind === 'same' ? (
           <button
@@ -90,7 +72,7 @@ export function CsvImportConfirmDialog({ pending, onConfirm, onCancel }: Props) 
             onClick={() => onConfirm({ keepMapping: true })}
             className="px-4 py-1.5 rounded text-xs font-mono whitespace-nowrap bg-accent text-bg hover:opacity-90 transition"
           >
-            {COPY.replace}
+            {tv.csvReplaceAction}
           </button>
         ) : (
           <>
@@ -99,7 +81,7 @@ export function CsvImportConfirmDialog({ pending, onConfirm, onCancel }: Props) 
               onClick={() => onConfirm({ keepMapping: false })}
               className="px-4 py-1.5 rounded text-xs font-mono whitespace-nowrap border border-border text-text hover:bg-surface-2 transition-colors"
             >
-              {COPY.discardMapping}
+              {tv.csvDiscardMapping}
             </button>
             <button
               type="button"
@@ -107,7 +89,7 @@ export function CsvImportConfirmDialog({ pending, onConfirm, onCancel }: Props) 
               onClick={() => onConfirm({ keepMapping: true })}
               className="px-4 py-1.5 rounded text-xs font-mono whitespace-nowrap bg-accent text-bg hover:opacity-90 transition"
             >
-              {COPY.keepAndRemap}
+              {tv.csvKeepAndRemap}
             </button>
           </>
         )}
