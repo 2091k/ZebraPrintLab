@@ -188,10 +188,11 @@ export function applyBindingToObject<T extends LabelObject>(
     next = resolveVariableValue(variable, active, mode);
   }
   if (hasTemplateMarkers(next)) {
+    // Map lookup so a field with N markers stays O(N+V) not O(N·V).
+    const byName = new Map(variables.map((v) => [v.name, v]));
     next = resolveTemplateMarkers(next, (name) => {
-      const v = variables.find((x) => x.name === name);
-      if (!v) return undefined;
-      return resolveVariableValue(v, active, mode);
+      const v = byName.get(name);
+      return v ? resolveVariableValue(v, active, mode) : undefined;
     });
   }
   if (next === content) return obj;

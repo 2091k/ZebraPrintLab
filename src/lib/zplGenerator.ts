@@ -87,20 +87,28 @@ function planTemplateHeader(
   label: LabelConfig,
   variables: readonly Variable[],
 ): { headerLines: string[]; emitCtx: ZplEmitContext } {
+  // Pre-built maps keep the leaf walk + header emit O(N+V) instead
+  // of O(N·V) — a label with hundreds of objects and dozens of
+  // variables would otherwise re-scan the whole variables list per
+  // leaf per marker.
+  const varsById = new Map(variables.map((v) => [v.id, v]));
+  const varsByName = new Map(variables.map((v) => [v.name, v]));
+  const varsByFn = new Map(variables.map((v) => [v.fnNumber, v]));
+
   const templatePayloads: string[] = [];
   const templateFns = new Set<number>();
   const singleBindFns = new Set<number>();
   for (const leaf of flattenObjects(shifted)) {
     if (leaf.includeInExport === false) continue;
     if (leaf.variableId) {
-      const v = variables.find((x) => x.id === leaf.variableId);
+      const v = varsById.get(leaf.variableId);
       if (v) singleBindFns.add(v.fnNumber);
     }
     const c = getObjectStringContent(leaf);
     if (c === undefined || !hasTemplateMarkers(c)) continue;
     templatePayloads.push(c);
     for (const name of extractTemplateRefs(c)) {
-      const v = variables.find((x) => x.name === name);
+      const v = varsByName.get(name);
       if (v) templateFns.add(v.fnNumber);
     }
   }
@@ -114,7 +122,7 @@ function planTemplateHeader(
   if (pickedEmbedChar !== '#') headerLines.push(`^FE${pickedEmbedChar}`);
   for (const fn of [...templateFns].sort((a, b) => a - b)) {
     if (singleBindFns.has(fn)) continue;
-    const v = variables.find((x) => x.fnNumber === fn);
+    const v = varsByFn.get(fn);
     if (!v) continue;
     headerLines.push(`^FN${fn}${fdField(v.defaultValue)}`);
   }
