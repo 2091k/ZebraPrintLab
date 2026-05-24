@@ -22,7 +22,8 @@ import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { FieldLabel } from '../ui/FieldLabel';
 import { useT } from '../../lib/useT';
 import type { Translations } from '../../locales';
-import { getVariableSource, type VariableSource } from '../../lib/variableBinding';
+import { getObjectStringContent, getVariableSource, type VariableSource } from '../../lib/variableBinding';
+import { extractTemplateRefs } from '../../lib/fnTemplate';
 import { VariableSourceBadge } from './VariableSourceBadge';
 
 export function VariablesPanel() {
@@ -487,18 +488,36 @@ function formatDeleteMessage(
 }
 
 /** Walk every page (groups too) and tally how many fields reference each
- *  variable. Returns a Map keyed by variable.id. Variables with no
- *  bindings are absent from the map; callers default to 0. */
+ *  variable, either via single-bind `variableId` OR via inline
+ *  `«name»` template markers in their content. Returns a Map keyed by
+ *  variable.id. Variables with no bindings are absent; callers
+ *  default to 0. */
 function countBindings(
   pages: { objects: LabelObject[] }[],
   variables: readonly Variable[],
 ): Map<string, number> {
   const known = new Set(variables.map((v) => v.id));
+  const byName = new Map(variables.map((v) => [v.name, v.id]));
   const counts = new Map<string, number>();
   for (const page of pages) {
     for (const obj of walkObjects(page.objects)) {
+      // De-dupe per OBJECT across both binding styles: a field with
+      // both `variableId === V` and `«V»` in its content counts as
+      // one usage of V, not two. Mirrors how the user thinks about
+      // "where is V used" — one field = one place.
+      const refsInThisObj = new Set<string>();
       if (obj.variableId && known.has(obj.variableId)) {
-        counts.set(obj.variableId, (counts.get(obj.variableId) ?? 0) + 1);
+        refsInThisObj.add(obj.variableId);
+      }
+      const c = getObjectStringContent(obj);
+      if (c !== undefined) {
+        for (const name of extractTemplateRefs(c)) {
+          const id = byName.get(name);
+          if (id) refsInThisObj.add(id);
+        }
+      }
+      for (const id of refsInThisObj) {
+        counts.set(id, (counts.get(id) ?? 0) + 1);
       }
     }
   }

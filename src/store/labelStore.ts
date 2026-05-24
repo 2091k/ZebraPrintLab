@@ -19,6 +19,8 @@ import {
 } from '../types/Group';
 import { locales } from '../locales';
 import type { LocaleCode } from '../locales';
+import { renameTemplateMarker } from '../lib/fnTemplate';
+import { getObjectStringContent } from '../lib/variableBinding';
 import { isDefaultLabelaryHost, fetchPreview, labelaryErrorMessage } from '../lib/labelary';
 import {
   nextFreeFnNumber,
@@ -55,6 +57,35 @@ const LOCK_BYPASS_KEYS = new Set(['locked', 'visible', 'includeInExport', 'comme
 function isLockBypass(changes: ObjectChanges): boolean {
   const keys = Object.keys(changes);
   return keys.length > 0 && keys.every((k) => LOCK_BYPASS_KEYS.has(k));
+}
+
+/** Apply `renameTemplateMarker` to every leaf's `content` in a subtree.
+ *  Identity-preserving: returns the same array (and same node refs)
+ *  when no markers needed rewriting, so React memoisation downstream
+ *  stays effective for the common case where the rename touched no
+ *  templates. */
+function rewriteTemplateMarkers(
+  objects: LabelObject[],
+  oldName: string,
+  newName: string,
+): LabelObject[] {
+  let changed = false;
+  const next = objects.map((obj) => {
+    if (isGroup(obj)) {
+      const nextChildren = rewriteTemplateMarkers(obj.children, oldName, newName);
+      if (nextChildren === obj.children) return obj;
+      changed = true;
+      return { ...obj, children: nextChildren };
+    }
+    const content = getObjectStringContent(obj);
+    if (content === undefined) return obj;
+    const renamed = renameTemplateMarker(content, oldName, newName);
+    if (renamed === content) return obj;
+    changed = true;
+    const props = (obj as { props: object }).props;
+    return { ...obj, props: { ...props, content: renamed } } as LabelObject;
+  });
+  return changed ? next : objects;
 }
 
 function applyObjectChanges(
@@ -1109,9 +1140,23 @@ export const useLabelStore = create<LabelState>()(
             if (state.variables.some((v) => v.id !== id && v.fnNumber === changes.fnNumber)) return {};
           }
 
-          return {
+          const next: Partial<typeof state> = {
             variables: state.variables.map((v) => (v.id === id ? { ...v, ...changes } : v)),
           };
+          // Rename ripple: when the variable's name changes, every
+          // `«oldName»` marker in any object's content needs to point
+          // at the new name. Without this the templates dangle (resolve
+          // to literal text) and the user has no obvious way to fix
+          // them other than re-typing.
+          if (changes.name !== undefined && changes.name !== existing.name) {
+            const oldName = existing.name;
+            const newName = changes.name;
+            next.pages = state.pages.map((page) => ({
+              ...page,
+              objects: rewriteTemplateMarkers(page.objects, oldName, newName),
+            }));
+          }
+          return next;
         }),
 
       setVariables: (variables) =>
