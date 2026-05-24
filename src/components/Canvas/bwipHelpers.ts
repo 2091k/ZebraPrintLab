@@ -211,24 +211,10 @@ function bwipScale1D(
     : BWIP_SCALE;
 }
 
-export function eanCheckDigit(digits: string, w0: number, w1: number): string {
-  let sum = 0;
-  for (let i = 0; i < digits.length; i++)
-    sum += parseInt(digits[i] ?? "0", 10) * (i % 2 === 0 ? w0 : w1);
-  return String((10 - (sum % 10)) % 10);
-}
-
-/** Compute the UPC-E check digit from the 6 compressed data digits. */
-export function upceCheckDigit(digits6: string): string {
-  const [vA, vB, vC, vD, vE, vF] = digits6.padEnd(6, "0").split("");
-  const fi = parseInt(vF ?? "0", 10);
-  let exp: string;
-  if (fi <= 2) exp = `0${vA}${vB}${vF}0000${vC}${vD}${vE}`;
-  else if (fi === 3) exp = `0${vA}${vB}${vC}00000${vD}${vE}`;
-  else if (fi === 4) exp = `0${vA}${vB}${vC}${vD}00000${vE}`;
-  else exp = `0${vA}${vB}${vC}${vD}${vE}${vF}0000`;
-  return eanCheckDigit(exp, 3, 1);
-}
+// Check-digit math now lives in src/lib/barcodeCheckDigits.ts (pure,
+// no Canvas deps). Re-export here so existing callers (BarcodeObject)
+// keep working without touching every import.
+export { eanCheckDigit, upceCheckDigit } from "../../lib/barcodeCheckDigits";
 
 /**
  * Encode text as Code 128 subset B using bwip-js raw ^NNN format.

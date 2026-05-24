@@ -1,4 +1,4 @@
-import type { ObjectTypeDefinition, ObjectGroup, LabelObjectBase } from '../types/ObjectType';
+import type { ObjectTypeDefinition, ObjectGroup, LabelObjectBase, HriBehavior } from '../types/ObjectType';
 import { useT } from '../lib/useT';
 import type { Translations } from '../locales';
 import { inputCls, labelCls } from '../components/Properties/styles';
@@ -43,6 +43,8 @@ interface Barcode1DConfig {
   interpretationLocked?: boolean;
   /** Restrict allowed input characters; see {@link ContentSpec}. */
   contentSpec?: ContentSpec;
+  /** See {@link HriBehavior}. */
+  hri?: HriBehavior;
 }
 
 interface BarcodeLocale {
@@ -71,6 +73,7 @@ export function createBarcode1D(config: Barcode1DConfig): ObjectTypeDefinition<B
     defaultSize: { width: 300, height: 120 },
     heightLocked: config.heightLocked,
     interpretationLocked: config.interpretationLocked,
+    hri: config.hri,
 
     // Width-locked symbologies (currently just heightLocked = true ones like
     // GS1 DataBar) keep undefined so the transformer is disabled entirely.
