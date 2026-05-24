@@ -12,7 +12,7 @@
  * bwipHelpers.test.ts ensures every BCID-registered type has a case.
  */
 
-import type { LeafObject } from "../../registry";
+import { ObjectRegistry, type LeafObject } from "../../registry";
 import type { LabelObject } from "../../types/Group";
 import type { Gs1DatabarProps } from "../../registry/gs1databar";
 import { objectRotation } from "../../registry/rotation";
@@ -662,7 +662,12 @@ export function getDisplaySize(
       ? obj.props.printInterpretation ? UPC_SUPP_TEXT_ZONE_DOTS : 0
       : TEXT_ZONE_DOTS_BY_TYPE[obj.type] ?? 0;
   const textZonePx = dotsToPx(textZoneDots, scale, dpmm);
-  const isTextAbove = obj.type === "upcEanExtension";
+  // Source of truth for textAbove is the registry's HriBehavior — same
+  // field BarcodeObject consumes for its overlay positioning. Without
+  // this the bbox places bars at the top and reserves the zone at the
+  // bottom, but the renderer draws the text above the bars at negative
+  // y → text leaks out of the bbox. Bug spotted by gemini on PR #90.
+  const isTextAbove = ObjectRegistry[obj.type]?.hri?.textAbove ?? false;
 
   // Map the upright "below the bars" zone onto the rotated bbox: it travels
   // around the rectangle as the symbol rotates.

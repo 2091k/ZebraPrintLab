@@ -160,6 +160,10 @@ export interface ZplEmitContext {
  * bars in raw form with the standard textGap. Each leaf overrides only
  * what differs from the baseline, keeping BarcodeObject type-agnostic
  * for the generic HRI path.
+ *
+ * @example See registry/logmars.tsx (text above + wider gap + check digit
+ * formatter) and registry/upcEanExtension.tsx (text above + very tight gap)
+ * for the canonical patterns.
  */
 export interface HriBehavior {
   /** True when the HRI text sits above the bars (logmars spec, ^BS).
