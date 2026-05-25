@@ -267,36 +267,74 @@ export function BarcodeObject({
       );
     }
 
-    // ── Other 1D: separate Konva Text below (or above) the bars ──────────
-    const showText =
-      BARCODE_1D_TYPES.has(obj.type) &&
-      printInterp;
-    // Rotated 1D: text overlay rotated to match the barcode orientation.
-    const showRotatedText =
-      !isUpright &&
+    // ── 1D barcode with HRI (any rotation, except upright EAN/UPC which
+    //    has its own clipped path above). Text overlay always lives in
+    //    upright coords inside an inner rotated Group; the Group's
+    //    transform handles all R/I/B placement. For upright + non-EAN/
+    //    UPC the text additionally counter-scales during a resize drag
+    //    so HRI stays at constant visual size while the bars stretch.
+    const showHriOverlay =
       printInterpEnabled &&
-      BARCODE_1D_TYPES.has(obj.type);
+      BARCODE_1D_TYPES.has(obj.type) &&
+      !(isUpright && EAN_UPC_TYPES.has(obj.type));
 
-    if (showText) {
-      // LOGMARS renders the human-readable line above the bars (per spec).
-      // ^FO Y refers to the bar top, so text is drawn at negative y to extend
-      // above the group origin into the visual zone above the bars.
-      const aboveGap = aboveGapPx;
-      // Local y for the HRI text. The /sy form keeps a constant *visual* offset
-      // when the group is being scaled (sy = 1 at rest, ≠ 1 during a drag).
-      // Anchor against the BAR top (btY) for text-above, not the group
-      // origin: when the firmware reserves a text zone above the bars
-      // (logmars: 20 dots, ^BS f=Y: 18 dots) the group origin sits
-      // text-zone above the bar top, and ignoring btY pushes the text
-      // a full text-zone above where it should sit.
+    if (showHriOverlay) {
+      const ub = dim.upright;
+      const innerTr = rotatedGroupTransform(rotation, ub.barW, ub.barH);
+
+      // Build text overlay content in upright coords.
+      let overlayContent: React.ReactNode;
+      if (EAN_UPC_TYPES.has(obj.type)) {
+        const bwipSc = get1DBwipScale(moduleWidth, scale, dpmm);
+        // Upright canvas dimension along the encoding axis. For R/B the
+        // bwip bitmap is rotated 90°, so the upright width sits on the
+        // canvas's `height` field; for N/I it's `width` as-is.
+        const isQuarter = rotation === "R" || rotation === "B";
+        const uprightCanvasW = isQuarter ? barcodeCanvas.height : barcodeCanvas.width;
+        const layout = getEanUpcLayout(obj.type as EanUpcType, ub.w, uprightCanvasW, bwipSc);
+        const { nodes } = buildEanUpcDigitOverlay({
+          type: obj.type as EanUpcType,
+          displayText,
+          layout,
+          uprightBarW: ub.barW,
+          uprightBarH: ub.barH,
+          textGap,
+          textFontSize,
+        });
+        overlayContent = nodes;
+      } else {
+        // Other 1D: single centered text. textRef is wired only for the
+        // upright case so handleTransform/End can counter-scale it; for
+        // rotated paths the counter-scale math doesn't apply (would
+        // scale along upright-Y which after R/B is screen-X), so the
+        // ref stays undefined and the bars+text just scale together
+        // during a rotated resize drag — minor visual nit, no broken
+        // print output.
+        const textY = isTextAbove
+          ? -textFontSize - aboveGapPx
+          : ub.barH + textGap;
+        overlayContent = (
+          <Text
+            ref={isUpright ? setTextRef : undefined}
+            x={0} y={textY} width={Math.max(ub.barW, 1)}
+            text={displayText} fontSize={textFontSize}
+            fontFamily="'Courier New', monospace" fontStyle="bold"
+            align="center" wrap="none" fill="#000000" listening={false}
+          />
+        );
+      }
+
+      // Counter-scale only applies to upright Other 1D. textLocalY here
+      // returns the position in inner-Group local coords (the inner-
+      // Group origin sits at bar top-left for upright N, so subtracting
+      // btY from the legacy outer-coord formula gives the same screen
+      // y). For above-bars (logmars): inner-y = -(font + gap)/sy. For
+      // below: inner-y = barH + gap/sy.
+      const useUprightTransform = isUpright && !EAN_UPC_TYPES.has(obj.type);
       const textLocalY = (sy: number) =>
         isTextAbove
-          ? btY - (textFontSize + aboveGap) / sy
-          : Math.max(bh, 1) + textGap / sy;
-      const txtY = textLocalY(1);
-
-      // Counter-scale the text so it stays at constant pixel size while the
-      // bars stretch with the parent group's scaleY during a resize drag.
+          ? -(textFontSize + aboveGapPx) / sy
+          : ub.barH + textGap / sy;
       const handleTransform = () => {
         const grp = groupRef.current;
         const txt = textRef.current;
@@ -306,38 +344,30 @@ export function BarcodeObject({
         txt.scaleY(1 / sy);
         txt.y(textLocalY(sy));
       };
-
-      // react-konva does not track imperatively-set scaleY/y. Reset both here
-      // so the next drag starts clean. For logmars the JSX y is constant, so
-      // without an explicit reset react-konva would not re-apply it on the
-      // post-commit render and the text would stay at its last drag-time y.
+      // react-konva does not track imperatively-set scaleY/y; reset
+      // both so the next drag starts clean. For logmars the JSX y is a
+      // constant non-zero value, so without explicit reset react-konva
+      // would not re-apply it on the post-commit render.
       const handleTransformEnd = () => {
         const txt = textRef.current;
         if (!txt) return;
         txt.scaleY(1);
-        txt.y(txtY);
+        txt.y(textLocalY(1));
       };
 
       return (
         <Group
-          ref={groupRef}
+          ref={useUprightTransform ? groupRef : undefined}
           id={obj.id}
           x={x}
           y={y}
           draggable={!obj.locked}
           {...selectionHandlers(onSelect)}
-          onDragMove={(e) =>
-            e.target.position(snapPos(e.target.x(), e.target.y()))
-          }
+          onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
           onDragEnd={handleDragEnd}
-          onTransform={handleTransform}
-          onTransformEnd={handleTransformEnd}
+          onTransform={useUprightTransform ? handleTransform : undefined}
+          onTransformEnd={useUprightTransform ? handleTransformEnd : undefined}
         >
-          {/* No invisible footprint rect: bbox shrinks to the bars (HRI
-              Text node has getSelfRect=0 already). The firmware text-zone
-              reservation stays implicit — it only matters for print
-              output, not for canvas selection / smart-align, where the
-              user expects the visual focus to sit on the bars. */}
           <KImage
             x={btX}
             y={btY}
@@ -350,106 +380,15 @@ export function BarcodeObject({
             strokeWidth={isSelected ? 2 : 0}
             strokeScaleEnabled={false}
           />
-          <Text
-            ref={setTextRef}
-            x={0}
-            y={txtY}
-            width={Math.max(w, 1)}
-            text={displayText}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />
-        </Group>
-      );
-    }
-
-    // ── Rotated 1D: text overlay rotated alongside the bars ──────────────
-    // Both branches (EAN/UPC + Other 1D) render text in upright coords
-    // inside an inner rotated Group; the Group's transform handles all
-    // R/I/B placement, so the per-rotation tx/ty switches from the
-    // earlier hand-math are gone. isTextAbove + rotGap come from the
-    // registry — same source as the upright showText branch above, so
-    // rotated and N stay visually consistent per type.
-    if (showRotatedText) {
-      const rotGap = aboveGapPx;
-
-      // ── EAN/UPC: same upright digit overlay as the printInterp
-      //    branch above, wrapped in an inner rotated Group. The Group's
-      //    transform handles all R/I/B placement; the digit splits
-      //    themselves live in the shared buildEanUpcDigitOverlay
-      //    helper so upright and rotated stay in lock-step.
-      let textElements: React.ReactNode;
-      if (EAN_UPC_TYPES.has(obj.type)) {
-        const ub = dim.upright;
-        const bwipSc = get1DBwipScale(moduleWidth, scale, dpmm);
-        // Upright canvas dimension along the encoding axis. For R/B the
-        // bwip bitmap is rotated 90°, so the upright width sits on the
-        // canvas's `height` field; for N/I it's `width` as-is.
-        const isQuarter = rotation === "R" || rotation === "B";
-        const uprightCanvasW = isQuarter ? barcodeCanvas.height : barcodeCanvas.width;
-        const layout = getEanUpcLayout(obj.type as EanUpcType, ub.w, uprightCanvasW, bwipSc);
-        const { nodes: digitNodes } = buildEanUpcDigitOverlay({
-          type: obj.type as EanUpcType,
-          displayText,
-          layout,
-          uprightBarW: ub.barW,
-          uprightBarH: ub.barH,
-          textGap,
-          textFontSize,
-        });
-        const innerTr = rotatedGroupTransform(rotation, ub.barW, ub.barH);
-        textElements = (
-          <Group x={dim.barLeftPx + innerTr.x} y={dim.barTopPx + innerTr.y} rotation={innerTr.rotation}>
-            {digitNodes}
+          <Group ref={excludeGroupFromBbox}>
+            <Group
+              x={dim.barLeftPx + innerTr.x}
+              y={dim.barTopPx + innerTr.y}
+              rotation={innerTr.rotation}
+            >
+              {overlayContent}
+            </Group>
           </Group>
-        );
-      } else {
-        // ── Other 1D: single centered text inside an upright-coords
-        //    rotated container. The inner Group's transform places its
-        //    upright origin at the bar sub-rect's rotated origin, so
-        //    `<Text x={0} y={textY} width={uprightBarW}>` lands the same
-        //    spot for every rotation — no per-rotation tx/ty math. The
-        //    upright text-Y formula mirrors the showText branch above
-        //    (isTextAbove → above bars; else → below) so rotated and N
-        //    stay visually consistent per type without duplication.
-        const ub = dim.upright;
-        const innerTr = rotatedGroupTransform(rotation, ub.barW, ub.barH);
-        const textY = isTextAbove
-          ? -textFontSize - rotGap
-          : ub.barH + textGap;
-        textElements = (
-          <Group x={dim.barLeftPx + innerTr.x} y={dim.barTopPx + innerTr.y} rotation={innerTr.rotation}>
-            <Text
-              x={0} y={textY} width={Math.max(ub.barW, 1)}
-              text={displayText} fontSize={textFontSize}
-              fontFamily="'Courier New', monospace" fontStyle="bold"
-              align="center" wrap="none" fill="#000000" listening={false}
-            />
-          </Group>
-        );
-      }
-
-      return (
-        <Group
-          id={obj.id} x={x} y={y} draggable
-          {...selectionHandlers(onSelect)}
-          onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
-          onDragEnd={handleDragEnd}
-        >
-          <KImage x={btX} y={btY} image={barcodeCanvas} crop={bitmapCrop}
-            width={bw} height={bh}
-            imageSmoothingEnabled={false}
-            stroke={isSelected ? colors.selection : undefined}
-            strokeWidth={isSelected ? 2 : 0}
-            strokeScaleEnabled={false}
-          />
-          {textElements && (
-            <Group ref={excludeGroupFromBbox}>{textElements}</Group>
-          )}
         </Group>
       );
     }
