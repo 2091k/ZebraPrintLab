@@ -254,7 +254,28 @@ export const text: ObjectTypeDefinition<TextProps> = {
           <label className={labelCls}>{t.registry.text.content}</label>
           <TemplateContentInput
             value={p.content}
-            onChange={(content) => onChange({ content })}
+            onChange={(content) => {
+              // Auto-enable ^FB block-text when the user types a
+              // newline (printer ignores embedded `\n` in plain ^FD,
+              // so a visual second line in the editor would silently
+              // collapse to one row on the label). Width default
+              // mirrors the manual Tekstblok toggle. `blockLines`
+              // grows with line count so the printer doesn't truncate
+              // — never shrinks back, since the user may want a
+              // higher cap than the current content for CSV-bound
+              // rows of varying length.
+              const lines = content.split("\n").length;
+              const patch: Partial<TextProps> = { content };
+              if (lines > 1 && !p.blockWidth) {
+                patch.blockWidth = 400;
+                patch.blockLines = Math.max(lines, 3);
+                patch.blockLineSpacing = 0;
+                patch.blockJustify = "L";
+              } else if (p.blockWidth && lines > (p.blockLines ?? 1)) {
+                patch.blockLines = lines;
+              }
+              onChange(patch);
+            }}
           />
         </div>
 

@@ -5,6 +5,7 @@ import {
   useState,
   useLayoutEffect,
 } from "react";
+import { flushSync } from "react-dom";
 import { useT } from "../../lib/useT";
 import { useLabelStore } from "../../store/labelStore";
 import { CLOCK_TOKEN_LABELS } from "../../lib/fcTemplate";
@@ -49,12 +50,8 @@ interface Props {
  *  - on input the DOM is converted back to plain text and emitted via
  *    `onChange` — letting the parent re-derive the rendered DOM
  */
-// `leading-tight` (1.25 ⇒ 15px for text-xs) hugs the glyph height so
-// the selection rect doesn't paint a few pixels of empty leading
-// below the text. `py-2` then restores the visual rhythm a more
-// generous line-height would have given.
 const SHARED_CLS =
-  "w-full min-h-[2rem] bg-surface-2 border border-border rounded pl-2 pr-7 py-2 text-xs font-mono leading-tight whitespace-pre-wrap break-words focus:border-accent focus:outline-none";
+  "w-full min-h-[1.75rem] bg-surface-2 border border-border rounded pl-2 pr-7 py-1 text-xs font-mono leading-5 whitespace-pre-wrap break-words focus:border-accent focus:outline-none";
 
 const SEGMENT_CLASS: Record<MarkerSegment["kind"], string> = {
   text: "",
@@ -63,22 +60,29 @@ const SEGMENT_CLASS: Record<MarkerSegment["kind"], string> = {
   orphan: "text-error underline decoration-wavy decoration-error/60",
 };
 
-/** Build the editor's HTML representation of `segments`. Non-empty
- *  lines wrap in a span (so token colours apply); a literal `\n` in
- *  the value becomes a bare `<br>` between lines. A trailing `\n`
- *  appends a final `<br>` so the empty last line stays clickable
- *  (Chrome's contenteditable extends the cursor onto the next line
- *  past a trailing BR without needing an empty text container). */
+/** Build the editor's HTML representation of `segments`. Markers
+ *  wrap in a coloured span; plain-text segments become raw text
+ *  nodes; a literal `\n` becomes a bare `<br>` between siblings.
+ *  Flatter than wrapping each line in its own span: Chrome's caret
+ *  algorithm handles `(parent, indexAfterBR)` reliably as long as
+ *  there's a real text node on either side to land in, which the
+ *  bare-text emission for plain segments naturally produces. */
 function segmentsToHTML(segments: MarkerSegment[]): string {
   const parts: string[] = [];
   for (const s of segments) {
     const cls = SEGMENT_CLASS[s.kind];
-    const lines = s.text.split("\n");
-    lines.forEach((line, i) => {
-      if (i > 0) parts.push("<br>");
-      if (line === "") return;
-      parts.push(cls ? `<span class="${cls}">${escapeHTML(line)}</span>` : `<span>${escapeHTML(line)}</span>`);
-    });
+    if (s.kind === "text") {
+      // Plain text: emit as text nodes joined by <br>, no wrapper.
+      const lines = s.text.split("\n");
+      lines.forEach((line, i) => {
+        if (i > 0) parts.push("<br>");
+        if (line !== "") parts.push(escapeHTML(line));
+      });
+    } else {
+      // Markers never contain `\n` (the grammar `«[^»]+»` excludes
+      // newlines), so a single coloured span is always correct.
+      parts.push(`<span class="${cls}">${escapeHTML(s.text)}</span>`);
+    }
   }
   return parts.join("");
 }
@@ -232,40 +236,31 @@ export function TemplateContentInput({
         return;
       }
       const commitInline = (next: string, nextCaret: number) => {
-        onChange(next);
-        // requestAnimationFrame schedules after React's render +
-        // useLayoutEffect commit, so the caret-restore inside the
-        // effect doesn't overwrite this position.
-        requestAnimationFrame(() => {
-          if (!editor) return;
-          editor.focus();
-          const pos = findCaretPosition(editor, nextCaret);
-          const range = document.createRange();
-          range.setStart(pos.node, pos.offset);
-          range.collapse(true);
-          const sel = window.getSelection();
-          sel?.removeAllRanges();
-          sel?.addRange(range);
-        });
-      };
-      if (inputType === "insertParagraph" || inputType === "insertLineBreak") {
-        // Browser-native Enter on contenteditable inserts a `<br>` or
-        // wraps lines in `<div>` blocks (Chrome) which the render
-        // effect would then have to re-flatten back into `\n`. Route
-        // the newline through the canonical value instead so the DOM
-        // shape stays the predictable `<span>...<br>...</span>` tree.
-        e.preventDefault();
+        // flushSync forces React to render synchronously here so the
+        // caret restore lands BEFORE the next key event (otherwise a
+        // user typing fast through Enter+letter races us — the letter
+        // fires before the rebuilt DOM gets its caret restored and
+        // ends up appended to the previous line).
+        flushSync(() => onChange(next));
+        if (!editor) return;
+        editor.focus();
+        const pos = findCaretPosition(editor, nextCaret);
+        const range = document.createRange();
+        range.setStart(pos.node, pos.offset);
+        range.collapse(true);
         const sel = window.getSelection();
-        if (!sel || sel.rangeCount === 0) return;
-        const start = editor.contains(sel.anchorNode)
-          ? getCaretOffset(editor, sel.anchorNode!, sel.anchorOffset)
-          : value.length;
-        const end = editor.contains(sel.focusNode)
-          ? getCaretOffset(editor, sel.focusNode!, sel.focusOffset)
-          : start;
-        const lo = Math.min(start, end);
-        const hi = Math.max(start, end);
-        commitInline(value.slice(0, lo) + "\n" + value.slice(hi), lo + 1);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      };
+      if (inputType === "insertParagraph") {
+        // Chrome's native `insertParagraph` wraps following content
+        // in a `<div>` which `domToPlainText` would have to special-
+        // case. Force a plain `<br>` insertion instead via
+        // `insertLineBreak` semantics — Chrome's input event for
+        // that inserts a single BR at the caret and the next
+        // keystroke continues normally.
+        e.preventDefault();
+        document.execCommand("insertLineBreak");
         return;
       }
       if (inputType === "deleteContentBackward" || inputType === "deleteContentForward") {

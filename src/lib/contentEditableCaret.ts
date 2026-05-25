@@ -112,12 +112,16 @@ export function findCaretPosition(
       if (remaining === 0) {
         // Caret right AFTER the <br>. A bare (parent, brIndex+1)
         // position confuses Chrome's caret algorithm — it snaps the
-        // cursor back into the preceding text node and typing lands on
-        // the wrong line. Prefer to enter the next sibling element
-        // (e.g. an empty `<span></span>` left over for exactly this
-        // purpose) so a typed character creates a text node inside
-        // it on the new line.
+        // cursor back into the preceding text node. Prefer to land
+        // inside the next sibling: text node → (textNode, 0); element
+        // → (element, 0). Only fall back to the parent-index
+        // position when the BR is the last child (Chrome handles
+        // end-of-content reliably).
         const next = el.nextSibling;
+        if (next && next.nodeType === Node.TEXT_NODE) {
+          result = { node: next, offset: 0 };
+          return;
+        }
         if (next && next.nodeType === Node.ELEMENT_NODE) {
           result = { node: next, offset: 0 };
           return;
