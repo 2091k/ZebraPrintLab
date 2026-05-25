@@ -16,6 +16,7 @@ import {
 } from "./bwipHelpers";
 import { objectRotation } from "../../registry/rotation";
 import { rotatedGroupTransform } from "./rotatedGroupTransform";
+import { buildEanUpcDigitOverlay } from "./eanUpcDigitNodes";
 import {
   QR_FO_Y_OFFSET_DOTS,
   QR_FT_MODULE_OFFSET,
@@ -223,202 +224,15 @@ export function BarcodeObject({
         barcodeCanvas.width,
         bwipSc,
       );
-      const ldW = textFontSize * 1.2; // width reserved for leading/trailing digit
-
-      let textNodes: React.ReactNode[] = [];
-      let clipLeft = 0;
-      let clipRight = 0;
-
-      if (obj.type === "ean13") {
-        // 13-digit string formatted by registry's formatEan13Hri (includes check digit).
-        const allDigits = displayText;
-
-        const { xLeft: xLeft13, xRight: xRight13, halfWidth: halfW13 } = layout;
-
-        const textY = Math.max(bh, 1) + textGap;
-        clipLeft = ldW;
-        textNodes = [
-          <Text
-            key="d0"
-            x={-ldW}
-            y={textY}
-            width={ldW}
-            text={allDigits[0]}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          <Text
-            key="dl"
-            x={xLeft13}
-            y={textY}
-            width={halfW13}
-            text={allDigits.slice(1, 7)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          <Text
-            key="dr"
-            x={xRight13}
-            y={textY}
-            width={halfW13}
-            text={allDigits.slice(7, 13)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-        ];
-      } else if (obj.type === "ean8") {
-        // 8-digit string formatted by registry's formatEan8Hri.
-        const allDigits = displayText;
-
-        const { xLeft: xLeft8, xRight: xRight8, halfWidth: halfW8 } = layout;
-
-        const textY = Math.max(bh, 1) + textGap;
-        textNodes = [
-          <Text
-            key="dl"
-            x={xLeft8}
-            y={textY}
-            width={halfW8}
-            text={allDigits.slice(0, 4)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          <Text
-            key="dr"
-            x={xRight8}
-            y={textY}
-            width={halfW8}
-            text={allDigits.slice(4, 8)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-        ];
-      } else if (obj.type === "upca") {
-        // 12-digit string formatted by registry's formatUpcaHri.
-        const allDigits = displayText;
-
-        const { xLeft: xLeftUpca, xRight: xRightUpca, halfWidth: halfUpca } =
-          layout;
-
-        const textY = Math.max(bh, 1) + textGap;
-        clipLeft = ldW;
-        textNodes = [
-          // number system digit — floated left of barcode image
-          <Text
-            key="d0"
-            x={-ldW}
-            y={textY}
-            width={ldW}
-            text={allDigits[0]}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          // left 5 digits
-          <Text
-            key="dl"
-            x={xLeftUpca}
-            y={textY}
-            width={halfUpca}
-            text={allDigits.slice(1, 6)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          // right 5 digits
-          <Text
-            key="dr"
-            x={xRightUpca}
-            y={textY}
-            width={halfUpca}
-            text={allDigits.slice(6, 11)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-        ];
-      } else if (obj.type === "upce") {
-        // displayText = "0" + 6 data digits + check digit (8 chars total),
-        // formatted by registry's formatUpceHri.
-        const digits6 = displayText.slice(1, 7);
-        const checkDigit = displayText[7] ?? "";
-
-        // UPC-E: 6 digits centered over the data area (modules 3–44 of 51)
-        const { xLeft: xMid, halfWidth: midW } = layout;
-        const textY = Math.max(bh, 1) + textGap;
-        clipLeft = ldW;
-        clipRight = ldW;
-        textNodes = [
-          <Text
-            key="d0"
-            x={-ldW}
-            y={textY}
-            width={ldW}
-            text="0"
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          <Text
-            key="dm"
-            x={xMid}
-            y={textY}
-            width={midW}
-            text={digits6}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          <Text
-            key="dc"
-            x={w + 2}
-            y={textY}
-            width={ldW}
-            text={checkDigit}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="left"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-        ];
-      }
+      const { nodes: textNodes, clipLeft, clipRight } = buildEanUpcDigitOverlay({
+        type: obj.type as EanUpcType,
+        displayText,
+        layout,
+        uprightBarW: w,
+        uprightBarH: bh,
+        textGap,
+        textFontSize,
+      });
 
       return (
         <Group
@@ -563,12 +377,11 @@ export function BarcodeObject({
     if (showRotatedText) {
       const rotGap = aboveGapPx;
 
-      // ── EAN/UPC: reproduce the upright digit layout inside an inner
-      //    rotated Group. Each digit node lives at its upright x/y
-      //    (xLeft/xRight from getEanUpcLayout, textY just below bars);
-      //    the inner Group's transform handles the visual rotation, so
-      //    the per-rotation tx/ty/tRot triple is gone. Same source-of-
-      //    truth digit splits as the upright EAN/UPC branch above.
+      // ── EAN/UPC: same upright digit overlay as the printInterp
+      //    branch above, wrapped in an inner rotated Group. The Group's
+      //    transform handles all R/I/B placement; the digit splits
+      //    themselves live in the shared buildEanUpcDigitOverlay
+      //    helper so upright and rotated stay in lock-step.
       let textElements: React.ReactNode;
       if (EAN_UPC_TYPES.has(obj.type)) {
         const ub = dim.upright;
@@ -579,52 +392,16 @@ export function BarcodeObject({
         const isQuarter = rotation === "R" || rotation === "B";
         const uprightCanvasW = isQuarter ? barcodeCanvas.height : barcodeCanvas.width;
         const layout = getEanUpcLayout(obj.type as EanUpcType, ub.w, uprightCanvasW, bwipSc);
-        const { xLeft, xRight, halfWidth: halfW } = layout;
-        const ldW = textFontSize * 1.2;
-        const textY = ub.barH + textGap;
+        const { nodes: digitNodes } = buildEanUpcDigitOverlay({
+          type: obj.type as EanUpcType,
+          displayText,
+          layout,
+          uprightBarW: ub.barW,
+          uprightBarH: ub.barH,
+          textGap,
+          textFontSize,
+        });
         const innerTr = rotatedGroupTransform(rotation, ub.barW, ub.barH);
-
-        const tStyle = {
-          fontSize: textFontSize,
-          fontFamily: "'Courier New', monospace" as const,
-          fontStyle: "bold" as const,
-          wrap: "none" as const,
-          fill: "#000000",
-          listening: false,
-        };
-
-        const mainDigits = (key: string, x: number, width: number, text: string) =>
-          <Text key={key} x={x} y={textY} width={Math.max(width, 1)} text={text} align="center" {...tStyle} />;
-        const sysDigit = (text: string) =>
-          <Text key="sys" x={-ldW} y={textY} width={ldW} text={text} align="center" {...tStyle} />;
-        const trailDigit = (text: string) =>
-          <Text key="trail" x={ub.barW + 2} y={textY} width={ldW} text={text} align="left" {...tStyle} />;
-
-        let digitNodes: React.ReactNode[] = [];
-        if (obj.type === "ean13") {
-          digitNodes = [
-            sysDigit(displayText[0] ?? ""),
-            mainDigits("left", xLeft, halfW, displayText.slice(1, 7)),
-            mainDigits("right", xRight, halfW, displayText.slice(7, 13)),
-          ];
-        } else if (obj.type === "ean8") {
-          digitNodes = [
-            mainDigits("left", xLeft, halfW, displayText.slice(0, 4)),
-            mainDigits("right", xRight, halfW, displayText.slice(4, 8)),
-          ];
-        } else if (obj.type === "upca") {
-          digitNodes = [
-            sysDigit(displayText[0] ?? ""),
-            mainDigits("left", xLeft, halfW, displayText.slice(1, 6)),
-            mainDigits("right", xRight, halfW, displayText.slice(6, 11)),
-          ];
-        } else if (obj.type === "upce") {
-          digitNodes = [
-            sysDigit(displayText[0] ?? "0"),
-            mainDigits("mid", xLeft, halfW, displayText.slice(1, 7)),
-            trailDigit(displayText[7] ?? ""),
-          ];
-        }
         textElements = (
           <Group x={dim.barLeftPx + innerTr.x} y={dim.barTopPx + innerTr.y} rotation={innerTr.rotation}>
             {digitNodes}
