@@ -355,6 +355,22 @@ function KonvaObjectInner({
           fill="#000000"
           stroke={isSelected ? colors.selection : undefined}
           strokeWidth={isSelected ? 1 : 0}
+          {...(obj.type === "text" && obj.props.blockWidth
+            ? {
+                width: dotsToPx(obj.props.blockWidth, scale, dpmm),
+                // Konva supports left/center/right; ZPL "J" (justified)
+                // has no Konva equivalent so fall back to left — the
+                // printed output still justifies, the canvas just
+                // approximates.
+                align: (
+                  obj.props.blockJustify === "C"
+                    ? "center"
+                    : obj.props.blockJustify === "R"
+                      ? "right"
+                      : "left"
+                ),
+              }
+            : {})}
         />
         {/* ^FB wrap-guide: a dashed vertical line at blockWidth so
             the user sees where the printer will break the text.
