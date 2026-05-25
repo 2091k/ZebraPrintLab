@@ -15,6 +15,8 @@ import { applyBindingToObject, buildActiveCsvRow } from "../../lib/variableBindi
 import { ZPL_FONT_HEIGHT_TO_CSS_RATIO } from "./textPositionTransforms";
 import { getTextRenderMetrics } from "./textRenderMetrics";
 import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
+import { DEFAULT_GS_SYMBOL_META, GS_SYMBOLS } from "../../registry/symbol";
+import { rotatedGroupTransform } from "./rotatedGroupTransform";
 
 type Props = KonvaObjectProps;
 
@@ -377,6 +379,77 @@ function KonvaObjectInner({
             />
           );
         })() : null}
+      </Group>
+    );
+  }
+
+  if (obj.type === "symbol") {
+    const p = obj.props;
+    const w = dotsToPx(p.width, scale, dpmm);
+    const h = dotsToPx(p.height, scale, dpmm);
+    const meta = GS_SYMBOLS.find((s) => s.code === p.symbol) ?? DEFAULT_GS_SYMBOL_META;
+    // UL/CSA glyphs aren't real Unicode characters; the printer renders
+    // a stylised logo. The canvas approximates with the letters inside
+    // a rounded outline so the user still sees what'll print. ®/©/™ are
+    // genuine Unicode glyphs and render directly.
+    const isLogo = p.symbol === "D" || p.symbol === "E";
+    const fontSize = Math.min(h, w) * (isLogo ? 0.55 : 1);
+    // Inner rotated Group so the upright (w × h) content fills the
+    // rotated bbox starting at (0, 0) — same pattern barcode + text
+    // use, keeps ^FO consistent across the editor regardless of
+    // rotation.
+    const innerTr = rotatedGroupTransform(p.rotation, w, h);
+    return (
+      <Group
+        id={obj.id}
+        x={x}
+        y={y}
+        draggable={!obj.locked}
+        {...selectionHandlers(onSelect)}
+        onDragMove={handleDragMove}
+        onDragEnd={handleDragEnd}
+      >
+        <Group x={innerTr.x} y={innerTr.y} rotation={innerTr.rotation}>
+          {isLogo && (
+            <Rect
+              width={w}
+              height={h}
+              stroke="#000000"
+              // min(w,h) so a tall thin or wide flat logo gets a
+              // proportional stroke instead of a fat band when one
+              // axis is much smaller than the other.
+              strokeWidth={Math.max(1, Math.min(w, h) * 0.05)}
+              strokeScaleEnabled={false}
+              cornerRadius={Math.min(w, h) * 0.15}
+              fill="transparent"
+            />
+          )}
+          <Text
+            x={0}
+            y={0}
+            width={w}
+            height={h}
+            align="center"
+            verticalAlign="middle"
+            text={meta.glyph}
+            fontSize={fontSize}
+            fontFamily="'Courier New', monospace"
+            fontStyle="bold"
+            fill="#000000"
+            listening={false}
+          />
+          {isSelected && (
+            <Rect
+              width={w}
+              height={h}
+              stroke={colors.selection}
+              strokeWidth={1.5}
+              strokeScaleEnabled={false}
+              fill="transparent"
+              listening={false}
+            />
+          )}
+        </Group>
       </Group>
     );
   }
