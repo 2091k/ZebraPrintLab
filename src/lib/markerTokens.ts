@@ -41,3 +41,46 @@ export function tokeniseMarkers(
   if (last < content.length) out.push({ kind: "text", text: content.slice(last) });
   return out;
 }
+
+/** Marker range [start, end) containing or adjacent to `pos`, honouring
+ *  the atomic-delete edge rules:
+ *   - `backspace`: cursor right after the closing `»` (or anywhere
+ *     inside the marker) → marker is deletable as one unit
+ *   - `delete`:    cursor right before the opening `«` (or anywhere
+ *     inside) → same
+ *   - any other position → null (caller falls back to default editing)
+ *
+ *  Used by the content-editor's `onKeyDown` to treat every `«…»` as a
+ *  single deletable unit; a `Backspace` mid-marker would otherwise
+ *  leave a half-broken `«nam»` that the resolver can't bind. */
+export function findAtomicMarker(
+  content: string,
+  pos: number,
+  direction: "backspace" | "delete",
+): { start: number; end: number } | null {
+  for (const m of content.matchAll(MARKER_RE)) {
+    const start = m.index ?? 0;
+    const end = start + m[0].length;
+    if (direction === "backspace") {
+      if (pos > start && pos <= end) return { start, end };
+    } else {
+      if (pos >= start && pos < end) return { start, end };
+    }
+  }
+  return null;
+}
+
+/** Marker range [start, end) containing `pos`, with both endpoints
+ *  treated as "inside". Used by the content-editor's `onDoubleClick`
+ *  to select the whole marker instead of the default word-fragment. */
+export function findMarkerContaining(
+  content: string,
+  pos: number,
+): { start: number; end: number } | null {
+  for (const m of content.matchAll(MARKER_RE)) {
+    const start = m.index ?? 0;
+    const end = start + m[0].length;
+    if (pos >= start && pos <= end) return { start, end };
+  }
+  return null;
+}

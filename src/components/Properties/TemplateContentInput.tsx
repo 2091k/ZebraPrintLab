@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
+import { useEffect, useMemo, useRef, useState, useLayoutEffect, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useT } from "../../lib/useT";
 import { useLabelStore } from "../../store/labelStore";
 import { CLOCK_TOKEN_LABELS } from "../../lib/fcTemplate";
-import { tokeniseMarkers } from "../../lib/markerTokens";
+import { findAtomicMarker, findMarkerContaining, tokeniseMarkers } from "../../lib/markerTokens";
 import type { Variable } from "../../types/Variable";
 
 interface Props {
@@ -114,6 +114,47 @@ export function TemplateContentInput({
     });
   };
 
+  const replaceRange = (start: number, end: number, replacement: string) => {
+    const ta = taRef.current;
+    onChange(value.slice(0, start) + replacement + value.slice(end));
+    queueMicrotask(() => {
+      if (!ta) return;
+      const pos = start + replacement.length;
+      ta.focus();
+      ta.setSelectionRange(pos, pos);
+    });
+  };
+
+  /** Treat each `«marker»` as a single deletable unit: Backspace right
+   *  after the closing `»` (or anywhere inside) deletes the whole
+   *  marker; Delete right before the opening `«` (or inside) does the
+   *  same. Without this, single-char edits inside a marker leave a
+   *  broken `«nam»` token that won't resolve at render time. */
+  const onKeyDown = (e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
+    const ta = taRef.current;
+    if (!ta || ta.selectionStart !== ta.selectionEnd) return;
+    if (e.key !== "Backspace" && e.key !== "Delete") return;
+    const m = findAtomicMarker(
+      value,
+      ta.selectionStart,
+      e.key === "Backspace" ? "backspace" : "delete",
+    );
+    if (!m) return;
+    e.preventDefault();
+    replaceRange(m.start, m.end, "");
+  };
+
+  /** Double-click inside a marker selects the whole marker as a range
+   *  instead of the browser's default word-boundary selection (which
+   *  would land on a fragment like `name` from `«name»`). Falls
+   *  through when the click isn't inside a marker. */
+  const onDoubleClick = () => {
+    const ta = taRef.current;
+    if (!ta) return;
+    const m = findMarkerContaining(value, ta.selectionStart);
+    if (m) ta.setSelectionRange(m.start, m.end);
+  };
+
   const syncScroll = () => {
     const ta = taRef.current;
     const mirror = mirrorRef.current;
@@ -158,6 +199,8 @@ export function TemplateContentInput({
         maxLength={maxLength}
         placeholder={placeholder}
         onChange={(e) => onChange(sanitise ? sanitise(e.target.value) : e.target.value)}
+        onKeyDown={onKeyDown}
+        onDoubleClick={onDoubleClick}
         onScroll={syncScroll}
         spellCheck={false}
       />
