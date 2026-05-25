@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  rotatedGroupTransform,
-  rotatedBboxDims,
-} from "./rotatedGroupTransform";
+import { rotatedGroupTransform } from "./rotatedGroupTransform";
 
 describe("rotatedGroupTransform", () => {
   it("returns identity for N", () => {
@@ -29,14 +26,3 @@ describe("rotatedGroupTransform", () => {
   });
 });
 
-describe("rotatedBboxDims", () => {
-  it("keeps axes for N and I", () => {
-    expect(rotatedBboxDims("N", 100, 40)).toEqual({ width: 100, height: 40 });
-    expect(rotatedBboxDims("I", 100, 40)).toEqual({ width: 100, height: 40 });
-  });
-
-  it("swaps axes for R and B", () => {
-    expect(rotatedBboxDims("R", 100, 40)).toEqual({ width: 40, height: 100 });
-    expect(rotatedBboxDims("B", 100, 40)).toEqual({ width: 40, height: 100 });
-  });
-});

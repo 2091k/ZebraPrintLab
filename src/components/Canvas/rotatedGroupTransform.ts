@@ -48,16 +48,3 @@ export function rotatedGroupTransform(
   }
 }
 
-/** Outer-bbox dimensions for a given upright (W × H) content under
- *  rotation. R / B swap axes; N / I keep them. Useful when the caller
- *  needs the rotated footprint (e.g. for an invisible bbox rect). */
-export function rotatedBboxDims(
-  rotation: ZplRotation,
-  uprightW: number,
-  uprightH: number,
-): { width: number; height: number } {
-  if (rotation === "R" || rotation === "B") {
-    return { width: uprightH, height: uprightW };
-  }
-  return { width: uprightW, height: uprightH };
-}

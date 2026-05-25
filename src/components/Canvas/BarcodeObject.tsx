@@ -216,9 +216,10 @@ export function BarcodeObject({
     //    bbox computation. Upright Other 1D additionally counter-
     //    scales the HRI text during a resize drag so it stays at
     //    constant visual size while the bars stretch.
+    const isEanUpc = EAN_UPC_TYPES.has(obj.type);
     const showHriOverlay =
       printInterpEnabled && BARCODE_1D_TYPES.has(obj.type);
-    const isUprightEanUpc = isUpright && EAN_UPC_TYPES.has(obj.type);
+    const isUprightEanUpc = isUpright && isEanUpc;
 
     if (showHriOverlay) {
       const ub = dim.upright;
@@ -228,13 +229,16 @@ export function BarcodeObject({
       const innerTr = rotatedGroupTransform(rotation, ub.w, ub.h);
 
       // Build text overlay content in upright bbox-relative coords.
+      // Upright EAN/UPC also needs clip extents to keep the floated
+      // sys/trail digits visible past the bar bbox; the helper returns
+      // them alongside the digit nodes, gated by isUprightEanUpc at
+      // the parent Group below.
       let overlayContent: React.ReactNode;
-      let clipLeft = 0;
-      let clipRight = 0;
-      if (EAN_UPC_TYPES.has(obj.type)) {
+      let eanOverlay: ReturnType<typeof buildEanUpcDigitOverlay> | null = null;
+      if (isEanUpc) {
         const bwipSc = get1DBwipScale(moduleWidth, scale, dpmm);
         const layout = getEanUpcLayout(obj.type as EanUpcType, ub.w, barcodeCanvas.width, bwipSc);
-        const overlay = buildEanUpcDigitOverlay({
+        eanOverlay = buildEanUpcDigitOverlay({
           type: obj.type as EanUpcType,
           displayText,
           layout,
@@ -246,9 +250,7 @@ export function BarcodeObject({
         // EAN/UPC have barTopPx === 0 (no text zone above), so the
         // helper's bar-relative textY equals the bbox-relative one
         // here — render directly without an offset wrapper.
-        overlayContent = overlay.nodes;
-        clipLeft = overlay.clipLeft;
-        clipRight = overlay.clipRight;
+        overlayContent = eanOverlay.nodes;
       } else {
         // Other 1D: single centered text. textRef is wired only for the
         // upright case so handleTransform/End can counter-scale it; for
@@ -275,7 +277,7 @@ export function BarcodeObject({
       // returns the position in inner-Group local coords (bbox-relative
       // upright). For above-bars (logmars): barTopPx - (font+gap)/sy.
       // For below: barTopPx + barH + gap/sy.
-      const useUprightTransform = isUpright && !EAN_UPC_TYPES.has(obj.type);
+      const useUprightTransform = isUpright && !isEanUpc;
       const textLocalY = (sy: number) =>
         isTextAbove
           ? ub.barTopPx - (textFontSize + aboveGapPx) / sy
@@ -300,16 +302,25 @@ export function BarcodeObject({
         txt.y(textLocalY(1));
       };
 
+      // Clip-expansion is upright-EAN/UPC only; absent on other paths
+      // so Konva computes a natural bbox. Spread-or-empty keeps the
+      // JSX free of four parallel ternaries.
+      const clipProps = isUprightEanUpc && eanOverlay
+        ? {
+            clipX: -eanOverlay.clipLeft,
+            clipY: 0,
+            clipWidth: Math.max(ub.w, 1) + eanOverlay.clipLeft + eanOverlay.clipRight,
+            clipHeight: Math.max(ub.h, 1) + textFontSize + textGap,
+          }
+        : {};
+
       return (
         <Group
           ref={useUprightTransform ? groupRef : undefined}
           id={obj.id}
           x={x}
           y={y}
-          clipX={isUprightEanUpc ? -clipLeft : undefined}
-          clipY={isUprightEanUpc ? 0 : undefined}
-          clipWidth={isUprightEanUpc ? Math.max(ub.w, 1) + clipLeft + clipRight : undefined}
-          clipHeight={isUprightEanUpc ? Math.max(ub.h, 1) + textFontSize + textGap : undefined}
+          {...clipProps}
           draggable={!obj.locked}
           {...selectionHandlers(onSelect)}
           onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
