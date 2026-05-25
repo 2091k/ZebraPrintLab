@@ -289,12 +289,8 @@ export function buildBwipOptions(
   const bcid = BCID[obj.type];
   if (!bcid) return null;
 
-  // bwip-js takes the same N/R/I/B letters ZPL does for symbol orientation;
-  // emitting it post-build means the produced bitmap is already rotated and
-  // its dimensions are the post-rotation extents — no Konva-side rotation math
-  // needed.
-  const rotation = objectRotation(obj.props);
-
+  // bwip always renders upright; visual rotation is handled in the
+  // Konva renderer via an inner rotated Group (rotatedGroupTransform).
   // Declared without an initializer because every reachable case
   // assigns before `break` and the `default` arm returns early — the
   // previous `= null` initializer is what ESLint 10's
@@ -352,8 +348,9 @@ export function buildBwipOptions(
       // HRI digits sit ABOVE the bars per Zebra firmware. Rendered
       // as a separate Konva Text overlay (same pattern as logmars)
       // so all four rotations land at the firmware-correct anchor
-      // via getRotatedTextAnchor; bwip's own includetext would
-      // bake the text into the bitmap and rotate with it.
+      // via the inner rotated Group in BarcodeObject; bwip's own
+      // includetext would bake the text into the bitmap and rotate
+      // with it.
       const text = p.content || "00000";
       const variantBcid = text.length === 2 ? "ean2" : "ean5";
       opts = {
@@ -539,16 +536,10 @@ export function buildBwipOptions(
       return null;
   }
 
-  if (rotation !== "N") {
-    // ZPL uses N/R/I/B (B = 270° CW). bwip-js uses N/R/I/L (L = 90° CCW =
-    // 270° CW). The other three letters mean the same thing in both.
-    opts.rotate = rotation === "B" ? "L" : rotation;
-    // HRI text is handled as a Konva overlay in BarcodeObject (same as for
-    // upright barcodes). Using bwip's includetext would embed text into the
-    // bitmap at bwip's internal scale, making the bitmap taller/wider than the
-    // bar-only dimensions that getDisplaySize computes — causing the KImage to
-    // stretch the bitmap incorrectly and appear blurry/distorted.
-  }
+  // Visual rotation is Konva's job (wraps the KImage in a rotated Group
+  // via rotatedGroupTransform). Asking bwip to rotate would produce
+  // bitmaps in mismatched orientations across types — keep them all
+  // upright so the renderer can rotate them uniformly.
   return opts;
 }
 
@@ -573,66 +564,24 @@ export interface BarcodeDisplaySize {
   barH: number;
   barLeftPx: number;
   barTopPx: number;
+  /** Upright (rotation=N) view of the same layout. Renderers that draw
+   *  inside an inner rotated Group consume this so their geometry stays
+   *  rotation-independent — the inner group's transform handles the
+   *  visual rotation. Always present alongside the rotated fields. */
+  upright: {
+    w: number;
+    h: number;
+    barW: number;
+    barH: number;
+    barLeftPx: number;
+    barTopPx: number;
+  };
   /** Sub-rect of the bwip-js canvas to render (in source pixel coords).
    *  Lets the renderer skip bwip's internal padding, e.g. the
    *  paddingheight pad on GS1 DataBar that would otherwise leave the
    *  bars proportionally shorter than the firmware-reserved bbox.
    *  Undefined = use the full canvas. */
   bitmapCrop?: { x: number; y: number; width: number; height: number };
-}
-
-/** Anchor coordinates for a Konva Text node that is rotated alongside a
- *  1D barcode. Exactly one field is meaningful per rotation: `sideX` for
- *  R / B, `topY` for I. The other is set to 0 and ignored by the caller. */
-export interface RotatedTextAnchor {
-  sideX: number;
-  topY: number;
-}
-
-/**
- * Where to place the rotated HRI text node so it sits `textGap` dots away
- * from the bars on the firmware-correct side.
- *
- * Naive sideX = -textGap / w + textGap anchors against the bbox edge,
- * which double-counts the firmware text zone (EAN/UPC: 13 dots, logmars:
- * 20 dots). Anchoring against the bar sub-rectangle (`barLeftPx`/`bw` for
- * R/B, `barTopPx`/`bh` for I) keeps the gap at exactly `textGap`
- * regardless of which side the text zone sits on.
- *
- * Konva rotates around the node origin, so the anchor accounts for the
- * text glyph extending in the rotation-opposite direction. For R (CW 90)
- * with text on the right, the glyph extends LEFT of `sideX` by
- * `textFontSize`, so we offset by +textFontSize. Mirror for B (CCW 90)
- * and I (180).
- */
-export function getRotatedTextAnchor(
-  rotation: "R" | "B" | "I",
-  isTextAbove: boolean,
-  dim: Pick<BarcodeDisplaySize, "barLeftPx" | "barTopPx" | "barW" | "barH">,
-  textGap: number,
-  textFontSize: number,
-): RotatedTextAnchor {
-  const { barLeftPx: btX, barTopPx: btY, barW: bw, barH: bh } = dim;
-  if (rotation === "R") {
-    return {
-      sideX: isTextAbove ? btX + bw + textGap + textFontSize : btX - textGap,
-      topY: 0,
-    };
-  }
-  if (rotation === "B") {
-    return {
-      sideX: isTextAbove ? btX - textGap - textFontSize : btX + bw + textGap,
-      topY: 0,
-    };
-  }
-  // I (180°): text glyph extends UP from the origin, so a text-below-in-
-  // upright glyph (now top after flip) anchors at btY - textGap; a
-  // text-above-in-upright glyph (now bottom) anchors at btY + bh +
-  // textGap + textFontSize.
-  return {
-    sideX: 0,
-    topY: isTextAbove ? btY + bh + textGap + textFontSize : btY - textGap,
-  };
 }
 
 /** Firmware-reserved text-zone height in dots, keyed by symbology. The
@@ -656,19 +605,18 @@ export function getDisplaySize(
   if (!canvas) {
     return {
       w: 0, h: 0, barW: 0, barH: 0, barLeftPx: 0, barTopPx: 0,
+      upright: { w: 0, h: 0, barW: 0, barH: 0, barLeftPx: 0, barTopPx: 0 },
     };
   }
 
-  // For 90°/270° rotations, bwip-js produces a bitmap whose width and height
-  // are swapped relative to the upright form. Compute size as if upright (the
-  // existing per-symbology formulas all assume that), then swap at the end.
+  // bwip-js now always renders upright (the BarcodeObject renderer
+  // handles visual rotation via a rotated Konva Group), so the canvas
+  // dimensions are the upright dimensions directly.
   const rotation = objectRotation(obj.props);
   const isQuarter = rotation === "R" || rotation === "B";
-  const cw = isQuarter ? canvas.height : canvas.width;
-  const ch = isQuarter ? canvas.width : canvas.height;
-  const upright = getUprightDisplaySize(obj, cw, ch, scale, dpmm);
+  const upright = getUprightDisplaySize(obj, canvas.width, canvas.height, scale, dpmm);
 
-  // Bbox after rotation.
+  // Bbox after rotation: R/B swap upright w/h; N/I keep them.
   const w = isQuarter ? upright.h : upright.w;
   const h = isQuarter ? upright.w : upright.h;
 
@@ -725,39 +673,41 @@ export function getDisplaySize(
   }
 
   // GS1 DataBar opts include `paddingheight: N`, which adds whitespace
-  // rows on top and bottom of the bwip canvas. Without cropping them out,
-  // the bitmap drawn at displayH leaves the bars proportionally shorter
-  // than the spec-correct height. Zebra firmware fills the full reserved
-  // height with bars; mirror that by cropping the source bitmap to the
-  // bar-only rows.
-  //
-  // Rotation flips which axis the padding sits on. For N / I the padding
-  // is on top/bottom of the bitmap as bwip produced it; for R / B (bwip
-  // rotated 90° CW / CCW respectively) the same rows end up on the
-  // left/right edges, so the crop must run along the x-axis instead.
+  // rows on top and bottom of the upright bwip canvas. Without cropping
+  // them out, the bitmap drawn at displayH leaves the bars
+  // proportionally shorter than the spec-correct height. Zebra firmware
+  // fills the full reserved height with bars; mirror that by cropping
+  // the source bitmap to the bar-only rows. Always y-axis now because
+  // bwip renders upright.
   let bitmapCrop: BarcodeDisplaySize["bitmapCrop"];
   if (obj.type === "gs1databar") {
     const bwipSc = get1DBwipScale(obj.props.moduleWidth, scale, dpmm);
     const padPx = GS1_DATABAR_PADDING_ROWS * bwipSc;
-    const axisDim = isQuarter ? canvas.width : canvas.height;
-    if (axisDim > 2 * padPx) {
-      bitmapCrop = isQuarter
-        ? {
-            x: padPx,
-            y: 0,
-            width: canvas.width - 2 * padPx,
-            height: canvas.height,
-          }
-        : {
-            x: 0,
-            y: padPx,
-            width: canvas.width,
-            height: canvas.height - 2 * padPx,
-          };
+    if (canvas.height > 2 * padPx) {
+      bitmapCrop = {
+        x: 0,
+        y: padPx,
+        width: canvas.width,
+        height: canvas.height - 2 * padPx,
+      };
     }
   }
 
-  return { w, h, barW, barH, barLeftPx, barTopPx, bitmapCrop };
+  // Upright view (rotation=N) of the same layout. Text zone sits above
+  // the bars when isTextAbove (logmars), otherwise implicitly below
+  // (barTopPx=0, barH = h - textZonePx). Bars span the full width.
+  // The inner-rotated-Group renderer pattern consumes this so its
+  // geometry stays rotation-independent.
+  const uprightView = {
+    w: upright.w,
+    h: upright.h,
+    barLeftPx: 0,
+    barTopPx: isTextAbove && textZonePx > 0 ? textZonePx : 0,
+    barW: upright.w,
+    barH: textZonePx > 0 ? upright.h - textZonePx : upright.h,
+  };
+
+  return { w, h, barW, barH, barLeftPx, barTopPx, upright: uprightView, bitmapCrop };
 }
 
 function getUprightDisplaySize(

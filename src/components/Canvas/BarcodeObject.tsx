@@ -9,13 +9,14 @@ import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 import {
   buildBwipOptions,
   getDisplaySize,
-  getRotatedTextAnchor,
   get1DBwipScale,
   getEanUpcLayout,
   type BarcodeDisplaySize,
   type EanUpcType,
 } from "./bwipHelpers";
 import { objectRotation } from "../../registry/rotation";
+import { rotatedGroupTransform } from "./rotatedGroupTransform";
+import { buildEanUpcDigitOverlay } from "./eanUpcDigitNodes";
 import {
   QR_FO_Y_OFFSET_DOTS,
   QR_FT_MODULE_OFFSET,
@@ -86,7 +87,8 @@ export function BarcodeObject({
   // when the bwip canvas hasn't rendered yet.
   const dim: BarcodeDisplaySize = barcodeCanvas
     ? getDisplaySize(obj, barcodeCanvas, scale, dpmm)
-    : { w: 0, h: 0, barW: 0, barH: 0, barLeftPx: 0, barTopPx: 0 };
+    : { w: 0, h: 0, barW: 0, barH: 0, barLeftPx: 0, barTopPx: 0,
+        upright: { w: 0, h: 0, barW: 0, barH: 0, barLeftPx: 0, barTopPx: 0 } };
 
   // Y delta in dots between the FT baseline (bar bottom) and the bbox
   // top-left, plus the QR-specific firmware offset. Used forward in the
@@ -164,15 +166,6 @@ export function BarcodeObject({
   };
 
   if (barcodeCanvas) {
-    const w = dim.w;
-    const h = dim.h;
-    // Bitmap is drawn at the bar sub-rectangle of the bbox so the bars
-    // render at their true height. The text-zone padding (which side
-    // depends on rotation) stays empty inside the bbox.
-    const bw = Math.max(dim.barW, 1);
-    const bh = Math.max(dim.barH, 1);
-    const btX = dim.barLeftPx;
-    const btY = dim.barTopPx;
     // Konva crop prop is undefined when no cropping is needed; passing it
     // selectively skips bwip's internal padding (e.g. GS1 DataBar's
     // paddingheight rows) so bars fill the bbox at firmware-correct height.
@@ -185,7 +178,6 @@ export function BarcodeObject({
     const printInterpEnabled =
       !ObjectRegistry[obj.type]?.interpretationLocked &&
       !!(obj.props as { printInterpretation?: boolean }).printInterpretation;
-    const printInterp = isUpright && printInterpEnabled;
     // Cross-type access: this block runs for every barcode and reads moduleWidth
     // generically (textFontSize is computed for HRI text rendering downstream).
     // Unlike buildBwipOptions, this function isn't switch-structured by obj.type,
@@ -213,275 +205,83 @@ export function BarcodeObject({
       ? Math.max(dotsToPx(hri.aboveGapDots, scale, dpmm), 3)
       : textGap;
 
-    // ── EAN/UPC: manually-positioned digit labels ─────────────────────────
-    if (EAN_UPC_TYPES.has(obj.type) && printInterp) {
-      const bwipSc = get1DBwipScale(moduleWidth, scale, dpmm);
-      const layout = getEanUpcLayout(
-        obj.type as EanUpcType,
-        w,
-        barcodeCanvas.width,
-        bwipSc,
-      );
-      const ldW = textFontSize * 1.2; // width reserved for leading/trailing digit
+    // ── 1D barcode with HRI overlay (all 4 rotations, both EAN/UPC and
+    //    Other 1D). Text overlay always lives in upright bbox-relative
+    //    coords inside an inner rotated Group; the Group's transform
+    //    handles every R/I/B placement. Upright EAN/UPC additionally
+    //    needs clip-expansion on the outer Group so the floated
+    //    sys/trail digits stay visible (their x extends past the
+    //    bar bbox); rotated EAN/UPC gets no clipping because the
+    //    floated digits land within the rotated bbox after Konva's
+    //    bbox computation. Upright Other 1D additionally counter-
+    //    scales the HRI text during a resize drag so it stays at
+    //    constant visual size while the bars stretch.
+    const isEanUpc = EAN_UPC_TYPES.has(obj.type);
+    const showHriOverlay =
+      printInterpEnabled && BARCODE_1D_TYPES.has(obj.type);
+    const isUprightEanUpc = isUpright && isEanUpc;
 
-      let textNodes: React.ReactNode[] = [];
-      let clipLeft = 0;
-      let clipRight = 0;
+    if (showHriOverlay) {
+      const ub = dim.upright;
+      // Inner Group covers the full upright bbox so KImage + text both
+      // live inside it at upright bbox-relative coords. The Group's
+      // transform handles all R/I/B placement.
+      const innerTr = rotatedGroupTransform(rotation, ub.w, ub.h);
 
-      if (obj.type === "ean13") {
-        // 13-digit string formatted by registry's formatEan13Hri (includes check digit).
-        const allDigits = displayText;
-
-        const { xLeft: xLeft13, xRight: xRight13, halfWidth: halfW13 } = layout;
-
-        const textY = Math.max(bh, 1) + textGap;
-        clipLeft = ldW;
-        textNodes = [
+      // Build text overlay content in upright bbox-relative coords.
+      // Upright EAN/UPC also needs clip extents to keep the floated
+      // sys/trail digits visible past the bar bbox; the helper returns
+      // them alongside the digit nodes, gated by isUprightEanUpc at
+      // the parent Group below.
+      let overlayContent: React.ReactNode;
+      let eanOverlay: ReturnType<typeof buildEanUpcDigitOverlay> | null = null;
+      if (isEanUpc) {
+        const bwipSc = get1DBwipScale(moduleWidth, scale, dpmm);
+        const layout = getEanUpcLayout(obj.type as EanUpcType, ub.w, barcodeCanvas.width, bwipSc);
+        eanOverlay = buildEanUpcDigitOverlay({
+          type: obj.type as EanUpcType,
+          displayText,
+          layout,
+          uprightBarW: ub.barW,
+          uprightBarH: ub.barH,
+          textGap,
+          textFontSize,
+        });
+        // EAN/UPC have barTopPx === 0 (no text zone above), so the
+        // helper's bar-relative textY equals the bbox-relative one
+        // here — render directly without an offset wrapper.
+        overlayContent = eanOverlay.nodes;
+      } else {
+        // Other 1D: single centered text. textRef is wired only for the
+        // upright case so handleTransform/End can counter-scale it; for
+        // rotated paths the counter-scale math doesn't apply (would
+        // scale along upright-Y which after R/B is screen-X), so the
+        // ref stays undefined and the bars+text just scale together
+        // during a rotated resize drag — minor visual nit, no broken
+        // print output.
+        const textY = isTextAbove
+          ? ub.barTopPx - textFontSize - aboveGapPx
+          : ub.barTopPx + ub.barH + textGap;
+        overlayContent = (
           <Text
-            key="d0"
-            x={-ldW}
-            y={textY}
-            width={ldW}
-            text={allDigits[0]}
-            fontSize={textFontSize}
+            ref={isUpright ? setTextRef : undefined}
+            x={ub.barLeftPx} y={textY} width={Math.max(ub.barW, 1)}
+            text={displayText} fontSize={textFontSize}
             fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          <Text
-            key="dl"
-            x={xLeft13}
-            y={textY}
-            width={halfW13}
-            text={allDigits.slice(1, 7)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          <Text
-            key="dr"
-            x={xRight13}
-            y={textY}
-            width={halfW13}
-            text={allDigits.slice(7, 13)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-        ];
-      } else if (obj.type === "ean8") {
-        // 8-digit string formatted by registry's formatEan8Hri.
-        const allDigits = displayText;
-
-        const { xLeft: xLeft8, xRight: xRight8, halfWidth: halfW8 } = layout;
-
-        const textY = Math.max(bh, 1) + textGap;
-        textNodes = [
-          <Text
-            key="dl"
-            x={xLeft8}
-            y={textY}
-            width={halfW8}
-            text={allDigits.slice(0, 4)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          <Text
-            key="dr"
-            x={xRight8}
-            y={textY}
-            width={halfW8}
-            text={allDigits.slice(4, 8)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-        ];
-      } else if (obj.type === "upca") {
-        // 12-digit string formatted by registry's formatUpcaHri.
-        const allDigits = displayText;
-
-        const { xLeft: xLeftUpca, xRight: xRightUpca, halfWidth: halfUpca } =
-          layout;
-
-        const textY = Math.max(bh, 1) + textGap;
-        clipLeft = ldW;
-        textNodes = [
-          // number system digit — floated left of barcode image
-          <Text
-            key="d0"
-            x={-ldW}
-            y={textY}
-            width={ldW}
-            text={allDigits[0]}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          // left 5 digits
-          <Text
-            key="dl"
-            x={xLeftUpca}
-            y={textY}
-            width={halfUpca}
-            text={allDigits.slice(1, 6)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          // right 5 digits
-          <Text
-            key="dr"
-            x={xRightUpca}
-            y={textY}
-            width={halfUpca}
-            text={allDigits.slice(6, 11)}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-        ];
-      } else if (obj.type === "upce") {
-        // displayText = "0" + 6 data digits + check digit (8 chars total),
-        // formatted by registry's formatUpceHri.
-        const digits6 = displayText.slice(1, 7);
-        const checkDigit = displayText[7] ?? "";
-
-        // UPC-E: 6 digits centered over the data area (modules 3–44 of 51)
-        const { xLeft: xMid, halfWidth: midW } = layout;
-        const textY = Math.max(bh, 1) + textGap;
-        clipLeft = ldW;
-        clipRight = ldW;
-        textNodes = [
-          <Text
-            key="d0"
-            x={-ldW}
-            y={textY}
-            width={ldW}
-            text="0"
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          <Text
-            key="dm"
-            x={xMid}
-            y={textY}
-            width={midW}
-            text={digits6}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-          <Text
-            key="dc"
-            x={w + 2}
-            y={textY}
-            width={ldW}
-            text={checkDigit}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="left"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />,
-        ];
+            align="center" wrap="none" fill="#000000" listening={false}
+          />
+        );
       }
 
-      return (
-        <Group
-          id={obj.id}
-          x={x}
-          y={y}
-          clipX={-clipLeft}
-          clipY={0}
-          clipWidth={Math.max(w, 1) + clipLeft + clipRight}
-          clipHeight={Math.max(h, 1) + textFontSize + textGap}
-          draggable={!obj.locked}
-          {...selectionHandlers(onSelect)}
-          onDragMove={(e) =>
-            e.target.position(snapPos(e.target.x(), e.target.y()))
-          }
-          onDragEnd={handleDragEnd}
-        >
-          <KImage
-            x={btX}
-            y={btY}
-            image={barcodeCanvas}
-            crop={bitmapCrop}
-            width={bw}
-            height={bh}
-            imageSmoothingEnabled={false}
-            stroke={isSelected ? colors.selection : undefined}
-            strokeWidth={isSelected ? 2 : 0}
-            strokeScaleEnabled={false}
-          />
-          {textNodes.length > 0 && <Group ref={excludeGroupFromBbox}>{textNodes}</Group>}
-        </Group>
-      );
-    }
-
-    // ── Other 1D: separate Konva Text below (or above) the bars ──────────
-    const showText =
-      BARCODE_1D_TYPES.has(obj.type) &&
-      printInterp;
-    // Rotated 1D: text overlay rotated to match the barcode orientation.
-    const showRotatedText =
-      !isUpright &&
-      printInterpEnabled &&
-      BARCODE_1D_TYPES.has(obj.type);
-
-    if (showText) {
-      // LOGMARS renders the human-readable line above the bars (per spec).
-      // ^FO Y refers to the bar top, so text is drawn at negative y to extend
-      // above the group origin into the visual zone above the bars.
-      const aboveGap = aboveGapPx;
-      // Local y for the HRI text. The /sy form keeps a constant *visual* offset
-      // when the group is being scaled (sy = 1 at rest, ≠ 1 during a drag).
-      // Anchor against the BAR top (btY) for text-above, not the group
-      // origin: when the firmware reserves a text zone above the bars
-      // (logmars: 20 dots, ^BS f=Y: 18 dots) the group origin sits
-      // text-zone above the bar top, and ignoring btY pushes the text
-      // a full text-zone above where it should sit.
+      // Counter-scale only applies to upright Other 1D. textLocalY here
+      // returns the position in inner-Group local coords (bbox-relative
+      // upright). For above-bars (logmars): barTopPx - (font+gap)/sy.
+      // For below: barTopPx + barH + gap/sy.
+      const useUprightTransform = isUpright && !isEanUpc;
       const textLocalY = (sy: number) =>
         isTextAbove
-          ? btY - (textFontSize + aboveGap) / sy
-          : Math.max(bh, 1) + textGap / sy;
-      const txtY = textLocalY(1);
-
-      // Counter-scale the text so it stays at constant pixel size while the
-      // bars stretch with the parent group's scaleY during a resize drag.
+          ? ub.barTopPx - (textFontSize + aboveGapPx) / sy
+          : ub.barTopPx + ub.barH + textGap / sy;
       const handleTransform = () => {
         const grp = groupRef.current;
         const txt = textRef.current;
@@ -491,220 +291,66 @@ export function BarcodeObject({
         txt.scaleY(1 / sy);
         txt.y(textLocalY(sy));
       };
-
-      // react-konva does not track imperatively-set scaleY/y. Reset both here
-      // so the next drag starts clean. For logmars the JSX y is constant, so
-      // without an explicit reset react-konva would not re-apply it on the
-      // post-commit render and the text would stay at its last drag-time y.
+      // react-konva does not track imperatively-set scaleY/y; reset
+      // both so the next drag starts clean. For logmars the JSX y is a
+      // constant non-zero value, so without explicit reset react-konva
+      // would not re-apply it on the post-commit render.
       const handleTransformEnd = () => {
         const txt = textRef.current;
         if (!txt) return;
         txt.scaleY(1);
-        txt.y(txtY);
+        txt.y(textLocalY(1));
       };
+
+      // Clip-expansion is upright-EAN/UPC only; absent on other paths
+      // so Konva computes a natural bbox. Spread-or-empty keeps the
+      // JSX free of four parallel ternaries.
+      const clipProps = isUprightEanUpc && eanOverlay
+        ? {
+            clipX: -eanOverlay.clipLeft,
+            clipY: 0,
+            clipWidth: Math.max(ub.w, 1) + eanOverlay.clipLeft + eanOverlay.clipRight,
+            clipHeight: Math.max(ub.h, 1) + textFontSize + textGap,
+          }
+        : {};
 
       return (
         <Group
-          ref={groupRef}
+          ref={useUprightTransform ? groupRef : undefined}
           id={obj.id}
           x={x}
           y={y}
+          {...clipProps}
           draggable={!obj.locked}
-          {...selectionHandlers(onSelect)}
-          onDragMove={(e) =>
-            e.target.position(snapPos(e.target.x(), e.target.y()))
-          }
-          onDragEnd={handleDragEnd}
-          onTransform={handleTransform}
-          onTransformEnd={handleTransformEnd}
-        >
-          {/* No invisible footprint rect: bbox shrinks to the bars (HRI
-              Text node has getSelfRect=0 already). The firmware text-zone
-              reservation stays implicit — it only matters for print
-              output, not for canvas selection / smart-align, where the
-              user expects the visual focus to sit on the bars. */}
-          <KImage
-            x={btX}
-            y={btY}
-            image={barcodeCanvas}
-            crop={bitmapCrop}
-            width={bw}
-            height={bh}
-            imageSmoothingEnabled={false}
-            stroke={isSelected ? colors.selection : undefined}
-            strokeWidth={isSelected ? 2 : 0}
-            strokeScaleEnabled={false}
-          />
-          <Text
-            ref={setTextRef}
-            x={0}
-            y={txtY}
-            width={Math.max(w, 1)}
-            text={displayText}
-            fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center"
-            wrap="none"
-            fill="#000000"
-            listening={false}
-          />
-        </Group>
-      );
-    }
-
-    // ── Rotated 1D: text overlay rotated alongside the bars ──────────────
-    if (showRotatedText) {
-      // Rotation math (Konva y-down, CW positive):
-      //   R  (rot=90):  local-x→screen-down, local-y→screen-left
-      //   B  (rot=-90): local-x→screen-up,   local-y→screen-right
-      //   I  (rot=180): local-x→screen-left,  local-y→screen-up
-      //
-      // Text "side" for 90°/270°: standard 1D text is below bars in upright,
-      //   so after 90°CW it's on the LEFT; after 270°CW on the RIGHT.
-      //   LOGMARS is mirrored (text above in upright → right for 90°, left for 270°).
-      // isTextAbove and rotGap come from the registry (same source as
-      // upright above) — keeps rotated and N visually consistent per
-      // type without duplicating the per-type chain.
-      const rotGap = aboveGapPx;
-      // x/y anchor for the rotated text. Helper anchors against the bar
-      // sub-rectangle, not the bbox edge — without that the firmware
-      // text-zone (EAN/UPC: 13 dots, logmars: 20 dots) is added to the
-      // gap and the text drifts that many dots away from the bars.
-      // sideX is the R/B x-anchor (and the I tx for sysNode/trailNode);
-      // topY is the I y-anchor (replaces -textGap for I).
-      const { sideX, topY } = getRotatedTextAnchor(
-        rotation,
-        isTextAbove,
-        dim,
-        rotGap,
-        textFontSize,
-      );
-      const tRot = rotation === "R" ? 90 : rotation === "I" ? 180 : -90;
-
-      // ── EAN/UPC: reproduce upright digit layout along the rotated axis ──
-      let textElements: React.ReactNode;
-      if (EAN_UPC_TYPES.has(obj.type)) {
-        const bwipSc = get1DBwipScale(moduleWidth, scale, dpmm);
-        // For I: encoding runs horizontally (canvas.width); for R/B: vertically (canvas.height)
-        const encDisplay = rotation === "I" ? w : h;
-        const encCanvas  = rotation === "I" ? barcodeCanvas.width : barcodeCanvas.height;
-        const layout = getEanUpcLayout(obj.type as EanUpcType, encDisplay, encCanvas, bwipSc);
-        const { xLeft, xRight, halfWidth: halfW } = layout;
-        const ldW = textFontSize * 1.2;
-
-        const tStyle = {
-          fontSize: textFontSize,
-          fontFamily: "'Courier New', monospace" as const,
-          fontStyle: "bold" as const,
-          wrap: "none" as const,
-          fill: "#000000",
-          listening: false,
-        };
-
-        // Position a text node at `encPos` from barcode start, spanning `size`.
-        // For R: encPos → screen-y downward from top (start=top).
-        // For B: encPos → screen-y upward from bottom (start=bottom), anchor = h - encPos.
-        // For I: encPos → screen-x leftward from right (start=right), anchor-x = w - encPos.
-        const node = (key: string, encPos: number, size: number, text: string) => {
-          const tx = rotation === "I" ? w - encPos : sideX;
-          const ty = rotation === "R" ? encPos : rotation === "B" ? h - encPos : topY;
-          return <Text key={key} x={tx} y={ty} rotation={tRot} width={Math.max(size, 1)} text={text} align="center" {...tStyle} />;
-        };
-
-        // Single digit floated BEFORE barcode start (outside the quiet zone).
-        const sysNode = (key: string, text: string) => {
-          // R: above top (y=-ldW); B: below bottom (y=h+ldW); I: right of barcode (x=w+ldW).
-          const tx = rotation === "I" ? w + ldW : sideX;
-          const ty = rotation === "R" ? -ldW : rotation === "B" ? h + ldW : topY;
-          return <Text key={key} x={tx} y={ty} rotation={tRot} width={Math.max(ldW, 1)} text={text} align="center" {...tStyle} />;
-        };
-
-        // Single digit floated AFTER barcode end (UPC-A/UPC-E check digit).
-        const trailNode = (key: string, text: string) => {
-          // R: below bottom (y≈encDisplay); B: above top (y≈h-encDisplay); I: left of x=0.
-          const tx = rotation === "I" ? -ldW : sideX;
-          const ty = rotation === "R" ? encDisplay : rotation === "B" ? h - encDisplay : topY;
-          return <Text key={key} x={tx} y={ty} rotation={tRot} width={Math.max(ldW, 1)} text={text} align="left" {...tStyle} />;
-        };
-
-        // All EAN/UPC HRI strings are formatted by the registry's
-        // formatHri (displayText). The split positions differ per type
-        // but the source string is the same as the upright branch.
-        if (obj.type === "ean13") {
-          textElements = [
-            sysNode("sys", displayText[0] ?? ""),
-            node("left", xLeft, halfW, displayText.slice(1, 7)),
-            node("right", xRight, halfW, displayText.slice(7, 13)),
-          ];
-        } else if (obj.type === "ean8") {
-          textElements = [
-            node("left", xLeft, halfW, displayText.slice(0, 4)),
-            node("right", xRight, halfW, displayText.slice(4, 8)),
-          ];
-        } else if (obj.type === "upca") {
-          textElements = [
-            sysNode("sys", displayText[0] ?? ""),
-            node("left", xLeft, halfW, displayText.slice(1, 6)),
-            node("right", xRight, halfW, displayText.slice(6, 11)),
-          ];
-        } else if (obj.type === "upce") {
-          // displayText = "0" + 6 data digits + check digit (8 chars).
-          textElements = [
-            sysNode("sys", displayText[0] ?? "0"),
-            node("mid", xLeft, halfW, displayText.slice(1, 7)),
-            trailNode("trail", displayText[7] ?? ""),
-          ];
-        }
-      } else {
-        // ── Other 1D: single centered text string ──────────────────────────
-        let txtX: number;
-        let txtY: number;
-        let txtWidth: number;
-
-        if (rotation === "R") {
-          txtX = sideX; txtY = 0; txtWidth = h;
-        } else if (rotation === "I") {
-          txtX = w; txtY = topY; txtWidth = w;
-        } else {
-          txtX = sideX; txtY = h; txtWidth = h;
-        }
-
-        textElements = (
-          <Text
-            x={txtX} y={txtY} rotation={tRot} width={Math.max(txtWidth, 1)}
-            text={displayText} fontSize={textFontSize}
-            fontFamily="'Courier New', monospace" fontStyle="bold"
-            align="center" wrap="none" fill="#000000" listening={false}
-          />
-        );
-      }
-
-      return (
-        <Group
-          id={obj.id} x={x} y={y} draggable
           {...selectionHandlers(onSelect)}
           onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
           onDragEnd={handleDragEnd}
+          onTransform={useUprightTransform ? handleTransform : undefined}
+          onTransformEnd={useUprightTransform ? handleTransformEnd : undefined}
         >
-          <KImage x={btX} y={btY} image={barcodeCanvas} crop={bitmapCrop}
-            width={bw} height={bh}
-            imageSmoothingEnabled={false}
-            stroke={isSelected ? colors.selection : undefined}
-            strokeWidth={isSelected ? 2 : 0}
-            strokeScaleEnabled={false}
-          />
-          {textElements && (
-            <Group ref={excludeGroupFromBbox}>{textElements}</Group>
-          )}
+          <Group x={innerTr.x} y={innerTr.y} rotation={innerTr.rotation}>
+            <KImage
+              x={ub.barLeftPx}
+              y={ub.barTopPx}
+              image={barcodeCanvas}
+              crop={bitmapCrop}
+              width={ub.barW}
+              height={ub.barH}
+              imageSmoothingEnabled={false}
+              stroke={isSelected ? colors.selection : undefined}
+              strokeWidth={isSelected ? 2 : 0}
+              strokeScaleEnabled={false}
+            />
+            <Group ref={excludeGroupFromBbox}>{overlayContent}</Group>
+          </Group>
         </Group>
       );
     }
 
-    // Default path. Wrapped in a Group so the bbox spans the full footprint
-    // (including any text zone reserved by firmware) while the bitmap
-    // renders only at the bar sub-rectangle. An invisible Rect at the full
-    // bbox dimensions keeps Group.getClientRect aligned with displayH even
-    // when btY > 0 or bh < h.
+    // Default path: 2D barcodes + 1D without HRI. bwip renders upright,
+    // the inner Group's rotated transform handles R/I/B placement.
+    const ub = dim.upright;
+    const defaultInnerTr = rotatedGroupTransform(rotation, ub.w, ub.h);
     return (
       <Group
         id={obj.id}
@@ -715,18 +361,20 @@ export function BarcodeObject({
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
-        <KImage
-          x={btX}
-          y={btY}
-          image={barcodeCanvas}
-          crop={bitmapCrop}
-          width={bw}
-          height={bh}
-          imageSmoothingEnabled={false}
-          stroke={isSelected ? colors.selection : undefined}
-          strokeWidth={isSelected ? 2 : 0}
-          strokeScaleEnabled={false}
-        />
+        <Group x={defaultInnerTr.x} y={defaultInnerTr.y} rotation={defaultInnerTr.rotation}>
+          <KImage
+            x={ub.barLeftPx}
+            y={ub.barTopPx}
+            image={barcodeCanvas}
+            crop={bitmapCrop}
+            width={ub.barW}
+            height={ub.barH}
+            imageSmoothingEnabled={false}
+            stroke={isSelected ? colors.selection : undefined}
+            strokeWidth={isSelected ? 2 : 0}
+            strokeScaleEnabled={false}
+          />
+        </Group>
       </Group>
     );
   }
