@@ -554,18 +554,13 @@ export function BarcodeObject({
     }
 
     // ── Rotated 1D: text overlay rotated alongside the bars ──────────────
+    // Both branches (EAN/UPC + Other 1D) render text in upright coords
+    // inside an inner rotated Group; the Group's transform handles all
+    // R/I/B placement, so the per-rotation tx/ty switches from the
+    // earlier hand-math are gone. isTextAbove + rotGap come from the
+    // registry — same source as the upright showText branch above, so
+    // rotated and N stay visually consistent per type.
     if (showRotatedText) {
-      // Rotation math (Konva y-down, CW positive):
-      //   R  (rot=90):  local-x→screen-down, local-y→screen-left
-      //   B  (rot=-90): local-x→screen-up,   local-y→screen-right
-      //   I  (rot=180): local-x→screen-left,  local-y→screen-up
-      //
-      // Text "side" for 90°/270°: standard 1D text is below bars in upright,
-      //   so after 90°CW it's on the LEFT; after 270°CW on the RIGHT.
-      //   LOGMARS is mirrored (text above in upright → right for 90°, left for 270°).
-      // isTextAbove and rotGap come from the registry (same source as
-      // upright above) — keeps rotated and N visually consistent per
-      // type without duplicating the per-type chain.
       const rotGap = aboveGapPx;
 
       // ── EAN/UPC: reproduce the upright digit layout inside an inner

@@ -352,8 +352,9 @@ export function buildBwipOptions(
       // HRI digits sit ABOVE the bars per Zebra firmware. Rendered
       // as a separate Konva Text overlay (same pattern as logmars)
       // so all four rotations land at the firmware-correct anchor
-      // via getRotatedTextAnchor; bwip's own includetext would
-      // bake the text into the bitmap and rotate with it.
+      // via the inner rotated Group in BarcodeObject; bwip's own
+      // includetext would bake the text into the bitmap and rotate
+      // with it.
       const text = p.content || "00000";
       const variantBcid = text.length === 2 ? "ean2" : "ean5";
       opts = {
@@ -591,60 +592,6 @@ export interface BarcodeDisplaySize {
    *  bars proportionally shorter than the firmware-reserved bbox.
    *  Undefined = use the full canvas. */
   bitmapCrop?: { x: number; y: number; width: number; height: number };
-}
-
-/** Anchor coordinates for a Konva Text node that is rotated alongside a
- *  1D barcode. Exactly one field is meaningful per rotation: `sideX` for
- *  R / B, `topY` for I. The other is set to 0 and ignored by the caller. */
-export interface RotatedTextAnchor {
-  sideX: number;
-  topY: number;
-}
-
-/**
- * Where to place the rotated HRI text node so it sits `textGap` dots away
- * from the bars on the firmware-correct side.
- *
- * Naive sideX = -textGap / w + textGap anchors against the bbox edge,
- * which double-counts the firmware text zone (EAN/UPC: 13 dots, logmars:
- * 20 dots). Anchoring against the bar sub-rectangle (`barLeftPx`/`bw` for
- * R/B, `barTopPx`/`bh` for I) keeps the gap at exactly `textGap`
- * regardless of which side the text zone sits on.
- *
- * Konva rotates around the node origin, so the anchor accounts for the
- * text glyph extending in the rotation-opposite direction. For R (CW 90)
- * with text on the right, the glyph extends LEFT of `sideX` by
- * `textFontSize`, so we offset by +textFontSize. Mirror for B (CCW 90)
- * and I (180).
- */
-export function getRotatedTextAnchor(
-  rotation: "R" | "B" | "I",
-  isTextAbove: boolean,
-  dim: Pick<BarcodeDisplaySize, "barLeftPx" | "barTopPx" | "barW" | "barH">,
-  textGap: number,
-  textFontSize: number,
-): RotatedTextAnchor {
-  const { barLeftPx: btX, barTopPx: btY, barW: bw, barH: bh } = dim;
-  if (rotation === "R") {
-    return {
-      sideX: isTextAbove ? btX + bw + textGap + textFontSize : btX - textGap,
-      topY: 0,
-    };
-  }
-  if (rotation === "B") {
-    return {
-      sideX: isTextAbove ? btX - textGap - textFontSize : btX + bw + textGap,
-      topY: 0,
-    };
-  }
-  // I (180°): text glyph extends UP from the origin, so a text-below-in-
-  // upright glyph (now top after flip) anchors at btY - textGap; a
-  // text-above-in-upright glyph (now bottom) anchors at btY + bh +
-  // textGap + textFontSize.
-  return {
-    sideX: 0,
-    topY: isTextAbove ? btY + bh + textGap + textFontSize : btY - textGap,
-  };
 }
 
 /** Firmware-reserved text-zone height in dots, keyed by symbology. The
