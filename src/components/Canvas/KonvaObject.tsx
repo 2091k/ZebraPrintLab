@@ -17,6 +17,7 @@ import { getTextRenderMetrics } from "./textRenderMetrics";
 import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 import { DEFAULT_GS_SYMBOL_META, GS_SYMBOLS } from "../../registry/symbol";
 import { GS_SYMBOL_PATHS, GS_VECTOR_CODES, type GsVectorCode } from "../../registry/gsSymbolPaths";
+import { zebraAlignOffsetDots, zebraLineWidthDots } from "../../lib/zebraTextLayout";
 
 type Props = KonvaObjectProps;
 
@@ -81,18 +82,6 @@ function EllipseSelectionOverlay({
     />
   );
 }
-
-// ZPL `^FB` justify letters → Konva `Text.align` values. Konva
-// supports only left/center/right, so ZPL "J" (justified) falls
-// back to left — the printed output still justifies, the canvas
-// just approximates.
-const ZPL_JUSTIFY_TO_KONVA_ALIGN: Record<"L" | "C" | "R" | "J", "left" | "center" | "right"> = {
-  L: "left",
-  C: "center",
-  R: "right",
-  J: "left",
-};
-
 const BARCODE_TYPES = new Set([
   "code128",
   "code39",
@@ -352,27 +341,67 @@ function KonvaObjectInner({
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
-        <Text
-          // See note above re fontVersion + Konva's text-width cache.
-          key={fontVersion}
-          x={0}
-          y={0}
-          text={content}
-          fontSize={fontSizePx}
-          fontFamily={fontFamily}
-          fontStyle="bold"
-          scaleX={fontScaleX}
-          rotation={zplRotationDeg[p.rotation]}
-          fill="#000000"
-          stroke={isSelected ? colors.selection : undefined}
-          strokeWidth={isSelected ? 1 : 0}
-          {...(obj.type === "text" && obj.props.blockWidth
-            ? {
-                width: dotsToPx(obj.props.blockWidth, scale, dpmm),
-                align: ZPL_JUSTIFY_TO_KONVA_ALIGN[obj.props.blockJustify ?? "L"],
-              }
-            : {})}
-        />
+        {(() => {
+          // ^FB block-text: render one Text per line, positioned at a
+          // Zebra-style alignment offset. Konva's own `align` uses
+          // browser canvas `measureText` which over-estimates A0
+          // glyph widths (A0's documented default aspect is 5:9, but
+          // browser fonts emulating it tend wider). Computing the
+          // offset against Zebra's documented advance keeps the
+          // canvas centred / right-aligned text in sync with the
+          // Labelary preview. Non-^FB text keeps a single Text — no
+          // alignment math needed, ZPL ^FO anchors top-left natively.
+          const fbActive = obj.type === "text" && obj.props.blockWidth;
+          if (!fbActive) {
+            return (
+              <Text
+                // See note above re fontVersion + Konva's text-width cache.
+                key={fontVersion}
+                x={0}
+                y={0}
+                text={content}
+                fontSize={fontSizePx}
+                fontFamily={fontFamily}
+                fontStyle="bold"
+                scaleX={fontScaleX}
+                rotation={zplRotationDeg[p.rotation]}
+                fill="#000000"
+                stroke={isSelected ? colors.selection : undefined}
+                strokeWidth={isSelected ? 1 : 0}
+              />
+            );
+          }
+          const tp = obj.props as {
+            blockWidth: number;
+            blockJustify?: "L" | "C" | "R" | "J";
+            blockLineSpacing?: number;
+            fontHeight: number;
+            fontWidth: number;
+          };
+          const justify = tp.blockJustify ?? "L";
+          const spacingPx = dotsToPx(tp.blockLineSpacing ?? 0, scale, dpmm);
+          const lineStepPx = fontSizePx + spacingPx;
+          return content.split("\n").map((line, i) => {
+            const lineWidthDots = zebraLineWidthDots(line, tp.fontHeight, tp.fontWidth);
+            const offsetDots = zebraAlignOffsetDots(lineWidthDots, tp.blockWidth, justify);
+            return (
+              <Text
+                key={`${fontVersion}-${i}`}
+                x={dotsToPx(offsetDots, scale, dpmm)}
+                y={i * lineStepPx}
+                text={line}
+                fontSize={fontSizePx}
+                fontFamily={fontFamily}
+                fontStyle="bold"
+                scaleX={fontScaleX}
+                rotation={zplRotationDeg[p.rotation]}
+                fill="#000000"
+                stroke={isSelected ? colors.selection : undefined}
+                strokeWidth={isSelected ? 1 : 0}
+              />
+            );
+          });
+        })()}
         {/* ^FB wrap-guide: a dashed vertical line at blockWidth so
             the user sees where the printer will break the text.
             Only shown while selected — clutter-free for the common
