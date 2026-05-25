@@ -16,7 +16,7 @@ import { ZPL_FONT_HEIGHT_TO_CSS_RATIO } from "./textPositionTransforms";
 import { getTextRenderMetrics } from "./textRenderMetrics";
 import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 import { DEFAULT_GS_SYMBOL_META, GS_SYMBOLS } from "../../registry/symbol";
-import { GS_SYMBOL_PATHS } from "../../registry/gsSymbolPaths";
+import { GS_SYMBOL_PATHS, GS_VECTOR_CODES, type GsVectorCode } from "../../registry/gsSymbolPaths";
 
 type Props = KonvaObjectProps;
 
@@ -391,8 +391,11 @@ function KonvaObjectInner({
     // to Zebra firmware). D/E are trademarked UL/CSA logos we can't
     // ship — render a clearly-placeholder dashed gray box with the
     // letters so the user knows the printer will substitute the real
-    // logo. Falls back to the © path if an unknown code slips through.
-    const vectorPath = GS_SYMBOL_PATHS[p.symbol as 'A' | 'B' | 'C'] ?? null;
+    // logo. Unknown codes (D/E or malformed import) take the same
+    // placeholder branch via the null path here.
+    const vectorPath = GS_VECTOR_CODES.has(p.symbol)
+      ? GS_SYMBOL_PATHS[p.symbol as GsVectorCode]
+      : null;
     // The field bbox itself doesn't rotate — Zebra keeps the ^FO
     // anchor and (w, h) extent fixed and rotates only the glyph
     // inside. Skip the outer rotatedGroupTransform; sceneFunc bakes
@@ -408,6 +411,13 @@ function KonvaObjectInner({
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
+        {/* Single hit area for the whole field bbox — picks up clicks
+            both for the vector-path branch and the placeholder branch
+            below (both of which render with listening={false}). One
+            source of truth for "where in this Group counts as a hit"
+            instead of duplicating a transparent Rect inside each
+            branch. */}
+        <Rect width={w} height={h} fill="transparent" />
         {vectorPath ? (() => {
             // Konva.Path has no fillRule prop, so the holes in ® / ©
             // (inner ring carved out of the outer disc) can't be
@@ -420,7 +430,12 @@ function KonvaObjectInner({
             // inside the declared bbox, measured directly from
             // Labelary so Zebra's per-rotation anchor offsets match
             // pixel-for-pixel.
-            const rel = vectorPath.rel[p.rotation];
+            // Defensive ?? rel.N for the malformed-import case where
+            // a JSON-restored object slips a non-N/R/I/B rotation
+            // string past the type system; falling back to the
+            // upright entry keeps the canvas from crashing on bad
+            // data instead of throwing inside sceneFunc.
+            const rel = vectorPath.rel[p.rotation] ?? vectorPath.rel.N;
             const glyphW = vectorPath.bbox.maxX - vectorPath.bbox.minX;
             const glyphH = vectorPath.bbox.maxY - vectorPath.bbox.minY;
             const renderW = w * rel.w;
@@ -428,13 +443,6 @@ function KonvaObjectInner({
             const renderX = w * rel.x;
             const renderY = h * rel.y;
             return (
-              <>
-              {/* Hit area: a plain Rect catches clicks for the whole
-                  bbox so the user can hit anywhere in the field, not
-                  only the glyph ink. Rendered first so the visible
-                  Shape draws on top. `fill="transparent"` keeps it
-                  invisible but Konva-listenable. */}
-              <Rect width={w} height={h} fill="transparent" />
               <Shape
                 listening={false}
                 sceneFunc={(ctx) => {
@@ -463,14 +471,14 @@ function KonvaObjectInner({
                   ctx.translate(-vectorPath.bbox.minX, -vectorPath.bbox.minY);
                   const path = new Path2D(vectorPath.d);
                   ctx.fillStyle = "#000000";
-                  // 2D ctx fill(rule) is unaware of the Konva wrapper,
-                  // so cast through unknown to reach the underlying
-                  // CanvasRenderingContext2D method.
-                  (ctx as unknown as CanvasRenderingContext2D).fill(path, "evenodd");
+                  // Konva.Context exposes the underlying 2D canvas
+                  // context as `_context`; reach for it directly so
+                  // we can call `fill(path, "evenodd")` — the Konva
+                  // wrapper doesn't surface the path/rule overload.
+                  ctx._context.fill(path, "evenodd");
                   ctx.restore();
                 }}
               />
-              </>
             );
           })() : (
             <>

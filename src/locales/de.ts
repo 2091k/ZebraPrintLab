@@ -349,9 +349,9 @@ const de = {
     },
     symbol: {
       symbol: 'Symbol',
-      height: 'Höhe (Dots)',
-      width: 'Breite (Dots)',
-      symbolRegistered: 'Eingetragen (®)',
+      height: 'Höhe (Punkte)',
+      width: 'Breite (Punkte)',
+      symbolRegistered: 'Registriert (®)',
       symbolCopyright: 'Copyright (©)',
       symbolTrademark: 'Markenzeichen (™)',
       symbolUL: 'UL-Zulassung',

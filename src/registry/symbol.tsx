@@ -29,8 +29,10 @@ export type SymbolCode = (typeof GS_SYMBOLS)[number]['code'];
 export const DEFAULT_GS_SYMBOL: SymbolCode = 'B';
 /** Resolved GS_SYMBOLS entry for the DEFAULT_GS_SYMBOL code. Renderers
  *  use this as a typed fallback when `find` returns undefined, so they
- *  can avoid non-null assertions on the lookup result. */
-export const DEFAULT_GS_SYMBOL_META = GS_SYMBOLS[1]; // 'B' = ©
+ *  can avoid non-null assertions on the lookup result. Looked up by
+ *  code so reordering GS_SYMBOLS doesn't silently break the fallback. */
+export const DEFAULT_GS_SYMBOL_META =
+  GS_SYMBOLS.find((s) => s.code === DEFAULT_GS_SYMBOL) ?? GS_SYMBOLS[0];
 
 /** Set of recognised ^GS codes — used by the parser to validate the
  *  ^FD payload without re-listing the letters. Single source of truth
