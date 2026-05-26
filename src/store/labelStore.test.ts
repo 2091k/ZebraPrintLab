@@ -1366,3 +1366,28 @@ describe('csvDataset', () => {
     expect(state().csvDataset?.rows).toHaveLength(1);
   });
 });
+
+describe('sidebar tab + content-editor focus request', () => {
+  beforeEach(reset);
+
+  it('setSidebarTab updates the visible tab', () => {
+    expect(state().sidebarTab).toBe('properties');
+    state().setSidebarTab('layers');
+    expect(state().sidebarTab).toBe('layers');
+  });
+
+  it('requestContentEditorFocus increments the nonce and switches to properties', () => {
+    state().setSidebarTab('variables');
+    const before = state().editorFocusNonce;
+    state().requestContentEditorFocus();
+    expect(state().editorFocusNonce).toBe(before + 1);
+    expect(state().sidebarTab).toBe('properties');
+  });
+
+  it('repeated requestContentEditorFocus keeps incrementing so consumers re-fire', () => {
+    state().requestContentEditorFocus();
+    const first = state().editorFocusNonce;
+    state().requestContentEditorFocus();
+    expect(state().editorFocusNonce).toBe(first + 1);
+  });
+});

@@ -339,6 +339,20 @@ interface LabelState {
   duplicatePage: (index: number) => void;
   setCurrentPage: (index: number) => void;
 
+  /** Right-sidebar tab currently visible. Lives in the store so canvas
+   *  interactions (e.g. double-click a text field) can drive the
+   *  panel — the sidebar itself reads + writes via `setSidebarTab`. */
+  sidebarTab: 'properties' | 'layers' | 'variables' | 'fonts';
+  setSidebarTab: (tab: LabelState['sidebarTab']) => void;
+  /** Monotonic counter; an increment signals "please focus the text
+   *  field's content editor". TemplateContentInput watches this and
+   *  calls `.focus()` + selectAll when it changes. Decoupled from
+   *  selection because focusing on every select would steal keyboard
+   *  focus from the canvas / global shortcuts; only explicit user
+   *  intent (e.g. a canvas double-click) requests it. */
+  editorFocusNonce: number;
+  requestContentEditorFocus: () => void;
+
   /** Start a preview session: render the current page's objects to ZPL,
    *  fetch the Labelary PNG, swap status to `active` on success or
    *  `error` on failure. Should only be called when `previewMode.status`
@@ -1093,6 +1107,15 @@ export const useLabelStore = create<LabelState>()(
           if (index === state.currentPageIndex) return {};
           return { currentPageIndex: index, selectedIds: [] };
         }),
+
+      sidebarTab: 'properties',
+      setSidebarTab: (tab) => set({ sidebarTab: tab }),
+      editorFocusNonce: 0,
+      requestContentEditorFocus: () =>
+        set((state) => ({
+          sidebarTab: 'properties',
+          editorFocusNonce: state.editorFocusNonce + 1,
+        })),
 
       addVariable: (input) => {
         const state = get();

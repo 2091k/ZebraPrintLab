@@ -103,6 +103,7 @@ export function TemplateContentInput({
 }: Props) {
   const t = useT();
   const variables = useLabelStore((s) => s.variables);
+  const editorFocusNonce = useLabelStore((s) => s.editorFocusNonce);
   const editorRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const composingRef = useRef(false);
@@ -148,6 +149,23 @@ export function TemplateContentInput({
       sel!.addRange(range);
     }
   }, [value, segments]);
+
+  // External focus request — e.g. a canvas double-click on the text
+  // field asks the user to immediately start typing. Focus + select
+  // all so the next keystroke replaces the current value (typical
+  // "rename"-style affordance). Skipped on the initial nonce=0 mount
+  // so unrelated text-field selections don't steal focus.
+  useEffect(() => {
+    if (editorFocusNonce === 0) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  }, [editorFocusNonce]);
 
   // Click-outside + Esc close. Mounted only while the {x} menu is open.
   useEffect(() => {
