@@ -4,7 +4,7 @@ import { inputCls, labelCls } from '../components/Properties/styles';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { RotationSelect } from '../components/Properties/RotationSelect';
 import { fieldPos } from './zplHelpers';
-import { effectiveScale } from './transformHelpers';
+import { commitRotatedWidthHeightTransform } from './transformHelpers';
 import type { ZplRotation } from './rotation';
 
 /**
@@ -66,19 +66,7 @@ export const symbol: ObjectTypeDefinition<SymbolProps> = {
     return `${fieldPos(obj)}^GS${p.rotation},${p.height},${p.width}^FD${p.symbol}^FS`;
   },
 
-  // Corner-drag resize: sx scales width, sy scales height. effectiveScale
-  // swaps the two for R/B rotations so the user's screen-vertical drag
-  // stays attached to the (pre-rotation) height regardless of how the
-  // symbol is oriented on screen. Without this commit the position
-  // updates after a drag but the symbol's drawn size doesn't, which
-  // looks like a non-resizable element.
-  commitTransform: (obj, ctx) => {
-    const { esx, esy } = effectiveScale(obj.props.rotation, ctx);
-    return {
-      width: Math.max(1, ctx.snap(Math.round(obj.props.width * esx))),
-      height: Math.max(1, ctx.snap(Math.round(obj.props.height * esy))),
-    };
-  },
+  commitTransform: commitRotatedWidthHeightTransform,
 
   PropertiesPanel: ({ obj, onChange }) => {
     const t = useT();

@@ -43,7 +43,10 @@ interface WidthHeightProps {
   height: number;
 }
 
-/** Shared commitTransform for shapes that scale width and height independently (box, ellipse). */
+/** Shared commitTransform for shapes that scale width and height
+ *  independently (box, ellipse). No rotation-aware axis swap — these
+ *  types render axis-aligned. For ZPL-rotated types (text, symbol)
+ *  use `commitRotatedWidthHeightTransform`. */
 export function commitWidthHeightTransform<P extends WidthHeightProps>(
   obj: LabelObjectBase & { props: P },
   ctx: TransformContext,
@@ -52,6 +55,23 @@ export function commitWidthHeightTransform<P extends WidthHeightProps>(
   return {
     width: Math.max(1, snap(Math.round(obj.props.width * sx))),
     height: Math.max(1, snap(Math.round(obj.props.height * sy))),
+  } as Partial<P>;
+}
+
+/** Rotation-aware variant: width is the pre-rotation x-extent, height
+ *  the pre-rotation y-extent. `effectiveScale` swaps sx/sy for R/B
+ *  rotations so the user's screen-vertical drag stays attached to the
+ *  `height` prop regardless of how the shape is oriented on screen. */
+export function commitRotatedWidthHeightTransform<
+  P extends WidthHeightProps & { rotation: "N" | "R" | "I" | "B" },
+>(
+  obj: LabelObjectBase & { props: P },
+  ctx: TransformContext,
+): Partial<P> {
+  const { esx, esy } = effectiveScale(obj.props.rotation, ctx);
+  return {
+    width: Math.max(1, ctx.snap(Math.round(obj.props.width * esx))),
+    height: Math.max(1, ctx.snap(Math.round(obj.props.height * esy))),
   } as Partial<P>;
 }
 

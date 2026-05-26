@@ -18,6 +18,9 @@ import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 import { DEFAULT_GS_SYMBOL_META, GS_SYMBOLS } from "../../registry/symbol";
 import { GS_SYMBOL_PATHS, GS_VECTOR_CODES, type GsVectorCode } from "../../registry/gsSymbolPaths";
 import { zebraAlignOffsetDots, zebraLineWidthDots } from "../../lib/zebraTextLayout";
+import type { LeafObject } from "../../registry";
+import type { TextProps } from "../../registry/text";
+import type { SerialProps } from "../../registry/serial";
 
 type Props = KonvaObjectProps;
 
@@ -82,6 +85,103 @@ function EllipseSelectionOverlay({
     />
   );
 }
+
+/** Shared `<Text>` props baked once per render of a text/serial field.
+ *  Every Text node in the field (single-line or per-^FB-line) uses
+ *  the same font / scale / rotation / fill / selection-stroke; only
+ *  `key`, `text`, and `(x, y)` vary across them. */
+interface BaseTextProps {
+  fontSize: number;
+  fontFamily: string;
+  fontStyle: "bold";
+  scaleX: number;
+  rotation: number;
+  fill: string;
+  stroke: string | undefined;
+  strokeWidth: number;
+}
+
+/** Render a text/serial field as either a single Konva `<Text>` or,
+ *  when `^FB` is active on a text object, one `<Text>` per line at a
+ *  Zebra-style alignment offset. Per-line + offset against ZPL's
+ *  documented 5:9 A0 advance (`zebraTextLayout`) keeps the canvas
+ *  centred / right-aligned output aligned with Labelary — Konva's
+ *  own `Text.align` uses canvas `measureText` which over-estimates
+ *  A0 glyph widths and drifts noticeably for centred blocks. */
+function TextFieldContent({
+  obj,
+  content,
+  base,
+  scale,
+  dpmm,
+  fontVersion,
+}: {
+  obj: LeafObject & { type: "text" | "serial"; props: TextProps | SerialProps };
+  content: string;
+  base: BaseTextProps;
+  scale: number;
+  dpmm: number;
+  fontVersion: number;
+}) {
+  if (obj.type !== "text" || !obj.props.blockWidth) {
+    return <Text key={fontVersion} x={0} y={0} text={content} {...base} />;
+  }
+  const p = obj.props;
+  const justify = p.blockJustify ?? "L";
+  const lineStepPx =
+    base.fontSize + dotsToPx(p.blockLineSpacing ?? 0, scale, dpmm);
+  return (
+    <>
+      {content.split("\n").map((line, i) => {
+        const lineWidthDots = zebraLineWidthDots(line, p.fontHeight, p.fontWidth);
+        const offsetDots = zebraAlignOffsetDots(lineWidthDots, p.blockWidth!, justify);
+        return (
+          <Text
+            key={`${fontVersion}-${i}`}
+            x={dotsToPx(offsetDots, scale, dpmm)}
+            y={i * lineStepPx}
+            text={line}
+            {...base}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+/** Dashed vertical guide at `^FB` blockWidth so the user sees where
+ *  the printer wraps. Rendered only while the text is selected;
+ *  height matches `blockLines * lineStep` to cover the full block. */
+function BlockWrapGuide({
+  blockWidthDots,
+  blockLines,
+  blockLineSpacing,
+  fontSizePx,
+  scale,
+  dpmm,
+  color,
+}: {
+  blockWidthDots: number;
+  blockLines: number;
+  blockLineSpacing: number;
+  fontSizePx: number;
+  scale: number;
+  dpmm: number;
+  color: string;
+}) {
+  const lineStep = fontSizePx + dotsToPx(blockLineSpacing, scale, dpmm);
+  const guideX = dotsToPx(blockWidthDots, scale, dpmm);
+  return (
+    <Line
+      points={[guideX, 0, guideX, blockLines * lineStep]}
+      stroke={color}
+      strokeWidth={1}
+      dash={[4, 3]}
+      listening={false}
+    />
+  );
+}
+
 const BARCODE_TYPES = new Set([
   "code128",
   "code39",
@@ -362,90 +462,34 @@ function KonvaObjectInner({
           requestContentEditorFocus(obj.id);
         }}
       >
-        {(() => {
-          // ^FB block-text: render one Text per line, positioned at a
-          // Zebra-style alignment offset. Konva's own `align` uses
-          // browser canvas `measureText` which over-estimates A0
-          // glyph widths (A0's documented default aspect is 5:9, but
-          // browser fonts emulating it tend wider). Computing the
-          // offset against Zebra's documented advance keeps the
-          // canvas centred / right-aligned text in sync with the
-          // Labelary preview. Non-^FB text keeps a single Text — no
-          // alignment math needed, ZPL ^FO anchors top-left natively.
-          const fbActive = obj.type === "text" && obj.props.blockWidth;
-          if (!fbActive) {
-            return (
-              <Text
-                // See note above re fontVersion + Konva's text-width cache.
-                key={fontVersion}
-                x={0}
-                y={0}
-                text={content}
-                fontSize={fontSizePx}
-                fontFamily={fontFamily}
-                fontStyle="bold"
-                scaleX={fontScaleX}
-                rotation={zplRotationDeg[p.rotation]}
-                fill="#000000"
-                stroke={isSelected ? colors.selection : undefined}
-                strokeWidth={isSelected ? 1 : 0}
-              />
-            );
-          }
-          const tp = obj.props as {
-            blockWidth: number;
-            blockJustify?: "L" | "C" | "R" | "J";
-            blockLineSpacing?: number;
-            fontHeight: number;
-            fontWidth: number;
-          };
-          const justify = tp.blockJustify ?? "L";
-          const spacingPx = dotsToPx(tp.blockLineSpacing ?? 0, scale, dpmm);
-          const lineStepPx = fontSizePx + spacingPx;
-          return content.split("\n").map((line, i) => {
-            const lineWidthDots = zebraLineWidthDots(line, tp.fontHeight, tp.fontWidth);
-            const offsetDots = zebraAlignOffsetDots(lineWidthDots, tp.blockWidth, justify);
-            return (
-              <Text
-                key={`${fontVersion}-${i}`}
-                x={dotsToPx(offsetDots, scale, dpmm)}
-                y={i * lineStepPx}
-                text={line}
-                fontSize={fontSizePx}
-                fontFamily={fontFamily}
-                fontStyle="bold"
-                scaleX={fontScaleX}
-                rotation={zplRotationDeg[p.rotation]}
-                fill="#000000"
-                stroke={isSelected ? colors.selection : undefined}
-                strokeWidth={isSelected ? 1 : 0}
-              />
-            );
-          });
-        })()}
-        {/* ^FB wrap-guide: a dashed vertical line at blockWidth so
-            the user sees where the printer will break the text.
-            Only shown while selected — clutter-free for the common
-            view, immediate feedback when adjusting blockWidth.
-            Height = (lines * line-step) where line-step is the font
-            cap height plus the user-configured blockLineSpacing
-            (dots), matching how Zebra advances the y-cursor between
-            wrapped rows. */}
-        {obj.type === "text" && isSelected && obj.props.blockWidth ? (() => {
-          const lines = obj.props.blockLines ?? 1;
-          const spacingPx = dotsToPx(obj.props.blockLineSpacing ?? 0, scale, dpmm);
-          const lineStep = fontSizePx + spacingPx;
-          const guideX = dotsToPx(obj.props.blockWidth, scale, dpmm);
-          return (
-            <Line
-              points={[guideX, 0, guideX, lines * lineStep]}
-              stroke={colors.accent}
-              strokeWidth={1}
-              dash={[4, 3]}
-              listening={false}
-            />
-          );
-        })() : null}
+        <TextFieldContent
+          obj={obj as LeafObject & { type: "text" | "serial"; props: TextProps | SerialProps }}
+          content={content}
+          base={{
+            fontSize: fontSizePx,
+            fontFamily,
+            fontStyle: "bold",
+            scaleX: fontScaleX,
+            rotation: zplRotationDeg[p.rotation],
+            fill: "#000000",
+            stroke: isSelected ? colors.selection : undefined,
+            strokeWidth: isSelected ? 1 : 0,
+          }}
+          scale={scale}
+          dpmm={dpmm}
+          fontVersion={fontVersion}
+        />
+        {obj.type === "text" && isSelected && obj.props.blockWidth && (
+          <BlockWrapGuide
+            blockWidthDots={obj.props.blockWidth}
+            blockLines={obj.props.blockLines ?? 1}
+            blockLineSpacing={obj.props.blockLineSpacing ?? 0}
+            fontSizePx={fontSizePx}
+            scale={scale}
+            dpmm={dpmm}
+            color={colors.accent}
+          />
+        )}
       </Group>
     );
   }
