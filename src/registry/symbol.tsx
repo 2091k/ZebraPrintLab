@@ -4,6 +4,7 @@ import { inputCls, labelCls } from '../components/Properties/styles';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { RotationSelect } from '../components/Properties/RotationSelect';
 import { fieldPos } from './zplHelpers';
+import { commitRotatedWidthHeightTransform } from './transformHelpers';
 import type { ZplRotation } from './rotation';
 
 /**
@@ -64,6 +65,8 @@ export const symbol: ObjectTypeDefinition<SymbolProps> = {
     const p = obj.props;
     return `${fieldPos(obj)}^GS${p.rotation},${p.height},${p.width}^FD${p.symbol}^FS`;
   },
+
+  commitTransform: commitRotatedWidthHeightTransform,
 
   PropertiesPanel: ({ obj, onChange }) => {
     const t = useT();

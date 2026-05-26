@@ -15,6 +15,7 @@ import { NumberInput } from "../components/Properties/NumberInput";
 import { TemplateContentInput } from "../components/Properties/TemplateContentInput";
 import { BlockTextSettings } from "../components/Properties/BlockTextSettings";
 import { encodeFbContent } from "../lib/fbContent";
+import { deriveBlockTextPatch, FB_DEFAULTS } from "../lib/textBlock";
 
 export interface TextProps {
   content: string;
@@ -253,8 +254,9 @@ export const text: ObjectTypeDefinition<TextProps> = {
         <div className="flex flex-col gap-1">
           <label className={labelCls}>{t.registry.text.content}</label>
           <TemplateContentInput
+            objectId={obj.id}
             value={p.content}
-            onChange={(content) => onChange({ content })}
+            onChange={(content) => onChange(deriveBlockTextPatch(content, p))}
           />
         </div>
 
@@ -271,12 +273,7 @@ export const text: ObjectTypeDefinition<TextProps> = {
             onChange={(e) =>
               onChange(
                 e.target.checked
-                  ? {
-                      blockWidth: 400,
-                      blockLines: 3,
-                      blockLineSpacing: 0,
-                      blockJustify: "L",
-                    }
+                  ? { ...FB_DEFAULTS, blockLines: 3 }
                   : {
                       blockWidth: undefined,
                       blockLines: undefined,

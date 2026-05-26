@@ -339,6 +339,25 @@ interface LabelState {
   duplicatePage: (index: number) => void;
   setCurrentPage: (index: number) => void;
 
+  /** Right-sidebar tab currently visible. Lives in the store so canvas
+   *  interactions (e.g. double-click a text field) can drive the
+   *  panel — the sidebar itself reads + writes via `setSidebarTab`. */
+  sidebarTab: 'properties' | 'layers' | 'variables' | 'fonts';
+  setSidebarTab: (tab: LabelState['sidebarTab']) => void;
+  /** One-shot focus request scoped to a single object. Each call sets a
+   *  fresh object (incrementing `nonce` so consumers can re-fire even
+   *  for the same id) and TemplateContentInput's effect compares its
+   *  own `objectId` prop to `id` so only the editor for the requested
+   *  object takes focus. `null` is the steady state — kept transient
+   *  in memory only, never persisted. */
+  editorFocusRequest: { id: string; nonce: number } | null;
+  /** Fire a focus request for the given object's content editor. Does
+   *  NOT touch the sidebar tab — the caller is responsible for
+   *  composing `setSidebarTab('properties')` alongside this when the
+   *  request would otherwise land on an unmounted editor. Decoupled
+   *  so the store doesn't assert which panel hosts the editor. */
+  requestContentEditorFocus: (id: string) => void;
+
   /** Start a preview session: render the current page's objects to ZPL,
    *  fetch the Labelary PNG, swap status to `active` on success or
    *  `error` on failure. Should only be called when `previewMode.status`
@@ -1093,6 +1112,20 @@ export const useLabelStore = create<LabelState>()(
           if (index === state.currentPageIndex) return {};
           return { currentPageIndex: index, selectedIds: [] };
         }),
+
+      // sidebarTab is transient — not in partialize, so a reload
+      // resets it to 'properties' (the safe default for any selection
+      // state that survived rehydration).
+      sidebarTab: 'properties',
+      setSidebarTab: (tab) => set({ sidebarTab: tab }),
+      editorFocusRequest: null,
+      requestContentEditorFocus: (id) =>
+        set((state) => ({
+          editorFocusRequest: {
+            id,
+            nonce: (state.editorFocusRequest?.nonce ?? 0) + 1,
+          },
+        })),
 
       addVariable: (input) => {
         const state = get();

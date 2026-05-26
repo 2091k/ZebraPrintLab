@@ -1,4 +1,4 @@
-import { useState, type ComponentType, type RefObject } from 'react';
+import { type ComponentType, type RefObject } from 'react';
 import {
   AdjustmentsHorizontalIcon,
   RectangleStackIcon,
@@ -9,6 +9,7 @@ import { LayersPanel } from '../Properties/LayersPanel';
 import { FontManager } from '../Fonts/FontManager';
 import { VariablesPanel } from '../Variables/VariablesPanel';
 import { useT } from '../../lib/useT';
+import { useLabelStore } from '../../store/labelStore';
 import type { LabelCanvasHandle } from '../Canvas/LabelCanvas';
 import { AaIcon } from './AaIcon';
 
@@ -27,7 +28,11 @@ interface TabDef {
 
 export function RightSidebar({ canvasRef }: Props) {
   const t = useT();
-  const [tab, setTab] = useState<TabId>('properties');
+  // Tab state lives in the store so canvas interactions (e.g. double-
+  // click a text field) can switch the sidebar to Properties +
+  // request the content editor's focus in one atomic action.
+  const tab = useLabelStore((s) => s.sidebarTab);
+  const setTab = useLabelStore((s) => s.setSidebarTab);
 
   // Ordering rule: selection scope first (Properties), then document-wide
   // concerns by usage frequency (Layers, Variables, Fonts).

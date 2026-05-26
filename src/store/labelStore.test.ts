@@ -1366,3 +1366,42 @@ describe('csvDataset', () => {
     expect(state().csvDataset?.rows).toHaveLength(1);
   });
 });
+
+describe('sidebar tab + content-editor focus request', () => {
+  beforeEach(reset);
+
+  it('setSidebarTab updates the visible tab', () => {
+    expect(state().sidebarTab).toBe('properties');
+    state().setSidebarTab('layers');
+    expect(state().sidebarTab).toBe('layers');
+  });
+
+  it('requestContentEditorFocus(id) sets a fresh focus request scoped to that id', () => {
+    expect(state().editorFocusRequest).toBeNull();
+    state().requestContentEditorFocus('obj-1');
+    const first = state().editorFocusRequest;
+    expect(first?.id).toBe('obj-1');
+    expect(first?.nonce).toBe(1);
+  });
+
+  it('requestContentEditorFocus does NOT change the sidebar tab (caller composes)', () => {
+    state().setSidebarTab('layers');
+    state().requestContentEditorFocus('obj-1');
+    expect(state().sidebarTab).toBe('layers');
+  });
+
+  it('repeated requestContentEditorFocus bumps the nonce so consumers re-fire on the same id', () => {
+    state().requestContentEditorFocus('obj-1');
+    const firstNonce = state().editorFocusRequest?.nonce;
+    state().requestContentEditorFocus('obj-1');
+    const secondNonce = state().editorFocusRequest?.nonce;
+    expect(secondNonce).toBe((firstNonce ?? 0) + 1);
+    expect(state().editorFocusRequest?.id).toBe('obj-1');
+  });
+
+  it('requestContentEditorFocus with a different id retargets', () => {
+    state().requestContentEditorFocus('obj-1');
+    state().requestContentEditorFocus('obj-2');
+    expect(state().editorFocusRequest?.id).toBe('obj-2');
+  });
+});

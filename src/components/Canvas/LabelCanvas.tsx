@@ -20,6 +20,7 @@ import type { Unit } from "../../lib/units";
 import { computeSnap } from "../../lib/snapGuides";
 import type { SnapGuide } from "../../lib/snapGuides";
 import { computeGroupCenterDelta } from "../../lib/alignment";
+import { isEditableTarget } from "../../lib/dom";
 import type { AlignAxis } from "../../lib/alignment";
 import { KonvaObject } from "./KonvaObject";
 import { Grid } from "./Grid";
@@ -213,8 +214,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code !== "Delete" && e.code !== "Backspace") return;
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (isEditableTarget(e.target as HTMLElement)) return;
       // Preview overlay shows a frozen Labelary snapshot; editing while
       // it's active would silently drift the comparison out of sync.
       if (selectPreviewLocksEditor(useLabelStore.getState())) return;
