@@ -3,6 +3,8 @@ import {
   zebraGlyphAdvanceDots,
   zebraLineWidthDots,
   zebraAlignOffsetDots,
+  blockBoundsDots,
+  blockLineStepDots,
 } from "./zebraTextLayout";
 
 describe("zebraGlyphAdvanceDots", () => {
@@ -51,5 +53,80 @@ describe("zebraAlignOffsetDots", () => {
   it("clamps to 0 when the line is wider than the block (no negative offsets)", () => {
     expect(zebraAlignOffsetDots(500, 400, "C")).toBe(0);
     expect(zebraAlignOffsetDots(500, 400, "R")).toBe(0);
+  });
+});
+
+describe("blockLineStepDots", () => {
+  it("adds extra inter-line spacing onto fontHeight", () => {
+    expect(blockLineStepDots(30, 0)).toBe(30);
+    expect(blockLineStepDots(30, 5)).toBe(35);
+  });
+});
+
+describe("blockBoundsDots", () => {
+  it("anchors at (0, 0) — left edge stays at the FO position regardless of text justify", () => {
+    // No justify/text parameter exists on the helper signature, so
+    // C/R-justified text can never shift this bbox rightwards.
+    // Adding such a parameter would be the regression to catch.
+    const r = blockBoundsDots({
+      blockWidthDots: 400,
+      blockLines: 3,
+      blockLineSpacing: 0,
+      fontHeight: 30,
+    });
+    expect(r.x).toBe(0);
+    expect(r.y).toBe(0);
+  });
+
+  it("width = blockWidthDots", () => {
+    const r = blockBoundsDots({
+      blockWidthDots: 400,
+      blockLines: 1,
+      blockLineSpacing: 0,
+      fontHeight: 30,
+    });
+    expect(r.width).toBe(400);
+  });
+
+  it("height = blockLines × fontHeight when blockLineSpacing is 0", () => {
+    const r = blockBoundsDots({
+      blockWidthDots: 100,
+      blockLines: 3,
+      blockLineSpacing: 0,
+      fontHeight: 30,
+    });
+    expect(r.height).toBe(90);
+  });
+
+  it("blockLineSpacing fills only the N-1 inter-line gaps", () => {
+    const r = blockBoundsDots({
+      blockWidthDots: 100,
+      blockLines: 3,
+      blockLineSpacing: 5,
+      fontHeight: 30,
+    });
+    // Matches the ZPL emit formula `fontHeight*lines + spacing*(lines-1)`
+    // so the canvas wrap guide doesn't overshoot the printed block.
+    expect(r.height).toBe(100); // 3 × 30 + 2 × 5
+  });
+
+  it("single-line block ignores spacing entirely (no inter-line gaps exist)", () => {
+    const r = blockBoundsDots({
+      blockWidthDots: 100,
+      blockLines: 1,
+      blockLineSpacing: 99,
+      fontHeight: 30,
+    });
+    expect(r.height).toBe(30);
+  });
+
+  it("zero lines collapse to height 0 without underflow", () => {
+    const r = blockBoundsDots({
+      blockWidthDots: 100,
+      blockLines: 0,
+      blockLineSpacing: 5,
+      fontHeight: 30,
+    });
+    expect(r.height).toBe(0);
   });
 });

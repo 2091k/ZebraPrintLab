@@ -51,3 +51,37 @@ export function zebraAlignOffsetDots(
   // spacing of non-last lines, which we don't visualise on canvas.
   return 0;
 }
+
+/** Per-row advance in dots: font height plus the user-set extra
+ *  inter-line spacing. Shared between layout helpers (block bbox)
+ *  and per-line text rendering so a future spacing-rule tweak (e.g.
+ *  leading vs spacing) only has to land here. */
+export function blockLineStepDots(fontHeight: number, blockLineSpacing: number): number {
+  return fontHeight + blockLineSpacing;
+}
+
+/** Dots-space bbox of the FB block area, anchored at (0, 0) — the
+ *  field's FO position. Used as the invisible Rect that pins the
+ *  Transformer's selection bbox to the full block extent so its
+ *  left edge stays at the FO anchor when text is C/R-justified
+ *  inside the block (the text spans drift rightwards but the
+ *  selection rectangle does not). Anchor is fixed and documented
+ *  here rather than via a literal type so callers can destructure
+ *  without casts. */
+export function blockBoundsDots(args: {
+  blockWidthDots: number;
+  blockLines: number;
+  blockLineSpacing: number;
+  fontHeight: number;
+}): { x: number; y: number; width: number; height: number } {
+  // N lines have N-1 inter-line gaps, not N. Matches the ZPL emit
+  // path in text.tsx (`fontHeight * lines + spacing * (lines - 1)`),
+  // so canvas bbox, wrap guide and printed block stay consistent.
+  const lineStep = blockLineStepDots(args.fontHeight, args.blockLineSpacing);
+  return {
+    x: 0,
+    y: 0,
+    width: args.blockWidthDots,
+    height: args.blockLines > 0 ? (args.blockLines - 1) * lineStep + args.fontHeight : 0,
+  };
+}

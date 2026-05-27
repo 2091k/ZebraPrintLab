@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useFontCacheVersion } from "../../hooks/useFontCacheVersion";
 import { Ellipse, Group, Line, Rect, Shape, Text } from "react-konva";
 import { lookupBoundVariable, shouldShowFallbackTint } from "../../lib/variableBinding";
@@ -17,7 +16,7 @@ import { getTextRenderMetrics } from "./textRenderMetrics";
 import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 import { DEFAULT_GS_SYMBOL_META, GS_SYMBOLS } from "../../registry/symbol";
 import { GS_SYMBOL_PATHS, GS_VECTOR_CODES, type GsVectorCode } from "../../registry/gsSymbolPaths";
-import { zebraAlignOffsetDots, zebraLineWidthDots } from "../../lib/zebraTextLayout";
+import { blockBoundsDots, zebraAlignOffsetDots, zebraLineWidthDots } from "../../lib/zebraTextLayout";
 import type { LeafObject } from "../../registry";
 import type { TextProps } from "../../registry/text";
 import type { SerialProps } from "../../registry/serial";
@@ -157,12 +156,20 @@ function TextFieldContent({
 
 /** Dashed vertical guide at `^FB` blockWidth so the user sees where
  *  the printer wraps. Rendered only while the text is selected;
- *  height matches `blockLines * lineStep` to cover the full block. */
+ *  height matches `blockLines * lineStep` to cover the full block.
+ *
+ *  An invisible Rect over the full block extent (0,0)–(blockWidth,
+ *  blockHeight) anchors the parent Group's clientRect so the
+ *  Transformer always covers the FO-aligned block area, regardless
+ *  of C/R justify pushing the text spans rightwards inside it.
+ *  Without it the bbox would collapse to the rendered glyphs +
+ *  guide line, shifting the selection's left edge away from the
+ *  field anchor. */
 function BlockWrapGuide({
   blockWidthDots,
   blockLines,
   blockLineSpacing,
-  fontSizePx,
+  fontHeight,
   scale,
   dpmm,
   color,
@@ -170,21 +177,32 @@ function BlockWrapGuide({
   blockWidthDots: number;
   blockLines: number;
   blockLineSpacing: number;
-  fontSizePx: number;
+  fontHeight: number;
   scale: number;
   dpmm: number;
   color: string;
 }) {
-  const lineStep = fontSizePx + dotsToPx(blockLineSpacing, scale, dpmm);
-  const guideX = dotsToPx(blockWidthDots, scale, dpmm);
+  const bounds = blockBoundsDots({ blockWidthDots, blockLines, blockLineSpacing, fontHeight });
+  const widthPx = dotsToPx(bounds.width, scale, dpmm);
+  const heightPx = dotsToPx(bounds.height, scale, dpmm);
   return (
-    <Line
-      points={[guideX, 0, guideX, blockLines * lineStep]}
-      stroke={color}
-      strokeWidth={1}
-      dash={[4, 3]}
-      listening={false}
-    />
+    <>
+      <Rect
+        x={dotsToPx(bounds.x, scale, dpmm)}
+        y={dotsToPx(bounds.y, scale, dpmm)}
+        width={widthPx}
+        height={heightPx}
+        fill="transparent"
+        listening={false}
+      />
+      <Line
+        points={[widthPx, 0, widthPx, heightPx]}
+        stroke={color}
+        strokeWidth={1}
+        dash={[4, 3]}
+        listening={false}
+      />
+    </>
   );
 }
 
@@ -229,12 +247,7 @@ export function KonvaObject(props_: Props) {
   const csvDataset = useLabelStore((s) => s.csvDataset);
   const csvMapping = useLabelStore((s) => s.csvMapping);
   const csvRenderMode = useLabelStore((s) => s.canvasSettings.csvRenderMode);
-  // useMemo so applyBindingToObject's identity-preservation downstream
-  // isn't defeated by a fresh ActiveCsvRow object on every render.
-  const active = useMemo(
-    () => buildActiveCsvRow(csvDataset, csvMapping),
-    [csvDataset, csvMapping],
-  );
+  const active = buildActiveCsvRow(csvDataset, csvMapping);
   const obj = applyBindingToObject(props_.obj, variables, active, csvRenderMode);
   const renderProps = obj === props_.obj ? props_ : { ...props_, obj };
 
@@ -486,7 +499,7 @@ function KonvaObjectInner({
             blockWidthDots={obj.props.blockWidth}
             blockLines={obj.props.blockLines ?? 1}
             blockLineSpacing={obj.props.blockLineSpacing ?? 0}
-            fontSizePx={fontSizePx}
+            fontHeight={obj.props.fontHeight}
             scale={scale}
             dpmm={dpmm}
             color={colors.accent}
