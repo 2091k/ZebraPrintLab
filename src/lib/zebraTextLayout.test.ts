@@ -98,13 +98,35 @@ describe("blockBoundsDots", () => {
     expect(r.height).toBe(90);
   });
 
-  it("blockLineSpacing widens the row step uniformly", () => {
+  it("blockLineSpacing fills only the N-1 inter-line gaps", () => {
     const r = blockBoundsDots({
       blockWidthDots: 100,
       blockLines: 3,
       blockLineSpacing: 5,
       fontHeight: 30,
     });
-    expect(r.height).toBe(105); // 3 × (30 + 5)
+    // Matches the ZPL emit formula `fontHeight*lines + spacing*(lines-1)`
+    // so the canvas wrap guide doesn't overshoot the printed block.
+    expect(r.height).toBe(100); // 3 × 30 + 2 × 5
+  });
+
+  it("single-line block ignores spacing entirely (no inter-line gaps exist)", () => {
+    const r = blockBoundsDots({
+      blockWidthDots: 100,
+      blockLines: 1,
+      blockLineSpacing: 99,
+      fontHeight: 30,
+    });
+    expect(r.height).toBe(30);
+  });
+
+  it("zero lines collapse to height 0 without underflow", () => {
+    const r = blockBoundsDots({
+      blockWidthDots: 100,
+      blockLines: 0,
+      blockLineSpacing: 5,
+      fontHeight: 30,
+    });
+    expect(r.height).toBe(0);
   });
 });

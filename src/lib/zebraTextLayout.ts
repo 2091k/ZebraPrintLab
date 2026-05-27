@@ -74,10 +74,14 @@ export function blockBoundsDots(args: {
   blockLineSpacing: number;
   fontHeight: number;
 }): { x: number; y: number; width: number; height: number } {
+  // N lines have N-1 inter-line gaps, not N. Matches the ZPL emit
+  // path in text.tsx (`fontHeight * lines + spacing * (lines - 1)`),
+  // so canvas bbox, wrap guide and printed block stay consistent.
+  const lineStep = blockLineStepDots(args.fontHeight, args.blockLineSpacing);
   return {
     x: 0,
     y: 0,
     width: args.blockWidthDots,
-    height: args.blockLines * blockLineStepDots(args.fontHeight, args.blockLineSpacing),
+    height: args.blockLines > 0 ? (args.blockLines - 1) * lineStep + args.fontHeight : 0,
   };
 }
