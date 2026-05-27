@@ -16,7 +16,7 @@ import { getTextRenderMetrics } from "./textRenderMetrics";
 import { selectionHandlers, type KonvaObjectProps } from "./konvaObjectProps";
 import { DEFAULT_GS_SYMBOL_META, GS_SYMBOLS } from "../../registry/symbol";
 import { GS_SYMBOL_PATHS, GS_VECTOR_CODES, type GsVectorCode } from "../../registry/gsSymbolPaths";
-import { blockBoundsPx, zebraAlignOffsetDots, zebraLineWidthDots } from "../../lib/zebraTextLayout";
+import { blockBoundsDots, zebraAlignOffsetDots, zebraLineWidthDots } from "../../lib/zebraTextLayout";
 import type { LeafObject } from "../../registry";
 import type { TextProps } from "../../registry/text";
 import type { SerialProps } from "../../registry/serial";
@@ -169,7 +169,7 @@ function BlockWrapGuide({
   blockWidthDots,
   blockLines,
   blockLineSpacing,
-  fontSizePx,
+  fontHeight,
   scale,
   dpmm,
   color,
@@ -177,31 +177,26 @@ function BlockWrapGuide({
   blockWidthDots: number;
   blockLines: number;
   blockLineSpacing: number;
-  fontSizePx: number;
+  fontHeight: number;
   scale: number;
   dpmm: number;
   color: string;
 }) {
-  const bounds = blockBoundsPx({
-    blockWidthDots,
-    blockLines,
-    blockLineSpacing,
-    fontSizePx,
-    scale,
-    dpmm,
-  });
+  const bounds = blockBoundsDots({ blockWidthDots, blockLines, blockLineSpacing, fontHeight });
+  const widthPx = dotsToPx(bounds.width, scale, dpmm);
+  const heightPx = dotsToPx(bounds.height, scale, dpmm);
   return (
     <>
       <Rect
-        x={bounds.x}
-        y={bounds.y}
-        width={bounds.width}
-        height={bounds.height}
+        x={dotsToPx(bounds.x, scale, dpmm)}
+        y={dotsToPx(bounds.y, scale, dpmm)}
+        width={widthPx}
+        height={heightPx}
         fill="transparent"
         listening={false}
       />
       <Line
-        points={[bounds.width, 0, bounds.width, bounds.height]}
+        points={[widthPx, 0, widthPx, heightPx]}
         stroke={color}
         strokeWidth={1}
         dash={[4, 3]}
@@ -504,7 +499,7 @@ function KonvaObjectInner({
             blockWidthDots={obj.props.blockWidth}
             blockLines={obj.props.blockLines ?? 1}
             blockLineSpacing={obj.props.blockLineSpacing ?? 0}
-            fontSizePx={fontSizePx}
+            fontHeight={obj.props.fontHeight}
             scale={scale}
             dpmm={dpmm}
             color={colors.accent}

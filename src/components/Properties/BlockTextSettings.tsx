@@ -23,9 +23,7 @@ export function BlockTextSettings({ props: p, onChange }: Props) {
   return (
     // Indent + left border marks the sub-panel as belonging to the
     // FELDBLOCK checkbox above — same convention as the Font-Advanced
-    // block in text.tsx. `items-end` on the number-input grids keeps
-    // the input boxes aligned even when a label wraps to two lines
-    // (e.g. "BLOCKBREITE (PUNKTE)" vs "MAX. ZEILEN").
+    // block in text.tsx.
     <div className="pl-3 border-l border-border flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <label className={labelCls}>{t.registry.text.blockJustify}</label>
@@ -34,6 +32,8 @@ export function BlockTextSettings({ props: p, onChange }: Props) {
           onChange={(blockJustify) => onChange({ blockJustify })}
         />
       </div>
+      {/* items-end keeps the inputs flush even when only one label
+          wraps to two lines (e.g. "BLOCKBREITE (PUNKTE)" vs "MAX. ZEILEN"). */}
       <div className="grid grid-cols-2 gap-2 items-end">
         <NumberInput
           label={t.registry.text.blockWidth}
@@ -48,7 +48,9 @@ export function BlockTextSettings({ props: p, onChange }: Props) {
           onChange={(blockLines) => onChange({ blockLines })}
         />
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      {/* Half-width on its own row: visually matches the grid above
+          without inventing an empty grid cell. */}
+      <div className="w-1/2 pr-1">
         <NumberInput
           label={t.registry.text.blockLineSpacing}
           value={p.blockLineSpacing ?? 0}

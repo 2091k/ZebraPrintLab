@@ -7,8 +7,6 @@
  *  positions against that fixed advance so the canvas matches the
  *  printer instead of the browser. */
 
-import { dotsToPx } from "./coordinates";
-
 export type BlockJustify = "L" | "C" | "R" | "J";
 
 /** ZPL Type-0 font default aspect ratio. The built-in A0 font is
@@ -54,25 +52,32 @@ export function zebraAlignOffsetDots(
   return 0;
 }
 
-/** Pixel-space bbox of the FB block area, anchored at (0, 0) inside
- *  the field's Konva Group (the FO position). Used as the invisible
- *  Rect that pins the Transformer's selection bbox to the full block
- *  extent so its left edge stays at the FO anchor when text is
- *  C/R-justified inside the block (the text spans drift rightwards
- *  but the selection rectangle does not). */
-export function blockBoundsPx(args: {
+/** Per-row advance in dots: font height plus the user-set extra
+ *  inter-line spacing. Shared between layout helpers (block bbox)
+ *  and per-line text rendering so a future spacing-rule tweak (e.g.
+ *  leading vs spacing) only has to land here. */
+export function blockLineStepDots(fontHeight: number, blockLineSpacing: number): number {
+  return fontHeight + blockLineSpacing;
+}
+
+/** Dots-space bbox of the FB block area, anchored at (0, 0) — the
+ *  field's FO position. Used as the invisible Rect that pins the
+ *  Transformer's selection bbox to the full block extent so its
+ *  left edge stays at the FO anchor when text is C/R-justified
+ *  inside the block (the text spans drift rightwards but the
+ *  selection rectangle does not). Anchor is fixed and documented
+ *  here rather than via a literal type so callers can destructure
+ *  without casts. */
+export function blockBoundsDots(args: {
   blockWidthDots: number;
   blockLines: number;
   blockLineSpacing: number;
-  fontSizePx: number;
-  scale: number;
-  dpmm: number;
-}): { x: 0; y: 0; width: number; height: number } {
-  const lineStep = args.fontSizePx + dotsToPx(args.blockLineSpacing, args.scale, args.dpmm);
+  fontHeight: number;
+}): { x: number; y: number; width: number; height: number } {
   return {
     x: 0,
     y: 0,
-    width: dotsToPx(args.blockWidthDots, args.scale, args.dpmm),
-    height: args.blockLines * lineStep,
+    width: args.blockWidthDots,
+    height: args.blockLines * blockLineStepDots(args.fontHeight, args.blockLineSpacing),
   };
 }
