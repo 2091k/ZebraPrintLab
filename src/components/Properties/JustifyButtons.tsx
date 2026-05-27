@@ -69,7 +69,7 @@ export function JustifyButtons({ value, onChange }: Props) {
             aria-label={title}
             aria-pressed={active}
             onClick={() => onChange(v)}
-            className={`flex-1 px-2 py-1 rounded border transition-colors ${
+            className={`w-7 h-6 flex items-center justify-center rounded border transition-colors ${
               active
                 ? "border-accent bg-accent-dim text-accent"
                 : "border-border text-muted hover:text-text hover:bg-surface-2"

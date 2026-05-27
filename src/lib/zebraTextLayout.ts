@@ -7,6 +7,8 @@
  *  positions against that fixed advance so the canvas matches the
  *  printer instead of the browser. */
 
+import { dotsToPx } from "./coordinates";
+
 export type BlockJustify = "L" | "C" | "R" | "J";
 
 /** ZPL Type-0 font default aspect ratio. The built-in A0 font is
@@ -50,4 +52,27 @@ export function zebraAlignOffsetDots(
   // L and J both start at the left edge — J only stretches the inner
   // spacing of non-last lines, which we don't visualise on canvas.
   return 0;
+}
+
+/** Pixel-space bbox of the FB block area, anchored at (0, 0) inside
+ *  the field's Konva Group (the FO position). Used as the invisible
+ *  Rect that pins the Transformer's selection bbox to the full block
+ *  extent so its left edge stays at the FO anchor when text is
+ *  C/R-justified inside the block (the text spans drift rightwards
+ *  but the selection rectangle does not). */
+export function blockBoundsPx(args: {
+  blockWidthDots: number;
+  blockLines: number;
+  blockLineSpacing: number;
+  fontSizePx: number;
+  scale: number;
+  dpmm: number;
+}): { x: 0; y: 0; width: number; height: number } {
+  const lineStep = args.fontSizePx + dotsToPx(args.blockLineSpacing, args.scale, args.dpmm);
+  return {
+    x: 0,
+    y: 0,
+    width: dotsToPx(args.blockWidthDots, args.scale, args.dpmm),
+    height: args.blockLines * lineStep,
+  };
 }
