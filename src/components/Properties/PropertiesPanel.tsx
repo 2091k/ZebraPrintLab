@@ -1,4 +1,4 @@
-import type { RefObject } from "react";
+import { useId, type RefObject } from "react";
 import { InformationCircleIcon, FolderPlusIcon } from "@heroicons/react/16/solid";
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import type { LabelCanvasHandle } from "../Canvas/LabelCanvas";
@@ -28,6 +28,32 @@ import {
   getAvailableFontIds,
   stripDrivePrefix,
 } from "../../lib/customFonts";
+
+/** POSITION section header with centre-on-label tools docked right —
+ *  same Figma/Sketch/Affinity convention used across leaf, group and
+ *  multi-select panels. `unitSuffix` shows only when X/Y inputs sit
+ *  below (leaf case); group + multi-select pass it bare. `useId`
+ *  ties the label to the AlignButtons group so screen readers
+ *  announce "Position, button group" instead of three loose icons. */
+function PositionSectionHeader({
+  unitSuffix,
+  onAlign,
+}: {
+  unitSuffix?: string;
+  onAlign: (axis: AlignAxis) => void;
+}) {
+  const t = useT();
+  const labelId = useId();
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <p id={labelId} className={labelCls}>
+        {t.properties.positionSection}
+        {unitSuffix ? ` (${unitSuffix})` : ""}
+      </p>
+      <AlignButtons onAlign={onAlign} ariaLabelledBy={labelId} />
+    </div>
+  );
+}
 
 interface PropertiesPanelProps {
   /** Imperative handle on the canvas — used for actions that need live render
@@ -72,10 +98,12 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
           </span>
         </div>
         <div className="px-3 py-3 flex flex-col gap-3">
-          <p className="text-xs text-muted">
-            {t.properties.x} / {t.properties.y}: {t.properties.multipleSelectedHint}
-          </p>
-          <AlignButtons onAlign={handleAlign} />
+          <div className="flex flex-col gap-2">
+            <PositionSectionHeader onAlign={handleAlign} />
+            <p className="text-xs text-muted">
+              {t.properties.x} / {t.properties.y}: {t.properties.multipleSelectedHint}
+            </p>
+          </div>
           {canGroup && (
             <button
               type="button"
@@ -160,11 +188,12 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
             still applies — it expands to the group's leaves at the
             canvas layer. */}
         <div className="flex flex-col gap-2">
-          {!groupRow && (
+          {groupRow ? (
+            // Groups have no per-leaf position inputs — header alone.
+            <PositionSectionHeader onAlign={handleAlign} />
+          ) : (
             <>
-              <p className={labelCls}>
-                {t.properties.positionSection} ({unitLabel(unit)})
-              </p>
+              <PositionSectionHeader onAlign={handleAlign} unitSuffix={unitLabel(unit)} />
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                   <label className={labelCls}>{t.properties.x}</label>
@@ -203,7 +232,6 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
               </div>
             </>
           )}
-          <AlignButtons onAlign={handleAlign} />
         </div>
 
         <div className="border-t border-border" />
