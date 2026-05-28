@@ -34,14 +34,14 @@ The print resolution (dpmm = dots per millimeter) must match your printer. Commo
 
 Drag items from the left panel onto the canvas, or double-click them to add at the center.
 
-Available objects: text, serial (auto-incrementing number fields), barcodes (24 symbologies including Code 128, QR, DataMatrix, PDF417), shapes (box, line, ellipse), and images.
+Available objects: text, serial (auto-incrementing number fields), barcodes (27 symbologies including Code 128, QR, DataMatrix, PDF417, Maxicode), shapes (box, line, ellipse), and images.
 
 <details>
 <summary>Full list of supported barcode symbologies</summary>
 
-**1D linear:** Code 128, Code 39, Code 93, Code 11, Interleaved 2 of 5, Standard 2 of 5, Industrial 2 of 5, Codabar, LOGMARS, MSI, Plessey, GS1 Databar, Planet Code, Postal/POSTNET, EAN-13, EAN-8, UPC-A, UPC-E
+**1D linear:** Code 128, Code 39, Code 93, Code 11, Interleaved 2 of 5, Standard 2 of 5, Industrial 2 of 5, Codabar, LOGMARS, MSI, Plessey, GS1 Databar, Planet Code, Postal/POSTNET, EAN-13, EAN-8, UPC-A, UPC-E, UPC/EAN 2- or 5-digit supplement, Code 49
 
-**2D matrix:** QR Code, DataMatrix, PDF417, MicroPDF417, Aztec, Codablock F
+**2D matrix:** QR Code, DataMatrix, PDF417, MicroPDF417, Aztec, Codablock F, Maxicode
 
 </details>
 
@@ -119,7 +119,7 @@ See [docs/zpl-roadmap.md](docs/zpl-roadmap.md) for ZPL II command coverage.
 
 - The canvas is a design preview, not a pixel-perfect simulation. Shapes, spacing, and positions match the print; text approximates Zebra's built-in font to within a few dots, but exact letterforms and anti-aliasing differ. For a faithful render, use the **Preview** in the bottom-right panel (powered by Labelary).
 - Label preview is rendered by Labelary. The default build calls `api.labelary.com`; self-hosters can point at a private endpoint or turn it off.
-- The Labelary preview doesn't render every ZPL feature. Some less common elements (e.g. Codablock F barcodes) may be missing or wrong in the preview even when the actual print is fine.
+- The Labelary preview doesn't render every ZPL feature. Some less common elements (e.g. Codablock F, Maxicode) may be missing or wrong in the preview even when the actual print is fine.
 - The Labelary preview shows only the current page; the printed/exported ZPL still contains every page.
 
 ---
@@ -131,7 +131,7 @@ pnpm install
 pnpm dev
 ```
 
-Requires Node.js ≥ 18 and pnpm. Alternatively use `npm install` / `npm run dev`.
+Requires Node.js ≥ 20 and pnpm. Alternatively use `npm install` / `npm run dev`.
 
 ```bash
 pnpm build   # output goes to dist/
