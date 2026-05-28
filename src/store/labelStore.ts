@@ -164,6 +164,17 @@ export interface CanvasSettings {
 
 export type ThemePreference = 'light' | 'dark';
 
+/** Tab IDs for the Printer Settings modal. Source of truth for
+ *  components that render the rail and for the store's modal
+ *  state. Adding a tab is a one-line union extension plus the
+ *  matching locale-key + content component. */
+export type PrinterSettingsTab =
+  | 'mediaFeed'
+  | 'printQuality'
+  | 'clockTime'
+  | 'encodingLanguage'
+  | 'identity';
+
 /** Labelary-backed canvas overlay. While `active`, the canvas renders
  *  the Labelary-rendered PNG in place of the editor objects so the user
  *  can A/B compare design vs. printed output at the same scale. The
@@ -344,6 +355,8 @@ interface LabelState {
    *  panel — the sidebar itself reads + writes via `setSidebarTab`. */
   sidebarTab: 'properties' | 'layers' | 'variables' | 'fonts';
   setSidebarTab: (tab: LabelState['sidebarTab']) => void;
+  printerSettingsTab: PrinterSettingsTab | null;
+  setPrinterSettingsTab: (tab: PrinterSettingsTab | null) => void;
   /** One-shot focus request scoped to a single object. Each call sets a
    *  fresh object (incrementing `nonce` so consumers can re-fire even
    *  for the same id) and TemplateContentInput's effect compares its
@@ -1118,6 +1131,8 @@ export const useLabelStore = create<LabelState>()(
       // state that survived rehydration).
       sidebarTab: 'properties',
       setSidebarTab: (tab) => set({ sidebarTab: tab }),
+      printerSettingsTab: null,
+      setPrinterSettingsTab: (tab) => set({ printerSettingsTab: tab }),
       editorFocusRequest: null,
       requestContentEditorFocus: (id) =>
         set((state) => ({
