@@ -206,6 +206,11 @@ const sv = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Skrivarnamn',
+      printerNameHint: 'Max 16 tecken. Används i frontpaneletiketter och ZebraNet-utskriftsserver.',
+      printerDescription: 'Skrivarbeskrivning',
+    },
   },
 
   app: {

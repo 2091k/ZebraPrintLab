@@ -206,6 +206,11 @@ const nl = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Printernaam',
+      printerNameHint: 'Max. 16 tekens. Gebruikt in frontpanel-labels en ZebraNet-printserver.',
+      printerDescription: 'Printerbeschrijving',
+    },
   },
 
   app: {

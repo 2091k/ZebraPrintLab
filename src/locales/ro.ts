@@ -206,6 +206,11 @@ const ro = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Numele imprimantei',
+      printerNameHint: 'Max. 16 caractere. Folosit în etichetele panoului frontal și serverul de imprimare ZebraNet.',
+      printerDescription: 'Descrierea imprimantei',
+    },
   },
 
   app: {

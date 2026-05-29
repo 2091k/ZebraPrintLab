@@ -206,6 +206,11 @@ const fi = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Tulostimen nimi',
+      printerNameHint: 'Enint. 16 merkkiä. Käytetään etupaneelin tarroissa ja ZebraNet-tulostuspalvelimessa.',
+      printerDescription: 'Tulostimen kuvaus',
+    },
   },
 
   app: {

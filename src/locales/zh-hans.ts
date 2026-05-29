@@ -206,6 +206,11 @@ const zhHans = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: '打印机名称',
+      printerNameHint: '最多16个字符。用于前面板标签和ZebraNet打印服务器。',
+      printerDescription: '打印机描述',
+    },
   },
 
   app: {

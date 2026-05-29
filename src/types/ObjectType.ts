@@ -87,6 +87,27 @@ export const isPrintOrientation = makeEnumGuard(PRINT_ORIENTATION_VALUES);
  *  parse/format helper in `src/lib/`. */
 export const realtimeClockIsoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
 
+/** ^KN printer-name length cap per Zebra spec (16 characters). */
+export const PRINTER_NAME_MAX_LEN = 16;
+
+/** Character class of "dangerous" chars in Setup-Script free-string
+ *  positionals. Includes the ZPL command-introducer chars (`^`, `~`),
+ *  the positional delimiter `,` (would silently split into multiple
+ *  fields on round-trip), newlines, and control codes. Defined once
+ *  here so both the schema-side anchored regex and the parser-side
+ *  unanchored check derive from the same source — adding a char
+ *  cannot drift between them. */
+// String-based char class (passed to `new RegExp`), so the
+// `no-control-regex` rule (which inspects regex literals) does
+// not fire here — the intent (blocking control chars to prevent
+// ZPL injection) is the same as for a literal.
+const SETUP_SCRIPT_UNSAFE_CHARS = '\\^~,\\r\\n\\x00-\\x1f';
+/** Anchored, positive form for `z.string().regex(...)` schema checks. */
+export const setupScriptSafeStringRegex = new RegExp(`^[^${SETUP_SCRIPT_UNSAFE_CHARS}]+$`);
+/** Unanchored, negative form for parser-side dropping (the parser
+ *  writes into the store without re-running the schema). */
+export const setupScriptUnsafeCharRegex = new RegExp(`[${SETUP_SCRIPT_UNSAFE_CHARS}]`);
+
 /** ^KL printer locale — sets the language used for printer-side
  *  display strings (front-panel menus, status messages). Per the
  *  ZPL II spec the documented codes are the two-letter ISO 639-1
@@ -234,11 +255,18 @@ export const labelConfigSchema = z.object({
    *  (`^`, `~`), newlines, and control codes — an untrusted import
    *  with `encodingTable: "^SD30"` would otherwise inject a second
    *  command into the generated Setup Script via string interpolation. */
-  // eslint-disable-next-line no-control-regex -- intentional: blocks control chars to prevent ZPL injection
-  encodingTable: z.string().min(1).regex(/^[^^~\r\n\x00-\x1f]+$/).optional(),
+  encodingTable: z.string().min(1).regex(setupScriptSafeStringRegex).optional(),
   /** ^SZ: ZPL mode. `2` is the default on every modern firmware;
    *  `1` switches the printer to legacy ZPL interpretation. */
   zplMode: z.enum(ZPL_MODE_VALUES).optional(),
+  /** ^KN p1: friendly printer name (max 16 chars per spec).
+   *  Same injection-safety regex as ^SE so an imported ZPL
+   *  cannot smuggle a second command via the name value. */
+  printerName: z.string().min(1).max(PRINTER_NAME_MAX_LEN).regex(setupScriptSafeStringRegex).optional(),
+  /** ^KN p2: optional human-readable printer description.
+   *  Spec does not pin an explicit length cap; the injection-
+   *  safe regex is the only schema-side constraint. */
+  printerDescription: z.string().min(1).regex(setupScriptSafeStringRegex).optional(),
 });
 
 export type LabelConfig = z.infer<typeof labelConfigSchema>;

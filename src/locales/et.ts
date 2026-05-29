@@ -206,6 +206,11 @@ const et = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Printeri nimi',
+      printerNameHint: 'Kuni 16 tähemärki. Kasutatakse esipaneeli siltidel ja ZebraNet prindiserveris.',
+      printerDescription: 'Printeri kirjeldus',
+    },
   },
 
   app: {

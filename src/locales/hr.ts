@@ -206,6 +206,11 @@ const hr = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Naziv pisača',
+      printerNameHint: 'Najviše 16 znakova. Koristi se na naljepnicama prednje ploče i ZebraNet poslužitelju ispisa.',
+      printerDescription: 'Opis pisača',
+    },
   },
 
   app: {

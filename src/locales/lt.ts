@@ -206,6 +206,11 @@ const lt = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Spausdintuvo pavadinimas',
+      printerNameHint: 'Daugiausia 16 simbolių. Naudojamas priekinio skydelio etiketėse ir ZebraNet spausdinimo serveryje.',
+      printerDescription: 'Spausdintuvo aprašymas',
+    },
   },
 
   app: {

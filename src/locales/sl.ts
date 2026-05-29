@@ -206,6 +206,11 @@ const sl = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Ime tiskalnika',
+      printerNameHint: 'Največ 16 znakov. Uporablja se v nalepkah sprednje plošče in tiskalniškem strežniku ZebraNet.',
+      printerDescription: 'Opis tiskalnika',
+    },
   },
 
   app: {

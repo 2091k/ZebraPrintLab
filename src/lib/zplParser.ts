@@ -4,6 +4,7 @@ import {
   DARKNESS_PERMANENT_RANGE,
   HEAD_TEST_INTERVAL_RANGE,
   MAX_LABEL_LENGTH_RANGE,
+  PRINTER_NAME_MAX_LEN,
   SPEED_RANGE,
   TEAR_OFF_ADJUST_RANGE,
   isClockFormat,
@@ -14,6 +15,7 @@ import {
   isPrintOrientation,
   isPrinterLocale,
   isZplMode,
+  setupScriptUnsafeCharRegex,
 } from "../types/ObjectType";
 import { parseIntOrUndef } from "./inputParse";
 import { parseRealtimeClock } from "./realtimeClock";
@@ -2042,8 +2044,7 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     // in the store and be re-emitted as an injected command.
     SE(_, rest) {
       const v = rest.trim();
-      // eslint-disable-next-line no-control-regex -- intentional: blocks control chars to prevent ZPL injection
-      if (v && !/[\^~\r\n\x00-\x1f]/.test(v)) labelConfig.encodingTable = v;
+      if (v && !setupScriptUnsafeCharRegex.test(v)) labelConfig.encodingTable = v;
     },
     // ^SZ <mode>. Single digit '1' or '2'; same first-char-trim
     // pattern as KD / KL.
@@ -2051,6 +2052,23 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       const v = rest.trim()[0] ?? "";
       if (isZplMode(v)) labelConfig.zplMode = v;
     },
+    // ^KN <name>,<description>. Both parts free strings; the
+    // injection-guard regex mirrors the schema so an imported
+    // ZPL cannot smuggle command-introducer chars into either
+    // field. Name length cap stays per spec.
+    KN(p) {
+      const name = (p[0] ?? "").trim();
+      if (!name || name.length > PRINTER_NAME_MAX_LEN) return;
+      if (setupScriptUnsafeCharRegex.test(name)) return;
+      labelConfig.printerName = name;
+      const desc = (p[1] ?? "").trim();
+      if (desc && !setupScriptUnsafeCharRegex.test(desc)) {
+        labelConfig.printerDescription = desc;
+      }
+    },
+    // ^SL belongs in Tab 3 Clock & Time (Mode S/T + Language
+    // 1-13), not Identity — handler will land with that follow-
+    // up PR. See memory:project_ticket_sl_clock_formatting.
 
     // ^CW {alias},{path} — register an alias for a printer-resident font.
     // Subsequent ^A{alias} fields resolve to {path} via the fontAliases

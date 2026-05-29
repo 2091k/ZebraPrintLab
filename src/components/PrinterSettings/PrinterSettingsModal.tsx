@@ -5,6 +5,7 @@ import { useLabelStore, type PrinterSettingsTab } from "../../store/labelStore";
 import { DialogShell } from "../ui/DialogShell";
 import { ClockAndTimeTab } from "./ClockAndTimeTab";
 import { EncodingAndLanguageTab } from "./EncodingAndLanguageTab";
+import { IdentityTab } from "./IdentityTab";
 import { MediaFeedTab } from "./MediaFeedTab";
 import { PrintQualityTab } from "./PrintQualityTab";
 
@@ -33,6 +34,7 @@ const TAB_COMPONENTS: Partial<Record<PrinterSettingsTab, FC>> = {
   printQuality: PrintQualityTab,
   clockTime: ClockAndTimeTab,
   encodingLanguage: EncodingAndLanguageTab,
+  identity: IdentityTab,
 };
 
 /** Modal-box class kept as a constant rather than inline so the

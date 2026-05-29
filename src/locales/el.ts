@@ -206,6 +206,11 @@ const el = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Όνομα εκτυπωτή',
+      printerNameHint: 'Έως 16 χαρακτήρες. Χρησιμοποιείται στις ετικέτες του μπροστινού πίνακα και στον διακομιστή εκτύπωσης ZebraNet.',
+      printerDescription: 'Περιγραφή εκτυπωτή',
+    },
   },
 
   app: {

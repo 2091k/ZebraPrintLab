@@ -206,6 +206,11 @@ const cs = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Název tiskárny',
+      printerNameHint: 'Max. 16 znaků. Používá se v štítcích předního panelu a tiskovém serveru ZebraNet.',
+      printerDescription: 'Popis tiskárny',
+    },
   },
 
   app: {

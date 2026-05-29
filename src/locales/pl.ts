@@ -206,6 +206,11 @@ const pl = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Nazwa drukarki',
+      printerNameHint: 'Maks. 16 znaków. Używana w etykietach panelu przedniego i serwerze druku ZebraNet.',
+      printerDescription: 'Opis drukarki',
+    },
   },
 
   app: {
