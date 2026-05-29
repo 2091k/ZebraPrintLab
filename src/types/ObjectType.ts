@@ -229,8 +229,13 @@ export const labelConfigSchema = z.object({
    *  because the path shape is firmware-and-storage-dependent.
    *  `min(1)` locks the "unset" invariant in the schema so the UI,
    *  generator, and parser all agree that empty string is not a
-   *  valid persisted value (cleared input maps to `undefined`). */
-  encodingTable: z.string().min(1).optional(),
+   *  valid persisted value (cleared input maps to `undefined`).
+   *  The regex blocks the ZPL command-introducer characters
+   *  (`^`, `~`), newlines, and control codes — an untrusted import
+   *  with `encodingTable: "^SD30"` would otherwise inject a second
+   *  command into the generated Setup Script via string interpolation. */
+  // eslint-disable-next-line no-control-regex -- intentional: blocks control chars to prevent ZPL injection
+  encodingTable: z.string().min(1).regex(/^[^^~\r\n\x00-\x1f]+$/).optional(),
   /** ^SZ: ZPL mode. `2` is the default on every modern firmware;
    *  `1` switches the printer to legacy ZPL interpretation. */
   zplMode: z.enum(ZPL_MODE_VALUES).optional(),

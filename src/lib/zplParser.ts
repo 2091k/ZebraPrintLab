@@ -2036,10 +2036,14 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     },
     // ^SE <file-path>. Free string per spec; trim to drop any
     // streaming whitespace but otherwise preserve the value as-is
-    // because the firmware path syntax is user-supplied.
+    // because the firmware path syntax is user-supplied. The
+    // dangerous-char check mirrors the schema regex so an imported
+    // ZPL that smuggled a ^/~ / newline into the path cannot land
+    // in the store and be re-emitted as an injected command.
     SE(_, rest) {
       const v = rest.trim();
-      if (v) labelConfig.encodingTable = v;
+      // eslint-disable-next-line no-control-regex -- intentional: blocks control chars to prevent ZPL injection
+      if (v && !/[\^~\r\n\x00-\x1f]/.test(v)) labelConfig.encodingTable = v;
     },
     // ^SZ <mode>. Single digit '1' or '2'; same first-char-trim
     // pattern as KD / KL.

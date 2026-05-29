@@ -69,11 +69,13 @@ export function EncodingAndLanguageTab() {
           in the modal; promote to a primitive only when a second
           caller appears.
 
-          `pattern` enforces the documented `drive:filename.DAT`
-          shape (drives R: E: B: A:, 1-8 alphanumeric stem). It
-          fires only on form-submit semantics (none here), so it
-          acts purely as a visual `:invalid` hint via Tailwind's
-          `invalid:` variant — the parser stays tolerant because
+          `pattern` is a permissive shape check (drive letter +
+          colon + filename + `.DAT`-ish extension). Case-insensitive
+          on drive + extension, allows underscore/hyphen in the
+          stem, and tolerates a trailing comma-separated second
+          param (`^SE` accepts one in some firmware revisions).
+          Acts purely as a visual `:invalid` hint via Tailwind's
+          `invalid:` variant; the parser stays tolerant because
           firmware path conventions vary. */}
       <ZplField>
         <ZplCommandLabel text={loc.encodingTable} command="^SE" htmlFor={encodingId} />
@@ -81,7 +83,7 @@ export function EncodingAndLanguageTab() {
           id={encodingId}
           type="text"
           className={`${inputCls} invalid:border-warning`}
-          pattern="[REBA]:[A-Z0-9]{1,8}\.DAT"
+          pattern="[rReEbBaA]:[A-Za-z0-9_\-]{1,8}\.[dDaAtT]{3}(,.+)?"
           value={label.encodingTable ?? ""}
           onChange={(e) =>
             setLabelConfig({ encodingTable: e.target.value || undefined })

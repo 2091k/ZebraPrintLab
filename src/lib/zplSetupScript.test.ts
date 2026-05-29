@@ -137,6 +137,23 @@ describe("generateSetupScript — output shape", () => {
     expect(parsed.encodingTable).toBe(path);
   });
 
+  it("rejects ZPL injection attempts in ^SE values at the schema layer", async () => {
+    // `^SE${value}` interpolation makes this a real injection
+    // surface for imported / pasted ZPL. Schema must reject any
+    // value carrying the command-introducer chars.
+    const { labelConfigSchema } = await import("../types/ObjectType");
+    expect(() => labelConfigSchema.parse({ ...base, encodingTable: "^SDXY" })).toThrow();
+    expect(() => labelConfigSchema.parse({ ...base, encodingTable: "E:F.DAT~JR" })).toThrow();
+    expect(() => labelConfigSchema.parse({ ...base, encodingTable: "E:F.DAT\n^MD30" })).toThrow();
+  });
+
+  it("parser drops ^SE values carrying ZPL command-introducer chars", () => {
+    // The parser writes into the store without re-running the
+    // schema; the dangerous-char check mirrors the schema so an
+    // import cannot smuggle an injection past it.
+    expect(parseZPL("^XA^SE\x1bbad^XZ").labelConfig.encodingTable).toBeUndefined();
+  });
+
   it("rejects ^KL with an unknown locale code", () => {
     expect(parseZPL("^XA^KLXX^XZ").labelConfig.printerLocale).toBeUndefined();
   });
