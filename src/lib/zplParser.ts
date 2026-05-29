@@ -10,7 +10,6 @@ import {
   TEAR_OFF_ADJUST_RANGE,
   isClockFormat,
   isClockLanguage,
-  isClockMode,
   isMediaFeedMode,
   isMediaMode,
   isMediaTracking,
@@ -2078,7 +2077,13 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     SL(p) {
       const a = strParam(p[0]);
       if (a === "S" || a === "T") {
-        if (isClockMode(a)) labelConfig.clockMode = a;
+        labelConfig.clockMode = a;
+        // Clear any tolerance left over from a previous ^SL parse —
+        // schema's cross-field rule forbids `tolerance && mode !== 'TOL'`,
+        // and the parser writes raw values without re-running the
+        // schema, so a stale tolerance from an earlier ^SL60,1 would
+        // make the persisted state un-saveable.
+        labelConfig.clockTolerance = undefined;
       } else {
         const tol = inRange(parseIntOrUndef(a), CLOCK_TOLERANCE_RANGE);
         if (tol !== undefined) {

@@ -243,6 +243,17 @@ describe("generateSetupScript — output shape", () => {
     expect(parseZPL("^XA^SLS,99^XZ").labelConfig.clockLanguage).toBeUndefined();
   });
 
+  it("clears stale clockTolerance when a later ^SL parses to mode S/T", () => {
+    // Schema's cross-field rule forbids `tolerance set while mode in
+    // {S, T}`. Parser writes raw values, so without the clear a
+    // second ^SL parse would leave the store in an un-saveable
+    // state. `^SL60,1^SLS` mid-stream is the realistic scenario.
+    const zpl = "^XA^SL60,1^XZ^XA^SLS^XZ";
+    const { labelConfig } = parseZPL(zpl);
+    expect(labelConfig.clockMode).toBe("S");
+    expect(labelConfig.clockTolerance).toBeUndefined();
+  });
+
   it("does not orphan-set clockLanguage when the mode parse drops", () => {
     // Without the mode guard, `^SL1500,1` would set
     // clockLanguage='1' while clockMode stays undefined — emit
