@@ -1929,7 +1929,11 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       }
     },
     MM(_, rest) {
-      const mode = (rest[0] ?? "").toUpperCase();
+      // `.trim()` before `[0]` so a stray leading whitespace in the
+      // input (rare but seen with hand-edited ZPL) does not eat the
+      // mode character. Applies to all single-char enum handlers
+      // below (MT / PO / PM / KD).
+      const mode = (rest.trim()[0] ?? "").toUpperCase();
       if (isMediaMode(mode)) labelConfig.mediaMode = mode;
     },
     LS(_, rest) {
@@ -1949,7 +1953,7 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       if (v !== undefined) labelConfig.darkness = v;
     },
     MT(_, rest) {
-      const mt = (rest[0] ?? "").toUpperCase();
+      const mt = (rest.trim()[0] ?? "").toUpperCase();
       if (isMediaType(mt)) labelConfig.mediaType = mt;
     },
     MN(p) {
@@ -1990,11 +1994,11 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       if (v !== undefined) labelConfig.tearOffAdjust = v;
     },
     PO(_, rest) {
-      const po = (rest[0] ?? "").toUpperCase();
+      const po = (rest.trim()[0] ?? "").toUpperCase();
       if (isPrintOrientation(po)) labelConfig.printOrientation = po;
     },
     PM(_, rest) {
-      const m = (rest[0] ?? "").toUpperCase();
+      const m = (rest.trim()[0] ?? "").toUpperCase();
       if (m === "Y" || m === "N") labelConfig.mirror = m;
     },
     // ~SD — instant darkness set (00..30). Tilde-prefix; the tokenizer
@@ -2017,7 +2021,7 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     // is dropped. Matches the parser's lenient contract elsewhere
     // (PO / PM / MT take the same first-char approach).
     KD(_, rest) {
-      const v = (rest[0] ?? "").trim();
+      const v = rest.trim()[0] ?? "";
       if (isClockFormat(v)) labelConfig.clockFormat = v;
     },
 
