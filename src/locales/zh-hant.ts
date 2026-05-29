@@ -206,6 +206,11 @@ const zhHant = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: '印表機名稱',
+      printerNameHint: '最多16個字元。用於前面板標籤和ZebraNet列印伺服器。',
+      printerDescription: '印表機描述',
+    },
   },
 
   app: {

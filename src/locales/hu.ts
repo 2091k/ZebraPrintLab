@@ -206,6 +206,11 @@ const hu = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Nyomtató neve',
+      printerNameHint: 'Max. 16 karakter. Előlapi címkékben és a ZebraNet nyomtatószerveren használatos.',
+      printerDescription: 'Nyomtató leírása',
+    },
   },
 
   app: {

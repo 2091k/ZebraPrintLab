@@ -206,6 +206,11 @@ const ja = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'プリンター名',
+      printerNameHint: '最大16文字。フロントパネルラベルおよびZebraNetプリントサーバーで使用されます。',
+      printerDescription: 'プリンターの説明',
+    },
   },
 
   app: {

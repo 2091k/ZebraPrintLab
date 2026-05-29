@@ -206,6 +206,11 @@ const lv = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Printera nosaukums',
+      printerNameHint: 'Maks. 16 rakstzīmes. Tiek izmantots priekšējā paneļa etiķetēs un ZebraNet drukas serverī.',
+      printerDescription: 'Printera apraksts',
+    },
   },
 
   app: {

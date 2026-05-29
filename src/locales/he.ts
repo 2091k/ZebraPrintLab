@@ -206,6 +206,11 @@ const he = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'שם המדפסת',
+      printerNameHint: 'עד 16 תווים. משמש בתוויות הפאנל הקדמי ובשרת ההדפסה ZebraNet.',
+      printerDescription: 'תיאור המדפסת',
+    },
   },
 
   app: {

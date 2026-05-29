@@ -206,6 +206,11 @@ const bg = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Име на принтера',
+      printerNameHint: 'Макс. 16 знака. Използва се в етикетите на предния панел и сървъра за печат ZebraNet.',
+      printerDescription: 'Описание на принтера',
+    },
   },
 
   app: {

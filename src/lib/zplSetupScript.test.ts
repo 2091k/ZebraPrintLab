@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { generateSetupScript, SETUP_SCRIPT_FIELDS } from "./zplSetupScript";
 import { parseZPL } from "./zplParser";
-import type { LabelConfig } from "../types/ObjectType";
+import { labelConfigSchema, type LabelConfig } from "../types/ObjectType";
 
 const base: LabelConfig = { widthMm: 100, heightMm: 50, dpmm: 8 };
 
@@ -94,12 +94,12 @@ describe("generateSetupScript — output shape", () => {
       .toBe("^XA\n^SEE:UHANGUL.DAT\n^XZ");
   });
 
-  it("rejects empty-string encodingTable at the schema layer", async () => {
+  it("rejects empty-string encodingTable at the schema layer", () => {
     // The schema's min(1) makes empty string unreachable through
     // labelConfigSchema.parse, so the generator no longer carries
     // its own empty-string defense. This test pins the schema
     // contract so a future schema loosening would also surface here.
-    const { labelConfigSchema } = await import("../types/ObjectType");
+
     expect(() => labelConfigSchema.parse({ ...base, encodingTable: "" })).toThrow();
   });
 
@@ -137,14 +137,57 @@ describe("generateSetupScript — output shape", () => {
     expect(parsed.encodingTable).toBe(path);
   });
 
-  it("rejects ZPL injection attempts in ^SE values at the schema layer", async () => {
+  it("rejects ZPL injection attempts in ^SE values at the schema layer", () => {
     // `^SE${value}` interpolation makes this a real injection
     // surface for imported / pasted ZPL. Schema must reject any
     // value carrying the command-introducer chars.
-    const { labelConfigSchema } = await import("../types/ObjectType");
+
     expect(() => labelConfigSchema.parse({ ...base, encodingTable: "^SDXY" })).toThrow();
     expect(() => labelConfigSchema.parse({ ...base, encodingTable: "E:F.DAT~JR" })).toThrow();
     expect(() => labelConfigSchema.parse({ ...base, encodingTable: "E:F.DAT\n^MD30" })).toThrow();
+  });
+
+  it("emits ^KN with name only when description is unset", () => {
+    expect(generateSetupScript({ ...base, printerName: "Lab-01" }))
+      .toBe("^XA\n^KNLab-01\n^XZ");
+  });
+
+  it("folds ^KN description into the same line when both are set", () => {
+    expect(generateSetupScript({ ...base, printerName: "Lab-01", printerDescription: "front desk" }))
+      .toBe("^XA\n^KNLab-01,front desk\n^XZ");
+  });
+
+  it("skips ^KN emit when only the description is set (name is the anchor)", () => {
+    expect(generateSetupScript({ ...base, printerDescription: "orphan" })).toBe("");
+  });
+
+  it("round-trips ^KN via the parser without loss", () => {
+    const orig: LabelConfig = {
+      ...base,
+      printerName: "Lab-01",
+      printerDescription: "front desk",
+    };
+    const { labelConfig: parsed } = parseZPL(generateSetupScript(orig));
+    expect(parsed.printerName).toBe("Lab-01");
+    expect(parsed.printerDescription).toBe("front desk");
+  });
+
+  it("rejects ZPL injection attempts in ^KN values at the schema layer", () => {
+
+    expect(() => labelConfigSchema.parse({ ...base, printerName: "^SD30" })).toThrow();
+    expect(() => labelConfigSchema.parse({ ...base, printerDescription: "front\n^MD0" })).toThrow();
+  });
+
+  it("rejects ^KN names longer than the 16-char spec cap", () => {
+
+    expect(() => labelConfigSchema.parse({ ...base, printerName: "abcdefghij0123456" })).toThrow();
+  });
+
+  it("rejects commas in ^KN / ^SE free-string fields (would round-trip-split)", () => {
+
+    expect(() => labelConfigSchema.parse({ ...base, printerName: "Lab,01" })).toThrow();
+    expect(() => labelConfigSchema.parse({ ...base, printerDescription: "front,desk" })).toThrow();
+    expect(() => labelConfigSchema.parse({ ...base, encodingTable: "E:F.DAT,extra" })).toThrow();
   });
 
   it("parser drops ^SE values carrying ZPL command-introducer chars", () => {
@@ -176,6 +219,8 @@ describe("generateSetupScript — output shape", () => {
       "printerLocale",
       "encodingTable",
       "zplMode",
+      "printerName",
+      "printerDescription",
     ]);
   });
 

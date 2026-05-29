@@ -94,6 +94,30 @@ const SETUP_SCRIPT_EMITTERS = {
     channel: 'block',
     emit: (l) => l.zplMode !== undefined ? `^SZ${l.zplMode}` : null,
   },
+  printerName: {
+    channel: 'block',
+    // ^KN takes two positional params; description rides along
+    // only when set. The `printerDescription` registry entry below
+    // intentionally returns null on its own (it has no standalone
+    // ZPL command) — the description is folded in here so the
+    // ^KN emit stays a single line. Both values are `.trim()`ed
+    // on emit because the parser trims on import, and asymmetric
+    // whitespace would silently break the round-trip invariant.
+    emit: (l) => {
+      if (l.printerName === undefined) return null;
+      const name = l.printerName.trim();
+      const desc = l.printerDescription?.trim();
+      return desc ? `^KN${name},${desc}` : `^KN${name}`;
+    },
+  },
+  printerDescription: {
+    // Folded into the ^KN emit above; this entry exists only so
+    // the SETUP_SCRIPT_FIELDS list (derived via Object.keys) sees
+    // the field and the no-leak test knows it's per-spec a
+    // Setup-Script field.
+    channel: 'block',
+    emit: () => null,
+  },
 } as const satisfies Partial<Record<keyof LabelConfig, SetupScriptEmitter>>;
 
 /** Public list of the LabelConfig fields that flow through the

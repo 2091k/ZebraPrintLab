@@ -206,6 +206,11 @@ const ko = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: '프린터 이름',
+      printerNameHint: '최대 16자. 전면 패널 라벨 및 ZebraNet 프린트 서버에서 사용됩니다.',
+      printerDescription: '프린터 설명',
+    },
   },
 
   app: {

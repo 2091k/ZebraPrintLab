@@ -206,6 +206,11 @@ const tr = {
       zplMode1: 'ZPL (legacy)',
       zplMode2: 'ZPL II',
     },
+    identity: {
+      printerName: 'Yazıcı adı',
+      printerNameHint: 'En fazla 16 karakter. Ön panel etiketlerinde ve ZebraNet baskı sunucusunda kullanılır.',
+      printerDescription: 'Yazıcı açıklaması',
+    },
   },
 
   app: {
