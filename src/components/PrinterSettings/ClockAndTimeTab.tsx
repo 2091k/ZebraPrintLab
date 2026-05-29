@@ -15,12 +15,16 @@ import {
 
 type LocClockTime = ReturnType<typeof useT>["printerSettings"]["clockTime"];
 
-/** Maps a clock-format code to its locale key. Computed from
- *  `CLOCK_FORMAT_VALUES` so adding a future format `'4'` only
- *  requires extending the values + adding `clockFormat4` to the
- *  locale block, no third list to keep in sync. */
-const clockFormatLabelKey = (v: ClockFormat): keyof LocClockTime =>
-  `clockFormat${v}` as `clockFormat${ClockFormat}`;
+/** Explicit value → locale-key map. `satisfies` makes both a
+ *  missing enum-value entry (here) and a missing locale key (in
+ *  the locale shape) compile errors — the earlier template-literal
+ *  helper used an `as`-cast that bypassed the second direction. */
+const CLOCK_FORMAT_LABEL_KEYS = {
+  '0': 'clockFormat0',
+  '1': 'clockFormat1',
+  '2': 'clockFormat2',
+  '3': 'clockFormat3',
+} as const satisfies Record<ClockFormat, keyof LocClockTime>;
 
 /** Tab 3 of the Printer Settings Modal — clock/time setup commands.
  *  All three live in the Setup-Script output (EEPROM-persistent),
@@ -64,7 +68,7 @@ export function ClockAndTimeTab() {
         value={label.clockFormat}
         onChange={(v) => setLabelConfig({ clockFormat: v })}
         defaultLabel={t.printerSettings.defaultOption}
-        optionLabel={(m) => loc[clockFormatLabelKey(m)]}
+        optionLabel={(m) => loc[CLOCK_FORMAT_LABEL_KEYS[m]]}
       />
     </div>
   );
