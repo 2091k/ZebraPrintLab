@@ -87,6 +87,27 @@ export const isPrintOrientation = makeEnumGuard(PRINT_ORIENTATION_VALUES);
  *  parse/format helper in `src/lib/`. */
 export const realtimeClockIsoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
 
+/** ^KL printer locale — sets the language used for printer-side
+ *  display strings (front-panel menus, status messages). Per the
+ *  ZPL II spec the documented codes are the two-letter ISO 639-1
+ *  shorthands for the languages Zebra ships translations for. Older
+ *  firmware also accepts numeric codes for the same set; those are
+ *  not exposed here because the alpha codes round-trip cleanly and
+ *  are unambiguous. */
+export const PRINTER_LOCALE_VALUES = [
+  'EN', 'ES', 'FR', 'DE', 'IT', 'NO', 'PT', 'SV', 'DK', 'SP2', 'NL', 'FI', 'JP', 'KR', 'SC', 'TC', 'RU', 'PL', 'CZ', 'RO', 'HU',
+] as const;
+export type PrinterLocale = (typeof PRINTER_LOCALE_VALUES)[number];
+export const isPrinterLocale = makeEnumGuard(PRINTER_LOCALE_VALUES);
+
+/** ^SZ ZPL mode selector. `2` = ZPL II (the default on every
+ *  modern firmware), `1` = legacy ZPL. The editor always emits
+ *  ZPL II syntax, so flipping `1` here only makes sense on a
+ *  printer that needs the legacy interpretation. */
+export const ZPL_MODE_VALUES = ['1', '2'] as const;
+export type ZplMode = (typeof ZPL_MODE_VALUES)[number];
+export const isZplMode = makeEnumGuard(ZPL_MODE_VALUES);
+
 /** ^KD clock-print format selector. Drives how ^FC clock fields render
  *  on the printed label.
  *    0 = no display (default, clock field disabled)
@@ -200,6 +221,19 @@ export const labelConfigSchema = z.object({
    *  the per-value rendering. Stored as the digit char ('0'..'3'),
    *  matching the on-wire shape. */
   clockFormat: z.enum(CLOCK_FORMAT_VALUES).optional(),
+  /** ^KL: printer-side display locale. See `PRINTER_LOCALE_VALUES`. */
+  printerLocale: z.enum(PRINTER_LOCALE_VALUES).optional(),
+  /** ^SE: encoding-table file path on the printer (e.g.
+   *  `E:UHANGUL.DAT`). Power-user setup field; ^CI28 (UTF-8)
+   *  emitted in `generateZPL` covers the typical case. Free string
+   *  because the path shape is firmware-and-storage-dependent.
+   *  `min(1)` locks the "unset" invariant in the schema so the UI,
+   *  generator, and parser all agree that empty string is not a
+   *  valid persisted value (cleared input maps to `undefined`). */
+  encodingTable: z.string().min(1).optional(),
+  /** ^SZ: ZPL mode. `2` is the default on every modern firmware;
+   *  `1` switches the printer to legacy ZPL interpretation. */
+  zplMode: z.enum(ZPL_MODE_VALUES).optional(),
 });
 
 export type LabelConfig = z.infer<typeof labelConfigSchema>;

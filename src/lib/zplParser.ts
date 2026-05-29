@@ -12,6 +12,8 @@ import {
   isMediaTracking,
   isMediaType,
   isPrintOrientation,
+  isPrinterLocale,
+  isZplMode,
 } from "../types/ObjectType";
 import { parseIntOrUndef } from "./inputParse";
 import { parseRealtimeClock } from "./realtimeClock";
@@ -2023,6 +2025,27 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     KD(_, rest) {
       const v = rest.trim()[0] ?? "";
       if (isClockFormat(v)) labelConfig.clockFormat = v;
+    },
+    // ^KL <locale-code>. Two- or three-char alpha code (see
+    // PRINTER_LOCALE_VALUES). `rest` may contain trailing newline /
+    // tokens from the streamed ZPL; trim and uppercase before the
+    // guard check.
+    KL(_, rest) {
+      const v = rest.trim().toUpperCase();
+      if (isPrinterLocale(v)) labelConfig.printerLocale = v;
+    },
+    // ^SE <file-path>. Free string per spec; trim to drop any
+    // streaming whitespace but otherwise preserve the value as-is
+    // because the firmware path syntax is user-supplied.
+    SE(_, rest) {
+      const v = rest.trim();
+      if (v) labelConfig.encodingTable = v;
+    },
+    // ^SZ <mode>. Single digit '1' or '2'; same first-char-trim
+    // pattern as KD / KL.
+    SZ(_, rest) {
+      const v = rest.trim()[0] ?? "";
+      if (isZplMode(v)) labelConfig.zplMode = v;
     },
 
     // ^CW {alias},{path} — register an alias for a printer-resident font.
