@@ -1,4 +1,5 @@
 import type { CustomFontMapping, LabelConfig } from "../types/ObjectType";
+import { isMediaFeedMode, isMediaTracking } from "../types/ObjectType";
 import {
   FN_NUMBER_MIN,
   FN_NUMBER_MAX,
@@ -119,8 +120,17 @@ function tokenize(zpl: string): { cmd: string; rest: string }[] {
 }
 
 function int(s: string | undefined, fallback = 0): number {
-  const n = parseInt(s ?? "", 10);
-  return isNaN(n) ? fallback : n;
+  const n = Number.parseInt(s ?? "", 10);
+  return Number.isNaN(n) ? fallback : n;
+}
+
+/** Normalised positional string param: trims surrounding whitespace
+ *  (the tokenizer keeps trailing `\n` etc. on the last positional)
+ *  and upper-cases for case-insensitive enum matches. Use for any
+ *  multi-positional string-enum handler so each handler agrees on
+ *  the same param-cleaning contract. */
+function strParam(s: string | undefined): string {
+  return (s ?? "").trim().toUpperCase();
 }
 
 function makeObj(
@@ -1926,6 +1936,27 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       const mt = (rest[0] ?? "").toUpperCase();
       if (mt === "T" || mt === "D") labelConfig.mediaType = mt;
     },
+    MN(p) {
+      // ^MNa,b — b is an optional black-mark offset for W/M modes,
+      // which we don't model. Reading p[0] instead of the raw rest
+      // string keeps `^MNY,10` from being mis-read as the single
+      // token "Y,10" and silently dropped.
+      const v = strParam(p[0]);
+      if (isMediaTracking(v)) labelConfig.mediaTracking = v;
+    },
+    ML(p) {
+      const v = int(p[0]);
+      if (v > 0) labelConfig.maxLabelLength = v;
+    },
+    MF(p) {
+      const p1 = strParam(p[0]);
+      const p2 = strParam(p[1]);
+      if (isMediaFeedMode(p1)) labelConfig.mediaFeedPowerUp = p1;
+      if (isMediaFeedMode(p2)) labelConfig.mediaFeedHeadClose = p2;
+    },
+    XB() {
+      labelConfig.suppressBackfeed = true;
+    },
     PO(_, rest) {
       const po = (rest[0] ?? "").toUpperCase();
       if (po === "N" || po === "I") labelConfig.printOrientation = po;
@@ -2203,7 +2234,6 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     },
     FM: noop, // multiple field origin locations
     FP: noop, // field parameter — per-character text direction
-    MN: noop, // media handling / notch tracking
     JA: noop, // applicator / configuration recall
     JM: noop, // darkness / print settings
     JC: noop, // calibrate

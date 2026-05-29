@@ -315,6 +315,17 @@ export function generateZPL(
 
   if (label.mediaMode) lines.push(`^MM${label.mediaMode}`);
   if (label.mediaType) lines.push(`^MT${label.mediaType}`);
+  if (label.mediaTracking) lines.push(`^MN${label.mediaTracking}`);
+  if (label.maxLabelLength !== undefined) lines.push(`^ML${label.maxLabelLength}`);
+  // ^MF takes two positional params; emit when either is set, defaulting
+  // the other to "N" (no motion) so the printer keeps its current behaviour
+  // for the unset slot.
+  if (label.mediaFeedPowerUp || label.mediaFeedHeadClose) {
+    const p1 = label.mediaFeedPowerUp ?? 'N';
+    const p2 = label.mediaFeedHeadClose ?? 'N';
+    lines.push(`^MF${p1},${p2}`);
+  }
+  if (label.suppressBackfeed) lines.push('^XB');
   // ^PR print,slew,backfeed — any of the three triggers emission. Slew and
   // backfeed default to the print speed per Zebra spec; ZPL has no way to
   // skip a positional param, so backfeed-only still has to repeat the print

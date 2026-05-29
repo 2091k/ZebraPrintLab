@@ -26,6 +26,7 @@ import {
   DocumentArrowDownIcon,
   TableCellsIcon,
   PrinterIcon,
+  Cog6ToothIcon,
   PaperAirplaneIcon,
   GlobeAltIcon,
   XMarkIcon,
@@ -34,6 +35,7 @@ import {
 } from "@heroicons/react/16/solid";
 import { useLabelStore, useHistory, selectLabelaryNoticeRequired } from "../store/labelStore";
 import { LabelaryNoticeModal } from "./Output/LabelaryNoticeModal";
+import { PrinterSettingsModal } from "./PrinterSettings/PrinterSettingsModal";
 import { localeNames } from "../locales";
 import type { LocaleCode } from "../locales";
 import { mmToUnit } from "../lib/units";
@@ -51,6 +53,7 @@ export function AppShell() {
   const pages = useLabelStore((s) => s.pages);
   const selectObject = useLabelStore((s) => s.selectObject);
   const addPage = useLabelStore((s) => s.addPage);
+  const setPrinterSettingsTab = useLabelStore((s) => s.setPrinterSettingsTab);
   const locale = useLabelStore((s) => s.locale);
   const setLocale = useLabelStore((s) => s.setLocale);
   const theme = useLabelStore((s) => s.theme);
@@ -204,6 +207,13 @@ export function AppShell() {
             <DropdownSeparator />
             <DropdownItem icon={ArrowUpTrayIcon} onClick={openZplImport}>
               {t.app.importZpl}
+            </DropdownItem>
+            <DropdownSeparator />
+            <DropdownItem
+              icon={Cog6ToothIcon}
+              onClick={() => setPrinterSettingsTab("mediaFeed")}
+            >
+              {t.printerSettings.open}
             </DropdownItem>
             <DropdownItem
               icon={ArrowDownTrayIcon}
@@ -372,6 +382,7 @@ export function AppShell() {
           }}
         />
       )}
+      <PrinterSettingsModal />
     </div>
   );
 }

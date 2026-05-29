@@ -40,6 +40,32 @@ export const customFontMappingSchema = z
   });
 export type CustomFontMapping = z.infer<typeof customFontMappingSchema>;
 
+/** Source-of-truth value lists for the per-label printer-config
+ *  enums. Exported separately so the registry / UI / parser all
+ *  iterate the same array instead of inlining the literals (and
+ *  drifting when the spec grows). The Zod schema below uses them
+ *  via `z.enum(...)`. */
+export const MEDIA_TRACKING_VALUES = ['N', 'Y', 'W', 'M', 'A'] as const;
+export type MediaTracking = (typeof MEDIA_TRACKING_VALUES)[number];
+
+/** ^MF feed-action modes. F=Feed, C=Calibration, L=Length, N=No
+ *  motion, S=Short calibration. */
+export const MEDIA_FEED_VALUES = ['F', 'C', 'L', 'N', 'S'] as const;
+export type MediaFeedMode = (typeof MEDIA_FEED_VALUES)[number];
+
+/** Factory for runtime type guards from a tuple of literal string
+ *  values (typically one of the `*_VALUES` arrays above). Lets the
+ *  parser and UI share a single discriminator function per enum
+ *  instead of each site rewriting `values.includes(v)` plus the
+ *  `as readonly string[]` cast. */
+export function makeEnumGuard<T extends string>(values: readonly T[]): (v: string) => v is T {
+  const set: ReadonlySet<string> = new Set(values);
+  return (v): v is T => set.has(v);
+}
+
+export const isMediaTracking = makeEnumGuard(MEDIA_TRACKING_VALUES);
+export const isMediaFeedMode = makeEnumGuard(MEDIA_FEED_VALUES);
+
 export const labelConfigSchema = z.object({
   widthMm: z.number(),
   heightMm: z.number(),
@@ -81,6 +107,21 @@ export const labelConfigSchema = z.object({
    *  registers a single-char identifier ([A-Z0-9]) that ^A{alias} fields
    *  can reference instead of the verbose ^A@…E:font.TTF form. */
   customFonts: z.array(customFontMappingSchema).optional(),
+  /** ^MN: media tracking. N continuous, Y non-continuous web/gap, W web
+   *  sensing, M mark sensing, A auto-detect web. Param 2 (black-mark
+   *  offset for W/M) intentionally not modelled. Printer-default
+   *  covers the typical setup. */
+  mediaTracking: z.enum(MEDIA_TRACKING_VALUES).optional(),
+  /** ^ML: maximum label length, in dots. Printer-side upper bound used
+   *  during media calibration; defaults to printer hardware max. */
+  maxLabelLength: z.number().int().positive().optional(),
+  /** ^MF p1: feed action at power-up. */
+  mediaFeedPowerUp: z.enum(MEDIA_FEED_VALUES).optional(),
+  /** ^MF p2: feed action after head-close (same enum). */
+  mediaFeedHeadClose: z.enum(MEDIA_FEED_VALUES).optional(),
+  /** ^XB: suppress backfeed for the next label. Standalone toggle.
+   *  Command emits without parameters when active. */
+  suppressBackfeed: z.boolean().optional(),
 });
 
 export type LabelConfig = z.infer<typeof labelConfigSchema>;
