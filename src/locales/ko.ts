@@ -170,7 +170,8 @@ const ko = {
     },
     clockTime: {
       setRealtimeClock: '실시간 시계 설정',
-      setRealtimeClockHint: '정적 값입니다. 한 번 입력하면 그대로 전송되며 프린터에서 진행되지 않습니다.',
+      setRealtimeClockHint: '값은 그대로 전송됩니다. 수신 후 프린터 시계는 정상적으로 계속 작동합니다. 이 필드는 자동으로 업데이트되지 않습니다 — "지금" 버튼을 사용하세요.',
+      clockSetNow: '지금',
       clockFormat: '시계 표시 형식',
       clockFormat0: '표시 없음',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24시간)',

@@ -170,7 +170,8 @@ const hu = {
     },
     clockTime: {
       setRealtimeClock: 'Valós idejű óra beállítása',
-      setRealtimeClockHint: 'Statikus érték: egyszer megadva, változatlanul elküldve. A nyomtató nem lépteti tovább.',
+      setRealtimeClockHint: 'Az érték szó szerint kerül elküldésre. A nyomtató órája utána normálisan ketyeg tovább. Ez a mező nem frissül automatikusan — használja a „Most” gombot.',
+      clockSetNow: 'Most',
       clockFormat: 'Óra megjelenítési formátum',
       clockFormat0: 'Nincs megjelenítés',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24 órás)',

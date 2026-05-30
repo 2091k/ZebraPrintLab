@@ -170,7 +170,8 @@ const tr = {
     },
     clockTime: {
       setRealtimeClock: 'Gerçek zamanlı saati ayarla',
-      setRealtimeClockHint: 'Statik değer: bir kez yazılır ve olduğu gibi gönderilir. Yazıcı ilerletmez.',
+      setRealtimeClockHint: 'Değer olduğu gibi gönderilir. Yazıcının saati daha sonra normal şekilde işlemeye devam eder. Bu alan otomatik olarak güncellenmez — "Şimdi" düğmesini kullanın.',
+      clockSetNow: 'Şimdi',
       clockFormat: 'Saat görüntüleme biçimi',
       clockFormat0: 'Görüntü yok',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24 saat)',

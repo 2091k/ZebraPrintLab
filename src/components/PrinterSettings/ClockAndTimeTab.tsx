@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { useT } from "../../lib/useT";
 import { useLabelStore } from "../../store/labelStore";
+import { toLocalIsoString } from "../../lib/realtimeClock";
 import { inputCls, labelCls } from "../ui/formStyles";
 import {
   CLOCK_FORMAT_VALUES,
@@ -67,19 +68,35 @@ export function ClockAndTimeTab() {
     <div className="flex flex-col gap-4">
       {/* ^ST: hand-rolled instead of going through a primitive, since
           datetime-local is the only such input in the modal and
-          adding a primitive for one caller is YAGNI. */}
+          adding a primitive for one caller is YAGNI. The "Now"
+          button seeds the field with the current local wall-clock
+          time — UI-only nudge, the field itself stays static so
+          the generated Setup-Script remains reproducible. */}
       <ZplField>
         <ZplCommandLabel text={loc.setRealtimeClock} command="^ST" htmlFor={clockId} />
-        <input
-          id={clockId}
-          type="datetime-local"
-          step="1"
-          className={inputCls}
-          value={label.setRealtimeClock ?? ""}
-          onChange={(e) =>
-            setLabelConfig({ setRealtimeClock: e.target.value || undefined })
-          }
-        />
+        <div className="flex items-center gap-2">
+          <input
+            id={clockId}
+            type="datetime-local"
+            step="1"
+            className={`${inputCls} flex-1`}
+            value={label.setRealtimeClock ?? ""}
+            onChange={(e) =>
+              setLabelConfig({ setRealtimeClock: e.target.value || undefined })
+            }
+          />
+          <button
+            type="button"
+            onClick={() =>
+              setLabelConfig({ setRealtimeClock: toLocalIsoString() })
+            }
+            title={`${loc.setRealtimeClock}: ${loc.clockSetNow}`}
+            aria-label={`${loc.setRealtimeClock}: ${loc.clockSetNow}`}
+            className="px-3 py-1 rounded text-xs font-mono bg-surface-2 border border-border text-muted hover:text-accent hover:border-accent transition-colors"
+          >
+            {loc.clockSetNow}
+          </button>
+        </div>
         <span className={labelCls + " normal-case tracking-normal text-muted/70"}>
           {loc.setRealtimeClockHint}
         </span>

@@ -170,7 +170,8 @@ const no = {
     },
     clockTime: {
       setRealtimeClock: 'Still inn sanntidsklokke',
-      setRealtimeClockHint: 'Statisk verdi: skrevet inn én gang og sendt uendret. Skriveren teller ikke videre.',
+      setRealtimeClockHint: 'Verdien sendes ordrett. Skriverklokken fortsetter normalt etterpå. Dette feltet oppdateres ikke automatisk — bruk „Nå“-knappen.',
+      clockSetNow: 'Nå',
       clockFormat: 'Visningsformat for klokke',
       clockFormat0: 'Ingen visning',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-timers)',

@@ -170,7 +170,8 @@ const lt = {
     },
     clockTime: {
       setRealtimeClock: 'Nustatyti realaus laiko laikrodį',
-      setRealtimeClockHint: 'Statinė reikšmė: įvedama vieną kartą ir siunčiama nepakeista. Spausdintuvas jos nepatobulina.',
+      setRealtimeClockHint: 'Reikšmė siunčiama pažodžiui. Spausdintuvo laikrodis po to veikia įprastai. Šis laukas neatnaujinamas automatiškai — naudokite mygtuką „Dabar“.',
+      clockSetNow: 'Dabar',
       clockFormat: 'Laikrodžio rodymo formatas',
       clockFormat0: 'Be rodinio',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24 val.)',

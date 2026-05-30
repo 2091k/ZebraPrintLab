@@ -170,7 +170,8 @@ const sv = {
     },
     clockTime: {
       setRealtimeClock: 'Ställ in realtidsklocka',
-      setRealtimeClockHint: 'Statiskt värde: skrivs en gång och skickas oförändrat. Skrivaren räknar inte upp det.',
+      setRealtimeClockHint: 'Värdet skickas ordagrant. Skrivarens klocka fortsätter normalt efteråt. Detta fält uppdateras inte automatiskt — använd „Nu“-knappen.',
+      clockSetNow: 'Nu',
       clockFormat: 'Visningsformat för klocka',
       clockFormat0: 'Ingen visning',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-timmars)',

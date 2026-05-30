@@ -170,7 +170,8 @@ const et = {
     },
     clockTime: {
       setRealtimeClock: 'Määra reaalajakell',
-      setRealtimeClockHint: 'Staatiline väärtus: sisestatakse korra ja saadetakse muutmata. Printer seda edasi ei loe.',
+      setRealtimeClockHint: 'Väärtus saadetakse muutmata. Printeri kell jätkab tavapäraselt tiksumist. See väli ei uuene automaatselt — kasutage nuppu „Praegu“.',
+      clockSetNow: 'Praegu',
       clockFormat: 'Kella kuvavorming',
       clockFormat0: 'Kuva puudub',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-tunnine)',

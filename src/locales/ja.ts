@@ -170,7 +170,8 @@ const ja = {
     },
     clockTime: {
       setRealtimeClock: 'リアルタイムクロックを設定',
-      setRealtimeClockHint: '静的な値です。一度入力するとそのまま送信され、プリンタ側で進行しません。',
+      setRealtimeClockHint: '値はそのまま送信されます。送信後、プリンターの時計は通常通り進みます。このフィールドは自動更新されません — 「現在」ボタンを使用してください。',
+      clockSetNow: '現在',
       clockFormat: '時刻の表示形式',
       clockFormat0: '表示なし',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24時間)',

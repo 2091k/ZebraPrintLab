@@ -170,7 +170,8 @@ const en = {
     },
     clockTime: {
       setRealtimeClock: 'Set real-time clock',
-      setRealtimeClockHint: 'Static value — typed once, then sent verbatim. The printer does not advance it.',
+      setRealtimeClockHint: 'Value is sent verbatim. The printer clock continues ticking normally after receipt. This field does not auto-update — use the "Now" button.',
+      clockSetNow: 'Now',
       clockFormat: 'Clock display format',
       clockFormat0: 'No display',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-hour)',

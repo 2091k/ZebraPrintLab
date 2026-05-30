@@ -170,7 +170,8 @@ const he = {
     },
     clockTime: {
       setRealtimeClock: 'הגדר שעון זמן אמת',
-      setRealtimeClockHint: 'ערך סטטי: מוקלד פעם אחת ונשלח כפי שהוא. המדפסת אינה מקדמת אותו.',
+      setRealtimeClockHint: 'הערך נשלח כפי שהוא. שעון המדפסת ממשיך לפעול כרגיל. שדה זה אינו מתעדכן אוטומטית — השתמש בכפתור "עכשיו".',
+      clockSetNow: 'עכשיו',
       clockFormat: 'תבנית תצוגת שעון',
       clockFormat0: 'ללא תצוגה',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24 שעות)',

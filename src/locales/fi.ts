@@ -170,7 +170,8 @@ const fi = {
     },
     clockTime: {
       setRealtimeClock: 'Aseta reaaliaikakello',
-      setRealtimeClockHint: 'Staattinen arvo: kirjoitetaan kerran ja lähetetään sellaisenaan. Tulostin ei lisää siihen aikaa.',
+      setRealtimeClockHint: 'Arvo lähetetään sellaisenaan. Tulostimen kello jatkaa toimintaansa normaalisti. Tämä kenttä ei päivity automaattisesti — käytä "Nyt"-painiketta.',
+      clockSetNow: 'Nyt',
       clockFormat: 'Kellon näyttömuoto',
       clockFormat0: 'Ei näyttöä',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-tuntinen)',

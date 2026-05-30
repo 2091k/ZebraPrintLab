@@ -170,7 +170,8 @@ const zhHans = {
     },
     clockTime: {
       setRealtimeClock: '设置实时时钟',
-      setRealtimeClockHint: '静态值：输入一次后按原样发送，打印机不会自动推进。',
+      setRealtimeClockHint: '值按原样发送。接收后打印机时钟将正常继续运行。此字段不会自动更新 — 请使用「现在」按钮。',
+      clockSetNow: '现在',
       clockFormat: '时钟显示格式',
       clockFormat0: '不显示',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24 小时制)',

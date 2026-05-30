@@ -170,7 +170,8 @@ const lv = {
     },
     clockTime: {
       setRealtimeClock: 'Iestatīt reālā laika pulksteni',
-      setRealtimeClockHint: 'Statiska vērtība: ievadīta vienreiz un nosūtīta nemainīta. Printeris to nepārvirza.',
+      setRealtimeClockHint: 'Vērtība tiek nosūtīta burtiski. Printera pulkstenis pēc tam darbojas normāli. Šis lauks netiek automātiski atjaunināts — izmantojiet pogu „Tagad“.',
+      clockSetNow: 'Tagad',
       clockFormat: 'Pulksteņa attēlojuma formāts',
       clockFormat0: 'Bez attēlojuma',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24 stundu)',

@@ -170,7 +170,8 @@ const pt = {
     },
     clockTime: {
       setRealtimeClock: 'Definir relógio em tempo real',
-      setRealtimeClockHint: 'Valor estático: digitado uma vez e enviado tal como está. A impressora não o avança.',
+      setRealtimeClockHint: 'O valor é enviado tal como está. O relógio da impressora continua normalmente. Este campo não se atualiza automaticamente — use o botão "Agora".',
+      clockSetNow: 'Agora',
       clockFormat: 'Formato de exibição do relógio',
       clockFormat0: 'Sem exibição',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24h)',

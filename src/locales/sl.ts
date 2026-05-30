@@ -170,7 +170,8 @@ const sl = {
     },
     clockTime: {
       setRealtimeClock: 'Nastavi uro v realnem času',
-      setRealtimeClockHint: 'Statična vrednost: vnesena enkrat in poslana nespremenjena. Tiskalnik je ne prestavlja.',
+      setRealtimeClockHint: 'Vrednost se pošlje dobesedno. Ura tiskalnika po prejemu deluje normalno. To polje se ne posodablja samodejno — uporabite gumb „Zdaj“.',
+      clockSetNow: 'Zdaj',
       clockFormat: 'Format prikaza ure',
       clockFormat0: 'Brez prikaza',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-urni)',

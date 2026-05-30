@@ -170,7 +170,8 @@ const it = {
     },
     clockTime: {
       setRealtimeClock: 'Imposta orologio in tempo reale',
-      setRealtimeClockHint: 'Valore statico: digitato una volta e inviato così com\'è. La stampante non lo fa avanzare.',
+      setRealtimeClockHint: "Il valore viene inviato così com'è. L'orologio della stampante continua a funzionare normalmente. Questo campo non si aggiorna automaticamente — usa il pulsante \"Ora\".",
+      clockSetNow: 'Ora',
       clockFormat: 'Formato di visualizzazione dell\'orologio',
       clockFormat0: 'Nessuna visualizzazione',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24h)',

@@ -170,7 +170,8 @@ const fa = {
     },
     clockTime: {
       setRealtimeClock: 'تنظیم ساعت زمان واقعی',
-      setRealtimeClockHint: 'Static value — typed once, then sent verbatim. The printer does not advance it.',
+      setRealtimeClockHint: 'مقدار همان‌گونه که هست ارسال می‌شود. ساعت چاپگر پس از دریافت به‌طور عادی به کار خود ادامه می‌دهد. این فیلد به‌طور خودکار به‌روز نمی‌شود — از دکمه «اکنون» استفاده کنید.',
+      clockSetNow: 'اکنون',
       clockFormat: 'قالب نمایش ساعت',
       clockFormat0: 'بدون نمایش',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (۲۴ ساعته)',

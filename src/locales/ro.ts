@@ -170,7 +170,8 @@ const ro = {
     },
     clockTime: {
       setRealtimeClock: 'Setează ceasul în timp real',
-      setRealtimeClockHint: 'Valoare statică: introdusă o dată și trimisă ca atare. Imprimanta nu o avansează.',
+      setRealtimeClockHint: 'Valoarea este trimisă ca atare. Ceasul imprimantei continuă să funcționeze normal. Acest câmp nu se actualizează automat — utilizați butonul „Acum”.',
+      clockSetNow: 'Acum',
       clockFormat: 'Format de afișare a ceasului',
       clockFormat0: 'Fără afișare',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24h)',

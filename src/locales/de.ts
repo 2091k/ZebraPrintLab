@@ -170,7 +170,8 @@ const de = {
     },
     clockTime: {
       setRealtimeClock: 'Echtzeituhr stellen',
-      setRealtimeClockHint: 'Statischer Wert — einmal eingegeben, dann unverändert gesendet. Der Drucker zählt nicht weiter.',
+      setRealtimeClockHint: 'Wert wird unverändert gesendet. Die Drucker-Uhr tickt danach normal weiter. Dieses Feld aktualisiert sich nicht automatisch — Schaltfläche „Jetzt“ verwenden.',
+      clockSetNow: 'Jetzt',
       clockFormat: 'Uhrzeit-Anzeigeformat',
       clockFormat0: 'Keine Anzeige',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24h)',

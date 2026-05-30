@@ -170,7 +170,8 @@ const da = {
     },
     clockTime: {
       setRealtimeClock: 'Indstil realtidsur',
-      setRealtimeClockHint: 'Statisk værdi: indtastet én gang og sendt uændret. Printeren tæller ikke videre.',
+      setRealtimeClockHint: 'Værdien sendes ordret. Printerens ur fortsætter normalt bagefter. Dette felt opdateres ikke automatisk — brug knappen „Nu“.',
+      clockSetNow: 'Nu',
       clockFormat: 'Visningsformat for ur',
       clockFormat0: 'Ingen visning',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-timers)',

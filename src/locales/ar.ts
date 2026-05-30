@@ -170,7 +170,8 @@ const ar = {
     },
     clockTime: {
       setRealtimeClock: 'ضبط ساعة الوقت الفعلي',
-      setRealtimeClockHint: 'Static value — typed once, then sent verbatim. The printer does not advance it.',
+      setRealtimeClockHint: 'يتم إرسال القيمة كما هي. يستمر تشغيل ساعة الطابعة بعد ذلك بشكل طبيعي. هذا الحقل لا يتقدم تلقائيًا - استخدم زر "الآن".',
+      clockSetNow: 'الآن',
       clockFormat: 'تنسيق عرض الساعة',
       clockFormat0: 'بدون عرض',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24 ساعة)',

@@ -170,7 +170,8 @@ const pl = {
     },
     clockTime: {
       setRealtimeClock: 'Ustaw zegar czasu rzeczywistego',
-      setRealtimeClockHint: 'Wartość statyczna: wpisana raz i wysłana bez zmian. Drukarka jej nie zwiększa.',
+      setRealtimeClockHint: 'Wartość jest wysyłana dosłownie. Zegar drukarki działa potem normalnie. To pole nie aktualizuje się automatycznie — użyj przycisku „Teraz”.',
+      clockSetNow: 'Teraz',
       clockFormat: 'Format wyświetlania zegara',
       clockFormat0: 'Brak wyświetlania',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-godz.)',

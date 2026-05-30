@@ -170,7 +170,8 @@ const nl = {
     },
     clockTime: {
       setRealtimeClock: 'Realtimeklok instellen',
-      setRealtimeClockHint: 'Statische waarde: één keer ingevoerd en ongewijzigd verzonden. De printer telt niet door.',
+      setRealtimeClockHint: 'Waarde wordt letterlijk verzonden. De printerklok blijft daarna normaal lopen. Dit veld wordt niet automatisch bijgewerkt — gebruik de knop „Nu“.',
+      clockSetNow: 'Nu',
       clockFormat: 'Klokweergaveformaat',
       clockFormat0: 'Geen weergave',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-uurs)',

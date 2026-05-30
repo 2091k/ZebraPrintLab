@@ -170,7 +170,8 @@ const hr = {
     },
     clockTime: {
       setRealtimeClock: 'Postavi sat u stvarnom vremenu',
-      setRealtimeClockHint: 'Statična vrijednost: upisana jednom i poslana nepromijenjeno. Pisač je ne pomiče.',
+      setRealtimeClockHint: 'Vrijednost se šalje doslovno. Sat pisača nakon toga radi normalno. Ovo polje se ne ažurira automatski — koristite gumb „Sada“.',
+      clockSetNow: 'Sada',
       clockFormat: 'Format prikaza sata',
       clockFormat0: 'Bez prikaza',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-satni)',

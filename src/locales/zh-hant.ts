@@ -170,7 +170,8 @@ const zhHant = {
     },
     clockTime: {
       setRealtimeClock: '設定即時時鐘',
-      setRealtimeClockHint: '靜態值：輸入一次後依原樣傳送，印表機不會自動推進。',
+      setRealtimeClockHint: '值按原樣發送。接收後印表機時鐘將正常繼續運行。此欄位不會自動更新 — 請使用「現在」按鈕。',
+      clockSetNow: '現在',
       clockFormat: '時鐘顯示格式',
       clockFormat0: '不顯示',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24 小時制)',

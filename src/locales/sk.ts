@@ -170,7 +170,8 @@ const sk = {
     },
     clockTime: {
       setRealtimeClock: 'Nastaviť hodiny reálneho času',
-      setRealtimeClockHint: 'Statická hodnota: zadaná raz a odoslaná bez zmeny. Tlačiareň ju neposúva.',
+      setRealtimeClockHint: 'Hodnota sa odošle doslovne. Hodiny tlačiarne potom normálne pokračujú. Toto pole sa automaticky neaktualizuje — použite tlačidlo „Teraz“.',
+      clockSetNow: 'Teraz',
       clockFormat: 'Formát zobrazenia hodín',
       clockFormat0: 'Žiadne zobrazenie',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24h)',

@@ -170,7 +170,8 @@ const sr = {
     },
     clockTime: {
       setRealtimeClock: 'Подеси сат у реалном времену',
-      setRealtimeClockHint: 'Статична вредност: уписана једном и послата непромењена. Штампач је не помера.',
+      setRealtimeClockHint: 'Vrednost se šalje doslovno. Sat štampača nakon toga radi normalno. Ovo polje se ne ažurira automatski — koristite dugme „Sada“.',
+      clockSetNow: 'Sada',
       clockFormat: 'Формат приказа сата',
       clockFormat0: 'Без приказа',
       clockFormat1: 'MM/DD/YY  HH:MM:SS (24-часовни)',
