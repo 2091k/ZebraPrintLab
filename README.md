@@ -74,6 +74,10 @@ File menu → **Add page** creates a new page. With multiple pages, the control 
 
 File menu → **Import CSV data** loads a CSV. The mapping dialog pairs each Variable with a column, saved with the design. **Export batch ZPL** or **Send to Zebra Printer** then outputs one label per row.
 
+### Printer settings
+
+File menu → **Printer settings…** configures label-level media and print quality, plus a Setup Script for clock, locale, encoding, and printer identity (sent once when first setting up a printer). Setup-Script values stay out of saved designs so sharing a `.zpl` or `.json` doesn't leak your printer name or locale.
+
 ### Keyboard shortcuts
 
 | Shortcut | Action |
@@ -104,6 +108,7 @@ Both `.zpl` and `.json` round-trip cleanly. `.zpl` preserves all printable conte
 - Layers panel with reordering
 - Variables: bind text and barcode fields to named defaults that emit as `^FN`/`^FV` slots (or `^FE` inline embeds when one field references multiple variables), round-tripping with printer-side templates
 - CSV batch printing: import a CSV, map columns to Variables, print or export with efficient printer-side data merge (template ships once, each row sends only its overrides)
+- Printer settings: label-level hardware tuning plus a Setup Script for clock, locale, encoding, and printer identity
 - 32 UI languages (auto-detected from browser)
 - Light / dark mode (follows OS setting)
 
