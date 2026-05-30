@@ -74,7 +74,7 @@ The Printer Settings Modal (Media & Feed / Print Quality / Clock & Time / Encodi
 | `[x]` | `^A@` | TrueType reference | |
 | `[x]` | `^CF` | change default font | |
 | `[x]` | `^CI` | international encoding | |
-| `[ ]` | `^CW` | font alias (printer resident) | `Native build` |
+| `[x]` | `^CW` | font alias (printer resident) | |
 | `[ ]` | `^FL` | font linking | `Native build` |
 | `[ ]` | `^LF` | list font links | `Native build` |
 | `[ ]` | `~DB` | download bitmap font | `Native build` |

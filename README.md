@@ -114,9 +114,27 @@ Both `.zpl` and `.json` round-trip cleanly. `.zpl` preserves all printable conte
 
 ---
 
-## Roadmap
+## Coverage
 
-See [docs/zpl-roadmap.md](docs/zpl-roadmap.md) for ZPL II command coverage.
+90 of the 202 ZPL II commands tracked in the [roadmap](docs/zpl-roadmap.md) are supported today. Categorical breakdown:
+
+| Area | Supported |
+|---|---|
+| Layout & flow | 16 / 16 |
+| Templates & variables | 4 / 4 |
+| Barcodes | 27 / 28 |
+| Fields | 15 / 20 |
+| Encoding & language | 3 / 4 |
+| Clock & time | 2 / 3 |
+| Identity & access | 2 / 3 |
+| Graphics | 6 / 12 |
+| Media & feed | 4 / 10 |
+| Text & fonts | 6 / 14 |
+| Print quality | 3 / 14 |
+| Configuration & persistence | 0 / 5 |
+| Hardware / Host comm / RFID / Network | 0 / 67 (waits on a native build — bidirectional printer connection) |
+
+The full label-design path — layout, fields, barcodes, variables, templates — is complete. Hardware-tuning categories grow with the Printer Settings modal; the four 0% buckets at the bottom require a Tauri build for bidirectional printer I/O.
 
 ---
 
