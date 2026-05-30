@@ -1,12 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /** Copy-to-clipboard with a transient "copied" flag for button UI.
  *  `getPayload` is called at copy-time (not at hook-call-time) so
  *  live-generated content reflects the current state — needed for
  *  the Setup-Script live-clock mode where the emitted ^ST stamp
- *  must be "now at click", not "now at last render". */
+ *  must be "now at click", not "now at last render".
+ *
+ *  Holds the reset timer in a ref so two cases are handled cleanly:
+ *  (1) a second copy click while the previous reset is still pending
+ *  re-arms instead of letting the older timer flip the flag back
+ *  mid-feedback; (2) the host component unmounting (e.g. modal
+ *  close immediately after copy) cancels the timer in the effect
+ *  cleanup so React doesn't run a stale setState on a dead tree. */
 export function useCopyToClipboard(getPayload: () => string, resetMs = 1500) {
   const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const copy = () => {
     const payload = getPayload();
@@ -17,9 +25,22 @@ export function useCopyToClipboard(getPayload: () => string, resetMs = 1500) {
     if (!navigator.clipboard) return;
     navigator.clipboard.writeText(payload).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), resetMs);
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        timerRef.current = null;
+        setCopied(false);
+      }, resetMs);
     }).catch(() => { /* swallow: user-cancel or permission-denied */ });
   };
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
   return { copy, copied };
 }
