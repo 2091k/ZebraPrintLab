@@ -1,18 +1,32 @@
-import { describe, it, expect } from "vitest";
-import { generateSetupScript, SETUP_SCRIPT_FIELDS } from "./zplSetupScript";
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
+import {
+  generateSetupScript,
+  SETUP_SCRIPT_FIELDS,
+  __SETUP_SCRIPT_EMITTERS_FOR_TESTS,
+} from "./zplSetupScript";
 import { parseZPL } from "./zplParser";
-import { labelConfigSchema, type LabelConfig } from "../types/ObjectType";
+import { printerProfileSchema, type PrinterProfile } from "../types/PrinterProfile";
 
-const base: LabelConfig = { widthMm: 100, heightMm: 50, dpmm: 8 };
+const base: PrinterProfile = {};
 
 describe("generateSetupScript — output shape", () => {
   it("returns empty string when no Setup-Script field is set", () => {
     expect(generateSetupScript(base)).toBe("");
   });
 
-  it("emits tilde-prefix commands standalone (no wrapper block)", () => {
+  it("emits tilde-prefix commands standalone (no wrapper block) with 3-digit ~TA padding", () => {
+    // ~TA requires 3-digit magnitude per spec; firmware silently
+    // ignores shorter forms ("~TA10" is dropped, "~TA010" is honored).
     const script = generateSetupScript({ ...base, tearOffAdjust: 10 });
-    expect(script).toBe("~TA10");
+    expect(script).toBe("~TA010");
+  });
+
+  it("pads ~TA magnitude with the sign outside the 3-digit field", () => {
+    expect(generateSetupScript({ ...base, tearOffAdjust: 5 })).toBe("~TA005");
+    expect(generateSetupScript({ ...base, tearOffAdjust: -5 })).toBe("~TA-005");
+    expect(generateSetupScript({ ...base, tearOffAdjust: 120 })).toBe("~TA120");
+    expect(generateSetupScript({ ...base, tearOffAdjust: -120 })).toBe("~TA-120");
+    expect(generateSetupScript({ ...base, tearOffAdjust: 0 })).toBe("~TA000");
   });
 
   it("wraps caret-prefix commands in a ^XA...^XZ block", () => {
@@ -27,7 +41,7 @@ describe("generateSetupScript — output shape", () => {
       reprintAfterError: "Y",
       headTestInterval: 100,
     });
-    expect(script).toBe("~TA-5\n^XA\n^JZY\n^JT100\n^XZ");
+    expect(script).toBe("~TA-005\n^XA\n^JZY\n^JT100\n^XZ");
   });
 
   it("omits the wrapper block when only tilde commands are set", () => {
@@ -60,29 +74,65 @@ describe("generateSetupScript — output shape", () => {
     expect(script).toBe("");
   });
 
+  describe("^ST live mode (useCurrentTimeForClock)", () => {
+    beforeEach(() => {
+      // Local fields: May 30 2026 18:30:45 in whatever TZ the host
+      // is in — toLocalIsoString reads getFullYear/etc, so the
+      // assertion is TZ-independent.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 4, 30, 18, 30, 45));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("emits ^ST with the current wall-clock time when live mode is on", () => {
+      const script = generateSetupScript({ ...base, useCurrentTimeForClock: true });
+      expect(script).toBe("^XA\n^ST05,30,2026,18,30,45\n^XZ");
+    });
+
+    it("live mode wins over a stored static value", () => {
+      const script = generateSetupScript({
+        ...base,
+        useCurrentTimeForClock: true,
+        setRealtimeClock: "2020-01-01T00:00:00",
+      });
+      expect(script).toBe("^XA\n^ST05,30,2026,18,30,45\n^XZ");
+    });
+
+    it("falls back to the static value when live mode is off", () => {
+      const script = generateSetupScript({
+        ...base,
+        useCurrentTimeForClock: false,
+        setRealtimeClock: "2020-01-01T00:00:00",
+      });
+      expect(script).toBe("^XA\n^ST01,01,2020,00,00,00\n^XZ");
+    });
+  });
+
   it("emits ^KD with the selected clock-format code", () => {
     const script = generateSetupScript({ ...base, clockFormat: "2" });
     expect(script).toBe("^XA\n^KD2\n^XZ");
   });
 
   it("round-trips ^ST + ^KD via the parser without loss", () => {
-    const orig: LabelConfig = {
+    const orig: PrinterProfile = {
       ...base,
       setRealtimeClock: "2026-05-29T18:30:45",
       clockFormat: "3",
     };
-    const { labelConfig: parsed } = parseZPL(generateSetupScript(orig));
+    const { printerProfile: parsed } = parseZPL(generateSetupScript(orig));
     expect(parsed.setRealtimeClock).toBe("2026-05-29T18:30:45");
     expect(parsed.clockFormat).toBe("3");
   });
 
   it("rejects ^KD with an unknown format code", () => {
-    expect(parseZPL("^XA^KD9^XZ").labelConfig.clockFormat).toBeUndefined();
+    expect(parseZPL("^XA^KD9^XZ").printerProfile.clockFormat).toBeUndefined();
   });
 
   it("rejects ^ST with malformed positional params", () => {
-    expect(parseZPL("^XA^ST05,29,26,18,30,00^XZ").labelConfig.setRealtimeClock).toBeUndefined();
-    expect(parseZPL("^XA^ST05,29,2026,18,30^XZ").labelConfig.setRealtimeClock).toBeUndefined();
+    expect(parseZPL("^XA^ST05,29,26,18,30,00^XZ").printerProfile.setRealtimeClock).toBeUndefined();
+    expect(parseZPL("^XA^ST05,29,2026,18,30^XZ").printerProfile.setRealtimeClock).toBeUndefined();
   });
 
   it("emits ^KL with the selected printer locale", () => {
@@ -96,11 +146,10 @@ describe("generateSetupScript — output shape", () => {
 
   it("rejects empty-string encodingTable at the schema layer", () => {
     // The schema's min(1) makes empty string unreachable through
-    // labelConfigSchema.parse, so the generator no longer carries
+    // printerProfileSchema.parse, so the generator no longer carries
     // its own empty-string defense. This test pins the schema
     // contract so a future schema loosening would also surface here.
-
-    expect(() => labelConfigSchema.parse({ ...base, encodingTable: "" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, encodingTable: "" })).toThrow();
   });
 
   it("emits ^SZ with the selected ZPL mode", () => {
@@ -109,13 +158,13 @@ describe("generateSetupScript — output shape", () => {
   });
 
   it("round-trips ^KL + ^SE + ^SZ via the parser without loss", () => {
-    const orig: LabelConfig = {
+    const orig: PrinterProfile = {
       ...base,
       printerLocale: "JP",
       encodingTable: "E:UHANGUL.DAT",
       zplMode: "2",
     };
-    const { labelConfig: parsed } = parseZPL(generateSetupScript(orig));
+    const { printerProfile: parsed } = parseZPL(generateSetupScript(orig));
     expect(parsed.printerLocale).toBe("JP");
     expect(parsed.encodingTable).toBe("E:UHANGUL.DAT");
     expect(parsed.zplMode).toBe("2");
@@ -125,7 +174,7 @@ describe("generateSetupScript — output shape", () => {
     // SP2 is the only non-2-char alpha code in PRINTER_LOCALE_VALUES;
     // pin its round-trip so a future regex tightening of the parser
     // (e.g. assuming 2-char codes) breaks here loudly.
-    const { labelConfig: parsed } = parseZPL(generateSetupScript({ ...base, printerLocale: "SP2" }));
+    const { printerProfile: parsed } = parseZPL(generateSetupScript({ ...base, printerLocale: "SP2" }));
     expect(parsed.printerLocale).toBe("SP2");
   });
 
@@ -133,7 +182,7 @@ describe("generateSetupScript — output shape", () => {
     // Hand-edited ZPL can carry paths with spaces (e.g.
     // `E:MY FILE.DAT`). The parser must not mangle them.
     const path = "E:MY FILE.DAT";
-    const { labelConfig: parsed } = parseZPL(generateSetupScript({ ...base, encodingTable: path }));
+    const { printerProfile: parsed } = parseZPL(generateSetupScript({ ...base, encodingTable: path }));
     expect(parsed.encodingTable).toBe(path);
   });
 
@@ -141,10 +190,9 @@ describe("generateSetupScript — output shape", () => {
     // `^SE${value}` interpolation makes this a real injection
     // surface for imported / pasted ZPL. Schema must reject any
     // value carrying the command-introducer chars.
-
-    expect(() => labelConfigSchema.parse({ ...base, encodingTable: "^SDXY" })).toThrow();
-    expect(() => labelConfigSchema.parse({ ...base, encodingTable: "E:F.DAT~JR" })).toThrow();
-    expect(() => labelConfigSchema.parse({ ...base, encodingTable: "E:F.DAT\n^MD30" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, encodingTable: "^SDXY" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, encodingTable: "E:F.DAT~JR" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, encodingTable: "E:F.DAT\n^MD30" })).toThrow();
   });
 
   it("emits ^KN with name only when description is unset", () => {
@@ -171,25 +219,23 @@ describe("generateSetupScript — output shape", () => {
   });
 
   it("round-trips ^KN via the parser without loss", () => {
-    const orig: LabelConfig = {
+    const orig: PrinterProfile = {
       ...base,
       printerName: "Lab-01",
       printerDescription: "front desk",
     };
-    const { labelConfig: parsed } = parseZPL(generateSetupScript(orig));
+    const { printerProfile: parsed } = parseZPL(generateSetupScript(orig));
     expect(parsed.printerName).toBe("Lab-01");
     expect(parsed.printerDescription).toBe("front desk");
   });
 
   it("rejects ZPL injection attempts in ^KN values at the schema layer", () => {
-
-    expect(() => labelConfigSchema.parse({ ...base, printerName: "^SD30" })).toThrow();
-    expect(() => labelConfigSchema.parse({ ...base, printerDescription: "front\n^MD0" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, printerName: "^SD30" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, printerDescription: "front\n^MD0" })).toThrow();
   });
 
   it("rejects ^KN names longer than the 16-char spec cap", () => {
-
-    expect(() => labelConfigSchema.parse({ ...base, printerName: "abcdefghij0123456" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, printerName: "abcdefghij0123456" })).toThrow();
   });
 
   it("emits ^SL with mode S only when language is unset", () => {
@@ -207,11 +253,11 @@ describe("generateSetupScript — output shape", () => {
   });
 
   it("schema rejects clockMode='TOL' without clockTolerance (cross-field rule)", () => {
-    expect(() => labelConfigSchema.parse({ ...base, clockMode: "TOL" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, clockMode: "TOL" })).toThrow();
   });
 
   it("schema rejects clockTolerance set under non-TOL mode (cross-field rule)", () => {
-    expect(() => labelConfigSchema.parse({ ...base, clockMode: "S", clockTolerance: 60 })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, clockMode: "S", clockTolerance: 60 })).toThrow();
   });
 
   it("skips ^SL emit when only language or tolerance is set without mode anchor", () => {
@@ -225,7 +271,7 @@ describe("generateSetupScript — output shape", () => {
       { ...base, clockMode: "T" as const, clockLanguage: "4" as const },
       { ...base, clockMode: "TOL" as const, clockTolerance: 90, clockLanguage: "1" as const },
     ]) {
-      const { labelConfig: parsed } = parseZPL(generateSetupScript(orig));
+      const { printerProfile: parsed } = parseZPL(generateSetupScript(orig));
       expect(parsed.clockMode).toBe(orig.clockMode);
       if (orig.clockMode === "TOL") expect(parsed.clockTolerance).toBe(orig.clockTolerance);
       if ("clockLanguage" in orig) expect(parsed.clockLanguage).toBe(orig.clockLanguage);
@@ -233,14 +279,14 @@ describe("generateSetupScript — output shape", () => {
   });
 
   it("parses bare ^SL with no params as a no-op (no field set)", () => {
-    const { labelConfig: parsed } = parseZPL("^XA^SL^XZ");
+    const { printerProfile: parsed } = parseZPL("^XA^SL^XZ");
     expect(parsed.clockMode).toBeUndefined();
     expect(parsed.clockLanguage).toBeUndefined();
   });
 
   it("drops ^SL with out-of-range tolerance or unknown language", () => {
-    expect(parseZPL("^XA^SL1500,1^XZ").labelConfig.clockMode).toBeUndefined();
-    expect(parseZPL("^XA^SLS,99^XZ").labelConfig.clockLanguage).toBeUndefined();
+    expect(parseZPL("^XA^SL1500,1^XZ").printerProfile.clockMode).toBeUndefined();
+    expect(parseZPL("^XA^SLS,99^XZ").printerProfile.clockLanguage).toBeUndefined();
   });
 
   it("clears stale clockTolerance when a later ^SL parses to mode S/T", () => {
@@ -249,9 +295,9 @@ describe("generateSetupScript — output shape", () => {
     // second ^SL parse would leave the store in an un-saveable
     // state. `^SL60,1^SLS` mid-stream is the realistic scenario.
     const zpl = "^XA^SL60,1^XZ^XA^SLS^XZ";
-    const { labelConfig } = parseZPL(zpl);
-    expect(labelConfig.clockMode).toBe("S");
-    expect(labelConfig.clockTolerance).toBeUndefined();
+    const { printerProfile } = parseZPL(zpl);
+    expect(printerProfile.clockMode).toBe("S");
+    expect(printerProfile.clockTolerance).toBeUndefined();
   });
 
   it("does not orphan-set clockLanguage when the mode parse drops", () => {
@@ -259,29 +305,28 @@ describe("generateSetupScript — output shape", () => {
     // clockLanguage='1' while clockMode stays undefined — emit
     // would then drop the orphan language silently, making it
     // write-only state. Pin the guard.
-    expect(parseZPL("^XA^SL1500,1^XZ").labelConfig.clockLanguage).toBeUndefined();
+    expect(parseZPL("^XA^SL1500,1^XZ").printerProfile.clockLanguage).toBeUndefined();
   });
 
   it("rejects commas in ^KN / ^SE free-string fields (would round-trip-split)", () => {
-
-    expect(() => labelConfigSchema.parse({ ...base, printerName: "Lab,01" })).toThrow();
-    expect(() => labelConfigSchema.parse({ ...base, printerDescription: "front,desk" })).toThrow();
-    expect(() => labelConfigSchema.parse({ ...base, encodingTable: "E:F.DAT,extra" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, printerName: "Lab,01" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, printerDescription: "front,desk" })).toThrow();
+    expect(() => printerProfileSchema.parse({ ...base, encodingTable: "E:F.DAT,extra" })).toThrow();
   });
 
   it("parser drops ^SE values carrying ZPL command-introducer chars", () => {
     // The parser writes into the store without re-running the
     // schema; the dangerous-char check mirrors the schema so an
     // import cannot smuggle an injection past it.
-    expect(parseZPL("^XA^SE\x1bbad^XZ").labelConfig.encodingTable).toBeUndefined();
+    expect(parseZPL("^XA^SE\x1bbad^XZ").printerProfile.encodingTable).toBeUndefined();
   });
 
   it("rejects ^KL with an unknown locale code", () => {
-    expect(parseZPL("^XA^KLXX^XZ").labelConfig.printerLocale).toBeUndefined();
+    expect(parseZPL("^XA^KLXX^XZ").printerProfile.printerLocale).toBeUndefined();
   });
 
   it("rejects ^SZ with an unknown mode", () => {
-    expect(parseZPL("^XA^SZ9^XZ").labelConfig.zplMode).toBeUndefined();
+    expect(parseZPL("^XA^SZ9^XZ").printerProfile.zplMode).toBeUndefined();
   });
 
   it("declares its channel-field set as a SSoT (SETUP_SCRIPT_FIELDS)", () => {
@@ -294,6 +339,7 @@ describe("generateSetupScript — output shape", () => {
       "reprintAfterError",
       "headTestInterval",
       "setRealtimeClock",
+      "useCurrentTimeForClock",
       "clockFormat",
       "printerLocale",
       "encodingTable",
@@ -306,20 +352,44 @@ describe("generateSetupScript — output shape", () => {
     ]);
   });
 
-  it("never leaks per-label commands (^MD / ~SD / ^PR / ^MN) into the Setup Script", () => {
-    const script = generateSetupScript({
+  it("PrinterProfile carries only Setup-Script fields — no per-label leakage", () => {
+    // The schema must not accept per-label keys (^MD, ~SD, ^PR, ^MN
+    // and friends). This pins the "no double-source-of-truth"
+    // contract: per-label config stays on labelConfig.
+    const result = printerProfileSchema.safeParse({
       ...base,
       darkness: 15,
       instantDarkness: 20,
       printSpeed: 6,
       mediaTracking: "Y",
-      reprintAfterError: "Y",
-    });
-    expect(script).not.toContain("^MD");
-    expect(script).not.toContain("~SD");
-    expect(script).not.toContain("^PR");
-    expect(script).not.toContain("^MN");
-    // Only the actual Setup-Script command should be present.
-    expect(script).toContain("^JZY");
+    } as Record<string, unknown>);
+    // Strict mode would error; default zod object strips unknown
+    // keys silently. Verify the parsed result doesn't carry them.
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("darkness");
+      expect(result.data).not.toHaveProperty("instantDarkness");
+      expect(result.data).not.toHaveProperty("printSpeed");
+      expect(result.data).not.toHaveProperty("mediaTracking");
+    }
+  });
+});
+
+describe("SETUP_SCRIPT_EMITTERS structural invariants", () => {
+  it("every foldedInto.target points at a kind:'emit' entry, never another foldedInto", () => {
+    // A target chain (foldedInto → foldedInto) would mean no entry
+    // actually produces the wire command — the registry would compile
+    // but the emit channel would silently drop. This test catches a
+    // typo where `clockTolerance.target` got changed to `clockLanguage`
+    // (also a foldedInto) instead of `clockMode`.
+    for (const [field, entry] of Object.entries(__SETUP_SCRIPT_EMITTERS_FOR_TESTS)) {
+      if (entry.kind !== 'foldedInto') continue;
+      const target = __SETUP_SCRIPT_EMITTERS_FOR_TESTS[entry.target as keyof typeof __SETUP_SCRIPT_EMITTERS_FOR_TESTS];
+      expect(target, `field "${field}" folded into missing target "${entry.target}"`).toBeDefined();
+      expect(
+        target.kind,
+        `field "${field}" folded into "${entry.target}" but target is itself ${target.kind}, not 'emit'`,
+      ).toBe('emit');
+    }
   });
 });

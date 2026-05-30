@@ -34,6 +34,7 @@ beforeEach(() => {
 function reset() {
   useLabelStore.setState({
     label: { widthMm: 100, heightMm: 60, dpmm: 8 },
+    printerProfile: {},
     pages: [{ objects: [] }],
     currentPageIndex: 0,
     selectedIds: [],
@@ -1153,6 +1154,59 @@ describe('migrateLegacy — v2→v3 circle→ellipse', () => {
   });
 });
 
+describe('migrateLegacy — v4→v5 printerProfile extraction', () => {
+  it('hoists profile fields off label and clears them from the per-label config', () => {
+    const persisted = {
+      label: {
+        widthMm: 100,
+        heightMm: 50,
+        dpmm: 8,
+        // Profile fields that lived on labelConfig pre-v5.
+        reprintAfterError: 'Y',
+        headTestInterval: 250,
+        tearOffAdjust: 15,
+        clockFormat: 'd1',
+        printerName: 'lab-zpl-01',
+      },
+      pages: [{ objects: [] }],
+    };
+    const migrated = migrateLegacy(persisted, 4) as typeof persisted & {
+      printerProfile: Record<string, unknown>;
+    };
+    expect(migrated.label).toEqual({ widthMm: 100, heightMm: 50, dpmm: 8 });
+    expect(migrated.printerProfile).toEqual({
+      reprintAfterError: 'Y',
+      headTestInterval: 250,
+      tearOffAdjust: 15,
+      clockFormat: 'd1',
+      printerName: 'lab-zpl-01',
+    });
+  });
+
+  it('seeds an empty printerProfile when the legacy label has no profile fields', () => {
+    const persisted = {
+      label: { widthMm: 100, heightMm: 50, dpmm: 8 },
+      pages: [{ objects: [] }],
+    };
+    const migrated = migrateLegacy(persisted, 4) as typeof persisted & {
+      printerProfile: Record<string, unknown>;
+    };
+    expect(migrated.printerProfile).toEqual({});
+    expect(migrated.label).toEqual({ widthMm: 100, heightMm: 50, dpmm: 8 });
+  });
+
+  it('belt: defensively seeds printerProfile when version is current but slice is missing', () => {
+    const persisted = {
+      label: { widthMm: 100, heightMm: 50, dpmm: 8 },
+      pages: [{ objects: [] }],
+    };
+    const migrated = migrateLegacy(persisted, 5) as typeof persisted & {
+      printerProfile: Record<string, unknown>;
+    };
+    expect(migrated.printerProfile).toEqual({});
+  });
+});
+
 describe('variables', () => {
   beforeEach(reset);
 
@@ -1403,5 +1457,53 @@ describe('sidebar tab + content-editor focus request', () => {
     state().requestContentEditorFocus('obj-1');
     state().requestContentEditorFocus('obj-2');
     expect(state().editorFocusRequest?.id).toBe('obj-2');
+  });
+});
+
+describe('printerProfile actions', () => {
+  beforeEach(() => { reset(); });
+
+  it('patchPrinterProfile merges fields and drops undefined keys', () => {
+    state().patchPrinterProfile({ reprintAfterError: 'Y', headTestInterval: 250 });
+    expect(state().printerProfile).toEqual({
+      reprintAfterError: 'Y',
+      headTestInterval: 250,
+    });
+    state().patchPrinterProfile({ reprintAfterError: undefined });
+    expect(state().printerProfile).toEqual({ headTestInterval: 250 });
+  });
+
+  it('resetPrinterProfile clears all profile fields', () => {
+    state().patchPrinterProfile({
+      reprintAfterError: 'Y',
+      headTestInterval: 250,
+      printerName: 'lab-zpl-01',
+    });
+    expect(Object.keys(state().printerProfile).length).toBeGreaterThan(0);
+    state().resetPrinterProfile();
+    expect(state().printerProfile).toEqual({});
+  });
+
+  it('resetPrinterProfile is a no-op while preview locks the editor', () => {
+    state().patchPrinterProfile({ reprintAfterError: 'Y' });
+    useLabelStore.setState({ previewMode: { status: 'active', url: 'blob:x' } });
+    state().resetPrinterProfile();
+    expect(state().printerProfile).toEqual({ reprintAfterError: 'Y' });
+  });
+
+  it('patchPrinterProfile throws on schema-invalid patches in dev (tests run in DEV)', () => {
+    // clockMode 'TOL' without clockTolerance is schema-invalid.
+    // Vitest sets import.meta.env.DEV === true, so the store action
+    // throws instead of warn-and-drop. This is the contract for HMR
+    // / test sessions; prod builds get warn-and-drop instead.
+    expect(() => state().patchPrinterProfile({ clockMode: 'TOL' })).toThrow(
+      /rejected invalid patch/,
+    );
+    expect(state().printerProfile).toEqual({});
+  });
+
+  it('patchPrinterProfile accepts the TOL+tolerance pair as one atomic patch', () => {
+    state().patchPrinterProfile({ clockMode: 'TOL', clockTolerance: 30 });
+    expect(state().printerProfile).toEqual({ clockMode: 'TOL', clockTolerance: 30 });
   });
 });

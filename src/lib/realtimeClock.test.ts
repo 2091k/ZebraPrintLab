@@ -3,6 +3,7 @@ import {
   formatRealtimeClockForZpl,
   parseRealtimeClock,
   realtimeClockIsoRegex,
+  toLocalIsoString,
 } from './realtimeClock';
 
 describe('formatRealtimeClockForZpl', () => {
@@ -73,6 +74,33 @@ describe('parseRealtimeClock', () => {
 
   it('accepts Feb 29 in leap years', () => {
     expect(parseRealtimeClock(['02', '29', '2024', '00', '00', '00'])).toBe('2024-02-29T00:00:00');
+  });
+});
+
+describe('toLocalIsoString', () => {
+  it('formats a Date into YYYY-MM-DDTHH:MM:SS using local time fields', () => {
+    // Use the local-field constructor so the test does not depend on
+    // the host timezone: `new Date(2026, 4, 30, 18, 30, 45)` is local
+    // May 30 2026 18:30:45 regardless of TZ.
+    const d = new Date(2026, 4, 30, 18, 30, 45);
+    expect(toLocalIsoString(d)).toBe('2026-05-30T18:30:45');
+  });
+
+  it('zero-pads single-digit month / day / hour / minute / second', () => {
+    const d = new Date(2026, 0, 5, 7, 3, 9);
+    expect(toLocalIsoString(d)).toBe('2026-01-05T07:03:09');
+  });
+
+  it('output round-trips through formatRealtimeClockForZpl', () => {
+    const iso = toLocalIsoString(new Date(2026, 4, 30, 18, 30, 45));
+    // Assert the concrete ZPL positional shape (MM,DD,YYYY,HH,MM,SS)
+    // so a regression in toLocalIsoString that still parses but
+    // produces wrong values would surface here.
+    expect(formatRealtimeClockForZpl(iso)).toBe('05,30,2026,18,30,45');
+  });
+
+  it('output matches the schema-level shape regex', () => {
+    expect(realtimeClockIsoRegex.test(toLocalIsoString(new Date()))).toBe(true);
   });
 });
 

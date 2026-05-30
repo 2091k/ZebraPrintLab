@@ -24,6 +24,19 @@
 // that want both the validator and the parse/format pair together.
 export { realtimeClockIsoRegex } from '../types/ObjectType';
 
+/** Returns the current local time as the ISO datetime-local string
+ *  shape (`YYYY-MM-DDTHH:MM:SS`). Used by the ^ST "Now" button to
+ *  seed the field with the user's current wall-clock time —
+ *  `Date.prototype.toISOString` returns UTC, the form input is
+ *  local, so a dedicated formatter is needed. Deterministic given a
+ *  `Date`, so tests can pass a fixed instance instead of relying on
+ *  `new Date()` at call time. */
+export function toLocalIsoString(d: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    + `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 const inRangeStr = (s: string, min: number, max: number): boolean => {
   const n = Number.parseInt(s, 10);
   return Number.isFinite(n) && n >= min && n <= max;
