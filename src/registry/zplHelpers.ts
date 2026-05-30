@@ -1,8 +1,8 @@
 import type { LabelObjectBase, ZplEmitContext } from "../types/ObjectType";
 import { hasTemplateMarkers, markersToEmbeds } from "../lib/fnTemplate";
 import { hasClockMarkers, markersToTokens } from "../lib/fcTemplate";
-import { modelToZplAnchor } from "../components/Canvas/textPositionTransforms";
-import { getTextRenderMetrics } from "../components/Canvas/textRenderMetrics";
+import { modelToZplAnchor } from "../lib/labelGeometry/textPositionTransforms";
+import { getTextRenderMetrics } from "../lib/labelGeometry/textRenderMetrics";
 import type { LabelObject } from "../types/Group";
 
 /** Emit `^FT` or `^FO` depending on how the object was originally positioned. */

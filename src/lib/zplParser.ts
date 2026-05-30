@@ -35,8 +35,8 @@ import {
   type ClockChars,
 } from "./fcTemplate";
 import { decodeFbContent } from "./fbContent";
-import { zplAnchorToModel } from "../components/Canvas/textPositionTransforms";
-import { computeTextRenderMetrics } from "../components/Canvas/textRenderMetrics";
+import { zplAnchorToModel } from "./labelGeometry/textPositionTransforms";
+import { computeTextRenderMetrics } from "./labelGeometry/textRenderMetrics";
 import type { LabelObject } from "../types/Group";
 import type { TextProps } from "../registry/text";
 import type { Code128Props } from "../registry/code128";
