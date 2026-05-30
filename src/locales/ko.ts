@@ -278,8 +278,6 @@ const ko = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script에 내용이 있습니다',
     copy: '복사',
     copied: '✓ 복사됨',
     noObjects: '레이블에 아직 개체가 없습니다',

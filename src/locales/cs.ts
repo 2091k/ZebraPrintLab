@@ -278,8 +278,6 @@ const cs = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script obsahuje data',
     copy: 'Kopírovat',
     copied: '✓ Zkopírováno',
     noObjects: 'Na štítku zatím nejsou žádné objekty',

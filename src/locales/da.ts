@@ -278,8 +278,6 @@ const da = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script har indhold',
     copy: 'Kopiér',
     copied: '✓ Kopieret',
     noObjects: 'Ingen objekter på etiketten endnu',

@@ -278,8 +278,6 @@ const bg = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script съдържа данни',
     copy: 'Копирай',
     copied: '✓ Копирано',
     noObjects: 'Все още няма обекти върху етикета',

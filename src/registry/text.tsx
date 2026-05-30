@@ -3,7 +3,7 @@ import type { ObjectTypeDefinition } from "../types/ObjectType";
 import { useT } from "../lib/useT";
 import { buttonCls, inputCls, labelCls } from "../components/Properties/styles";
 import { textFieldPos, fdFieldFor, resolveFontCmd } from "./zplHelpers";
-import { getTextRenderMetrics } from "../components/Canvas/textRenderMetrics";
+import { getTextRenderMetrics } from "../lib/labelGeometry/textRenderMetrics";
 import type { LabelObject } from "../types/Group";
 import { effectiveScale } from "./transformHelpers";
 import { getFont, loadFontFile } from "../lib/fontCache";

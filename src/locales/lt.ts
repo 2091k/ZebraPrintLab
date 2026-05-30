@@ -278,8 +278,6 @@ const lt = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script turi turinio',
     copy: 'Kopijuoti',
     copied: '✓ Nukopijuota',
     noObjects: 'Etiketėje dar nėra objektų',

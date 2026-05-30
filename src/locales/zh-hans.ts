@@ -278,8 +278,6 @@ const zhHans = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script 有内容',
     copy: '复制',
     copied: '✓ 已复制',
     noObjects: '标签上暂无对象',

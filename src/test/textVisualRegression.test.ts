@@ -7,17 +7,20 @@ import { PNG } from 'pngjs';
 import { textTestCases } from '../../tests/fixtures/textTestCases';
 
 /**
- * Text rendering visual regression.
- *
- * Both sides load the SAME font (our PrintLabZPL-Bold.ttf):
+ * Renderer-pair stability check — Skia (@napi-rs/canvas) vs Labelary,
+ * with the SAME TTF loaded on both sides (PrintLabZPL-Bold.ttf):
  *   - Labelary uploaded it via /v1/fonts before generating the fixtures
  *     (see tests/scripts/fetch_labelary_text_fixtures.ts).
  *   - The local render here registers the TTF with @napi-rs/canvas.
  *
- * That removes glyph-design variance from the diff entirely. The
- * residual pixels are anti-aliasing edges between Labelary's renderer
- * and @napi-rs/canvas's renderer, which is small enough to flag real
- * regressions without flapping on noise.
+ * **This suite does NOT verify Zebra firmware fidelity.** Glyph data is
+ * identical on both sides by construction, and Labelary is itself a
+ * firmware simulator — substituting the font further removes the one
+ * thing Labelary contributed (its bundled Zebra-equivalent font metrics).
+ * What this catches: drift in our canvas font sizing / anchor math /
+ * fontSize-to-fontHeight conversion vs Labelary's renderer. What it
+ * does NOT catch: actual diff between the canvas preview and a label
+ * printed by physical Zebra hardware.
  *
  * Production uses `ZPL_FONT_HEIGHT_TO_CSS_RATIO = 1.0`, i.e. canvas
  * fontSize equals ZPL fontHeight directly. The test mirrors that so
@@ -47,7 +50,7 @@ if (!fs.existsSync(DIFF_DIR)) {
   fs.mkdirSync(DIFF_DIR, { recursive: true });
 }
 
-describe('Text Visual Regression — PrintLab ZPL on both sides', () => {
+describe('Text renderer-pair stability (Skia vs Labelary, shared TTF)', () => {
   beforeAll(() => {
     if (!fs.existsSync(FONT_PATH)) {
       throw new Error(`Font file missing at ${FONT_PATH}.`);

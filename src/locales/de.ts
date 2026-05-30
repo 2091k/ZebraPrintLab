@@ -299,8 +299,6 @@ const de = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup-Script',
-    hiddenSecondaryHint: 'Setup-Script enthält Inhalt',
     copy: 'Kopieren',
     copied: '✓ Kopiert',
     noObjects: 'Noch keine Objekte auf dem Etikett',

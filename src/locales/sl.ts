@@ -278,8 +278,6 @@ const sl = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script vsebuje vsebino',
     copy: 'Kopiraj',
     copied: '✓ Kopirano',
     noObjects: 'Na nalepki še ni predmetov',

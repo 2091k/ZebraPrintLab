@@ -12,7 +12,7 @@ export interface ImportResult {
 }
 
 /** Returns the loss description for a partial command code, e.g. "^A@" → font face note. */
-export function partialLoss(cmd: string): string {
+function partialLoss(cmd: string): string {
   const key = cmd.slice(1);
   const entry = ZPL_COMMAND_MAP.get(key) ?? (key[0] === 'A' ? ZPL_COMMAND_MAP.get('A@') : undefined);
   return entry?.loss ?? 'imported with limitations';

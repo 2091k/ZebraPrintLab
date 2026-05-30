@@ -299,8 +299,6 @@ const en = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script has content',
     copy: 'Copy',
     copied: '✓ Copied',
     noObjects: 'No objects on the label yet',

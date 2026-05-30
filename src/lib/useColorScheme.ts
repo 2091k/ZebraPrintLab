@@ -37,7 +37,7 @@ export const DARK_COLORS: CanvasColors = {
   accent:         '#f59e0b',
 };
 
-export const LIGHT_COLORS: CanvasColors = {
+const LIGHT_COLORS: CanvasColors = {
   canvasBg:       '#e4e4e7',
   canvasDot:      '#dcdce0',
   gridLine:       '#a1a1aa',

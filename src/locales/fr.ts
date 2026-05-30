@@ -278,8 +278,6 @@ const fr = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Le Setup Script contient des données',
     copy: 'Copier',
     copied: '✓ Copié',
     noObjects: "Pas encore d'objets sur l'étiquette",

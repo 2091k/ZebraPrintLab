@@ -278,8 +278,6 @@ const ja = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Scriptに内容があります',
     copy: 'コピー',
     copied: '✓ コピーしました',
     noObjects: 'ラベルにオブジェクトがありません',

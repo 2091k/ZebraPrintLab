@@ -35,7 +35,7 @@ export function isDefaultLabelaryHost(): boolean {
   return host() === DEFAULT_HOST;
 }
 
-export class LabelaryError extends Error {
+class LabelaryError extends Error {
   readonly kind: 'api' | 'timeout' | 'network';
   constructor(kind: 'api' | 'timeout' | 'network', message: string) {
     super(message);

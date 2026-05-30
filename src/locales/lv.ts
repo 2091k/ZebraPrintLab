@@ -278,8 +278,6 @@ const lv = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script satur saturu',
     copy: 'Kopēt',
     copied: '✓ Nokopēts',
     noObjects: 'Etiķetē vēl nav objektu',

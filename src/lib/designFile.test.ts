@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseDesignFile, serializeDesign } from './designFile';
+import { parseDesignFile, serializeDesign, CURRENT_DESIGN_SCHEMA_VERSION } from './designFile';
 import type { LabelObject } from '../types/Group';
 import type { Variable } from '../types/Variable';
 
@@ -25,6 +25,15 @@ describe('serializeDesign', () => {
     expect(parsed.pages[0]?.objects).toHaveLength(1);
   });
 
+  it('writes the current schemaVersion field', () => {
+    const json = serializeDesign(
+      { widthMm: 100, heightMm: 60, dpmm: 8 },
+      [{ objects: SAMPLE_OBJECTS }],
+    );
+    const parsed = JSON.parse(json) as { schemaVersion: number };
+    expect(parsed.schemaVersion).toBe(CURRENT_DESIGN_SCHEMA_VERSION);
+  });
+
   it('serializes multiple pages', () => {
     const json = serializeDesign(
       { widthMm: 100, heightMm: 60, dpmm: 8 },
@@ -48,16 +57,27 @@ describe('parseDesignFile', () => {
     expect(result.value.pages[0]?.objects).toHaveLength(1);
   });
 
-  it('migrates legacy { label, objects } shape into a single page', () => {
-    const legacyJson = JSON.stringify({
+  it('rejects files without a schemaVersion field', () => {
+    const json = JSON.stringify({
       label: { widthMm: 100, heightMm: 60, dpmm: 8 },
-      objects: SAMPLE_OBJECTS,
+      pages: [{ objects: SAMPLE_OBJECTS }],
     });
-    const result = parseDesignFile(legacyJson);
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value.pages).toHaveLength(1);
-    expect(result.value.pages[0]?.objects).toHaveLength(1);
+    const result = parseDesignFile(json);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe('invalid_schema');
+  });
+
+  it('rejects an unknown schemaVersion as invalid_schema', () => {
+    const futureJson = JSON.stringify({
+      schemaVersion: 999,
+      label: { widthMm: 100, heightMm: 60, dpmm: 8 },
+      pages: [{ objects: SAMPLE_OBJECTS }],
+    });
+    const result = parseDesignFile(futureJson);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe('invalid_schema');
   });
 
   it('returns parse_error for invalid JSON', () => {
@@ -193,18 +213,6 @@ describe('parseDesignFile', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.variables).toEqual([]);
-  });
-
-  it('legacy { label, objects } shape loads with empty variables', () => {
-    const legacyJson = JSON.stringify({
-      label: { widthMm: 100, heightMm: 60, dpmm: 8 },
-      objects: SAMPLE_OBJECTS,
-    });
-    const result = parseDesignFile(legacyJson);
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value.variables).toEqual([]);
-    expect(result.value.csvMapping).toBeNull();
   });
 
   it('roundtrips csvMapping when present', () => {

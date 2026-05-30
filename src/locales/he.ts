@@ -278,8 +278,6 @@ const he = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script מכיל תוכן',
     copy: 'העתק',
     copied: '✓ הועתק',
     noObjects: 'אין אובייקטים על התווית עדיין',

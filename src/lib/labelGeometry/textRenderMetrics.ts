@@ -1,5 +1,5 @@
-import { resolvePreviewFontName } from "../../lib/customFonts";
-import { getFontFamily } from "../../lib/fontCache";
+import { resolvePreviewFontName } from "../customFonts";
+import { getFontFamily } from "../fontCache";
 import type { LabelObject } from "../../types/Group";
 import type { LabelConfig } from "../../types/ObjectType";
 import { measureInkWidthPx } from "./measureTextDots";

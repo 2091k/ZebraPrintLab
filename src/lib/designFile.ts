@@ -9,6 +9,13 @@ import {
 import type { LabelObject } from "../types/Group";
 import { ok, err, type Result } from "./result";
 
+/** Current design-file schema version. Bump when the persisted shape
+ *  changes in a way an older app cannot read. Add a vN schema +
+ *  migrator below and dispatch on `schemaVersion` in `parseDesignFile`.
+ *  The persist middleware in `labelStore` has its own independent
+ *  version for localStorage state — do not conflate. */
+export const CURRENT_DESIGN_SCHEMA_VERSION = 1;
+
 export type DesignFileError = "parse_error" | "invalid_schema";
 export interface DesignFilePage { objects: LabelObject[] }
 export interface DesignFile {
@@ -45,18 +52,12 @@ const labelObjectSchema: z.ZodType<unknown> = z.union([groupSchema, leafSchema])
 
 const pageSchema = z.object({ objects: z.array(labelObjectSchema) });
 
-const designFileSchema = z.object({
+const designFileV1Schema = z.object({
+  schemaVersion: z.literal(1),
   label: labelConfigSchema,
   pages: z.array(pageSchema),
-  // Optional so designs saved before the variables feature still load.
   variables: z.array(variableSchema).optional(),
-  // Optional: designs without a CSV import omit the field entirely.
   csvMapping: csvMappingSchema.optional(),
-});
-
-const legacyDesignFileSchema = z.object({
-  label: labelConfigSchema,
-  objects: z.array(labelObjectSchema),
 });
 
 export function parseDesignFile(text: string): Result<DesignFile, DesignFileError> {
@@ -67,28 +68,13 @@ export function parseDesignFile(text: string): Result<DesignFile, DesignFileErro
     return err("parse_error");
   }
 
-  const current = designFileSchema.safeParse(json);
-  if (current.success) {
-    // LabelObject[] is a discriminated union with typed props; Zod cannot
-    // verify them without per-type schemas, so the cast here is intentional.
-    // The registry handles unknown prop shapes gracefully at runtime.
+  const v1 = designFileV1Schema.safeParse(json);
+  if (v1.success) {
     return ok({
-      label: current.data.label,
-      pages: current.data.pages as unknown as DesignFilePage[],
-      variables: current.data.variables ?? [],
-      csvMapping: current.data.csvMapping ?? null,
-    });
-  }
-
-  // Legacy: { label, objects } from before multi-page support.
-  // Wrapped into a single page so older designs keep loading.
-  const legacy = legacyDesignFileSchema.safeParse(json);
-  if (legacy.success) {
-    return ok({
-      label: legacy.data.label,
-      pages: [{ objects: legacy.data.objects as unknown as LabelObject[] }],
-      variables: [],
-      csvMapping: null,
+      label: v1.data.label,
+      pages: v1.data.pages as unknown as DesignFilePage[],
+      variables: v1.data.variables ?? [],
+      csvMapping: v1.data.csvMapping ?? null,
     });
   }
 
@@ -96,6 +82,7 @@ export function parseDesignFile(text: string): Result<DesignFile, DesignFileErro
 }
 
 interface SerializedDesign {
+  schemaVersion: number;
   label: LabelConfig;
   pages: DesignFilePage[];
   variables?: Variable[];
@@ -108,9 +95,11 @@ export function serializeDesign(
   variables: Variable[] = [],
   csvMapping: CsvMapping | null = null,
 ): string {
-  // Omit optional fields when empty so older versions of the app that
-  // lack them can keep round-tripping designs untouched.
-  const payload: SerializedDesign = { label, pages };
+  const payload: SerializedDesign = {
+    schemaVersion: CURRENT_DESIGN_SCHEMA_VERSION,
+    label,
+    pages,
+  };
   if (variables.length > 0) payload.variables = variables;
   if (csvMapping) payload.csvMapping = csvMapping;
   return JSON.stringify(payload, null, 2);

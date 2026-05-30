@@ -267,7 +267,7 @@ export { eanCheckDigit, upceCheckDigit } from "../../lib/barcodeCheckDigits";
  * Code B here keeps the designer's module count in sync with Labelary.
  * Returns null for characters outside Code B range (ASCII 32–126).
  */
-export function toCode128BRaw(text: string): string | null {
+function toCode128BRaw(text: string): string | null {
   if (!text) return null;
   const parts = ["^104"]; // Start B
   for (const ch of text) {

@@ -278,8 +278,6 @@ const fa = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script has content',
     copy: 'کپی',
     copied: '✓ کپی شد',
     noObjects: 'هنوز هیچ شیئی روی برچسب نیست',
