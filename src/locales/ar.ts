@@ -278,8 +278,6 @@ const ar = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script has content',
     copy: 'نسخ',
     copied: '✓ تم النسخ',
     noObjects: 'لا توجد عناصر على الملصق بعد',

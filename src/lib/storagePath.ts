@@ -38,7 +38,7 @@ export interface StoragePath {
 
 /** Extension paired with `^GF`-shaped graphic uploads. Zebra firmware
  *  persists `~DY{path},*,G,...` as `{path}.GRF` on the device. */
-export const GRAPHIC_EXT = "GRF";
+const GRAPHIC_EXT = "GRF";
 
 /**
  * Parse a `device:name` or `device:name.ext` storage path into structured

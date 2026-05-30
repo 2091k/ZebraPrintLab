@@ -278,8 +278,6 @@ const hu = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'A Setup Script tartalmaz adatokat',
     copy: 'Másolás',
     copied: '✓ Másolva',
     noObjects: 'Még nincsenek objektumok a címkén',

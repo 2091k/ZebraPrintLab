@@ -278,8 +278,6 @@ const el = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Το Setup Script περιέχει δεδομένα',
     copy: 'Αντιγραφή',
     copied: '✓ Αντιγράφηκε',
     noObjects: 'Δεν υπάρχουν ακόμη αντικείμενα στην ετικέτα',

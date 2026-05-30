@@ -16,7 +16,7 @@ export type ConstrainMode = "free" | "shift" | "autoSnap";
 
 /** Tolerance in degrees for `autoSnap` mode — below this distance from
  *  a 45° step the angle is snapped, above it the raw angle is kept. */
-export const AUTO_SNAP_TOLERANCE_DEG = 5;
+const AUTO_SNAP_TOLERANCE_DEG = 5;
 
 export interface LineGeometry {
   length: number;

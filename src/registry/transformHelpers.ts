@@ -73,7 +73,7 @@ export function commitRotatedWidthHeightTransform<
 
 /** Generic rotation-aware commit: scales an arbitrary numeric prop
  *  pair by `esx` / `esy`, rounds + snaps, clamps to min 1. */
-export function commitRotatedSizeTransform<
+function commitRotatedSizeTransform<
   P extends { rotation: "N" | "R" | "I" | "B" },
   XK extends keyof P,
   YK extends keyof P,

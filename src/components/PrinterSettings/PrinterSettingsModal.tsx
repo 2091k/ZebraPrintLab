@@ -15,11 +15,8 @@ import { PrintQualityTab } from "./PrintQualityTab";
 
 type TopTabId = 'perLabel' | 'setupScript';
 
-/** Sub-tab → top-tab assignment. `satisfies` makes TypeScript flag
- *  any `PrinterSettingsTab` literal that is added to the union but
- *  forgotten here — without this, a missing tab would silently
- *  default at runtime. This is the source of truth; rail groups
- *  below are derived from it. */
+/** Sub-tab → top-tab. `satisfies` flags any PrinterSettingsTab union
+ *  literal that gets added but forgotten here at compile time. */
 const TOP_TAB_OF = {
   mediaFeed: 'perLabel',
   printQuality: 'perLabel',
@@ -35,12 +32,6 @@ const TOP_TAB_LABEL_KEY = {
   setupScript: 'railGroupSetupScript',
 } as const satisfies Record<TopTabId, 'railGroupPerLabel' | 'railGroupSetupScript'>;
 
-/** Rail-tab order per top-tab, derived from TOP_TAB_OF so the source
- *  of truth stays the single literal map above. Iteration order over
- *  TOP_TAB_OF entries is insertion order, which is the desired rail
- *  order — keep entries in the map in the order the rail should show
- *  them. Seed is derived from TOP_TAB_ORDER so a new TopTabId added
- *  there can't silently produce `undefined.push(...)` at runtime. */
 const TABS_BY_TOP_TAB: Record<TopTabId, readonly PrinterSettingsTab[]> = (() => {
   const acc = Object.fromEntries(
     TOP_TAB_ORDER.map((id) => [id, [] as PrinterSettingsTab[]]),
@@ -51,9 +42,7 @@ const TABS_BY_TOP_TAB: Record<TopTabId, readonly PrinterSettingsTab[]> = (() => 
   return acc;
 })();
 
-/** Per-tab content registry. Tabs absent here render as disabled
- *  WIP rail entries; the rail prevents selection so the modal
- *  never has to handle a missing-component branch. */
+/** Tabs absent here render as disabled WIP rail entries. */
 const TAB_COMPONENTS: Partial<Record<PrinterSettingsTab, FC>> = {
   mediaFeed: MediaFeedTab,
   printQuality: PrintQualityTab,
@@ -62,21 +51,10 @@ const TAB_COMPONENTS: Partial<Record<PrinterSettingsTab, FC>> = {
   identity: IdentityTab,
 };
 
-/** Modal-box class kept as a constant rather than inline so the
- *  width / shadow tuning is named and stays consistent if other
- *  modals adopt the same shell. Fixed height (h-[600px]) so the
- *  modal does not resize when switching tabs of different field
- *  counts; the docked preview anchors at the bottom. `max-h-[85vh]`
- *  is a fallback cap for very short viewports. */
 const MODAL_BOX_CLS =
   "bg-surface border border-border rounded-lg shadow-2xl " +
   "w-[720px] max-w-[95vw] h-[600px] max-h-[85vh] flex flex-col overflow-hidden";
 
-/** Docked preview height. 160px = ~9 lines of mono ZPL at 13px/1.45
- *  plus the header strip and padding. Fixed (not collapsible) so the
- *  modal's vertical rhythm stays identical across top-tabs; the empty
- *  per-label state keeps the same height as the populated setup-script
- *  state. */
 const PREVIEW_HEIGHT = "h-40";
 
 export function PrinterSettingsModal() {
@@ -126,11 +104,8 @@ export function PrinterSettingsModal() {
       </header>
 
       <div
-        // Plain nav, not tablist. The rail below uses `aria-current`
-        // (page-style) navigation buttons; using `role="tablist"`
-        // here as well would force the rail into tab semantics too,
-        // and a single page with two different "tab" paradigms is
-        // worse than two plain navs.
+        // Plain nav (not role=tablist) so the strip + rail share one
+        // a11y paradigm.
         className="px-5 pt-3 border-b border-border flex gap-1"
         aria-label={t.printerSettings.title}
       >
@@ -210,10 +185,8 @@ export function PrinterSettingsModal() {
   );
 }
 
-/** Docked preview pane at the bottom of the modal, rendered only on
- *  the Setup-Script top-tab. Shows the freshly-generated script plus
- *  Copy + Send actions. Per-Label has no preview here because per-
- *  label ZPL still lives in the editor's main output panel. */
+/** Docked preview pane on the Setup-Script top-tab. Per-Label has no
+ *  preview here — its ZPL still lives in the editor's main output. */
 function PreviewDock({
   setupScript,
   printerProfile,
@@ -226,8 +199,7 @@ function PreviewDock({
   onSend: () => void;
 }) {
   const t = useT();
-  // Live-clock mode (useCurrentTimeForClock) needs the payload
-  // freshly generated at click-time, not the closured snapshot.
+  // Live-clock mode needs the payload generated at click-time.
   const { copy, copied } = useCopyToClipboard(() => generateSetupScript(printerProfile));
 
   const hasScript = !!setupScript;
@@ -239,21 +211,14 @@ function PreviewDock({
           {t.printerSettings.previewHeading}
         </span>
         <div className="flex items-center gap-3">
-          {/* Clear sits on the destructive side of a divider so the
-              red-hover affordance + spatial separation make a mis-
-              click into the adjacent primary (Send) much less
-              likely. Same muted resting state as Copy keeps the
-              header visually quiet until hover. */}
+          {/* Clear: separated from Send by a divider; red hover +
+              red focus-visible ring so destructive intent is visible
+              to both pointer and keyboard users. */}
           <button
             type="button"
             onClick={onClear}
             disabled={!hasScript}
             title={t.printerSettings.previewClear}
-            // Destructive intent: red hover AND a red focus ring so
-            // keyboard users see the same warning the mouse hover
-            // gives. Without the ring keyboard-tab onto Clear shows
-            // the default browser focus style — identical to Copy /
-            // Send next to it.
             className="flex items-center gap-1 font-mono text-[10px] text-muted hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 rounded disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >
             <TrashIcon className="w-4 h-4" />

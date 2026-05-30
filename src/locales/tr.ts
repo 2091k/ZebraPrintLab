@@ -278,8 +278,6 @@ const tr = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script içerik içeriyor',
     copy: 'Kopyala',
     copied: '✓ Kopyalandı',
     noObjects: 'Etikette henüz nesne yok',

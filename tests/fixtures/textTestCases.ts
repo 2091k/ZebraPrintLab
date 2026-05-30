@@ -1,7 +1,8 @@
-/** Text-only visual regression cases. Compared against Labelary with our
- *  uploaded custom font (R:PRINTLAB.TTF) so both sides use the same
- *  glyph data — the residual diff is just anti-aliasing edge noise
- *  between Labelary's renderer and Skia/@napi-rs/canvas. */
+/** Text renderer-pair stability cases (NOT firmware fidelity — both
+ *  sides load the same TTF, so this measures Skia-vs-Labelary
+ *  rendering drift, not diff against printed Zebra output). See the
+ *  test header in src/test/textVisualRegression.test.ts for the full
+ *  framing. */
 export interface TextTestCase {
   /** Unique id; doubles as the PNG filename stem under tests/fixtures/
    *  labelary_text_images/. */
@@ -11,8 +12,9 @@ export interface TextTestCase {
   /** Character data passed to `^FD`. Keep to printable ASCII; the
    *  fixture renderer doesn't apply ^CI. */
   text: string;
-  /** ZPL rotation. Mostly N for the first batch; rotated cases will
-   *  come once we trust the unrotated baseline. */
+  /** ZPL rotation. Today all N; rotated cases (R / I / B) are a
+   *  follow-up — they exercise FO anchor math more than glyph
+   *  rendering, which is where the next regression class would land. */
   rotation: 'N' | 'R' | 'I' | 'B';
   /** ^FO origin within the 4x4 inch (812×812 px @ 8 dpmm) canvas the
    *  fetch script renders. Pick a value that keeps the rendered bbox

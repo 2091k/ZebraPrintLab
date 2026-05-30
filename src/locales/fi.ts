@@ -278,8 +278,6 @@ const fi = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Skriptissä on sisältöä',
     copy: 'Kopioi',
     copied: '✓ Kopioitu',
     noObjects: 'Etiketillä ei ole vielä objekteja',

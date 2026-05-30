@@ -278,8 +278,6 @@ const es = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script tiene contenido',
     copy: 'Copiar',
     copied: '✓ Copiado',
     noObjects: 'Todavía no hay objetos en la etiqueta',

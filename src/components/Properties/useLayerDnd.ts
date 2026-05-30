@@ -7,7 +7,7 @@ import { INDENT_STEP } from './layerLayout';
 
 /** Sentinel container id for the top-level objects list. Group containers
  *  use the group's own id, so the root needs a value that can't collide. */
-export const ROOT_CONTAINER = '__root__';
+const ROOT_CONTAINER = '__root__';
 
 /** Pixel bias subtracted from the cursor X before quantising to depth so a
  *  user has to drag a little before the target depth changes. Tuned to feel

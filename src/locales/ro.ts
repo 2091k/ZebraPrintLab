@@ -278,8 +278,6 @@ const ro = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script conține conținut',
     copy: 'Copiați',
     copied: '✓ Copiat',
     noObjects: 'Nu există încă obiecte pe etichetă',

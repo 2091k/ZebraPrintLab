@@ -278,8 +278,6 @@ const zhHant = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script 有內容',
     copy: '複製',
     copied: '✓ 已複製',
     noObjects: '標籤上尚無物件',

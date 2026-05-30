@@ -278,8 +278,6 @@ const et = {
 
   output: {
     zplHeading: 'ZPL',
-    setupScriptHeading: 'Setup Script',
-    hiddenSecondaryHint: 'Setup Script sisaldab andmeid',
     copy: 'Kopeeri',
     copied: '✓ Kopeeritud',
     noObjects: 'Sildil pole veel objekte',
