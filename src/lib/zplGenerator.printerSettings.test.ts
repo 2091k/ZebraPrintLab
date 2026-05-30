@@ -100,59 +100,55 @@ describe("Printer Settings Modal Tab 1 — parser roundtrip", () => {
 
 describe("Printer Settings Modal Tab 2 — Print Quality commands (Setup Script)", () => {
   it("emits ^JZ in the Setup Script with the selected reprint mode", () => {
-    expect(generateSetupScript({ ...base, reprintAfterError: "Y" })).toContain("^JZY");
-    expect(generateSetupScript({ ...base, reprintAfterError: "N" })).toContain("^JZN");
+    expect(generateSetupScript({ reprintAfterError: "Y" })).toContain("^JZY");
+    expect(generateSetupScript({ reprintAfterError: "N" })).toContain("^JZN");
   });
 
   it("emits ^JT in the Setup Script with the head-test interval", () => {
-    expect(generateSetupScript({ ...base, headTestInterval: 500 })).toContain("^JT500");
+    expect(generateSetupScript({ headTestInterval: 500 })).toContain("^JT500");
   });
 
   it("emits ~TA in the Setup Script (tilde-prefix above the wrapper block)", () => {
     // Pair with a caret command so the ^XA wrapper exists; otherwise
     // a tilde-only script has no block to compare position against.
     const script = generateSetupScript({
-      ...base,
       tearOffAdjust: -30,
       reprintAfterError: "Y",
     });
-    expect(script).toContain("~TA-30");
+    expect(script).toContain("~TA-030");
     expect(script.indexOf("~TA")).toBeLessThan(script.indexOf("^XA"));
   });
 
   it("keeps ^JZ / ^JT / ~TA out of the per-label generateZPL output", () => {
-    const both = {
-      ...base,
-      reprintAfterError: "Y" as const,
-      headTestInterval: 250,
-      tearOffAdjust: 15,
-    };
-    const zpl = generateZPL(both, []);
+    // After the printerProfile split, generateZPL only sees labelConfig
+    // so these commands cannot reach the per-label stream by construction.
+    // Test still pins the invariant in case a future refactor wires
+    // profile values through generateZPL again.
+    const zpl = generateZPL(base, []);
     expect(zpl).not.toContain("^JZ");
     expect(zpl).not.toContain("^JT");
     expect(zpl).not.toContain("~TA");
   });
 
   it("returns an empty Setup Script when no relevant field is set", () => {
-    expect(generateSetupScript(base)).toBe("");
+    expect(generateSetupScript({})).toBe("");
   });
 
   it("round-trips ^JZ / ^JT / ~TA via the Setup Script parser", () => {
     const orig = {
-      ...base,
       reprintAfterError: "Y" as const,
       headTestInterval: 250,
       tearOffAdjust: 15,
     };
-    const { labelConfig: parsed } = parseZPL(generateSetupScript(orig));
+    const { printerProfile: parsed } = parseZPL(generateSetupScript(orig));
     expect(parsed.reprintAfterError).toBe("Y");
     expect(parsed.headTestInterval).toBe(250);
     expect(parsed.tearOffAdjust).toBe(15);
   });
 
   it("clamps out-of-range parser values for ^JT and ~TA", () => {
-    expect(parseZPL("^XA^JT99999^XZ").labelConfig.headTestInterval).toBeUndefined();
-    expect(parseZPL("~TA200^XA^XZ").labelConfig.tearOffAdjust).toBeUndefined();
-    expect(parseZPL("~TA-200^XA^XZ").labelConfig.tearOffAdjust).toBeUndefined();
+    expect(parseZPL("^XA^JT99999^XZ").printerProfile.headTestInterval).toBeUndefined();
+    expect(parseZPL("~TA200^XA^XZ").printerProfile.tearOffAdjust).toBeUndefined();
+    expect(parseZPL("~TA-200^XA^XZ").printerProfile.tearOffAdjust).toBeUndefined();
   });
 });
