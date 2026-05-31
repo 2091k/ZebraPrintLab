@@ -35,6 +35,7 @@ import {
   type PrinterProfileSlice,
 } from './slices/printerProfileSlice';
 import { createUiSlice, type UiSlice } from './slices/uiSlice';
+import { createSelectionSlice, type SelectionSlice } from './slices/selectionSlice';
 import {
   nextFreeFnNumber,
   FN_NUMBER_MIN,
@@ -111,7 +112,6 @@ interface LabelStateBase {
   label: LabelConfig;
   pages: Page[];
   currentPageIndex: number;
-  selectedIds: string[];
 
   /** State of the Labelary canvas overlay. `idle` is the editor default;
    *  `loading`/`active`/`error` mean the comparison overlay is in play and
@@ -155,10 +155,6 @@ interface LabelStateBase {
   duplicateSelectedObjects: () => void;
   copySelectedObjects: () => void;
   pasteObjects: () => void;
-  selectObject: (id: string | null) => void;
-  toggleSelectObject: (id: string) => void;
-  selectObjects: (ids: string[]) => void;
-  removeSelectedObjects: () => void;
   /** Wraps every selected top-level, unlocked object in a new GroupObject
    *  at the position of the topmost (last-in-array) selected item.
    *  No-op if fewer than one such object is selected. */
@@ -264,7 +260,7 @@ interface LabelStateBase {
 }
 
 /** Composed store shape: base fields + every extracted slice. */
-export type LabelState = LabelStateBase & PrinterProfileSlice & UiSlice;
+export type LabelState = LabelStateBase & PrinterProfileSlice & UiSlice & SelectionSlice;
 
 export const currentObjects = (state: PageState): LabelObject[] =>
   state.pages[state.currentPageIndex]?.objects ?? [];
@@ -475,10 +471,10 @@ export const useLabelStore = create<LabelState>()(
     (set, get, store) => ({
       ...createPrinterProfileSlice(set, get, store),
       ...createUiSlice(set, get, store),
+      ...createSelectionSlice(set, get, store),
       label: { widthMm: 100, heightMm: 60, dpmm: 8 },
       pages: [{ objects: [] }],
       currentPageIndex: 0,
-      selectedIds: [],
       clipboard: [],
       pasteCount: 0,
       variables: [],
@@ -624,48 +620,6 @@ export const useLabelStore = create<LabelState>()(
             ...updateCurrentObjects(state, (curr) => [...curr, ...copies]),
             selectedIds: copies.map((c) => c.id),
             pasteCount,
-          };
-        }),
-
-      selectObject: (id) =>
-        set((state) => {
-          const next = id ? [id] : [];
-          const same =
-            state.selectedIds.length === next.length &&
-            state.selectedIds[0] === next[0];
-          if (same) return {};
-          return { selectedIds: next };
-        }),
-
-      toggleSelectObject: (id) =>
-        set((state) => ({
-          selectedIds: state.selectedIds.includes(id)
-            ? state.selectedIds.filter((s) => s !== id)
-            : [...state.selectedIds, id],
-        })),
-
-      selectObjects: (ids) =>
-        set((state) => {
-          const same =
-            state.selectedIds.length === ids.length &&
-            state.selectedIds.every((id, i) => id === ids[i]);
-          if (same) return {};
-          return { selectedIds: ids };
-        }),
-
-      removeSelectedObjects: () =>
-        set((state) => {
-          if (selectPreviewLocksEditor(state)) return {};
-          const sel = new Set(state.selectedIds);
-          const objs = currentObjects(state);
-          // Locked objects survive a Delete keystroke / bulk-remove; the
-          // multi-select clears down to whichever locked items remain.
-          const lockedIds = objs.flatMap((o) => sel.has(o.id) && o.locked ? [o.id] : []);
-          return {
-            ...updateCurrentObjects(state, (curr) =>
-              curr.filter((o) => !sel.has(o.id) || o.locked),
-            ),
-            selectedIds: lockedIds,
           };
         }),
 
