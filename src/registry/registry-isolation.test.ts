@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { ObjectRegistry, ObjectPanels, BARCODE_1D_TYPES, STACKED_2D_TYPES } from "./index";
+import { ObjectRegistry, BARCODE_1D_TYPES, STACKED_2D_TYPES } from "./index";
+import { ObjectPanels } from "./panels";
 
 describe("registry isolation baseline", () => {
   it("registers 34 object types", () => {
@@ -20,16 +21,9 @@ describe("registry isolation baseline", () => {
     );
   });
 
-  it("split entries surface no PropertiesPanel on the Core map", () => {
-    // Derived from `<type>.panel.tsx` filenames whose stem matches a
-    // registry key (filters out factory files like barcode1d.panel.tsx).
-    const panelFiles = import.meta.glob("./*.panel.tsx", { eager: false });
-    const splitTypes = Object.keys(panelFiles)
-      .map((p) => p.replace(/^\.\//, "").replace(/\.panel\.tsx$/, ""))
-      .filter((type) => type in ObjectRegistry);
-    expect(splitTypes.length, "at least one split entry").toBeGreaterThan(0);
-    for (const type of splitTypes) {
-      expect(ObjectRegistry[type], `Core entry for "${type}"`).not.toHaveProperty(
+  it("no Core entry carries a PropertiesPanel field", () => {
+    for (const [type, entry] of Object.entries(ObjectRegistry)) {
+      expect(entry, `Core entry for "${type}"`).not.toHaveProperty(
         "PropertiesPanel",
       );
     }

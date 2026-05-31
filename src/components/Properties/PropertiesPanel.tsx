@@ -3,7 +3,8 @@ import { InformationCircleIcon, FolderPlusIcon } from "@heroicons/react/16/solid
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import type { LabelCanvasHandle } from "../Canvas/LabelCanvas";
 import type { AlignAxis } from "../../lib/alignment";
-import { ObjectRegistry, ObjectPanels } from "../../registry";
+import { ObjectRegistry } from "../../registry";
+import { ObjectPanels } from "../../registry/panels";
 import { canGroupSelection, findObjectById, isGroup } from "../../types/Group";
 import { BWIP_APPROX_SEVERITY } from "../Canvas/bwipConstants";
 import { stripZplCommandChars } from "../../registry/zplHelpers";
