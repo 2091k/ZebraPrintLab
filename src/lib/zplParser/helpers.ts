@@ -1,4 +1,18 @@
 import type { LabelObject } from "../../types/Group";
+import { isZplRotation, type ZplRotation } from "../../registry/rotation";
+
+/** Resolve a raw rotation char to a validated `ZplRotation`. Falls
+ *  back to `fallback` (default 'N') for unknown / missing values —
+ *  matches the parser's "silently drop invalid params" contract for
+ *  rotation. Use the `fallback` param at sites that need to honour the
+ *  ^FW default (e.g. ^A field handlers that inherit from the field-
+ *  wide rotation set by `^FW`). */
+export function readRotation(
+  raw: string | undefined,
+  fallback: ZplRotation = "N",
+): ZplRotation {
+  return raw && isZplRotation(raw) ? raw : fallback;
+}
 
 // ZPL commands start with ^ or ~ followed by 2 characters
 export function tokenize(zpl: string): { cmd: string; rest: string }[] {
