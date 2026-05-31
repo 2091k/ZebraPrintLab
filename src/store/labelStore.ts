@@ -3,13 +3,7 @@ import { temporal } from 'zundo';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { LabelConfig } from '../types/LabelConfig';
 import type { ObjectChanges } from '../types/LabelObject';
-import {
-  EMPTY_PRINTER_PROFILE,
-  PRINTER_PROFILE_FIELDS,
-  printerProfileSchema,
-  type PrinterProfile,
-} from '../types/PrinterProfile';
-import { pruneUndefined } from '../lib/pruneUndefined';
+import { PRINTER_PROFILE_FIELDS } from '../types/PrinterProfile';
 import type { Unit } from '../lib/units';
 import type { ViewRotation } from '../components/Canvas/rotationGeometry';
 import { getEntry } from '../registry';
@@ -40,6 +34,10 @@ import {
   updateCurrentObjects,
   type PageState,
 } from './labelStore.internals';
+import {
+  createPrinterProfileSlice,
+  type PrinterProfileSlice,
+} from './slices/printerProfileSlice';
 import {
   nextFreeFnNumber,
   FN_NUMBER_MIN,
@@ -112,14 +110,8 @@ export type PreviewMode =
   | { status: 'active'; url: string }
   | { status: 'error'; error: string };
 
-interface LabelState {
+interface LabelStateBase {
   label: LabelConfig;
-  /** EEPROM-persistent printer-state. Separate slice from `label` so
-   *  design files (which round-trip `label`) don't leak the user's
-   *  printer name, locale, clock value, etc. See PrinterProfile.ts.
-   *  Single-profile for now; the multi-profile follow-up will replace
-   *  this with `printerProfiles: Record<id, PrinterProfile>`. */
-  printerProfile: PrinterProfile;
   pages: Page[];
   currentPageIndex: number;
   selectedIds: string[];
@@ -204,15 +196,6 @@ interface LabelState {
    *  via the layers panel, instead of having to select-then-shortcut. */
   addGroup: () => void;
   setLabelConfig: (config: Partial<LabelConfig>) => void;
-  /** Patch the active printer profile. Same shape as setLabelConfig
-   *  but writes to the printerProfile slice so per-installation
-   *  Setup-Script fields stay out of the per-label config. */
-  patchPrinterProfile: (patch: Partial<PrinterProfile>) => void;
-  /** Clear all printer-profile fields (back to "printer defaults
-   *  apply everywhere"). Surfaced as the Setup-Script preview's
-   *  Clear action; emits no ^XA/^XZ output until a field is set
-   *  again. */
-  resetPrinterProfile: () => void;
   setLocale: (locale: LocaleCode) => void;
   setTheme: (theme: ThemePreference) => void;
   setThirdPartyEnabled: (service: 'labelary', enabled: boolean) => void;
@@ -330,6 +313,9 @@ interface LabelState {
    *  `idle`. Safe to call from any non-`idle` status. */
   exitPreviewMode: () => void;
 }
+
+/** Composed store shape: base fields + every extracted slice. */
+export type LabelState = LabelStateBase & PrinterProfileSlice;
 
 export const currentObjects = (state: PageState): LabelObject[] =>
   state.pages[state.currentPageIndex]?.objects ?? [];
@@ -537,9 +523,9 @@ export const temporalPartialize = (state: LabelState) => ({
 export const useLabelStore = create<LabelState>()(
   temporal(
     persist(
-    (set, get) => ({
+    (set, get, store) => ({
+      ...createPrinterProfileSlice(set, get, store),
       label: { widthMm: 100, heightMm: 60, dpmm: 8 },
-      printerProfile: EMPTY_PRINTER_PROFILE,
       pages: [{ objects: [] }],
       currentPageIndex: 0,
       selectedIds: [],
@@ -977,46 +963,6 @@ export const useLabelStore = create<LabelState>()(
           return { label: { ...state.label, ...config } };
         }),
 
-      patchPrinterProfile: (patch) =>
-        set((state) => {
-          if (selectPreviewLocksEditor(state)) return {};
-          // Drop keys explicitly set to `undefined` so the profile
-          // stays "field absent = printer default" rather than
-          // "field present with undefined". Validate the merged
-          // result through the schema so the cross-field rule
-          // (clockMode === 'TOL' ↔ clockTolerance defined) can't be
-          // violated from any caller — UI fields already enforce
-          // field-by-field, but `parseZPL` imports and any future
-          // patch site should not be trusted to know the rule.
-          const next = pruneUndefined<PrinterProfile>({
-            ...state.printerProfile,
-            ...patch,
-          });
-          const parsed = printerProfileSchema.safeParse(next);
-          if (!parsed.success) {
-            // Dev: throw so the bug surfaces immediately in tests
-            // and HMR sessions. Prod: warn-and-drop so end users
-            // hit a degraded-but-alive store instead of a crash.
-            // All callers today are UI-validated or schema-clean
-            // parser results, so an invalid patch reaching here is
-            // by definition a bug we want to see.
-            const msg = '[printerProfile] rejected invalid patch';
-            if (import.meta.env.DEV) {
-              throw new Error(
-                `${msg}: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-              );
-            }
-            console.warn(msg, parsed.error.issues, { merged: next });
-            return {};
-          }
-          return { printerProfile: parsed.data };
-        }),
-
-      resetPrinterProfile: () =>
-        set((state) => {
-          if (selectPreviewLocksEditor(state)) return {};
-          return { printerProfile: {} };
-        }),
 
       setLocale: (locale) => set({ locale }),
 
