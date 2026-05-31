@@ -71,11 +71,12 @@ export const createVariablesSlice: StateCreator<LabelState, [], [], VariablesSli
       const existing = state.variables.find((v) => v.id === id);
       if (!existing) return {};
 
+      let patched = changes;
       if (changes.name !== undefined) {
         const trimmed = changes.name.trim();
         if (trimmed === '') return {};
         if (state.variables.some((v) => v.id !== id && v.name === trimmed)) return {};
-        changes = { ...changes, name: trimmed };
+        patched = { ...patched, name: trimmed };
       }
       if (changes.fnNumber !== undefined) {
         if (changes.fnNumber < FN_NUMBER_MIN || changes.fnNumber > FN_NUMBER_MAX) return {};
@@ -83,13 +84,13 @@ export const createVariablesSlice: StateCreator<LabelState, [], [], VariablesSli
       }
 
       const next: Partial<LabelState> = {
-        variables: state.variables.map((v) => (v.id === id ? { ...v, ...changes } : v)),
+        variables: state.variables.map((v) => (v.id === id ? { ...v, ...patched } : v)),
       };
       // Rename ripple: every `«oldName»` marker in any object's content
       // needs to point at the new name, otherwise the templates dangle.
-      if (changes.name !== undefined && changes.name !== existing.name) {
+      if (patched.name !== undefined && patched.name !== existing.name) {
         const oldName = existing.name;
-        const newName = changes.name;
+        const newName = patched.name;
         next.pages = state.pages.map((page) => ({
           ...page,
           objects: rewriteTemplateMarkers(page.objects, oldName, newName),

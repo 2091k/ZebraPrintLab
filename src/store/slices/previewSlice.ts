@@ -5,27 +5,17 @@ import { buildPreviewZpl } from '../../lib/printPreview';
 import { currentObjects } from '../labelStore.selectors';
 import type { LabelState } from '../labelStore';
 
-/** Labelary-backed canvas overlay. While `active`, the canvas renders
- *  the Labelary-rendered PNG in place of the editor objects so the user
- *  can A/B compare design vs. printed output at the same scale. The
- *  fetch happens on entry and the snapshot is frozen for the lifetime
- *  of the active session — no live refresh — because the comparison
- *  loses meaning if the underlying design shifts under it. */
+/** Labelary canvas-overlay state. Snapshot is frozen for the session's
+ *  lifetime so the A/B comparison doesn't drift under the user. */
 export type PreviewMode =
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'active'; url: string }
   | { status: 'error'; error: string };
 
-/** Single-entry cache for the Labelary preview blob URL, keyed by the
- *  exact ZPL string that produced it. Module-level rather than store-
- *  state because the blob URL is a non-serialisable side-effect handle:
- *  persisting it through `partialize` would resurrect a stale identifier
- *  across reloads, and including it in Zustand state would churn every
- *  selector that observes the store.
- *
- *  The closure owns the URL: `set` revokes the previous blob before
- *  replacing it, so callers can't leak by forgetting to clean up. */
+/** Single-entry blob-URL cache keyed by the ZPL that produced it.
+ *  Module-level: blob URLs are non-serialisable, persisting them would
+ *  resurrect stale identifiers across reloads. */
 const previewCache = (() => {
   let entry: { zpl: string; url: string } | null = null;
   return {
@@ -47,15 +37,11 @@ const previewCache = (() => {
 export const __resetPreviewCacheForTests = (): void => previewCache._resetForTests();
 
 export interface PreviewSlice {
-  /** `idle` is the editor default; `loading`/`active`/`error` mean the
-   *  comparison overlay is in play and editor surfaces are visually locked. */
   previewMode: PreviewMode;
-  /** Render the current page to ZPL, fetch the Labelary PNG, swap status
-   *  to `active` on success or `error` on failure. Should only be called
-   *  when `previewMode.status` is `idle` or `error`. */
+  /** Render current page → fetch → set status. Caller-checked: only
+   *  call when `previewMode.status` is `idle` or `error`. */
   enterPreviewMode: () => Promise<void>;
-  /** End the preview session: reset to `idle`. The blob URL stays cached
-   *  so a re-toggle skips the fetch. Safe from any non-idle status. */
+  /** Reset to `idle`; blob URL stays cached for re-toggle. */
   exitPreviewMode: () => void;
 }
 
@@ -103,7 +89,6 @@ export const createPreviewSlice: StateCreator<LabelState, [], [], PreviewSlice> 
 
   exitPreviewMode: () =>
     set((state) => {
-      // Blob URL stays in previewCache across exits so a re-toggle skips the fetch.
       if (state.previewMode.status === 'idle') return {};
       return { previewMode: { status: 'idle' } };
     }),

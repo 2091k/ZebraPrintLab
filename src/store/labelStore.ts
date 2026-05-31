@@ -31,11 +31,12 @@ import {
 import { createUiSlice, type UiSlice } from './slices/uiSlice';
 import { createSelectionSlice, type SelectionSlice } from './slices/selectionSlice';
 import { createPreviewSlice, type PreviewSlice } from './slices/previewSlice';
-export { __resetPreviewCacheForTests } from './slices/previewSlice';
 import { createCsvSlice, type CsvSlice } from './slices/csvSlice';
 import { createVariablesSlice, type VariablesSlice } from './slices/variablesSlice';
 import { forgetImport } from '../lib/csvImport';
 import type { Variable, VariableInput, CsvMapping } from '../types/Variable';
+
+export { __resetPreviewCacheForTests } from './slices/previewSlice';
 export type { ObjectChanges };
 export type { Variable, VariableInput };
 
@@ -102,7 +103,14 @@ interface LabelStateBase {
 }
 
 /** Composed store shape: base fields + every extracted slice. */
-export type LabelState = LabelStateBase & PrinterProfileSlice & UiSlice & SelectionSlice & PreviewSlice & CsvSlice & VariablesSlice;
+export type LabelState =
+  & LabelStateBase
+  & PrinterProfileSlice
+  & UiSlice
+  & SelectionSlice
+  & PreviewSlice
+  & CsvSlice
+  & VariablesSlice;
 
 export {
   currentObjects,
