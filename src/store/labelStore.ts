@@ -1,7 +1,6 @@
 import { create, useStore } from 'zustand';
 import { temporal } from 'zundo';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { LabelConfig } from '../types/LabelConfig';
 import type { ObjectChanges } from '../types/LabelObject';
 import { PRINTER_PROFILE_FIELDS } from '../types/PrinterProfile';
 import { getEntry } from '../registry';
@@ -33,15 +32,14 @@ import { createSelectionSlice, type SelectionSlice } from './slices/selectionSli
 import { createPreviewSlice, type PreviewSlice } from './slices/previewSlice';
 import { createCsvSlice, type CsvSlice } from './slices/csvSlice';
 import { createVariablesSlice, type VariablesSlice } from './slices/variablesSlice';
-import { forgetImport } from '../lib/csvImport';
-import type { Variable, VariableInput, CsvMapping } from '../types/Variable';
+import { createLabelConfigSlice, type LabelConfigSlice } from './slices/labelConfigSlice';
+import type { Variable, VariableInput } from '../types/Variable';
 
 export { __resetPreviewCacheForTests } from './slices/previewSlice';
 export type { ObjectChanges };
 export type { Variable, VariableInput };
 
 interface LabelStateBase {
-  label: LabelConfig;
   pages: Page[];
   currentPageIndex: number;
 
@@ -81,14 +79,6 @@ interface LabelStateBase {
    *  Lets the user create a group up-front and drag items in afterwards
    *  via the layers panel, instead of having to select-then-shortcut. */
   addGroup: () => void;
-  setLabelConfig: (config: Partial<LabelConfig>) => void;
-  loadDesign: (
-    label: LabelConfig,
-    pages: Page[],
-    variables?: Variable[],
-    csvMapping?: CsvMapping | null,
-  ) => void;
-  appendPages: (pages: Page[]) => void;
 
   moveObjectForward: (id: string) => void;
   moveObjectBackward: (id: string) => void;
@@ -110,7 +100,8 @@ export type LabelState =
   & SelectionSlice
   & PreviewSlice
   & CsvSlice
-  & VariablesSlice;
+  & VariablesSlice
+  & LabelConfigSlice;
 
 export {
   currentObjects,
@@ -255,7 +246,7 @@ export const useLabelStore = create<LabelState>()(
       ...createPreviewSlice(set, get, store),
       ...createCsvSlice(set, get, store),
       ...createVariablesSlice(set, get, store),
-      label: { widthMm: 100, heightMm: 60, dpmm: 8 },
+      ...createLabelConfigSlice(set, get, store),
       pages: [{ objects: [] }],
       currentPageIndex: 0,
       clipboard: [],
@@ -593,51 +584,6 @@ export const useLabelStore = create<LabelState>()(
             if (item) next.splice(toIndex, 0, item);
             return next;
           });
-        }),
-
-      loadDesign: (label, pages, variables, csvMapping) => {
-        if (selectPreviewLocksEditor(get())) return;
-        // Drop the prior design's CSV cache too: the raw text in the
-        // module cache belongs to that file, not the one being loaded.
-        forgetImport();
-        set({
-          label,
-          pages: pages.length > 0 ? pages : [{ objects: [] }],
-          currentPageIndex: 0,
-          selectedIds: [],
-          variables: variables ?? [],
-          csvMapping: csvMapping ?? null,
-          csvDataset: null,
-        });
-      },
-
-      // Append-mode counterpart to loadDesign: keeps the current label
-      // config (the user opted into the existing design's dimensions /
-      // dpmm) and just tacks the imported pages onto the end of the
-      // page list, switching focus to the first appended page.
-      appendPages: (pages) =>
-        set((state) => {
-          if (selectPreviewLocksEditor(state)) return {};
-          if (pages.length === 0) return {};
-          const newPages = [...state.pages, ...pages];
-          return {
-            pages: newPages,
-            currentPageIndex: state.pages.length,
-            selectedIds: [],
-          };
-        }),
-
-      // Asymmetry with `patchPrinterProfile` below: setLabelConfig
-      // does NOT strip undefined keys, because LabelConfig fields
-      // have explicit generator defaults applied per-emit ("field
-      // unset = use widthMm/dpmm/etc fallback"), while PrinterProfile
-      // models true three-state "absent = printer default" semantics
-      // that round-trip through persist/import. Different semantics,
-      // different write paths.
-      setLabelConfig: (config) =>
-        set((state) => {
-          if (selectPreviewLocksEditor(state)) return {};
-          return { label: { ...state.label, ...config } };
         }),
 
       addPage: () =>
