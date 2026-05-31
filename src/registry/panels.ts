@@ -1,4 +1,5 @@
 import type { ObjectTypeUi } from '../types/ObjectType';
+import type { ObjectPanelsMap } from './leafObject';
 
 import { textPanel } from './text.panel';
 import { symbolPanel } from './symbol.panel';
@@ -35,12 +36,9 @@ import { linePanel } from './line.panel';
 import { serialPanel } from './serial.panel';
 import { imagePanel } from './image.panel';
 
-/** Per-type PropertiesPanel components, keyed by registry type.
- *  Imported only from the UI layer (PropertiesPanel.tsx). Kept apart
- *  from `./index` so the lib/parser path can pull `ObjectRegistry`
- *  without dragging any `.panel.tsx` into the module graph. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ObjectPanels: Record<string, ObjectTypeUi<any>> = {
+// `satisfies` enforces exhaustiveness at the literal; permissive export
+// matches ObjectRegistry's shape.
+const _ObjectPanels = {
   text: textPanel,
   symbol: symbolPanel,
   code128: code128Panel,
@@ -75,4 +73,10 @@ export const ObjectPanels: Record<string, ObjectTypeUi<any>> = {
   line: linePanel,
   serial: serialPanel,
   image: imagePanel,
-};
+} satisfies ObjectPanelsMap;
+
+/** Per-type PropertiesPanel components, keyed by registry type. The
+ *  literal above is exhaustive on `LeafObject['type']`; imported only
+ *  by the UI layer so lib/parser never pulls a `.panel.tsx`. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const ObjectPanels: Record<string, ObjectTypeUi<any>> = _ObjectPanels;

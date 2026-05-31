@@ -1,4 +1,5 @@
 import type { ObjectTypeCore } from '../types/ObjectType';
+import type { ObjectRegistryMap } from './leafObject';
 
 export type { LeafObject } from './leafObject';
 
@@ -45,10 +46,9 @@ export const BARCODE_1D_TYPES = new Set([
 
 export const STACKED_2D_TYPES = new Set(['pdf417', 'micropdf417', 'codablock']);
 
-// `any`: each entry has a different concrete `P`. Stage 7 replaces with a
-// discriminated map keyed on `LeafObject['type']`.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ObjectRegistry: Record<string, ObjectTypeCore<any>> = {
+// Internal literal: `satisfies` enforces that every LeafType has an entry
+// at build time, without narrowing the per-key value type in callers.
+const _ObjectRegistry = {
   // text
   text,
   symbol,
@@ -88,4 +88,10 @@ export const ObjectRegistry: Record<string, ObjectTypeCore<any>> = {
   line,
   serial,
   image,
-};
+} satisfies ObjectRegistryMap;
+
+/** Per-type registry of Core (domain) entries. The literal above is
+ *  exhaustive on `LeafObject['type']`; adding a new leaf type without
+ *  a registry entry fails the build. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const ObjectRegistry: Record<string, ObjectTypeCore<any>> = _ObjectRegistry;
