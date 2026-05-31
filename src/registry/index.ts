@@ -1,7 +1,7 @@
 import type { ObjectTypeCore } from '../types/ObjectType';
-import type { ObjectRegistryMap } from './leafObject';
+import type { LeafType, ObjectRegistryMap } from './leafObject';
 
-export type { LeafObject } from './leafObject';
+export type { LeafObject, LeafType } from './leafObject';
 
 import { text } from './text';
 import { code128 } from './code128';
@@ -89,6 +89,17 @@ const _ObjectRegistry = {
   image,
 } satisfies ObjectRegistryMap;
 
-/** Per-type Core (domain) entries, keyed by registry type. */
+/** Per-type Core (domain) entries, keyed on `LeafType` — literal-key
+ *  access (e.g. `ObjectRegistry.code128`) catches typos at compile time.
+ *  For dynamic lookups over `LabelObject['type']` (which includes
+ *  `'group'`), use {@link getEntry}. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ObjectRegistry: Record<string, ObjectTypeCore<any>> = _ObjectRegistry;
+export const ObjectRegistry: Record<LeafType, ObjectTypeCore<any>> = _ObjectRegistry;
+
+/** Dynamic lookup helper for callers whose `type` is `LabelObject['type']`
+ *  or an untyped string. Returns undefined for non-leaf types (e.g. `'group'`). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getEntry(type: string): ObjectTypeCore<any> | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (_ObjectRegistry as Record<string, ObjectTypeCore<any> | undefined>)[type];
+}

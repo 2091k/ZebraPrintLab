@@ -1,5 +1,5 @@
 import type { ObjectTypeUi } from '../types/ObjectType';
-import type { ObjectPanelsMap } from './leafObject';
+import type { LeafType, ObjectPanelsMap } from './leafObject';
 
 import { textPanel } from './text.panel';
 import { symbolPanel } from './symbol.panel';
@@ -75,6 +75,15 @@ const _ObjectPanels = {
   image: imagePanel,
 } satisfies ObjectPanelsMap;
 
-/** Per-type PropertiesPanel components. UI-only import; lib/parser never pulls a `.panel.tsx`. */
+/** Per-type PropertiesPanel components. UI-only import; lib/parser never pulls
+ *  a `.panel.tsx`. For dynamic lookups over `LabelObject['type']`, use {@link getPanel}. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ObjectPanels: Record<string, ObjectTypeUi<any>> = _ObjectPanels;
+export const ObjectPanels: Record<LeafType, ObjectTypeUi<any>> = _ObjectPanels;
+
+/** Dynamic lookup helper for callers whose `type` is `LabelObject['type']`
+ *  or an untyped string. Returns undefined for non-leaf types. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getPanel(type: string): ObjectTypeUi<any> | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (_ObjectPanels as Record<string, ObjectTypeUi<any> | undefined>)[type];
+}

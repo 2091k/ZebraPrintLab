@@ -26,7 +26,7 @@ import { KonvaObject } from "./KonvaObject";
 import { Grid } from "./Grid";
 import { GuideLines } from "./GuideLines";
 import { Ruler, RULER_SIZE } from "./Ruler";
-import { ObjectRegistry } from "../../registry";
+import { getEntry } from "../../registry";
 import type { LeafObject } from "../../registry";
 import { useColorScheme } from "../../lib/useColorScheme";
 import { objectIdsAtPoint } from "./hitTesting";
@@ -704,7 +704,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
       const dragData = event.active.data.current as PaletteDragData | undefined;
       const type = dragData?.type;
       if (!type) return;
-      const def = ObjectRegistry[type];
+      const def = getEntry(type);
       if (!def) return;
       setGhost({
         id: "__ghost__",
