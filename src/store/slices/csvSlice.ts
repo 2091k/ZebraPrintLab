@@ -1,8 +1,7 @@
 import type { StateCreator } from 'zustand';
 import { forgetImport, type CsvParseResult } from '../../lib/csvImport';
 import {
-  FN_NUMBER_MIN,
-  FN_NUMBER_MAX,
+  validateVariablesUnique,
   type CsvMapping,
   type Variable,
 } from '../../types/Variable';
@@ -92,18 +91,7 @@ export const createCsvSlice: StateCreator<LabelState, [], [], CsvSlice> = (set) 
   applyMappingDraft: ({ variables, dataset, mapping, activeRowIndex }) =>
     set((state) => {
       if (selectPreviewLocksEditor(state)) return {};
-      // Mirror setVariables' validation; bulk-replace with a duplicate
-      // would leave the panel unfixable.
-      const names = new Set<string>();
-      const fns = new Set<number>();
-      for (const v of variables) {
-        const trimmed = v.name.trim();
-        if (trimmed === '' || names.has(trimmed)) return {};
-        names.add(trimmed);
-        if (v.fnNumber < FN_NUMBER_MIN || v.fnNumber > FN_NUMBER_MAX) return {};
-        if (fns.has(v.fnNumber)) return {};
-        fns.add(v.fnNumber);
-      }
+      if (!validateVariablesUnique(variables)) return {};
       const rows = dataset.rows;
       const clampedIdx =
         rows.length === 0

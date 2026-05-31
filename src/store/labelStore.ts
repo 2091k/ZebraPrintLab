@@ -12,13 +12,11 @@ import {
   findObjectById,
   findAncestors,
   isSelfOrDescendant,
-  stripVariableIdFromObjects,
   type GroupObject,
   type LabelObject,
   type Page,
 } from '../types/Group';
 import {
-  rewriteTemplateMarkers,
   applyObjectChanges,
   insertAt,
   DUPLICATE_OFFSET_DOTS,
@@ -35,15 +33,9 @@ import { createSelectionSlice, type SelectionSlice } from './slices/selectionSli
 import { createPreviewSlice, type PreviewSlice } from './slices/previewSlice';
 export { __resetPreviewCacheForTests } from './slices/previewSlice';
 import { createCsvSlice, type CsvSlice } from './slices/csvSlice';
+import { createVariablesSlice, type VariablesSlice } from './slices/variablesSlice';
 import { forgetImport } from '../lib/csvImport';
-import {
-  nextFreeFnNumber,
-  FN_NUMBER_MIN,
-  FN_NUMBER_MAX,
-  type Variable,
-  type VariableInput,
-  type CsvMapping,
-} from '../types/Variable';
+import type { Variable, VariableInput, CsvMapping } from '../types/Variable';
 export type { ObjectChanges };
 export type { Variable, VariableInput };
 
@@ -54,11 +46,6 @@ interface LabelStateBase {
 
   clipboard: LabelObject[];
   pasteCount: number;
-
-  /** Document-level template variables. Fields reference them via
-   *  `variableId`; export emits `^FN{fnNumber}^FD{defaultValue}^FS`.
-   *  Order is user-controlled and surfaces in the Variables panel. */
-  variables: Variable[];
 
   addObject: (
     type: string,
@@ -102,27 +89,6 @@ interface LabelStateBase {
   ) => void;
   appendPages: (pages: Page[]) => void;
 
-  /** Create a new variable. Returns the new id, or null when all 99
-   *  `^FN` slots are taken (or the supplied fnNumber is out of range /
-   *  already used). Callers should surface null to the user. */
-  addVariable: (input: VariableInput) => string | null;
-  /** Patch fields on an existing variable. Validates uniqueness of
-   *  `name` and `fnNumber` and clamps `fnNumber` to [1, 99]; rejects
-   *  silently (no-op) on conflict so callers don't have to handle errors
-   *  for every keystroke. */
-  updateVariable: (id: string, changes: Partial<Omit<Variable, 'id'>>) => void;
-  /** Delete a variable and unbind every field that referenced it across
-   *  every page. The field's own content prop (kept since binding) takes
-   *  over on render/export. */
-  removeVariable: (id: string) => void;
-  /** Bulk-replace the entire variables list. Used by the mapping
-   *  modal's Apply path so add-variable-inline can commit atomically
-   *  with the new mapping. No cleanup of bindings or fields: callers
-   *  are expected to only append (every existing id stays in the
-   *  array); removals still go through `removeVariable` for the
-   *  full strip-and-unbind dance. */
-  setVariables: (variables: Variable[]) => void;
-
   moveObjectForward: (id: string) => void;
   moveObjectBackward: (id: string) => void;
   moveObjectToFront: (id: string) => void;
@@ -136,7 +102,7 @@ interface LabelStateBase {
 }
 
 /** Composed store shape: base fields + every extracted slice. */
-export type LabelState = LabelStateBase & PrinterProfileSlice & UiSlice & SelectionSlice & PreviewSlice & CsvSlice;
+export type LabelState = LabelStateBase & PrinterProfileSlice & UiSlice & SelectionSlice & PreviewSlice & CsvSlice & VariablesSlice;
 
 export {
   currentObjects,
@@ -280,12 +246,12 @@ export const useLabelStore = create<LabelState>()(
       ...createSelectionSlice(set, get, store),
       ...createPreviewSlice(set, get, store),
       ...createCsvSlice(set, get, store),
+      ...createVariablesSlice(set, get, store),
       label: { widthMm: 100, heightMm: 60, dpmm: 8 },
       pages: [{ objects: [] }],
       currentPageIndex: 0,
       clipboard: [],
       pasteCount: 0,
-      variables: [],
 
       addObject: (type, position = { x: 50, y: 50 }, propsOverride) => {
         if (selectPreviewLocksEditor(get())) return;
@@ -742,120 +708,6 @@ export const useLabelStore = create<LabelState>()(
           if (index < 0 || index >= state.pages.length) return {};
           if (index === state.currentPageIndex) return {};
           return { currentPageIndex: index, selectedIds: [] };
-        }),
-
-      addVariable: (input) => {
-        const state = get();
-        if (selectPreviewLocksEditor(state)) return null;
-        const trimmedName = input.name.trim();
-        if (trimmedName === '') return null;
-        if (state.variables.some((v) => v.name === trimmedName)) return null;
-
-        let fnNumber: number;
-        if (input.fnNumber !== undefined) {
-          if (input.fnNumber < FN_NUMBER_MIN || input.fnNumber > FN_NUMBER_MAX) return null;
-          if (state.variables.some((v) => v.fnNumber === input.fnNumber)) return null;
-          fnNumber = input.fnNumber;
-        } else {
-          const next = nextFreeFnNumber(state.variables.map((v) => v.fnNumber));
-          if (next === null) return null;
-          fnNumber = next;
-        }
-
-        const variable: Variable = {
-          id: crypto.randomUUID(),
-          name: trimmedName,
-          fnNumber,
-          defaultValue: input.defaultValue ?? '',
-          ...(input.comment !== undefined ? { comment: input.comment } : {}),
-        };
-        set((s) => ({ variables: [...s.variables, variable] }));
-        return variable.id;
-      },
-
-      updateVariable: (id, changes) =>
-        set((state) => {
-          if (selectPreviewLocksEditor(state)) return {};
-          const existing = state.variables.find((v) => v.id === id);
-          if (!existing) return {};
-
-          if (changes.name !== undefined) {
-            const trimmed = changes.name.trim();
-            if (trimmed === '') return {};
-            if (state.variables.some((v) => v.id !== id && v.name === trimmed)) return {};
-            changes = { ...changes, name: trimmed };
-          }
-          if (changes.fnNumber !== undefined) {
-            if (changes.fnNumber < FN_NUMBER_MIN || changes.fnNumber > FN_NUMBER_MAX) return {};
-            if (state.variables.some((v) => v.id !== id && v.fnNumber === changes.fnNumber)) return {};
-          }
-
-          const next: Partial<typeof state> = {
-            variables: state.variables.map((v) => (v.id === id ? { ...v, ...changes } : v)),
-          };
-          // Rename ripple: when the variable's name changes, every
-          // `«oldName»` marker in any object's content needs to point
-          // at the new name. Without this the templates dangle (resolve
-          // to literal text) and the user has no obvious way to fix
-          // them other than re-typing.
-          if (changes.name !== undefined && changes.name !== existing.name) {
-            const oldName = existing.name;
-            const newName = changes.name;
-            next.pages = state.pages.map((page) => ({
-              ...page,
-              objects: rewriteTemplateMarkers(page.objects, oldName, newName),
-            }));
-          }
-          return next;
-        }),
-
-      setVariables: (variables) =>
-        set((state) => {
-          if (selectPreviewLocksEditor(state)) return {};
-          // Mirror addVariable's validation. Bulk-replace bypasses
-          // per-entry guards so we re-check here; a stray duplicate
-          // would leave the Variables panel in an unfixable state
-          // (two rows with identical name or slot, neither
-          // editable to the other's value).
-          const names = new Set<string>();
-          const fns = new Set<number>();
-          for (const v of variables) {
-            const trimmed = v.name.trim();
-            if (trimmed === '') return {};
-            if (names.has(trimmed)) return {};
-            names.add(trimmed);
-            if (v.fnNumber < FN_NUMBER_MIN || v.fnNumber > FN_NUMBER_MAX) return {};
-            if (fns.has(v.fnNumber)) return {};
-            fns.add(v.fnNumber);
-          }
-          return { variables };
-        }),
-
-      removeVariable: (id) =>
-        set((state) => {
-          if (selectPreviewLocksEditor(state)) return {};
-          if (!state.variables.some((v) => v.id === id)) return {};
-          let pagesChanged = false;
-          const nextPages = state.pages.map((p) => {
-            const stripped = stripVariableIdFromObjects(p.objects, id);
-            if (stripped === p.objects) return p;
-            pagesChanged = true;
-            return { ...p, objects: stripped };
-          });
-          // Mapping-cleanup: drop any csvMapping entry pointing at the
-          // deleted variable so the design file doesn't carry orphan
-          // references. Other entries stay intact.
-          let nextMapping = state.csvMapping;
-          if (state.csvMapping && id in state.csvMapping.bindings) {
-            const { [id]: _drop, ...rest } = state.csvMapping.bindings;
-            void _drop;
-            nextMapping = { ...state.csvMapping, bindings: rest };
-          }
-          return {
-            variables: state.variables.filter((v) => v.id !== id),
-            ...(pagesChanged ? { pages: nextPages } : {}),
-            ...(nextMapping !== state.csvMapping ? { csvMapping: nextMapping } : {}),
-          };
         }),
 
     }),
