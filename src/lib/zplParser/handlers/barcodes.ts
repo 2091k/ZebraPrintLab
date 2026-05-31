@@ -7,20 +7,12 @@ import type { DefaultsState, FieldState } from "../context";
 import { int, readRotation } from "../helpers";
 import type { Handler } from "../types";
 
-/** Handlers for every ^B* barcode-family command plus the shared ^BY
- *  defaults. Takes only the two slices it actually mutates: `field`
- *  (per-field caching of fieldType + bcRotation / bcHeight / bcInterp
- *  / bcCheck + per-symbology pendings like qrMag / dmDim / aztecMag)
- *  and `defaults` (^BY barcode defaults that following ^B* handlers
- *  inherit from). flushField in parseZPL.ts emits the LabelObject
- *  once the closing ^FS arrives. */
+/** ^B* barcode commands + shared ^BY defaults. Touches `field` and `defaults`. */
 export function createBarcodeHandlers(
   field: FieldState,
   defaults: DefaultsState,
 ): Record<string, Handler> {
-  // Factory for standard 1D barcode commands that share the same state
-  // variables. hIdx/iIdx/cIdx are the comma-split parameter indices for
-  // height / printInterpretation / checkDigit.
+  // Factory for 1D barcodes: hIdx/iIdx/cIdx = param indices for height/interp/check.
   const mkBarcode =
     (
       type: string,

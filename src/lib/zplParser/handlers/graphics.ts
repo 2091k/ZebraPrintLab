@@ -4,9 +4,9 @@ import type { ImageProps } from "../../../registry/image";
 import type { LineProps } from "../../../registry/line";
 import { loadFontBytesSync } from "../../fontCache";
 import { formatStoragePath, parseStoragePath } from "../../storagePath";
-import type { ParserState } from "../context";
+import { getPosType, pushBrowserLimit, type ParserState } from "../context";
 import { decodeGraphicToImage } from "../decoders/graphic";
-import { int, makeObj, readRotation } from "../helpers";
+import { int, makeObj, readColor, readRotation } from "../helpers";
 import type { Handler } from "../types";
 
 /** Characters of a `^GF`/`~DY` payload retained in browserLimit/skipped
@@ -14,14 +14,9 @@ import type { Handler } from "../types";
  *  base64 blob doesn't drown out the import report. */
 const IMPORT_FINDING_PAYLOAD_LIMIT = 80;
 
-/** Helpers exposed back to parseZPL.ts so flushField (which lives
- *  there for now — see epic #4) can drive the reverse-bg collapse
- *  protocol without owning the pushGBObject logic. */
+/** Helpers re-exported to parseZPL so flushField can drive reverse-bg collapse. */
 export interface GraphicsExports {
-  /** Push a stashed reverse-bg as the GB shape it actually was. Called
-   *  when the stash didn't pair with a reverse-text on the next field. */
   commitPendingReverseBg: () => void;
-  /** Push a ^GB-derived object using the standard line-vs-box detection. */
   pushGBObject: (
     x: number,
     y: number,
@@ -33,10 +28,7 @@ export interface GraphicsExports {
     reverseFlag: boolean | undefined,
     comment: string | undefined,
   ) => void;
-  /** Resolve the currently-active reverse flag from ^LR (label-wide) and
-   *  ^FR (per-field) state. Returns `true` if either is on, else
-   *  `undefined` (NOT `false`) so emit paths that only set the flag
-   *  when truthy don't get a useless `reverse: false` field. */
+  /** ^LR | ^FR; returns `undefined` (not `false`) when off. */
   getReverseFlag: () => boolean | undefined;
 }
 
@@ -45,11 +37,7 @@ export interface GraphicsFamily {
   helpers: GraphicsExports;
 }
 
-/** Handlers for the graphic-primitive family (^GB, ^GC, ^GD, ^GE, ^GF,
- *  ^GS, ^XG) plus the ~DY upload preamble. Owns the reverse-text
- *  background collapse protocol (`pushGBObject` + `commitPendingReverseBg`)
- *  and exports both helpers so flushField (still in parseZPL.ts) can
- *  drive the collapse-or-commit decision on the next field. */
+/** Graphic primitives (^GB/^GC/^GD/^GE/^GF/^GS/^XG/~DY) + reverse-bg collapse. */
 export function createGraphicsHandlers(
   s: ParserState,
   takeComment: () => string | undefined,
@@ -120,18 +108,11 @@ export function createGraphicsHandlers(
       const rawH = int(p[1], t);
       const w = rawW === 0 ? t : rawW;
       const h = rawH === 0 ? t : rawH;
-      const color = (p[3] ?? "B") as "B" | "W";
+      const color = readColor(p[3]);
       const rounding = int(p[4], 0);
       const gbComment = takeComment();
 
-      // Filled-black non-rounded ^GBs (no active ^LR/^FR) are candidate
-      // reverse-text backgrounds — stash them and let flushField
-      // collapse the pair when the next field is an ^FR text at the
-      // same anchor with matching bbox. Stash is opaque: it stores the
-      // raw GB params so the commit path replays through the same
-      // line-vs-box detection a direct parse would use (a fat
-      // horizontal line and a reverse-bg banner share the same GB
-      // shape; only the following ^FR text disambiguates).
+      // Stash filled-black non-rounded GBs as reverse-bg candidates for flushField.
       const filled = t >= Math.min(w, h);
       const reverseFlag = getReverseFlag();
       if (filled && color === "B" && rounding === 0 && !reverseFlag) {
@@ -149,7 +130,7 @@ export function createGraphicsHandlers(
       const gdW = int(p[0], 1);
       const gdH = int(p[1], 1);
       const gdT = int(p[2], 3);
-      const gdColor = (p[3] ?? "B") as "B" | "W";
+      const gdColor = readColor(p[3]);
       const gdOri = (p[4] ?? "L").toUpperCase();
       const gdLen = Math.round(Math.sqrt(gdW * gdW + gdH * gdH));
       // Recover start point and angle from bounding-box FO position
@@ -181,17 +162,10 @@ export function createGraphicsHandlers(
     GF(_, rest) {
       commitPendingReverseBg();
       // ^GF{A|B|C},{totalBytes},{totalBytes},{bytesPerRow},{payload}
-      //
-      // Payload variants the parser understands:
-      //   - format=A + raw hex (optionally with G-Y/g-z/!/,/: RLE)
-      //   - any format + `:B64:<base64>:<crc>` wrapper (base64-decoded)
-      //   - any format + `:Z64:<base64>:<crc>` wrapper (zlib-inflated via
-      //     fflate). CRC mismatch → partial finding (printers tolerate),
-      //     inflate failure → browserLimit (payload unrecoverable).
+      // Payload: raw hex (fmt A, RLE-optional) or `:B64:` / `:Z64:` wrappers.
       const format = rest[0]?.toUpperCase();
       if (format !== "A" && format !== "B" && format !== "C") {
-        s.result.skipped.push(`^GF${rest}`);
-        s.result.browserLimit.push(`^GF${rest}`);
+        pushBrowserLimit(s.result, `^GF${rest}`);
         return;
       }
 
@@ -203,7 +177,7 @@ export function createGraphicsHandlers(
         if (commaPos === -1) break;
       }
       if (commaPos === -1) {
-        s.result.skipped.push(`^GF${rest}`);
+        pushBrowserLimit(s.result, `^GF${rest}`);
         return;
       }
 
@@ -213,13 +187,12 @@ export function createGraphicsHandlers(
       const gfRawData = gfRest.slice(commaPos + 1);
 
       if (gfBytesPerRow <= 0) {
-        s.result.skipped.push(`^GF${rest}`);
+        pushBrowserLimit(s.result, `^GF${rest}`);
         return;
       }
 
       const gfSummary = `^GF${rest.slice(0, IMPORT_FINDING_PAYLOAD_LIMIT)}…`;
-      // Preserve the source bytes-headers verbatim so re-export keeps the
-      // firmware's input-buffer hint intact (^GFC/:Z64: has total ≠ data).
+      // Pass bytes-headers verbatim so re-export keeps the firmware buffer hint.
       const gfImage = decodeGraphicToImage(
         gfRawData,
         format,
@@ -229,12 +202,11 @@ export function createGraphicsHandlers(
         `imported_${crypto.randomUUID().slice(0, 8)}.png`,
       );
       if (!gfImage) {
-        s.result.skipped.push(gfSummary);
-        s.result.browserLimit.push(gfSummary);
+        pushBrowserLimit(s.result, gfSummary);
         return;
       }
       if (!gfImage.crcOk) s.result.partialCmds.add("^GF");
-      const posType: "FT" | "FO" = s.field.positionIsFT ? "FT" : "FO";
+      const posType = getPosType(s.field);
       s.result.objects.push(
         makeObj(
           "image",
@@ -257,7 +229,7 @@ export function createGraphicsHandlers(
       const w = int(p[0], 100);
       const h = int(p[1], 100);
       const t = int(p[2], 3);
-      const color = (p[3] ?? "B") as "B" | "W";
+      const color = readColor(p[3]);
       const filled = t >= Math.min(w, h);
       s.result.objects.push(
         makeObj(
@@ -267,9 +239,6 @@ export function createGraphicsHandlers(
           {
             width: w,
             height: h,
-            // Preserve the original thickness (same rationale as ^GB) so a
-            // ZPL round-trip is lossless. UI sets sensible defaults when
-            // the user toggles `filled` off; the parser stays faithful.
             thickness: t,
             filled,
             color,
@@ -285,7 +254,7 @@ export function createGraphicsHandlers(
       // ^GC{diameter},{thickness},{color}  → circle = ellipse with equal w/h
       const d = int(p[0], 100);
       const t = int(p[1], 3);
-      const color = (p[2] ?? "B") as "B" | "W";
+      const color = readColor(p[2]);
       const filled = t >= d;
       s.result.objects.push(
         makeObj(
@@ -322,12 +291,11 @@ export function createGraphicsHandlers(
       const xgPath = firstComma === -1 ? rest : rest.slice(0, firstComma);
       const parsed = parseStoragePath(xgPath);
       if (!parsed) {
-        s.result.skipped.push(`^XG${rest}`);
-        s.result.browserLimit.push(`^XG${rest}`);
+        pushBrowserLimit(s.result, `^XG${rest}`);
         return;
       }
       const uploaded = s.fonts.downloadedGraphics.get(formatStoragePath(parsed, true));
-      const posType: "FT" | "FO" = s.field.positionIsFT ? "FT" : "FO";
+      const posType = getPosType(s.field);
       if (uploaded) {
         s.result.objects.push(
           makeObj(
@@ -395,7 +363,7 @@ export function createGraphicsHandlers(
         if (rest[i] === ",") c.push(i);
       }
       if (c.length < 5) {
-        s.result.browserLimit.push(`~DY${rest}`);
+        pushBrowserLimit(s.result, `~DY${rest}`);
         return;
       }
       const [c0, c1, c2, c3, c4] = c;
@@ -406,7 +374,7 @@ export function createGraphicsHandlers(
         c3 === undefined ||
         c4 === undefined
       ) {
-        s.result.browserLimit.push(`~DY${rest}`);
+        pushBrowserLimit(s.result, `~DY${rest}`);
         return;
       }
       const path = rest.slice(0, c0);
@@ -422,8 +390,7 @@ export function createGraphicsHandlers(
       // device:stem.GRF path. A subsequent ^XG can then instantiate it.
       if (extCode === "G" && (fmt === "A" || fmt === "B" || fmt === "C")) {
         if (!path || isNaN(dyBytesPerRow) || dyBytesPerRow <= 0) {
-          s.result.skipped.push(dySummary);
-          s.result.browserLimit.push(dySummary);
+          pushBrowserLimit(s.result, dySummary);
           return;
         }
         const sizeStr = size > 0 ? String(size) : "";
@@ -436,8 +403,7 @@ export function createGraphicsHandlers(
           `uploaded_${path.replace(/[:.]/g, "_")}.png`,
         );
         if (!dyImage) {
-          s.result.skipped.push(dySummary);
-          s.result.browserLimit.push(dySummary);
+          pushBrowserLimit(s.result, dySummary);
           return;
         }
         if (!dyImage.crcOk) s.result.partialCmds.add("~DY");
@@ -446,8 +412,7 @@ export function createGraphicsHandlers(
         // XG lookup is direct.
         const parsedDyPath = parseStoragePath(path);
         if (!parsedDyPath) {
-          s.result.skipped.push(dySummary);
-          s.result.browserLimit.push(dySummary);
+          pushBrowserLimit(s.result, dySummary);
           return;
         }
         s.fonts.downloadedGraphics.set(formatStoragePath(parsedDyPath, true), {
@@ -462,11 +427,11 @@ export function createGraphicsHandlers(
       // Only ASCII-hex TTF/OTF imports are supported. Z64 / compressed
       // payloads need a CRC-checked decoder and stay out of scope.
       if (fmt !== "A" || (extCode !== "T" && extCode !== "B")) {
-        s.result.browserLimit.push(dySummary);
+        pushBrowserLimit(s.result, dySummary);
         return;
       }
       if (!path || isNaN(size) || size <= 0 || data.length < size * 2) {
-        s.result.browserLimit.push(dySummary);
+        pushBrowserLimit(s.result, dySummary);
         return;
       }
       const bytes = new Uint8Array(size);
@@ -474,7 +439,7 @@ export function createGraphicsHandlers(
         const byteHex = data.slice(i * 2, i * 2 + 2);
         const b = parseInt(byteHex, 16);
         if (isNaN(b)) {
-          s.result.browserLimit.push(dySummary);
+          pushBrowserLimit(s.result, dySummary);
           return;
         }
         bytes[i] = b;
@@ -492,7 +457,7 @@ export function createGraphicsHandlers(
         s.fonts.downloadedFontPaths.add(fullPath);
       } catch {
         // Oversized or otherwise unloadable — surface as browser-limit.
-        s.result.browserLimit.push(`~DY${path}`);
+        pushBrowserLimit(s.result, `~DY${path}`);
       }
     },
   };

@@ -1,26 +1,18 @@
 import type { CustomFontMapping } from "../../../types/ObjectType";
 import { FN_NUMBER_MAX, FN_NUMBER_MIN } from "../../../types/Variable";
 import type { SerialProps } from "../../../registry/serial";
-import type { ParserState } from "../context";
+import { getDefaultTextH, getDefaultTextW, type ParserState } from "../context";
 import { ciToEncoding, getDecoder, int, makeObj, readRotation } from "../helpers";
 import type { Handler } from "../types";
 
-/** Helpers the field family borrows from parseZPL.ts. flushField + the
- *  reverse-bg helpers stay there because they form the gravitational
- *  centre of the parser (epic #4 will pull them out separately); the
- *  field family just calls in. appendComment is shared with XA/XZ in
- *  parseZPL.ts so it lives there. */
+/** flushField + appendComment are shared with the orchestrator. */
 export interface FieldHelpers {
   flushField: () => void;
   appendComment: Handler;
 }
 
-/** Handlers for field-shaping commands: positioning (FO/FT), text
- *  setup (A0, A@, TB, CF, FW, FB, FH), field lifecycle (FD/FS),
- *  reverse + offset (LR/FR/LH/LT), serialisation (SN/SF), template
- *  hooks (FN/FC/FE), encoding (CI), comments (FX), and font alias
- *  registration (CW). Mutates the per-field caching slice on
- *  `ParserState` plus the shared `labelConfig` via `s.result`. */
+/** Field-shaping commands: FO/FT, A0/A@, TB, CF, FW, FB, FH, FD/FS,
+ *  LR/FR, LH/LT, SN/SF, FN/FC/FE, CI, FX, CW. */
 export function createFieldHandlers(
   s: ParserState,
   helpers: FieldHelpers,
@@ -51,13 +43,9 @@ export function createFieldHandlers(
     A0(p, rest) {
       s.field.fieldType = "text";
       s.field.textRot = readRotation(rest[0], s.defaults.fwRotation);
-      s.field.textH = int(p[1], s.defaults.cfHeight || 30);
-      s.field.textW = int(p[2], s.defaults.cfWidth || 0);
-      // Set fontId="0" only when the current ^CF is not already 0 —
-      // otherwise the field is just repeating the label default, and
-      // we keep fontId undefined so the model says "use the default".
-      // When no ^CF has fired, "0" is the historical baseline both the
-      // generator and the printer fall back to, so it counts as default.
+      s.field.textH = int(p[1], getDefaultTextH(s.defaults));
+      s.field.textW = int(p[2], getDefaultTextW(s.defaults));
+      // fontId "0" only when ^CF differs; "0" is the implicit default otherwise.
       s.field.pendingFontId = s.defaults.cfFontId && s.defaults.cfFontId !== "0" ? "0" : undefined;
     },
 
@@ -101,8 +89,8 @@ export function createFieldHandlers(
       // ^FB also implies text if no ^A was specified.
       if (!s.field.fieldType) {
         s.field.fieldType = "text";
-        s.field.textH = s.defaults.cfHeight || 30;
-        s.field.textW = s.defaults.cfWidth || 0;
+        s.field.textH = getDefaultTextH(s.defaults);
+        s.field.textW = getDefaultTextW(s.defaults);
         s.field.textRot = s.defaults.fwRotation;
       }
     },
@@ -115,16 +103,11 @@ export function createFieldHandlers(
 
     // ── Field data / separator ────────────────────────────────────────────
     FD(_, rest) {
-      // Implicit text field: ^FD without a prior ^A uses ^CF defaults.
-      // Skip the implicit promotion when s.comment.fnNumber is set — that means
-      // we're looking at a bare `^FN<n>^FD<default>^FS` Variable
-      // declaration (the docs-example form for ^FE inline embeds),
-      // which flushField then routes through the bare-declaration
-      // path (no field object, just Variable registration).
+      // Implicit text field unless we're inside a bare `^FN^FD^FS` declaration.
       if (!s.field.fieldType && s.comment.fnNumber === null) {
         s.field.fieldType = "text";
-        s.field.textH = s.defaults.cfHeight || 30;
-        s.field.textW = s.defaults.cfWidth || 0;
+        s.field.textH = getDefaultTextH(s.defaults);
+        s.field.textW = getDefaultTextW(s.defaults);
         s.field.textRot = s.defaults.fwRotation;
       }
       s.field.pendingFD = rest;
@@ -137,9 +120,7 @@ export function createFieldHandlers(
 
     // ── Serialization ─────────────────────────────────────────────────────
     SN(p) {
-      // ^SN{start},{increment},{leadZero}
-      // Appears AFTER the ^FD for this field — upgrade the last text
-      // object to serial.
+      // ^SN{start},{increment},{leadZero} — runs after ^FD; upgrade last text to serial.
       const snStart = p[0] ?? "";
       const snInc = int(p[1], 1);
       const lastObj = s.result.objects[s.result.objects.length - 1];
@@ -164,8 +145,7 @@ export function createFieldHandlers(
       }
     },
     SF(p) {
-      // ^SF{increment},{padDigits},{leadZero}
-      // Appears BEFORE ^FD — set pending state so flushField creates serial.
+      // ^SF{increment},{padDigits},{leadZero} — runs before ^FD; flushField emits serial.
       s.field.snPending = true;
       s.field.snIncrement = int(p[0], 1);
       s.field.snMode = "SF";
@@ -190,12 +170,8 @@ export function createFieldHandlers(
       s.label.ltY = int(rest, 0);
     },
 
-    // ^CW {alias},{path} — register an alias for a printer-resident font.
-    // Subsequent ^A{alias} fields resolve to {path} via the s.fonts.aliases
-    // map. The mapping is also persisted on labelConfig so the generator
-    // can re-emit it on round-trip. Upsert by alias mirrors the
-    // Map-set semantics of s.fonts.aliases: a later ^CW for the same alias
-    // replaces the earlier mapping rather than accumulating duplicates.
+    // ^CW {alias},{path} — register a printer-resident font alias.
+    // Upsert: later ^CW for same alias replaces, no duplicates.
     CW(p) {
       const alias = (p[0] ?? "").trim().toUpperCase();
       const path = (p[1] ?? "").trim();
@@ -206,11 +182,8 @@ export function createFieldHandlers(
       );
       const entry: CustomFontMapping = { alias, path };
       if (s.fonts.downloadedFontPaths.has(path)) {
-        // The bytes already shipped via ~DY earlier in the stream;
-        // surface that intent on the model so re-emit will ~DY again.
+        // Bytes shipped via ~DY earlier; mark for re-emit and link the fontCache key.
         entry.embedInZpl = true;
-        // The fontCache key is the filename portion of the path
-        // (drive prefix stripped), matching how ~DY registers fonts.
         const colonIdx = path.indexOf(":");
         const filename = colonIdx >= 0 ? path.slice(colonIdx + 1) : path;
         if (filename) entry.previewFontName = filename;
@@ -224,8 +197,8 @@ export function createFieldHandlers(
     "A@"(p, rest) {
       s.field.fieldType = "text";
       s.field.textRot = readRotation(rest[0], s.defaults.fwRotation);
-      s.field.textH = int(p[1]) || s.defaults.cfHeight || 30;
-      s.field.textW = int(p[2]) || s.defaults.cfWidth || 0;
+      s.field.textH = int(p[1]) || getDefaultTextH(s.defaults);
+      s.field.textW = int(p[2]) || getDefaultTextW(s.defaults);
       const fontRef = p[3] ?? "";
       const colonIdx = fontRef.indexOf(":");
       s.field.pendingPrinterFontName =
@@ -238,8 +211,8 @@ export function createFieldHandlers(
       s.field.textRot = readRotation(rest[0], s.defaults.fwRotation);
       const tbW = int(p[1], 0);
       const tbH = int(p[2], 0);
-      s.field.textH = s.defaults.cfHeight || 30;
-      s.field.textW = s.defaults.cfWidth || 0;
+      s.field.textH = getDefaultTextH(s.defaults);
+      s.field.textW = getDefaultTextW(s.defaults);
       if (tbW > 0) {
         s.defaults.fbWidth = tbW;
         s.defaults.fbLines = tbH > 0 ? Math.floor(tbH / (s.field.textH || 30)) : 1;
@@ -247,10 +220,6 @@ export function createFieldHandlers(
       }
     },
 
-    // ^FX: comment field — accumulate across consecutive ^FX lines so
-    // the assembled text reaches the next field object as one multi-line
-    // comment. Shares the implementation with the XA/XZ resetComment
-    // path via the passed-in helper.
     FX: appendComment,
 
     // ^CI N: character set / encoding for ^FH byte decoding. Mapped to a
@@ -262,11 +231,7 @@ export function createFieldHandlers(
       if (!enc.supported) s.result.partialCmds.add(`^CI${int(p[0])}`);
     },
 
-    // ^FN{n}: declares that the next field is a template slot. The
-    // accompanying ^FD payload becomes the slot's default value at
-    // flushField time. Out-of-range numbers (Zebra accepts 0/100+ on
-    // newer firmware, but our model caps at 99) are ignored so they
-    // don't poison the binding.
+    // ^FN{n}: template slot for the next field's ^FD default. Out-of-range ignored.
     FN(p) {
       const n = int(p[0]);
       if (n < FN_NUMBER_MIN || n > FN_NUMBER_MAX) {

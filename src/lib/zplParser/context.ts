@@ -27,60 +27,45 @@ export interface PendingReverseBg {
   comment?: string;
 }
 
-/** Public output accumulators. Mutated by handlers (push to arrays,
- *  set fields on labelConfig / printerProfile); handed back to the
- *  caller verbatim via the returned `ParsedZPL`. */
+/** Public output accumulators handed back via `ParsedZPL`. */
 export interface ParserResult {
   objects: LabelObject[];
   labelConfig: Partial<LabelConfig>;
   printerProfile: Partial<PrinterProfile>;
   variables: Variable[];
   skipped: string[];
-  /** Deduplicated set of partial-import command codes. */
   partialCmds: Set<string>;
   browserLimit: string[];
   unknown: string[];
 }
 
-/** Label-frame state set by ^LH / ^LT / ^LR. Persists across all
- *  fields in the format until a later ^XA / ^LH / ^LT / ^LR overrides. */
+/** Label-frame state from ^LH / ^LT / ^LR; persists until overridden. */
 export interface LabelFrameState {
   lhX: number;
   lhY: number;
   ltY: number;
-  /** ^LR: label-wide reverse / invert. Per-field ^FR lives on the
-   *  `field` slice because it resets at ^FS. */
+  /** ^LR is label-wide; per-field ^FR lives on `field` (resets at ^FS). */
   lrActive: boolean;
 }
 
-/** ^FX comment carry + ^FN slot machinery. `fnComment` snapshots the
- *  pending comment at ^FN time so a later ^FX that lands between ^FN
- *  and ^FS doesn't pollute the variable's auto-name. */
+/** `fnComment` snapshots pending comment at ^FN so a later ^FX between
+ *  ^FN and ^FS doesn't pollute the variable's auto-name. */
 export interface CommentState {
   pending: string | undefined;
   fnNumber: number | null;
   fnComment: string | undefined;
 }
 
-/** Format-scoped (per-^XA) template + decoding state. Reset on
- *  ^XA / ^XZ to per-format defaults; ^FE / ^FC / ^FH / ^CI mutate. */
+/** Format-scoped (per-^XA) state; reset at label boundary. */
 export interface FormatState {
-  /** ^FE field-embed delimiter (default '#'). */
   embedChar: string;
-  /** ^FC clock-token chars (date, time, tertiary). */
   clockChars: ClockChars;
-  /** ^FH hex-decode mode flag. */
   fhActive: boolean;
-  /** ^FH delimiter (default '_'). */
   fhDelimiter: string;
-  /** ^CI-selected TextDecoder. Default UTF-8. */
   fhDecoder: TextDecoder;
 }
 
-/** Persistent defaults applied to following fields: ^CF default font,
- *  ^FW default rotation, ^FB field-block, ^BY barcode defaults.
- *  ^FB is the only group that resets after each text field (handled
- *  inside flushField); the others persist until overridden. */
+/** Persistent defaults for following fields (^CF, ^FW, ^FB, ^BY). */
 export interface DefaultsState {
   cfHeight: number;
   cfWidth: number;
@@ -90,26 +75,19 @@ export interface DefaultsState {
   fbLines: number;
   fbSpacing: number;
   fbJustify: TextProps["blockJustify"];
-  /** 0 = no ^BY height; barcode handlers use `|| 100` as the sentinel. */
+  /** 0 = no ^BY height; barcode handlers fall back to 100. */
   byModuleWidth: number;
   byHeight: number;
 }
 
-/** ^CW alias map + ~DY upload tracking. Spans the whole parse so a
- *  ^CW in one ^XA block can still resolve a ^A{X} in the next. */
+/** ^CW aliases + ~DY uploads; span the whole parse across ^XA blocks. */
 export interface FontsState {
   aliases: Map<string, string>;
-  /** Paths seen via ~DY this stream; ^CW for the same path flips the
-   *  mapping's `embedInZpl` flag (round-trip stability). */
   downloadedFontPaths: Set<string>;
-  /** Graphics uploaded via ~DY, keyed by full `device:stem.ext` path.
-   *  Recalled by ^XG into image objects. */
   downloadedGraphics: Map<string, UploadedGraphic>;
 }
 
-/** Per-field accumulator. Populated by handlers (^FO / ^FT for origin,
- *  ^A* for font and text params, ^B* for barcode params, ^GS for
- *  symbol params, etc.). Consumed and reset by flushField at ^FS. */
+/** Per-field accumulator; consumed and reset by flushField at ^FS. */
 export interface FieldState {
   // Position (^FO / ^FT — pre-shift, before label.lh*/lt* offsets)
   x: number;
@@ -159,21 +137,6 @@ export interface FieldState {
   snMode: SerialProps["zplMode"];
 }
 
-/** All mutable parser state grouped into typed sub-slices. Each
- *  handler family can take only the slices it actually mutates, so
- *  the type system enforces ownership across families rather than
- *  every handler getting the whole god-object.
- *
- *  Narrowing heuristic for handler-family factories: pass individual
- *  slices when the family mutates ≤ 2 of them (barcodes →
- *  `field, defaults`; setupScript → `printerProfile`; labelConfig →
- *  `labelConfig`); pass `s` whole when the family touches ≥ 3 slices,
- *  because the long parameter list duplicates the ParserState
- *  interface without adding type-safety. Sub-slices still enforce
- *  ownership at the access path even when the whole `s` is passed —
- *  e.g. graphics needs `s.reverseBg` (top-level mutation) plus four
- *  other slices, so it takes `s` but the per-slice access path keeps
- *  the intent visible. */
 export interface ParserState {
   result: ParserResult;
   label: LabelFrameState;
@@ -181,22 +144,33 @@ export interface ParserState {
   format: FormatState;
   defaults: DefaultsState;
   fonts: FontsState;
-  /** ^GB stash for the reverse-text collapse heuristic. Top-level
-   *  field, not nested under `field` — parallel to `comment.fnNumber`
-   *  it's a nullable "pending until next field consumes it" stash,
-   *  but kept flat because there's only one such field at this level
-   *  and grouping a single field into its own sub-slice would add
-   *  ceremony without clarity. If a second cross-handler stash ever
-   *  joins (e.g. a deferred font-load), promote to `pending: {...}`. */
   reverseBg: PendingReverseBg | null;
   field: FieldState;
 }
 
-/** Bbox tolerance for collapsing a stashed ^GB with a following ^FR
- *  text. Emit-time and parse-time inkWidth can drift by a dot or two
- *  depending on font registration; a small tolerance lets the
- *  legitimate pair collapse without over-collapsing coincidences. */
+/** Dot tolerance for ^GB+^FR reverse-text collapse (rounding drift). */
 export const REVERSE_BBOX_TOLERANCE_DOTS = 2;
+
+/** Append to `skipped` and `browserLimit` (invariant: browserLimit ⊆ skipped). */
+export function pushBrowserLimit(result: ParserResult, token: string): void {
+  result.skipped.push(token);
+  result.browserLimit.push(token);
+}
+
+/** Default text height: ^CF override, else ZPL baseline 30. */
+export function getDefaultTextH(defaults: DefaultsState): number {
+  return defaults.cfHeight || 30;
+}
+
+/** Default text width: ^CF override, else 0 (= auto-from-height). */
+export function getDefaultTextW(defaults: DefaultsState): number {
+  return defaults.cfWidth || 0;
+}
+
+/** ^FO vs ^FT discriminator for emit sites. */
+export function getPosType(field: FieldState): "FT" | "FO" {
+  return field.positionIsFT ? "FT" : "FO";
+}
 
 export function createParserState(): ParserState {
   return {

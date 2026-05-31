@@ -30,25 +30,16 @@ import type { MaxicodeProps } from "../../registry/maxicode";
 import type { MicroPdf417Props } from "../../registry/micropdf417";
 import type { CodablockProps } from "../../registry/codablock";
 import { decodeFH, makeObj, variableNameFromComment } from "./helpers";
-import { type ParserState, REVERSE_BBOX_TOLERANCE_DOTS } from "./context";
+import { getPosType, type ParserState, REVERSE_BBOX_TOLERANCE_DOTS } from "./context";
 
-/** Cross-family dependencies flushField needs but doesn't own:
- *  - `commitPendingReverseBg` / `getReverseFlag` belong to the graphics
- *    family (^GB+^FR collapse protocol)
- *  - `takeComment` belongs to parseZPL.ts (peer-shared with graphics
- *    family which also needs to attach pending ^FX comments) */
+/** Cross-family deps flushField borrows from graphics (^GB+^FR) and parseZPL (^FX). */
 export interface FlushFieldDeps {
   commitPendingReverseBg: () => void;
   getReverseFlag: () => boolean | undefined;
   takeComment: () => string | undefined;
 }
 
-/** Factory for the field-emit closure: `flushField` (the giant switch
- *  that turns cached `s.field.fieldType` + `s.field.pendingFD` into a pushed
- *  `LabelObject`). The helpers `upsertVariable` + `applyFnEmbeds`
- *  stay private to the closure — they're only called from inside
- *  flushField (the ^FN-embed bootstrap happens at flush time, not
- *  earlier in the field-handler family). */
+/** Field-emit closure: turns cached s.field into a pushed LabelObject at ^FS. */
 export function createFlushField(
   s: ParserState,
   deps: FlushFieldDeps,
@@ -56,13 +47,7 @@ export function createFlushField(
   const { commitPendingReverseBg, getReverseFlag, takeComment } = deps;
   const { objects, variables } = s.result;
 
-  /** Upsert a Variable for the given FN slot — returns the existing
-   *  one (and silently backfills its `defaultValue` if it was empty
-   *  and this call supplies one), or creates a new entry with the
-   *  auto-naming convention (`field_<n>` unless an FX comment hints
-   *  otherwise) + uniqueName collision logic. Three call sites: bare
-   *  `^FN^FD^FS` declarations, single-bind fields, and template-embed
-   *  references — all funnel through here. */
+  /** Find-or-create Variable for FN slot; silently backfills empty defaultValue. */
   const upsertVariable = (
     fnNumber: number,
     defaultValue: string,
@@ -86,17 +71,9 @@ export function createFlushField(
     return v;
   };
 
-  // Build a fnNumber→name map from the variables collected so far,
-  // bootstrapping Variables for any FN referenced by embeds in the
-  // current field's content. Mirrors the single-bind bootstrap at
-  // the bottom of flushField — same auto-name convention so embed-
-  // referenced FNs and inline-bound FNs share the same Variable
-  // entry when they hit the same slot number.
+  // Bootstrap Variables for FNs referenced by embeds before marker substitution.
   const applyFnEmbeds = (payload: string): string => {
-    // Match the same shape embedsToMarkers expects: `<e><n><e>` or
-    // `<e><n>,...<e>`. A naked `<e><digits>` without a closing `<e>`
-    // would otherwise bootstrap a phantom Variable from a literal
-    // like `#5 special` and then dangle (no marker emitted).
+    // Closed `<e><n><e>` only — a naked `<e><digits>` would dangle phantom Variables.
     const e = s.format.embedChar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const embedRe = new RegExp(`${e}(\\d+)(?:,[^${e}]*)?${e}`, "g");
     let m: RegExpExecArray | null;
@@ -122,10 +99,7 @@ export function createFlushField(
 
   const flushField = () => {
     if (!s.field.fieldType || s.field.pendingFD === null) {
-      // Bare `^FN<n>^FD<default>^FS` (no ^FO / ^A) is a Variable
-      // declaration, not a field. Register the Variable so the
-      // default reaches the Variables panel + downstream resolves,
-      // and clear s.comment.fnNumber so it doesn't leak into the next field.
+      // Bare `^FN<n>^FD<default>^FS`: Variable declaration, not a field.
       if (s.comment.fnNumber !== null && s.field.pendingFD !== null) {
         const decl = s.format.fhActive
           ? decodeFH(s.field.pendingFD, s.format.fhDelimiter, s.format.fhDecoder)
@@ -135,33 +109,24 @@ export function createFlushField(
         s.comment.fnComment = undefined;
       }
       s.field.pendingFD = null;
-      // Clear s.field.fieldType too so a half-formed field (e.g. `^GS…^FS`
-      // without `^FD`) doesn't leak its kind into the next ^FD that
-      // arrives via an unrelated ^FO.
+      // Reset half-formed field (e.g. `^GS…^FS` without `^FD`) so kind doesn't leak.
       s.field.fieldType = null;
       return;
     }
     const rawDecoded = s.format.fhActive
       ? decodeFH(s.field.pendingFD, s.format.fhDelimiter, s.format.fhDecoder)
       : s.field.pendingFD;
-    // Two marker conversions, in order:
-    //   1. ^FE-style FN embeds (`#1#` → `«variableName»`), bootstrap
-    //      Variables when the FN slot is new — same auto-naming as
-    //      the single-bind ^FN path below.
-    //   2. ^FC clock tokens (`%d`, `%Y`, …) → `«clock:T»`. Runs after
-    //      FN embeds so a payload like `%FN#1#%Y` resolves both.
+    // FN embeds → markers, then ^FC clock tokens (order matters: `%FN#1#%Y`).
     const afterFn = applyFnEmbeds(rawDecoded);
     const content = tokensToMarkers(afterFn, s.format.clockChars);
-    const posType: "FT" | "FO" = s.field.positionIsFT ? "FT" : "FO";
+    const posType = getPosType(s.field);
     const comment = takeComment();
 
     // Decode \& line breaks (and \\ escapes) in ^FB text blocks via the
     // shared helper so parser and generator stay symmetric.
     const decoded = s.defaults.fbWidth > 0 ? decodeFbContent(content) : content;
 
-    // Non-text fields can never be the second half of a reverse-text
-    // pair, so flush the stashed bg as a regular box before pushing.
-    // Text handles its own collapse-or-commit inline below.
+    // Only text can pair with a stashed reverse-bg; non-text flushes first.
     if (s.field.fieldType !== "text") commitPendingReverseBg();
     switch (s.field.fieldType) {
       case "text": {
@@ -183,10 +148,7 @@ export function createFlushField(
           posType,
           inkWidthDots,
         );
-        // If ^SF was pending, create a serial object instead of text.
-        // Serial fields can't be the second half of a reverse-text pair
-        // (no reverse-serial use case in our model), so flush any
-        // pending bg as a regular box before pushing the serial.
+        // ^SF pending: emit serial (not text); flush any reverse-bg first.
         if (s.field.snPending) {
           commitPendingReverseBg();
           objects.push(
@@ -212,16 +174,9 @@ export function createFlushField(
           resetFB();
           break;
         }
-        // Reverse-text collapse: if the previous field was a filled-black
-        // ^GB at this same anchor with a matching bbox, and this text is
-        // ^FR-flagged, the pair is our white-on-black emit. Drop the
-        // stashed bg and surface a single reverse-text object instead of
-        // a box + reverse-text. Dim match uses a small dot-tolerance so
-        // rounding in the emitter and parser can't unpair a legitimate
-        // pair. Anything that doesn't match flushes the stash as a
-        // regular box so hand-written ZPL with unrelated ^GB+^FR
-        // sequences round-trips unchanged. ^FB block-text isn't part of
-        // the reverse-text emit so collapsing is skipped there too.
+        // Reverse-text collapse: stashed filled ^GB + ^FR text at same anchor
+        // with matching bbox → single reverse-text. Otherwise the bg flushes
+        // as a normal box (unrelated ^GB+^FR sequences round-trip unchanged).
         const vertical = s.field.textRot === "R" || s.field.textRot === "B";
         const expectedW = vertical ? s.field.textH : Math.max(1, Math.round(inkWidthDots));
         const expectedH = vertical ? Math.max(1, Math.round(inkWidthDots)) : s.field.textH;
@@ -233,9 +188,7 @@ export function createFlushField(
           s.reverseBg.y === s.field.y &&
           Math.abs(s.reverseBg.w - expectedW) <= REVERSE_BBOX_TOLERANCE_DOTS &&
           Math.abs(s.reverseBg.h - expectedH) <= REVERSE_BBOX_TOLERANCE_DOTS;
-        // Preserve any comment that was attached to the stashed ^GB
-        // (e.g. a `^FX banner` before the bg). Merged with the text's
-        // own comment so no import metadata is silently dropped.
+        // Merge any ^FX banner that was attached to the stashed ^GB.
         let mergedComment = comment;
         if (collapse) {
           const bgComment = s.reverseBg?.comment;
@@ -329,7 +282,7 @@ export function createFlushField(
       case "qrcode": {
         // content format from toZPL: "{ec}A,{data}"  e.g. "QA,https://example.com"
         const ec = (content[0] ?? "Q") as QrCodeProps["errorCorrection"];
-        const data = content.slice(3); // skip "{ec}A,"
+        const data = content.slice(3);
         objects.push(
           makeObj(
             "qrcode",
@@ -547,10 +500,7 @@ export function createFlushField(
       }
     }
 
-    // Apply the pending `^FN{n}` slot (if any) to the field we just
-    // pushed. Reuse an existing Variable when its fnNumber matches —
-    // ZPL templates often reference the same slot multiple times,
-    // and the binding should funnel to one Variable, not duplicates.
+    // Bind pending ^FN slot; existing Variable for same fnNumber is reused.
     if (s.comment.fnNumber !== null) {
       const justPushed = objects[objects.length - 1];
       if (justPushed) {
