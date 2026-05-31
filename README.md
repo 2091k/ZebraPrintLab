@@ -134,8 +134,6 @@ Both `.zpl` and `.json` round-trip cleanly. `.zpl` preserves all printable conte
 | Configuration & persistence | 0 / 5 |
 | Hardware / Host comm / RFID / Network | 0 / 67 |
 
-The full label-design path (layout, fields, barcodes, variables, templates) is complete. Hardware-tuning categories grow with the Printer Settings modal; the four 0% buckets at the bottom require a Tauri build for bidirectional printer I/O.
-
 ---
 
 ## Limitations
