@@ -1,4 +1,4 @@
-import { createBarcode1D } from './barcode1d';
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 import { formatUpcEanExtensionHri } from './hriFormatters';
 import { UPC_SUPP_TEXT_ABOVE_GAP_DOTS } from '../components/Canvas/bwipConstants';
 export type { Barcode1DProps as UpcEanExtensionProps } from './barcode1d';
@@ -14,7 +14,8 @@ export type { Barcode1DProps as UpcEanExtensionProps } from './barcode1d';
  *  or 5 digits (bwip-js / the printer reject other lengths).
  *  Default '51999' = $19.99 in the ISBN price-code form, the
  *  dominant use case. */
-export const upcEanExtension = createBarcode1D({
+
+export const upcEanExtensionConfig: Barcode1DConfig = {
   label: 'UPC/EAN extension',
   icon: 'EXT',
   defaultContent: '51999',
@@ -31,4 +32,6 @@ export const upcEanExtension = createBarcode1D({
     aboveGapDots: UPC_SUPP_TEXT_ABOVE_GAP_DOTS,
     formatHri: formatUpcEanExtensionHri,
   },
-});
+};
+
+export const upcEanExtension = createBarcode1DCore(upcEanExtensionConfig);

@@ -1,9 +1,9 @@
-import { createBarcode1D } from "./barcode1d";
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 import { formatLogmarsHri } from "./hriFormatters";
 import { LOGMARS_TEXT_ABOVE_GAP_DOTS } from "../components/Canvas/bwipConstants";
 export type { Barcode1DProps as LogmarsProps } from "./barcode1d";
 
-export const logmars = createBarcode1D({
+export const logmarsConfig: Barcode1DConfig = {
   label: "LOGMARS",
   icon: "LOG",
   defaultContent: "LOGMARS1",
@@ -20,4 +20,6 @@ export const logmars = createBarcode1D({
     aboveGapDots: LOGMARS_TEXT_ABOVE_GAP_DOTS,
     formatHri: formatLogmarsHri,
   },
-});
+};
+
+export const logmars = createBarcode1DCore(logmarsConfig);

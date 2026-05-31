@@ -1,7 +1,7 @@
-import { createBarcode1D } from './barcode1d';
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 export type { Barcode1DProps as Code93Props } from './barcode1d';
 
-export const code93 = createBarcode1D({
+export const code93Config: Barcode1DConfig = {
   label: 'Code 93',
   icon: '|93|',
   defaultContent: 'CODE93',
@@ -13,4 +13,6 @@ export const code93 = createBarcode1D({
     const check = p.checkDigit ? 'Y' : 'N';
     return `^BA${p.rotation},${p.height},${interp},N,${check}`;
   },
-});
+};
+
+export const code93 = createBarcode1DCore(code93Config);

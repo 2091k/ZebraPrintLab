@@ -21,13 +21,13 @@ describe("registry isolation baseline", () => {
   });
 
   it("split entries surface no PropertiesPanel on the Core map", () => {
-    // Derived from `<type>.panel.tsx` filenames so each new split is
-    // auto-enforced. Stage 6 will assert this against every key once
-    // all entries are split.
+    // Derived from `<type>.panel.tsx` filenames whose stem matches a
+    // registry key (filters out factory files like barcode1d.panel.tsx).
+    // Stage 6 will assert this against every key once all entries are split.
     const panelFiles = import.meta.glob("./*.panel.tsx", { eager: false });
-    const splitTypes = Object.keys(panelFiles).map((p) =>
-      p.replace(/^\.\//, "").replace(/\.panel\.tsx$/, ""),
-    );
+    const splitTypes = Object.keys(panelFiles)
+      .map((p) => p.replace(/^\.\//, "").replace(/\.panel\.tsx$/, ""))
+      .filter((type) => type in ObjectRegistry);
     expect(splitTypes.length, "at least one split entry").toBeGreaterThan(0);
     for (const type of splitTypes) {
       expect(ObjectRegistry[type], `Core entry for "${type}"`).not.toHaveProperty(

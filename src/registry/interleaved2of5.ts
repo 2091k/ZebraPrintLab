@@ -1,7 +1,7 @@
-import { createBarcode1D } from './barcode1d';
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 export type { Barcode1DProps as Interleaved2of5Props } from './barcode1d';
 
-export const interleaved2of5 = createBarcode1D({
+export const interleaved2of5Config: Barcode1DConfig = {
   label: 'Interleaved 2 of 5',
   icon: 'I25',
   defaultContent: '12345678',
@@ -14,4 +14,6 @@ export const interleaved2of5 = createBarcode1D({
     const check = p.checkDigit ? 'Y' : 'N';
     return `^B2${p.rotation},${p.height},${interp},N,${check}`;
   },
-});
+};
+
+export const interleaved2of5 = createBarcode1DCore(interleaved2of5Config);

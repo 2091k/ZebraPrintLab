@@ -1,7 +1,7 @@
-import { createBarcode1D } from "./barcode1d";
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 export type { Barcode1DProps as PlesseyProps } from "./barcode1d";
 
-export const plessey = createBarcode1D({
+export const plesseyConfig: Barcode1DConfig = {
   label: "Plessey",
   icon: "PLS",
   defaultContent: "12345678",
@@ -16,4 +16,6 @@ export const plessey = createBarcode1D({
     const check = p.checkDigit ? "Y" : "N";
     return `^BP${p.rotation},${check},${p.height},${interp},N`;
   },
-});
+};
+
+export const plessey = createBarcode1DCore(plesseyConfig);

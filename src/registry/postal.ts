@@ -1,7 +1,7 @@
-import { createBarcode1D } from "./barcode1d";
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 export type { Barcode1DProps as PostalProps } from "./barcode1d";
 
-export const postal = createBarcode1D({
+export const postalConfig: Barcode1DConfig = {
   label: "POSTNET",
   icon: "✉Z",
   defaultContent: "12345",
@@ -14,4 +14,6 @@ export const postal = createBarcode1D({
     // ^BZ{orientation},{height},{interp},{startStop}
     return `^BZ${p.rotation},${p.height},${interp},N`;
   },
-});
+};
+
+export const postal = createBarcode1DCore(postalConfig);

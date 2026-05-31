@@ -1,7 +1,7 @@
-import { createBarcode1D } from "./barcode1d";
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 export type { Barcode1DProps as CodabarProps } from "./barcode1d";
 
-export const codabar = createBarcode1D({
+export const codabarConfig: Barcode1DConfig = {
   label: "Codabar",
   icon: "CBA",
   defaultContent: "A12345A",
@@ -14,4 +14,6 @@ export const codabar = createBarcode1D({
     const check = p.checkDigit ? "Y" : "N";
     return `^BK${p.rotation},${check},${p.height},${interp},N`;
   },
-});
+};
+
+export const codabar = createBarcode1DCore(codabarConfig);

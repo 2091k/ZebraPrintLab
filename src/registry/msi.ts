@@ -1,7 +1,7 @@
-import { createBarcode1D } from "./barcode1d";
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 export type { Barcode1DProps as MsiProps } from "./barcode1d";
 
-export const msi = createBarcode1D({
+export const msiConfig: Barcode1DConfig = {
   label: "MSI",
   icon: "MSI",
   defaultContent: "12345678",
@@ -20,4 +20,6 @@ export const msi = createBarcode1D({
     const checkType = p.checkDigit ? "A" : "N";
     return `^BM${p.rotation},${checkType},${p.height},${interp},N`;
   },
-});
+};
+
+export const msi = createBarcode1DCore(msiConfig);

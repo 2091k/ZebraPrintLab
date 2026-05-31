@@ -1,7 +1,7 @@
-import { createBarcode1D } from "./barcode1d";
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 export type { Barcode1DProps as Industrial2of5Props } from "./barcode1d";
 
-export const industrial2of5 = createBarcode1D({
+export const industrial2of5Config: Barcode1DConfig = {
   label: "Industrial 2 of 5",
   icon: "I25",
   defaultContent: "12345678",
@@ -13,4 +13,6 @@ export const industrial2of5 = createBarcode1D({
     const interp = p.printInterpretation ? "Y" : "N";
     return `^BI${p.rotation},${p.height},${interp},N`;
   },
-});
+};
+
+export const industrial2of5 = createBarcode1DCore(industrial2of5Config);

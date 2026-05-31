@@ -1,8 +1,8 @@
-import { createBarcode1D } from './barcode1d';
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 import { formatUpceHri } from './hriFormatters';
 export type { Barcode1DProps as UpcEProps } from './barcode1d';
 
-export const upce = createBarcode1D({
+export const upceConfig: Barcode1DConfig = {
   label: 'UPC-E',
   icon: 'UPE',
   defaultContent: '012345',
@@ -18,4 +18,6 @@ export const upce = createBarcode1D({
     return `^B9${p.rotation},${p.height},${interp},Y`;
   },
   hri: { formatHri: formatUpceHri },
-});
+};
+
+export const upce = createBarcode1DCore(upceConfig);

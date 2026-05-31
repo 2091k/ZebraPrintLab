@@ -1,7 +1,7 @@
-import { createBarcode1D } from "./barcode1d";
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 export type { Barcode1DProps as PlanetProps } from "./barcode1d";
 
-export const planet = createBarcode1D({
+export const planetConfig: Barcode1DConfig = {
   label: "Planet Code",
   icon: "✉P",
   defaultContent: "12345678901",
@@ -13,4 +13,6 @@ export const planet = createBarcode1D({
     const interp = p.printInterpretation ? "Y" : "N";
     return `^B5${p.rotation},${p.height},${interp},N`;
   },
-});
+};
+
+export const planet = createBarcode1DCore(planetConfig);

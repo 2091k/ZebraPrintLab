@@ -1,11 +1,11 @@
-import { createBarcode1D } from './barcode1d';
+import { createBarcode1DCore, type Barcode1DConfig } from './barcode1d';
 import type { ContentSpec } from './contentSpec';
 import { formatCode39Hri } from './hriFormatters';
 export type { Barcode1DProps as Code39Props } from './barcode1d';
 
 const code39Spec: ContentSpec = { charset: '0-9A-Za-z\\-. $/+%' };
 
-export const code39 = createBarcode1D({
+export const code39Config: Barcode1DConfig = {
   label: 'Code 39',
   icon: '|·|',
   defaultContent: 'CODE39',
@@ -19,4 +19,6 @@ export const code39 = createBarcode1D({
     return `^B3${p.rotation},${check},${p.height},${interp},N`;
   },
   hri: { formatHri: formatCode39Hri },
-});
+};
+
+export const code39 = createBarcode1DCore(code39Config);
