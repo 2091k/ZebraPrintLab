@@ -17,7 +17,6 @@ import {
   type LabelObject,
   type Page,
 } from '../types/Group';
-import { fetchPreview, labelaryErrorMessage } from '../lib/labelary';
 import {
   rewriteTemplateMarkers,
   applyObjectChanges,
@@ -33,6 +32,8 @@ import {
 } from './slices/printerProfileSlice';
 import { createUiSlice, type UiSlice } from './slices/uiSlice';
 import { createSelectionSlice, type SelectionSlice } from './slices/selectionSlice';
+import { createPreviewSlice, type PreviewSlice } from './slices/previewSlice';
+export { __resetPreviewCacheForTests } from './slices/previewSlice';
 import {
   nextFreeFnNumber,
   FN_NUMBER_MIN,
@@ -42,8 +43,6 @@ import {
   type CsvMapping,
 } from '../types/Variable';
 import { forgetImport, type CsvParseResult } from '../lib/csvImport';
-import { buildActiveCsvRow } from '../lib/variableBinding';
-import { buildPreviewZpl } from '../lib/printPreview';
 
 /** Snapshot of an imported CSV plus the row the canvas is currently
  *  previewing. Distinct from the Variable→header mapping (which lives
@@ -60,27 +59,10 @@ export interface CsvDataset {
 export type { ObjectChanges };
 export type { Variable, VariableInput };
 
-/** Labelary-backed canvas overlay. While `active`, the canvas renders
- *  the Labelary-rendered PNG in place of the editor objects so the user
- *  can A/B compare design vs. printed output at the same scale. The
- *  fetch happens on entry and the snapshot is frozen for the lifetime
- *  of the active session — no live refresh — because the comparison
- *  loses meaning if the underlying design shifts under it. */
-export type PreviewMode =
-  | { status: 'idle' }
-  | { status: 'loading' }
-  | { status: 'active'; url: string }
-  | { status: 'error'; error: string };
-
 interface LabelStateBase {
   label: LabelConfig;
   pages: Page[];
   currentPageIndex: number;
-
-  /** State of the Labelary canvas overlay. `idle` is the editor default;
-   *  `loading`/`active`/`error` mean the comparison overlay is in play and
-   *  editor surfaces should be visually locked. */
-  previewMode: PreviewMode;
 
   clipboard: LabelObject[];
   pasteCount: number;
@@ -212,19 +194,10 @@ interface LabelStateBase {
   removePage: (index: number) => void;
   duplicatePage: (index: number) => void;
   setCurrentPage: (index: number) => void;
-
-  /** Start a preview session: render the current page's objects to ZPL,
-   *  fetch the Labelary PNG, swap status to `active` on success or
-   *  `error` on failure. Should only be called when `previewMode.status`
-   *  is `idle` or `error` (the toggle button enforces this). */
-  enterPreviewMode: () => Promise<void>;
-  /** End a preview session: revoke the cached blob URL and reset to
-   *  `idle`. Safe to call from any non-`idle` status. */
-  exitPreviewMode: () => void;
 }
 
 /** Composed store shape: base fields + every extracted slice. */
-export type LabelState = LabelStateBase & PrinterProfileSlice & UiSlice & SelectionSlice;
+export type LabelState = LabelStateBase & PrinterProfileSlice & UiSlice & SelectionSlice & PreviewSlice;
 
 export {
   currentObjects,
@@ -235,42 +208,6 @@ export {
   selectCanBatchExport,
 } from './labelStore.selectors';
 import { currentObjects, selectPreviewLocksEditor } from './labelStore.selectors';
-
-/** Single-entry cache for the Labelary preview blob URL, keyed by the
- *  exact ZPL string that produced it. Module-level rather than store-
- *  state because the blob URL is a non-serialisable side-effect handle:
- *  persisting it through `partialize` would resurrect a stale identifier
- *  across reloads, and including it in Zustand state would churn every
- *  selector that observes the store.
- *
- *  The closure owns the URL: `set` revokes the previous blob before
- *  replacing it, so callers can't leak by forgetting to clean up. */
-const previewCache = (() => {
-  let entry: { zpl: string; url: string } | null = null;
-  return {
-    /** Returns the cached URL if `zpl` matches the cached key, else null. */
-    get(zpl: string): string | null {
-      return entry && entry.zpl === zpl ? entry.url : null;
-    },
-    /** Stores a fresh (zpl, url) pair. Revokes the previously held URL
-     *  if any so the browser can reclaim the blob memory. */
-    set(zpl: string, url: string): void {
-      if (entry) URL.revokeObjectURL(entry.url);
-      entry = { zpl, url };
-    },
-    /** Test-only: drop the cached entry without revoking, so a fresh
-     *  test starts from a clean slate. Production callers should never
-     *  need this — `set` handles eviction on its own. */
-    _resetForTests(): void {
-      entry = null;
-    },
-  };
-})();
-
-/** Test-only handle to clear the preview cache between test cases.
- *  Marked underscored to discourage production use; the cache otherwise
- *  manages its own lifecycle via the `set` revoke path. */
-export const __resetPreviewCacheForTests = (): void => previewCache._resetForTests();
 
 export function migrateLegacy(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
@@ -402,6 +339,7 @@ export const useLabelStore = create<LabelState>()(
       ...createPrinterProfileSlice(set, get, store),
       ...createUiSlice(set, get, store),
       ...createSelectionSlice(set, get, store),
+      ...createPreviewSlice(set, get, store),
       label: { widthMm: 100, heightMm: 60, dpmm: 8 },
       pages: [{ objects: [] }],
       currentPageIndex: 0,
@@ -411,7 +349,6 @@ export const useLabelStore = create<LabelState>()(
       csvDataset: null,
       csvMapping: null,
       csvMappingModalOpen: false,
-      previewMode: { status: 'idle' },
 
       addObject: (type, position = { x: 50, y: 50 }, propsOverride) => {
         if (selectPreviewLocksEditor(get())) return;
@@ -1045,56 +982,6 @@ export const useLabelStore = create<LabelState>()(
       openCsvMappingModal: () => set({ csvMappingModalOpen: true }),
       closeCsvMappingModal: () => set({ csvMappingModalOpen: false }),
 
-      enterPreviewMode: async () => {
-        const state = get();
-        if (state.previewMode.status === 'loading' || state.previewMode.status === 'active') {
-          return;
-        }
-        const objs = currentObjects(state);
-        const active = buildActiveCsvRow(state.csvDataset, state.csvMapping);
-        const zpl = buildPreviewZpl(state.label, objs, state.variables, active);
-        // Toggling preview off then on for a side-by-side pixel compare
-        // shouldn't burn an API call when nothing changed.
-        const cachedUrl = previewCache.get(zpl);
-        if (cachedUrl !== null) {
-          set({ previewMode: { status: 'active', url: cachedUrl } });
-          return;
-        }
-        set({ previewMode: { status: 'loading' } });
-        // Two checks guard against settling a stale request: the status
-        // check catches an exit that happened during the fetch; the
-        // reference-equality check catches the harder case where the
-        // user exited AND re-entered with a different design (so status
-        // is `loading` again — but for a different request whose result
-        // we mustn't overwrite). The store mutates label and objects
-        // immutably, so a reference change is the cheapest, most
-        // precise way to detect a divergent state — no string rebuild
-        // needed, and a page switch is caught too (different array).
-        const isStale = (): boolean =>
-          get().previewMode.status !== 'loading' ||
-          get().label !== state.label ||
-          currentObjects(get()) !== objs;
-        try {
-          const url = await fetchPreview(zpl, state.label);
-          if (isStale()) {
-            URL.revokeObjectURL(url);
-            return;
-          }
-          previewCache.set(zpl, url);
-          set({ previewMode: { status: 'active', url } });
-        } catch (e) {
-          if (isStale()) return;
-          set({ previewMode: { status: 'error', error: labelaryErrorMessage(e) } });
-        }
-      },
-
-      exitPreviewMode: () =>
-        set((state) => {
-          // The blob URL is owned by `previewCache` and intentionally
-          // kept alive across exits so a re-toggle skips the fetch.
-          if (state.previewMode.status === 'idle') return {};
-          return { previewMode: { status: 'idle' } };
-        }),
     }),
     {
       name: 'zpl-designer-session',
