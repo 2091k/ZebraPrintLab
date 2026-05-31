@@ -34,6 +34,8 @@ import { createUiSlice, type UiSlice } from './slices/uiSlice';
 import { createSelectionSlice, type SelectionSlice } from './slices/selectionSlice';
 import { createPreviewSlice, type PreviewSlice } from './slices/previewSlice';
 export { __resetPreviewCacheForTests } from './slices/previewSlice';
+import { createCsvSlice, type CsvSlice } from './slices/csvSlice';
+import { forgetImport } from '../lib/csvImport';
 import {
   nextFreeFnNumber,
   FN_NUMBER_MIN,
@@ -42,20 +44,6 @@ import {
   type VariableInput,
   type CsvMapping,
 } from '../types/Variable';
-import { forgetImport, type CsvParseResult } from '../lib/csvImport';
-
-/** Snapshot of an imported CSV plus the row the canvas is currently
- *  previewing. Distinct from the Variable→header mapping (which lives
- *  in the design file): this struct is the data itself, transient. */
-export interface CsvDataset {
-  headers: string[];
-  rows: string[][];
-  source: CsvParseResult['source'];
-  /** Index into `rows`. Clamped to [0, rows.length - 1] by setters.
-   *  Meaningless when `rows.length === 0`, callers should guard. */
-  activeRowIndex: number;
-}
-
 export type { ObjectChanges };
 export type { Variable, VariableInput };
 
@@ -71,23 +59,6 @@ interface LabelStateBase {
    *  `variableId`; export emits `^FN{fnNumber}^FD{defaultValue}^FS`.
    *  Order is user-controlled and surfaces in the Variables panel. */
   variables: Variable[];
-
-  /** Session-only CSV data feeding the template variables. Holds the
-   *  most-recently-imported file's headers + rows plus the
-   *  active-row index the canvas previews. Intentionally NOT in
-   *  persist-partialize: the file path can't be reopened on rehydrate,
-   *  and persisting raw rows would bloat localStorage and leak
-   *  customer data into the design file. User re-imports per session.
-   *  Mapping (which variable maps to which header) lives separately
-   *  in `csvMapping` and round-trips with the design. */
-  csvDataset: CsvDataset | null;
-
-  /** Persistent mapping between Variables and CSV column names.
-   *  Lives in the design file (round-tripped via Save/Load) so a
-   *  user can re-import the same CSV structure later without
-   *  re-mapping. Null when no CSV has ever been imported into this
-   *  design. */
-  csvMapping: CsvMapping | null;
 
   addObject: (
     type: string,
@@ -152,38 +123,6 @@ interface LabelStateBase {
    *  full strip-and-unbind dance. */
   setVariables: (variables: Variable[]) => void;
 
-  /** Replace the entire CSV dataset and reset the active row to 0. */
-  loadCsv: (result: CsvParseResult) => void;
-  /** Drop the current CSV dataset (session-only data). Does not touch
-   *  `csvMapping`; the mapping persists in the design so the next CSV
-   *  with the same headers reuses it silently. */
-  clearCsv: () => void;
-  /** Move the canvas preview to a different row. Out-of-range indices
-   *  are silently clamped to [0, rows.length - 1]; no-op when no CSV
-   *  is loaded. */
-  setActiveRow: (index: number) => void;
-  /** Set or replace the CSV mapping on the current design. Passing
-   *  null clears the mapping (e.g. user picks "Reset mapping"). */
-  setCsvMapping: (mapping: CsvMapping | null) => void;
-
-  /** Atomic commit for the mapping-modal Apply path: updates
-   *  variables, dataset, mapping and active row in a single store
-   *  mutation so zundo records one undo step (instead of four) and
-   *  no intermediate state ever leaks. */
-  applyMappingDraft: (input: {
-    variables: Variable[];
-    dataset: CsvParseResult;
-    mapping: CsvMapping;
-    activeRowIndex: number;
-  }) => void;
-
-  /** Whether the CSV mapping modal is currently open. Lives in the
-   *  store so the auto-open trigger (after import, on header
-   *  mismatch) and the manual-open trigger (button in Variables
-   *  panel) can share one flag without prop drilling. */
-  csvMappingModalOpen: boolean;
-  openCsvMappingModal: () => void;
-  closeCsvMappingModal: () => void;
   moveObjectForward: (id: string) => void;
   moveObjectBackward: (id: string) => void;
   moveObjectToFront: (id: string) => void;
@@ -197,7 +136,7 @@ interface LabelStateBase {
 }
 
 /** Composed store shape: base fields + every extracted slice. */
-export type LabelState = LabelStateBase & PrinterProfileSlice & UiSlice & SelectionSlice & PreviewSlice;
+export type LabelState = LabelStateBase & PrinterProfileSlice & UiSlice & SelectionSlice & PreviewSlice & CsvSlice;
 
 export {
   currentObjects,
@@ -340,15 +279,13 @@ export const useLabelStore = create<LabelState>()(
       ...createUiSlice(set, get, store),
       ...createSelectionSlice(set, get, store),
       ...createPreviewSlice(set, get, store),
+      ...createCsvSlice(set, get, store),
       label: { widthMm: 100, heightMm: 60, dpmm: 8 },
       pages: [{ objects: [] }],
       currentPageIndex: 0,
       clipboard: [],
       pasteCount: 0,
       variables: [],
-      csvDataset: null,
-      csvMapping: null,
-      csvMappingModalOpen: false,
 
       addObject: (type, position = { x: 50, y: 50 }, propsOverride) => {
         if (selectPreviewLocksEditor(get())) return;
@@ -920,67 +857,6 @@ export const useLabelStore = create<LabelState>()(
             ...(nextMapping !== state.csvMapping ? { csvMapping: nextMapping } : {}),
           };
         }),
-
-      loadCsv: (result) =>
-        set(() => ({
-          csvDataset: {
-            headers: result.headers,
-            rows: result.rows,
-            source: result.source,
-            activeRowIndex: 0,
-          },
-        })),
-
-      clearCsv: () => {
-        forgetImport();
-        set({ csvDataset: null });
-      },
-
-      setActiveRow: (index) =>
-        set((state) => {
-          const ds = state.csvDataset;
-          if (!ds || ds.rows.length === 0) return {};
-          const clamped = Math.max(0, Math.min(index, ds.rows.length - 1));
-          if (clamped === ds.activeRowIndex) return {};
-          return { csvDataset: { ...ds, activeRowIndex: clamped } };
-        }),
-
-      setCsvMapping: (mapping) => set({ csvMapping: mapping }),
-
-      applyMappingDraft: ({ variables, dataset, mapping, activeRowIndex }) =>
-        set((state) => {
-          if (selectPreviewLocksEditor(state)) return {};
-          // Mirror setVariables' validation; bulk-replace with a
-          // duplicate would leave the panel unfixable.
-          const names = new Set<string>();
-          const fns = new Set<number>();
-          for (const v of variables) {
-            const trimmed = v.name.trim();
-            if (trimmed === '' || names.has(trimmed)) return {};
-            names.add(trimmed);
-            if (v.fnNumber < FN_NUMBER_MIN || v.fnNumber > FN_NUMBER_MAX) return {};
-            if (fns.has(v.fnNumber)) return {};
-            fns.add(v.fnNumber);
-          }
-          const rows = dataset.rows;
-          const clampedIdx =
-            rows.length === 0
-              ? 0
-              : Math.max(0, Math.min(activeRowIndex, rows.length - 1));
-          return {
-            variables,
-            csvDataset: {
-              headers: dataset.headers,
-              rows: dataset.rows,
-              source: dataset.source,
-              activeRowIndex: clampedIdx,
-            },
-            csvMapping: mapping,
-          };
-        }),
-
-      openCsvMappingModal: () => set({ csvMappingModalOpen: true }),
-      closeCsvMappingModal: () => set({ csvMappingModalOpen: false }),
 
     }),
     {

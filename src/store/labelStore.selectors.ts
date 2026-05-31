@@ -1,6 +1,6 @@
 import type { LabelObject } from '../types/Group';
 import { isDefaultLabelaryHost } from '../lib/labelary';
-import type { CsvDataset } from './labelStore';
+import type { CsvDataset } from './slices/csvSlice';
 import type { CsvMapping } from '../types/Variable';
 import type { LabelState } from './labelStore';
 import type { PageState } from './labelStore.internals';
