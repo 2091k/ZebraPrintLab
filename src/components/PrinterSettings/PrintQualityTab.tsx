@@ -1,15 +1,7 @@
 import { useT } from "../../lib/useT";
 import { useLabelStore } from "../../store/labelStore";
-import {
-  DARKNESS_INSTANT_RANGE,
-  DARKNESS_PERMANENT_RANGE,
-  HEAD_TEST_INTERVAL_RANGE,
-  PRINT_ORIENTATION_VALUES,
-  SPEED_RANGE,
-  TEAR_OFF_ADJUST_RANGE,
-  isPrintOrientation,
-  type PrintOrientation,
-} from "../../types/ObjectType";
+import { DARKNESS_INSTANT_RANGE, DARKNESS_PERMANENT_RANGE, PRINT_ORIENTATION_VALUES, SPEED_RANGE, isPrintOrientation, type PrintOrientation } from "../../types/LabelConfig";
+import { HEAD_TEST_INTERVAL_RANGE, TEAR_OFF_ADJUST_RANGE } from "../../types/PrinterProfile";
 import {
   BoundedIntControl,
   ZplBoundedIntInput,

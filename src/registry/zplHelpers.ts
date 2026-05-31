@@ -1,4 +1,5 @@
-import type { LabelObjectBase, ZplEmitContext } from "../types/ObjectType";
+import type { LabelObjectBase } from "../types/LabelObject";
+import type { ZplEmitContext } from "../types/ZplEmit";
 import { hasTemplateMarkers, markersToEmbeds } from "../lib/fnTemplate";
 import { hasClockMarkers, markersToTokens } from "../lib/fcTemplate";
 import { modelToZplAnchor } from "../lib/labelGeometry/textPositionTransforms";

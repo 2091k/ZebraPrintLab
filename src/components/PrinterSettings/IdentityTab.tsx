@@ -2,7 +2,7 @@ import { useId } from "react";
 import { useT } from "../../lib/useT";
 import { useLabelStore } from "../../store/labelStore";
 import { inputCls, labelCls } from "../ui/formStyles";
-import { PRINTER_NAME_MAX_LEN } from "../../types/ObjectType";
+import { PRINTER_NAME_MAX_LEN } from "../../types/PrinterProfile";
 import {
   ZplCommandLabel,
   ZplField,

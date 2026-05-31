@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { code49 } from './code49';
 import type { Code49Props } from './code49';
-import type { LabelObjectBase } from '../types/ObjectType';
-
+import type { LabelObjectBase } from '../types/LabelObject';
 /**
  * The four-layer height-clamp contract for ^B4 Code 49:
  *   - UI:        NumberInput min/max blocks invalid typing

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { zlibSync } from 'fflate';
 import { generateZPL, generateMultiPageZPL, generateBatchZpl } from './zplGenerator';
 import { parseZPL } from './zplParser';
-import type { LabelConfig } from '../types/ObjectType';
+import type { LabelConfig } from '../types/LabelConfig';
 import type { GroupObject, LabelObject } from '../types/Group';
 import { defined, props } from '../test/helpers';
 

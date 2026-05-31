@@ -2,14 +2,7 @@ import { useId } from "react";
 import { useT } from "../../lib/useT";
 import { useLabelStore } from "../../store/labelStore";
 import { inputCls } from "../ui/formStyles";
-import {
-  PRINTER_LOCALE_VALUES,
-  ZPL_MODE_VALUES,
-  isPrinterLocale,
-  isZplMode,
-  type PrinterLocale,
-  type ZplMode,
-} from "../../types/ObjectType";
+import { PRINTER_LOCALE_VALUES, ZPL_MODE_VALUES, isPrinterLocale, isZplMode, type PrinterLocale, type ZplMode } from "../../types/PrinterProfile";
 import {
   ZplCommandLabel,
   ZplEnumSelect,

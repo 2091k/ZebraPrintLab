@@ -1,4 +1,6 @@
-import type { ObjectTypeDefinition, ObjectGroup, LabelObjectBase, HriBehavior } from '../types/ObjectType';
+import type { ObjectGroup, LabelObjectBase } from '../types/LabelObject';
+import type { ObjectTypeDefinition } from '../types/ObjectType';
+import type { HriBehavior } from '../types/ZplEmit';
 import { useT } from '../lib/useT';
 import type { Translations } from '../locales';
 import { labelCls } from '../components/Properties/styles';

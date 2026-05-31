@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { commitUniformScaleTransform } from './transformHelpers';
-import type { LabelObjectBase, TransformContext } from '../types/ObjectType';
-
+import type { LabelObjectBase } from '../types/LabelObject';
+import type { TransformContext } from '../types/ZplEmit';
 const ctx = (sx: number, sy: number): TransformContext => ({
   sx, sy, snap: (n) => n, nodeHeight: 0, anchor: null,
 });

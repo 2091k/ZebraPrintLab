@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { symbol, type SymbolProps } from "./symbol";
-import type { LabelObjectBase } from "../types/ObjectType";
-
+import type { LabelObjectBase } from "../types/LabelObject";
 const baseObj = (
   props: Partial<SymbolProps> = {},
 ): LabelObjectBase & { props: SymbolProps } => ({

@@ -2,8 +2,7 @@ import { describe, it, expect } from "vitest";
 import { generateZPL } from "./zplGenerator";
 import { generateSetupScript } from "./zplSetupScript";
 import { parseZPL } from "./zplParser";
-import type { LabelConfig } from "../types/ObjectType";
-
+import type { LabelConfig } from "../types/LabelConfig";
 const base: LabelConfig = { widthMm: 100, heightMm: 50, dpmm: 8 };
 
 describe("Printer Settings Modal Tab 1 — generator", () => {

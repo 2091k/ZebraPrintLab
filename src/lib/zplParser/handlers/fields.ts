@@ -1,4 +1,4 @@
-import type { CustomFontMapping } from "../../../types/ObjectType";
+import type { CustomFontMapping } from "../../../types/LabelConfig";
 import { FN_NUMBER_MAX, FN_NUMBER_MIN } from "../../../types/Variable";
 import type { SerialProps } from "../../../registry/serial";
 import { getDefaultTextH, getDefaultTextW, type ParserState } from "../context";

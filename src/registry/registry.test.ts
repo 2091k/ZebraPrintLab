@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ObjectRegistry } from './index';
-import type { LabelObjectBase } from '../types/ObjectType';
+import type { LabelObjectBase } from '../types/LabelObject';
 import { defined } from '../test/helpers';
 
 function makeObj<P extends object>(type: string, props: P, overrides?: Partial<LabelObjectBase>): LabelObjectBase & { props: P } {

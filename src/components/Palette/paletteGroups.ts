@@ -1,5 +1,4 @@
-import type { ObjectGroup } from '../../types/ObjectType';
-
+import type { ObjectGroup } from '../../types/LabelObject';
 export const PALETTE_GROUPS = [
   { key: 'text' as ObjectGroup, labelKey: 'groupText' },
   { key: 'code-1d' as ObjectGroup, labelKey: 'groupCode1d' },

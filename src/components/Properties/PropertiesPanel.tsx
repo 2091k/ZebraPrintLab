@@ -23,7 +23,7 @@ import { AlignButtons } from "./AlignButtons";
 import { VariableBindingControl } from "../Variables/VariableBindingControl";
 import { applyBindingToObject, lookupBoundVariable } from "../../lib/variableBinding";
 import { inputCls, labelCls } from "./styles";
-import type { LabelConfig } from "../../types/ObjectType";
+import type { LabelConfig } from "../../types/LabelConfig";
 import {
   getAvailableFontIds,
   stripDrivePrefix,

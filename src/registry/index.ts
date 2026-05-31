@@ -1,4 +1,5 @@
-import type { ObjectTypeDefinition, LabelObjectBase } from '../types/ObjectType';
+import type { LabelObjectBase } from '../types/LabelObject';
+import type { ObjectTypeDefinition } from '../types/ObjectType';
 import { text } from './text.tsx';
 import type { TextProps } from './text.tsx';
 import { code128 } from './code128.tsx';

@@ -1,4 +1,5 @@
-import type { ObjectTypeDefinition, LabelObjectBase } from '../types/ObjectType';
+import type { LabelObjectBase } from '../types/LabelObject';
+import type { ObjectTypeDefinition } from '../types/ObjectType';
 import { useT } from '../lib/useT';
 import { inputCls, labelCls } from '../components/Properties/styles';
 import { fieldPos, fdFieldFor } from './zplHelpers';

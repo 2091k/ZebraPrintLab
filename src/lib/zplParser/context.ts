@@ -1,5 +1,5 @@
 import type { LabelObject } from "../../types/Group";
-import type { LabelConfig } from "../../types/ObjectType";
+import type { LabelConfig } from "../../types/LabelConfig";
 import type { PrinterProfile } from "../../types/PrinterProfile";
 import type { Variable } from "../../types/Variable";
 import type { TextProps } from "../../registry/text";

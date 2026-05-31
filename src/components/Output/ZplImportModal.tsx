@@ -4,7 +4,7 @@ import { importZplText } from '../../lib/zplImportService';
 import { readFileAsText } from '../../lib/readFile';
 import { useLabelStore } from '../../store/labelStore';
 import type { Page } from '../../types/Group';
-import type { LabelConfig } from '../../types/ObjectType';
+import type { LabelConfig } from '../../types/LabelConfig';
 import type { PrinterProfile } from '../../types/PrinterProfile';
 import type { Variable } from '../../types/Variable';
 import { formatReportAsText, type ImportReport, type ImportResult } from '../../lib/importReport';

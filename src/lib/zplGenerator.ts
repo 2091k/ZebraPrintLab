@@ -12,7 +12,8 @@ import {
   isDefaultClockChars,
 } from './fcTemplate';
 import { getObjectStringContent } from './variableBinding';
-import type { CustomFontMapping, LabelConfig, ZplEmitContext } from '../types/ObjectType';
+import type { CustomFontMapping, LabelConfig } from '../types/LabelConfig';
+import type { ZplEmitContext } from '../types/ZplEmit';
 import type { Variable } from '../types/Variable';
 import { isGroup, type LabelObject, type Page } from '../types/Group';
 import { getFontBytes } from './fontCache';

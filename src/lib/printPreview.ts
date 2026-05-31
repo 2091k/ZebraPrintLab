@@ -1,6 +1,6 @@
 import { generateZPL } from "./zplGenerator";
 import { fetchPreview } from "./labelary";
-import type { LabelConfig } from "../types/ObjectType";
+import type { LabelConfig } from "../types/LabelConfig";
 import type { LabelObject } from "../types/Group";
 import type { Variable } from "../types/Variable";
 import { applyBindingToTree, type ActiveCsvRow } from "./variableBinding";

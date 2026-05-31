@@ -1,7 +1,8 @@
 import { create, useStore } from 'zustand';
 import { temporal } from 'zundo';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { LabelConfig, ObjectChanges } from '../types/ObjectType';
+import type { LabelConfig } from '../types/LabelConfig';
+import type { ObjectChanges } from '../types/LabelObject';
 import {
   EMPTY_PRINTER_PROFILE,
   PRINTER_PROFILE_FIELDS,

@@ -1,4 +1,4 @@
-import type { LabelConfig } from "../../types/ObjectType";
+import type { LabelConfig } from "../../types/LabelConfig";
 import type { LabelObject } from "../../types/Group";
 import type { Variable } from "../../types/Variable";
 import type { PrinterProfile } from "../../types/PrinterProfile";

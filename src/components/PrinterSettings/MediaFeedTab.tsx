@@ -1,20 +1,6 @@
 import { useT } from "../../lib/useT";
 import { useLabelStore } from "../../store/labelStore";
-import {
-  MAX_LABEL_LENGTH_RANGE,
-  MEDIA_FEED_VALUES,
-  MEDIA_MODE_VALUES,
-  MEDIA_TRACKING_VALUES,
-  MEDIA_TYPE_VALUES,
-  isMediaFeedMode,
-  isMediaMode,
-  isMediaTracking,
-  isMediaType,
-  type MediaFeedMode,
-  type MediaMode,
-  type MediaTracking,
-  type MediaType,
-} from "../../types/ObjectType";
+import { MAX_LABEL_LENGTH_RANGE, MEDIA_FEED_VALUES, MEDIA_MODE_VALUES, MEDIA_TRACKING_VALUES, MEDIA_TYPE_VALUES, isMediaFeedMode, isMediaMode, isMediaTracking, isMediaType, type MediaFeedMode, type MediaMode, type MediaTracking, type MediaType } from "../../types/LabelConfig";
 import {
   ZplBoundedIntInput,
   ZplCheckbox,

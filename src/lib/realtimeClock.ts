@@ -18,11 +18,8 @@
  *     reject, and the parser never round-trips an impossible date.
  */
 
-// `realtimeClockIsoRegex` is declared on `labelConfigSchema` side
-// (src/types/ObjectType.ts) so the schema can hoist the shape check
-// without `types → lib` cross-import. Re-export here for consumers
-// that want both the validator and the parse/format pair together.
-export { realtimeClockIsoRegex } from '../types/ObjectType';
+// Re-export so consumers can grab the regex and parse/format helpers together.
+export { realtimeClockIsoRegex } from '../types/PrinterProfile';
 
 /** Returns the current local time as the ISO datetime-local string
  *  shape (`YYYY-MM-DDTHH:MM:SS`). Used by the ^ST "Now" button to
