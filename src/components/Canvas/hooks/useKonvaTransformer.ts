@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import type Konva from "konva";
 import { pxToDots } from "../../../lib/coordinates";
 import { getCurrentObjects } from "../../../store/labelStore";
-import { BARCODE_1D_TYPES, STACKED_2D_TYPES, ObjectRegistry } from "../../../registry";
+import { BARCODE_1D_TYPES, STACKED_2D_TYPES, getEntry } from "../../../registry";
 import type { LeafObject } from "../../../registry";
 import type { ObjectChanges } from "../../../store/labelStore";
 import { findObjectById, isGroup } from "../../../types/Group";
@@ -189,7 +189,7 @@ export function useKonvaTransformer({
       : undefined;
   const resizeEnabled = selectedIds.length <= 1 && !singleSelected?.locked;
   const singleType = singleSelected?.type ?? "";
-  const uniformScaleDef = ObjectRegistry[singleType]?.uniformScale;
+  const uniformScaleDef = getEntry(singleType)?.uniformScale;
   const isUniformScale =
     typeof uniformScaleDef === "function"
       ? !!singleSelected && !isGroup(singleSelected) &&
@@ -198,7 +198,7 @@ export function useKonvaTransformer({
   const enabledAnchors: string[] | undefined =
     selectedIds.length > 1
       ? []
-      : ObjectRegistry[singleType]?.heightLocked
+      : getEntry(singleType)?.heightLocked
         ? []
         : BARCODE_1D_TYPES.has(singleType)
           ? [
@@ -347,7 +347,7 @@ export function useKonvaTransformer({
       x: positionDidMove(renderedXDots, oldRendered.x) ? snap(modelPos.x) : obj.x,
       y: positionDidMove(renderedYDots, oldRendered.y) ? snap(modelPos.y) : obj.y,
     };
-    const commit = ObjectRegistry[obj.type]?.commitTransform;
+    const commit = getEntry(obj.type)?.commitTransform;
     if (commit) {
       const propChanges = commit(obj, {
         sx,

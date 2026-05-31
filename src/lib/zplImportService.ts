@@ -1,6 +1,6 @@
 import { parseZPL, type ImportFinding, type ImportFindingKind, type ImportReport } from "./zplParser";
 import { pruneUndefined } from "./pruneUndefined";
-import type { LabelConfig } from "../types/ObjectType";
+import type { LabelConfig } from "../types/LabelConfig";
 import type { PrinterProfile } from "../types/PrinterProfile";
 import type { LabelObject } from "../types/Group";
 import { uniqueVariableName, type Variable } from "../types/Variable";

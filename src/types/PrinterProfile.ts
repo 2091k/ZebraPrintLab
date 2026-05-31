@@ -1,24 +1,67 @@
 import { z } from 'zod';
-import {
-  CLOCK_FORMAT_VALUES,
-  CLOCK_LANGUAGE_VALUES,
-  CLOCK_MODE_VALUES,
-  CLOCK_TOLERANCE_RANGE,
-  HEAD_TEST_INTERVAL_RANGE,
-  PRINTER_LOCALE_VALUES,
-  PRINTER_NAME_MAX_LEN,
-  TEAR_OFF_ADJUST_RANGE,
-  ZPL_MODE_VALUES,
-  intInRange,
-  realtimeClockIsoRegex,
-  setupScriptSafeStringRegex,
-} from './ObjectType';
+import { intInRange, makeEnumGuard } from './typeHelpers';
+
+/** ^ST real-time clock value (HTML5 datetime-local shape). */
+export const realtimeClockIsoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
+
+/** ^KN printer-name length cap per Zebra spec (16 characters). */
+export const PRINTER_NAME_MAX_LEN = 16;
+
+/** Character class of "dangerous" chars in Setup-Script free-string
+ *  positionals. Includes ZPL command-introducer chars (`^`, `~`),
+ *  the positional delimiter `,`, newlines, and control codes. */
+// String-based char class (passed to `new RegExp`) so the
+// no-control-regex rule does not fire here.
+const SETUP_SCRIPT_UNSAFE_CHARS = '\\^~,\\r\\n\\x00-\\x1f';
+/** Anchored, positive form for `z.string().regex(...)` schema checks. */
+export const setupScriptSafeStringRegex = new RegExp(`^[^${SETUP_SCRIPT_UNSAFE_CHARS}]+$`);
+/** Unanchored, negative form for parser-side dropping. */
+export const setupScriptUnsafeCharRegex = new RegExp(`[${SETUP_SCRIPT_UNSAFE_CHARS}]`);
+
+/** ^KL printer locale — two-letter ISO 639-1 shorthands per Zebra spec. */
+export const PRINTER_LOCALE_VALUES = [
+  'EN', 'ES', 'FR', 'DE', 'IT', 'NO', 'PT', 'SV', 'DK', 'SP2', 'NL', 'FI', 'JP', 'KR', 'SC', 'TC', 'RU', 'PL', 'CZ', 'RO', 'HU',
+] as const;
+export type PrinterLocale = (typeof PRINTER_LOCALE_VALUES)[number];
+export const isPrinterLocale = makeEnumGuard(PRINTER_LOCALE_VALUES);
+
+/** ^SZ ZPL mode selector. `2` = ZPL II, `1` = legacy. */
+export const ZPL_MODE_VALUES = ['1', '2'] as const;
+export type ZplMode = (typeof ZPL_MODE_VALUES)[number];
+export const isZplMode = makeEnumGuard(ZPL_MODE_VALUES);
+
+/** ^SL clock mode selector. Three shapes (S / T / numeric 1..999); generator
+ *  and parser fold the numeric variant back into the single positional slot.
+ *    S    = Start-Time mode — stamp captured when ^XA arrives
+ *    T    = Time-Now mode — stamp captured at queue dequeue
+ *    TOL  = Time-Now with tolerance window in seconds */
+export const CLOCK_MODE_VALUES = ['S', 'T', 'TOL'] as const;
+export type ClockMode = (typeof CLOCK_MODE_VALUES)[number];
+export const isClockMode = makeEnumGuard(CLOCK_MODE_VALUES);
+
+/** ^SL tolerance (seconds) when `clockMode === 'TOL'`. */
+export const CLOCK_TOLERANCE_RANGE = { min: 1, max: 999 } as const;
+/** UX default seeded when the user picks TOL mode. Matches `^SL60,1` spec example. */
+export const CLOCK_TOLERANCE_DEFAULT = 60;
+
+/** ^SL clock-language codes. Numeric 1..13 per spec; stored as digit chars. */
+export const CLOCK_LANGUAGE_VALUES = [
+  '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
+] as const;
+export type ClockLanguage = (typeof CLOCK_LANGUAGE_VALUES)[number];
+export const isClockLanguage = makeEnumGuard(CLOCK_LANGUAGE_VALUES);
+
+/** ^KD clock-print format. 0=disabled, 1=MM/DD/YY 24h, 2=MM/DD/YY 12h AM/PM, 3=DD/MM/YY 24h. */
+export const CLOCK_FORMAT_VALUES = ['0', '1', '2', '3'] as const;
+export type ClockFormat = (typeof CLOCK_FORMAT_VALUES)[number];
+export const isClockFormat = makeEnumGuard(CLOCK_FORMAT_VALUES);
+
+export const HEAD_TEST_INTERVAL_RANGE = { min: 0, max: 10000 } as const;
+export const TEAR_OFF_ADJUST_RANGE = { min: -120, max: 120 } as const;
 
 /** Printer-installation profile: EEPROM-persistent printer-state
  *  fields separated from `labelConfig` so design files don't leak
- *  per-install values (printer name, locale, …) when shared.
- *  Single profile today; the shape is ready to fan out into a
- *  Record<id, PrinterProfile> when multi-profile lands. */
+ *  per-install values when shared. */
 export const printerProfileSchema = z.object({
   reprintAfterError: z.enum(['Y', 'N']).optional(),
   headTestInterval: intInRange(HEAD_TEST_INTERVAL_RANGE).optional(),

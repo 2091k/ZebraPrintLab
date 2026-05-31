@@ -1,5 +1,4 @@
-import type { CustomFontMapping, LabelConfig } from "../types/ObjectType";
-
+import type { CustomFontMapping, LabelConfig } from "../types/LabelConfig";
 /** Characters NOT allowed in a ^CW alias. Used as a strip-pattern on
  *  user input so a single source of truth feeds both UI surfaces (the
  *  Custom Fonts editor and the Fonts-tab inline alias). The schema

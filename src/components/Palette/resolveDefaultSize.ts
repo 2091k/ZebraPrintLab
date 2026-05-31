@@ -1,6 +1,6 @@
 import { mmToDots } from "../../lib/coordinates";
-import type { LabelConfig, ObjectTypeDefinition } from "../../types/ObjectType";
-
+import type { LabelConfig } from "../../types/LabelConfig";
+import type { ObjectTypeDefinition } from "../../types/ObjectType";
 /** Resolve a registry `defaultSize` declaration to dot units against
  *  the active label config. Spec-fixed-physical-size symbols (e.g.
  *  Maxicode) declare `widthMm`/`heightMm` so their footprint stays

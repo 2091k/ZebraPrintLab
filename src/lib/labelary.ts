@@ -1,5 +1,4 @@
-import type { LabelConfig } from '../types/ObjectType';
-
+import type { LabelConfig } from '../types/LabelConfig';
 const TIMEOUT_MS = 10_000;
 const DEFAULT_HOST = 'https://api.labelary.com';
 

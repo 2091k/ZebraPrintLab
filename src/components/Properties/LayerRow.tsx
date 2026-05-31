@@ -10,7 +10,7 @@ import {
   LinkSlashIcon,
   VariableIcon,
 } from '@heroicons/react/16/solid';
-import { ObjectRegistry } from '../../registry';
+import { getEntry } from '../../registry';
 import { isGroup, type LabelObject } from '../../types/Group';
 import { useT } from '../../lib/useT';
 import { useLabelStore } from '../../store/labelStore';
@@ -69,7 +69,7 @@ export function LayerRow({
   onRename,
 }: LayerRowProps) {
   const t = useT();
-  const def = ObjectRegistry[obj.type];
+  const def = getEntry(obj.type);
   const groupRow = isGroup(obj);
   // Variable badge: small {x} glyph next to the type icon when the leaf
   // is bound, with the variable name as a tooltip. Lets the user scan

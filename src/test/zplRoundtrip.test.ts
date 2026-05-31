@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import { parseZPL } from '../lib/zplParser';
 import { generateZPL } from '../lib/zplGenerator';
-import type { LabelConfig } from '../types/ObjectType';
+import type { LabelConfig } from '../types/LabelConfig';
 import { props } from './helpers';
 
 const BASE: LabelConfig = { widthMm: 100, heightMm: 60, dpmm: 8 };

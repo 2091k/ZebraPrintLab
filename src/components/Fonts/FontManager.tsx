@@ -17,8 +17,7 @@ import {
 import { inputCls, labelCls } from '../Properties/styles';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
-import type { CustomFontMapping } from '../../types/ObjectType';
-
+import type { CustomFontMapping } from '../../types/LabelConfig';
 const PATHS_DATALIST_ID = 'zpl-custom-font-paths';
 
 const addBtnCls =

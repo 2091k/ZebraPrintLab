@@ -1,5 +1,5 @@
 import { mmToDots } from './coordinates';
-import { ObjectRegistry } from '../registry';
+import { getEntry } from '../registry';
 import { fdField, stripZplCommandChars } from '../registry/zplHelpers';
 import {
   extractTemplateRefs,
@@ -12,7 +12,8 @@ import {
   isDefaultClockChars,
 } from './fcTemplate';
 import { getObjectStringContent } from './variableBinding';
-import type { CustomFontMapping, LabelConfig, ZplEmitContext } from '../types/ObjectType';
+import type { CustomFontMapping, LabelConfig } from '../types/LabelConfig';
+import type { ZplEmitContext } from '../types/ZplEmit';
 import type { Variable } from '../types/Variable';
 import { isGroup, type LabelObject, type Page } from '../types/Group';
 import { getFontBytes } from './fontCache';
@@ -418,7 +419,7 @@ export function generateZPL(
   const emitLeaf = (obj: LabelObject): string[] => {
     if (obj.includeInExport === false) return [];
     if (isGroup(obj)) return obj.children.flatMap(emitLeaf);
-    const zpl = ObjectRegistry[obj.type]?.toZPL(obj, emitCtx) ?? '';
+    const zpl = getEntry(obj.type)?.toZPL(obj, emitCtx) ?? '';
     return obj.comment
       ? [`^FX${stripZplCommandChars(obj.comment)}\n${zpl}`]
       : [zpl];

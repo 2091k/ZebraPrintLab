@@ -1,7 +1,7 @@
 import { resolvePreviewFontName } from "../customFonts";
 import { getFontFamily } from "../fontCache";
 import type { LabelObject } from "../../types/Group";
-import type { LabelConfig } from "../../types/ObjectType";
+import type { LabelConfig } from "../../types/LabelConfig";
 import { measureInkWidthPx } from "./measureTextDots";
 import { ZPL_FONT_HEIGHT_TO_CSS_RATIO } from "./textPositionTransforms";
 

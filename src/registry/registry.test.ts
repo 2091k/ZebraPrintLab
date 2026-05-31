@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { ObjectRegistry } from './index';
-import type { LabelObjectBase } from '../types/ObjectType';
+import { ObjectRegistry, getEntry } from './index';
+import type { LabelObjectBase } from '../types/LabelObject';
 import { defined } from '../test/helpers';
 
 function makeObj<P extends object>(type: string, props: P, overrides?: Partial<LabelObjectBase>): LabelObjectBase & { props: P } {
@@ -298,7 +298,7 @@ describe('barcode rotation in ZPL output', () => {
     ['aztec',      '^B0R,', 'R', { magnification: 4, ecLevel: 0 }],
     ['codabar',    '^BKR,', 'R', { height: 100, moduleWidth: 2, printInterpretation: true, checkDigit: false }],
   ])('%s emits orientation in command param', (type, expected, rotation, baseProps) => {
-    const def = defined(ObjectRegistry[type]);
+    const def = defined(getEntry(type));
     const content = type === 'ean13' ? '590123412345' : 'X';
     const zpl = def.toZPL(makeObj(type, { content, ...baseProps, rotation }));
     expect(zpl).toContain(expected);
@@ -502,7 +502,7 @@ describe('ObjectRegistry', () => {
 
   it('contains all expected object types', () => {
     for (const type of expectedTypes) {
-      expect(ObjectRegistry[type]).toBeDefined();
+      expect(getEntry(type)).toBeDefined();
     }
   });
 

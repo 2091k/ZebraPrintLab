@@ -1,15 +1,5 @@
-import type { LabelConfig } from "../../../types/ObjectType";
-import {
-  DARKNESS_INSTANT_RANGE,
-  DARKNESS_PERMANENT_RANGE,
-  MAX_LABEL_LENGTH_RANGE,
-  SPEED_RANGE,
-  isMediaFeedMode,
-  isMediaMode,
-  isMediaTracking,
-  isMediaType,
-  isPrintOrientation,
-} from "../../../types/ObjectType";
+import type { LabelConfig } from "../../../types/LabelConfig";
+import { DARKNESS_INSTANT_RANGE, DARKNESS_PERMANENT_RANGE, MAX_LABEL_LENGTH_RANGE, SPEED_RANGE, isMediaFeedMode, isMediaMode, isMediaTracking, isMediaType, isPrintOrientation } from "../../../types/LabelConfig";
 import { parseIntOrUndef } from "../../inputParse";
 import { firstChar, inRange, int, strParam } from "../helpers";
 import type { Handler } from "../types";

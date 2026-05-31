@@ -1,7 +1,8 @@
 import { create, useStore } from 'zustand';
 import { temporal } from 'zundo';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { LabelConfig, ObjectChanges } from '../types/ObjectType';
+import type { LabelConfig } from '../types/LabelConfig';
+import type { ObjectChanges } from '../types/LabelObject';
 import {
   EMPTY_PRINTER_PROFILE,
   PRINTER_PROFILE_FIELDS,
@@ -11,7 +12,7 @@ import {
 import { pruneUndefined } from '../lib/pruneUndefined';
 import type { Unit } from '../lib/units';
 import type { ViewRotation } from '../components/Canvas/rotationGeometry';
-import { ObjectRegistry } from '../registry';
+import { getEntry } from '../registry';
 import {
   isGroup,
   mapObjectById,
@@ -114,7 +115,7 @@ function applyObjectChanges(
     // tree updates reach them through their own mapObjectById call.
     return { ...obj, ...changes } as LabelObject;
   }
-  const normalize = ObjectRegistry[obj.type]?.normalizeChanges;
+  const normalize = getEntry(obj.type)?.normalizeChanges;
   const normalized = normalize ? normalize(obj, changes) : changes;
   return {
     ...obj,
@@ -684,7 +685,7 @@ export const useLabelStore = create<LabelState>()(
 
       addObject: (type, position = { x: 50, y: 50 }, propsOverride) => {
         if (selectPreviewLocksEditor(get())) return;
-        const definition = ObjectRegistry[type];
+        const definition = getEntry(type);
         if (!definition) return;
 
         const obj = {

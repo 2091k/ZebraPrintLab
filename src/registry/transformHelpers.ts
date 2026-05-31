@@ -1,5 +1,5 @@
-import type { LabelObjectBase, TransformContext } from "../types/ObjectType";
-
+import type { LabelObjectBase } from "../types/LabelObject";
+import type { TransformContext } from "../types/ZplEmit";
 /** Clamp a value into [min, max]. */
 export function clamp(min: number, max: number, value: number): number {
   return Math.max(min, Math.min(max, value));

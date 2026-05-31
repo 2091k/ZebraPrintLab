@@ -1,15 +1,5 @@
 import type { PrinterProfile } from "../../../types/PrinterProfile";
-import {
-  CLOCK_TOLERANCE_RANGE,
-  HEAD_TEST_INTERVAL_RANGE,
-  PRINTER_NAME_MAX_LEN,
-  TEAR_OFF_ADJUST_RANGE,
-  isClockFormat,
-  isClockLanguage,
-  isPrinterLocale,
-  isZplMode,
-  setupScriptUnsafeCharRegex,
-} from "../../../types/ObjectType";
+import { CLOCK_TOLERANCE_RANGE, HEAD_TEST_INTERVAL_RANGE, PRINTER_NAME_MAX_LEN, TEAR_OFF_ADJUST_RANGE, isClockFormat, isClockLanguage, isPrinterLocale, isZplMode, setupScriptUnsafeCharRegex } from "../../../types/PrinterProfile";
 import { parseIntOrUndef } from "../../inputParse";
 import { parseRealtimeClock } from "../../realtimeClock";
 import { inRange, strParam } from "../helpers";

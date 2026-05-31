@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { labelConfigSchema, labelObjectBaseSchema, type LabelConfig } from "../types/ObjectType";
+import { labelConfigSchema, type LabelConfig } from "../types/LabelConfig";
+import { labelObjectBaseSchema } from "../types/LabelObject";
 import {
   variableSchema,
   csvMappingSchema,

@@ -3,7 +3,8 @@ import { InformationCircleIcon, FolderPlusIcon } from "@heroicons/react/16/solid
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import type { LabelCanvasHandle } from "../Canvas/LabelCanvas";
 import type { AlignAxis } from "../../lib/alignment";
-import { ObjectRegistry } from "../../registry";
+import { getEntry } from "../../registry";
+import { getPanel } from "../../registry/panels";
 import { canGroupSelection, findObjectById, isGroup } from "../../types/Group";
 import { BWIP_APPROX_SEVERITY } from "../Canvas/bwipConstants";
 import { stripZplCommandChars } from "../../registry/zplHelpers";
@@ -23,7 +24,7 @@ import { AlignButtons } from "./AlignButtons";
 import { VariableBindingControl } from "../Variables/VariableBindingControl";
 import { applyBindingToObject, lookupBoundVariable } from "../../lib/variableBinding";
 import { inputCls, labelCls } from "./styles";
-import type { LabelConfig } from "../../types/ObjectType";
+import type { LabelConfig } from "../../types/LabelConfig";
 import {
   getAvailableFontIds,
   stripDrivePrefix,
@@ -152,8 +153,8 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
     );
   }
 
-  const definition = ObjectRegistry[obj.type];
-  const TypePanel = definition?.PropertiesPanel;
+  const definition = getEntry(obj.type);
+  const TypePanel = getPanel(obj.type)?.PropertiesPanel;
   const groupRow = isGroup(obj);
   // Groups intentionally have no registry entry; surface a folder-shape
   // glyph here so the header reads as something rather than blank.

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { ObjectRegistry } from "./index";
 import { parseZPL } from "../lib/zplParser";
 import { validateMaxicodeBwip } from "../components/Canvas/bwipHelpers";
-import type { LabelObjectBase } from "../types/ObjectType";
+import type { LabelObjectBase } from "../types/LabelObject";
 import type { MaxicodeProps } from "./maxicode";
 import { defined } from "../test/helpers";
 
