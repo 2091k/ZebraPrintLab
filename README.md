@@ -17,7 +17,7 @@ Writing ZPL by hand is tedious: cryptic commands, dot coordinates, no visual fee
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="docs/screenshot-light.png">
-  <img alt="Zebra Print Lab — designer with a sample label" src="docs/screenshot-light.png">
+  <img alt="Zebra Print Lab: designer with a sample label" src="docs/screenshot-light.png">
 </picture>
 
 ---
@@ -132,9 +132,9 @@ Both `.zpl` and `.json` round-trip cleanly. `.zpl` preserves all printable conte
 | Text & fonts | 6 / 14 |
 | Print quality | 3 / 14 |
 | Configuration & persistence | 0 / 5 |
-| Hardware / Host comm / RFID / Network | 0 / 67 (waits on a native build — bidirectional printer connection) |
+| Hardware / Host comm / RFID / Network | 0 / 67 |
 
-The full label-design path — layout, fields, barcodes, variables, templates — is complete. Hardware-tuning categories grow with the Printer Settings modal; the four 0% buckets at the bottom require a Tauri build for bidirectional printer I/O.
+The full label-design path (layout, fields, barcodes, variables, templates) is complete. Hardware-tuning categories grow with the Printer Settings modal; the four 0% buckets at the bottom require a Tauri build for bidirectional printer I/O.
 
 ---
 
