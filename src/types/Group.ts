@@ -1,5 +1,6 @@
-import type { LeafObject } from '../registry';
+import type { LeafObject } from '../registry/leafObject';
 import type { LabelObjectBase } from './LabelObject';
+export type { LeafObject };
 /**
  * A Group is the only non-leaf node in the object tree. Leaves render and
  * export themselves; groups exist purely as structural containers that
