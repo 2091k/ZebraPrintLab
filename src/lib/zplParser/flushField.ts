@@ -168,9 +168,6 @@ export function createFlushField(
               comment,
             ),
           );
-          s.field.snPending = false;
-          s.field.snIncrement = 1;
-          s.field.snMode = "SN";
           resetFB();
           break;
         }
