@@ -19,15 +19,11 @@ import {
   type LabelObject,
   type Page,
 } from '../types/Group';
-import type { LocaleCode } from '../locales';
 import { isDefaultLabelaryHost, fetchPreview, labelaryErrorMessage } from '../lib/labelary';
 import {
   rewriteTemplateMarkers,
   applyObjectChanges,
   insertAt,
-  detectLocale,
-  detectInitialTheme,
-  thirdPartyDefaults,
   DUPLICATE_OFFSET_DOTS,
   buildOffsetCopies,
   cloneChildrenFresh,
@@ -38,6 +34,7 @@ import {
   createPrinterProfileSlice,
   type PrinterProfileSlice,
 } from './slices/printerProfileSlice';
+import { createUiSlice, type UiSlice } from './slices/uiSlice';
 import {
   nextFreeFnNumber,
   FN_NUMBER_MIN,
@@ -115,18 +112,6 @@ interface LabelStateBase {
   pages: Page[];
   currentPageIndex: number;
   selectedIds: string[];
-  locale: LocaleCode;
-  /** UI theme. Initial value seeded from prefers-color-scheme; once toggled
-   *  the explicit choice persists. */
-  theme: ThemePreference;
-  canvasSettings: CanvasSettings;
-  /** Per-service gates for third-party network calls. Sourced from build-time
-   *  env on every load (see thirdPartyDefaults) and intentionally not in
-   *  partialize — until a settings UI lets users explicitly opt in/out, the
-   *  build is authoritative. */
-  thirdParty: { labelary: boolean };
-  /** Whether the user has dismissed the one-time Labelary privacy notice. */
-  labelaryNoticeAcknowledged: boolean;
 
   /** State of the Labelary canvas overlay. `idle` is the editor default;
    *  `loading`/`active`/`error` mean the comparison overlay is in play and
@@ -196,11 +181,6 @@ interface LabelStateBase {
    *  via the layers panel, instead of having to select-then-shortcut. */
   addGroup: () => void;
   setLabelConfig: (config: Partial<LabelConfig>) => void;
-  setLocale: (locale: LocaleCode) => void;
-  setTheme: (theme: ThemePreference) => void;
-  setThirdPartyEnabled: (service: 'labelary', enabled: boolean) => void;
-  acknowledgeLabelaryNotice: () => void;
-  setCanvasSettings: (settings: Partial<CanvasSettings>) => void;
   loadDesign: (
     label: LabelConfig,
     pages: Page[],
@@ -273,37 +253,6 @@ interface LabelStateBase {
   duplicatePage: (index: number) => void;
   setCurrentPage: (index: number) => void;
 
-  /** Right-sidebar tab currently visible. Lives in the store so canvas
-   *  interactions (e.g. double-click a text field) can drive the
-   *  panel — the sidebar itself reads + writes via `setSidebarTab`. */
-  sidebarTab: 'properties' | 'layers' | 'variables' | 'fonts';
-  setSidebarTab: (tab: LabelState['sidebarTab']) => void;
-  printerSettingsTab: PrinterSettingsTab | null;
-  setPrinterSettingsTab: (tab: PrinterSettingsTab | null) => void;
-  /** Cross-component trigger for the "send to Zebra" dialog. The
-   *  source picks which ZPL gets fed in: `label` for the regular
-   *  multi-page label output (the default — file-menu entry), or
-   *  `setupScript` for the EEPROM-persistent printer config (the
-   *  PrinterSettingsModal's send button). `null` keeps the dialog
-   *  closed. Centralised in the store so the modal can trigger
-   *  without prop-drilling through the AppShell hook tree. */
-  zebraPrintSource: 'label' | 'setupScript' | null;
-  openZebraPrint: (source: 'label' | 'setupScript') => void;
-  closeZebraPrint: () => void;
-  /** One-shot focus request scoped to a single object. Each call sets a
-   *  fresh object (incrementing `nonce` so consumers can re-fire even
-   *  for the same id) and TemplateContentInput's effect compares its
-   *  own `objectId` prop to `id` so only the editor for the requested
-   *  object takes focus. `null` is the steady state — kept transient
-   *  in memory only, never persisted. */
-  editorFocusRequest: { id: string; nonce: number } | null;
-  /** Fire a focus request for the given object's content editor. Does
-   *  NOT touch the sidebar tab — the caller is responsible for
-   *  composing `setSidebarTab('properties')` alongside this when the
-   *  request would otherwise land on an unmounted editor. Decoupled
-   *  so the store doesn't assert which panel hosts the editor. */
-  requestContentEditorFocus: (id: string) => void;
-
   /** Start a preview session: render the current page's objects to ZPL,
    *  fetch the Labelary PNG, swap status to `active` on success or
    *  `error` on failure. Should only be called when `previewMode.status`
@@ -315,7 +264,7 @@ interface LabelStateBase {
 }
 
 /** Composed store shape: base fields + every extracted slice. */
-export type LabelState = LabelStateBase & PrinterProfileSlice;
+export type LabelState = LabelStateBase & PrinterProfileSlice & UiSlice;
 
 export const currentObjects = (state: PageState): LabelObject[] =>
   state.pages[state.currentPageIndex]?.objects ?? [];
@@ -525,6 +474,7 @@ export const useLabelStore = create<LabelState>()(
     persist(
     (set, get, store) => ({
       ...createPrinterProfileSlice(set, get, store),
+      ...createUiSlice(set, get, store),
       label: { widthMm: 100, heightMm: 60, dpmm: 8 },
       pages: [{ objects: [] }],
       currentPageIndex: 0,
@@ -535,12 +485,7 @@ export const useLabelStore = create<LabelState>()(
       csvDataset: null,
       csvMapping: null,
       csvMappingModalOpen: false,
-      locale: detectLocale(),
-      theme: detectInitialTheme(),
-      thirdParty: thirdPartyDefaults(),
-      labelaryNoticeAcknowledged: false,
       previewMode: { status: 'idle' },
-      canvasSettings: { showGrid: false, snapEnabled: false, snapSizeMm: 1, zoom: 1, unit: 'mm', viewRotation: 0, csvRenderMode: 'preview' },
 
       addObject: (type, position = { x: 50, y: 50 }, propsOverride) => {
         if (selectPreviewLocksEditor(get())) return;
@@ -963,19 +908,6 @@ export const useLabelStore = create<LabelState>()(
           return { label: { ...state.label, ...config } };
         }),
 
-
-      setLocale: (locale) => set({ locale }),
-
-      setTheme: (theme) => set({ theme }),
-
-      setThirdPartyEnabled: (service, enabled) =>
-        set((state) => ({ thirdParty: { ...state.thirdParty, [service]: enabled } })),
-
-      acknowledgeLabelaryNotice: () => set({ labelaryNoticeAcknowledged: true }),
-
-      setCanvasSettings: (settings) =>
-        set((state) => ({ canvasSettings: { ...state.canvasSettings, ...settings } })),
-
       addPage: () =>
         set((state) => {
           if (selectPreviewLocksEditor(state)) return {};
@@ -1053,25 +985,6 @@ export const useLabelStore = create<LabelState>()(
           if (index === state.currentPageIndex) return {};
           return { currentPageIndex: index, selectedIds: [] };
         }),
-
-      // sidebarTab is transient — not in partialize, so a reload
-      // resets it to 'properties' (the safe default for any selection
-      // state that survived rehydration).
-      sidebarTab: 'properties',
-      setSidebarTab: (tab) => set({ sidebarTab: tab }),
-      printerSettingsTab: null,
-      setPrinterSettingsTab: (tab) => set({ printerSettingsTab: tab }),
-      zebraPrintSource: null,
-      openZebraPrint: (source) => set({ zebraPrintSource: source }),
-      closeZebraPrint: () => set({ zebraPrintSource: null }),
-      editorFocusRequest: null,
-      requestContentEditorFocus: (id) =>
-        set((state) => ({
-          editorFocusRequest: {
-            id,
-            nonce: (state.editorFocusRequest?.nonce ?? 0) + 1,
-          },
-        })),
 
       addVariable: (input) => {
         const state = get();
