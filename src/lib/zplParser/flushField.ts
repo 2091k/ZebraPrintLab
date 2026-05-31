@@ -44,7 +44,7 @@ export interface FlushFieldDeps {
 }
 
 /** Factory for the field-emit closure: `flushField` (the giant switch
- *  that turns cached `s.fieldType` + `s.pendingFD` into a pushed
+ *  that turns cached `s.field.fieldType` + `s.field.pendingFD` into a pushed
  *  `LabelObject`). The helpers `bootstrapVariable` + `applyFnEmbeds`
  *  stay private to the closure — they're only called from inside
  *  flushField (the ^FN-embed bootstrap happens at flush time, not
@@ -54,7 +54,7 @@ export function createFlushField(
   deps: FlushFieldDeps,
 ): () => void {
   const { commitPendingReverseBg, getReverseFlag, takeComment } = deps;
-  const { objects, variables } = s;
+  const { objects, variables } = s.result;
 
   /** Get-or-create a Variable for the given FN slot. Three call
    *  sites — bare `^FN^FD^FS` declarations, single-bind fields,
@@ -96,7 +96,7 @@ export function createFlushField(
     // `<e><n>,...<e>`. A naked `<e><digits>` without a closing `<e>`
     // would otherwise bootstrap a phantom Variable from a literal
     // like `#5 special` and then dangle (no marker emitted).
-    const e = s.embedChar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const e = s.format.embedChar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const embedRe = new RegExp(`${e}(\\d+)(?:,[^${e}]*)?${e}`, "g");
     let m: RegExpExecArray | null;
     const seen = new Set<number>();
@@ -109,40 +109,40 @@ export function createFlushField(
     if (seen.size === 0) return payload;
     for (const n of seen) bootstrapVariable(n, "");
     const fnToName = new Map(variables.map((v) => [v.fnNumber, v.name]));
-    return embedsToMarkers(payload, s.embedChar, fnToName);
+    return embedsToMarkers(payload, s.format.embedChar, fnToName);
   };
 
   const resetFB = () => {
-    s.fbWidth = 0;
-    s.fbLines = 1;
-    s.fbSpacing = 0;
-    s.fbJustify = "L";
+    s.defaults.fbWidth = 0;
+    s.defaults.fbLines = 1;
+    s.defaults.fbSpacing = 0;
+    s.defaults.fbJustify = "L";
   };
 
   const flushField = () => {
-    if (!s.fieldType || s.pendingFD === null) {
+    if (!s.field.fieldType || s.field.pendingFD === null) {
       // Bare `^FN<n>^FD<default>^FS` (no ^FO / ^A) is a Variable
       // declaration, not a field. Register the Variable so the
       // default reaches the Variables panel + downstream resolves,
-      // and clear s.pendingFn so it doesn't leak into the next field.
-      if (s.pendingFn !== null && s.pendingFD !== null) {
-        const decl = s.fhActive
-          ? decodeFH(s.pendingFD, s.fhDelimiter, s.fhDecoder)
-          : s.pendingFD;
-        bootstrapVariable(s.pendingFn, decl, s.pendingFnComment);
-        s.pendingFn = null;
-        s.pendingFnComment = undefined;
+      // and clear s.comment.fnNumber so it doesn't leak into the next field.
+      if (s.comment.fnNumber !== null && s.field.pendingFD !== null) {
+        const decl = s.format.fhActive
+          ? decodeFH(s.field.pendingFD, s.format.fhDelimiter, s.format.fhDecoder)
+          : s.field.pendingFD;
+        bootstrapVariable(s.comment.fnNumber, decl, s.comment.fnComment);
+        s.comment.fnNumber = null;
+        s.comment.fnComment = undefined;
       }
-      s.pendingFD = null;
-      // Clear s.fieldType too so a half-formed field (e.g. `^GS…^FS`
+      s.field.pendingFD = null;
+      // Clear s.field.fieldType too so a half-formed field (e.g. `^GS…^FS`
       // without `^FD`) doesn't leak its kind into the next ^FD that
       // arrives via an unrelated ^FO.
-      s.fieldType = null;
+      s.field.fieldType = null;
       return;
     }
-    const rawDecoded = s.fhActive
-      ? decodeFH(s.pendingFD, s.fhDelimiter, s.fhDecoder)
-      : s.pendingFD;
+    const rawDecoded = s.format.fhActive
+      ? decodeFH(s.field.pendingFD, s.format.fhDelimiter, s.format.fhDecoder)
+      : s.field.pendingFD;
     // Two marker conversions, in order:
     //   1. ^FE-style FN embeds (`#1#` → `«variableName»`), bootstrap
     //      Variables when the FN slot is new — same auto-naming as
@@ -150,19 +150,19 @@ export function createFlushField(
     //   2. ^FC clock tokens (`%d`, `%Y`, …) → `«clock:T»`. Runs after
     //      FN embeds so a payload like `%FN#1#%Y` resolves both.
     const afterFn = applyFnEmbeds(rawDecoded);
-    const content = tokensToMarkers(afterFn, s.clockChars);
-    const posType: "FT" | "FO" = s.positionIsFT ? "FT" : "FO";
+    const content = tokensToMarkers(afterFn, s.format.clockChars);
+    const posType: "FT" | "FO" = s.field.positionIsFT ? "FT" : "FO";
     const comment = takeComment();
 
     // Decode \& line breaks (and \\ escapes) in ^FB text blocks via the
     // shared helper so parser and generator stay symmetric.
-    const decoded = s.fbWidth > 0 ? decodeFbContent(content) : content;
+    const decoded = s.defaults.fbWidth > 0 ? decodeFbContent(content) : content;
 
     // Non-text fields can never be the second half of a reverse-text
     // pair, so flush the stashed bg as a regular box before pushing.
     // Text handles its own collapse-or-commit inline below.
-    if (s.fieldType !== "text") commitPendingReverseBg();
-    switch (s.fieldType) {
+    if (s.field.fieldType !== "text") commitPendingReverseBg();
+    switch (s.field.fieldType) {
       case "text": {
         // ZPL anchors ^FO at cap-top and ^FT at baseline; our internal
         // model stores the Konva render position (EM-top-left) so editor
@@ -170,15 +170,15 @@ export function createFlushField(
         // need the rendered ink width — measure it the same way the
         // renderer does so the round-trip stays exact.
         const { inkWidthDots } = computeTextRenderMetrics({
-          content: s.snPending ? `#${decoded}` : decoded,
-          fontHeight: s.textH,
-          fontWidth: s.textW,
-          printerFontName: s.pendingPrinterFontName,
+          content: s.field.snPending ? `#${decoded}` : decoded,
+          fontHeight: s.field.textH,
+          fontWidth: s.field.textW,
+          printerFontName: s.field.pendingPrinterFontName,
         });
         const modelPos = zplAnchorToModel(
-          s.x,
-          s.y,
-          { fontHeight: s.textH, rotation: s.textRot },
+          s.field.x,
+          s.field.y,
+          { fontHeight: s.field.textH, rotation: s.field.textRot },
           posType,
           inkWidthDots,
         );
@@ -186,7 +186,7 @@ export function createFlushField(
         // Serial fields can't be the second half of a reverse-text pair
         // (no reverse-serial use case in our model), so flush any
         // pending bg as a regular box before pushing the serial.
-        if (s.snPending) {
+        if (s.field.snPending) {
           commitPendingReverseBg();
           objects.push(
             makeObj(
@@ -195,19 +195,19 @@ export function createFlushField(
               modelPos.y,
               {
                 content: decoded,
-                increment: s.snIncrement,
-                fontHeight: s.textH,
-                fontWidth: s.textW,
-                rotation: s.textRot,
-                zplMode: s.snMode,
+                increment: s.field.snIncrement,
+                fontHeight: s.field.textH,
+                fontWidth: s.field.textW,
+                rotation: s.field.textRot,
+                zplMode: s.field.snMode,
               } satisfies SerialProps,
               posType,
               comment,
             ),
           );
-          s.snPending = false;
-          s.snIncrement = 1;
-          s.snMode = "SN";
+          s.field.snPending = false;
+          s.field.snIncrement = 1;
+          s.field.snMode = "SN";
           resetFB();
           break;
         }
@@ -221,46 +221,46 @@ export function createFlushField(
         // regular box so hand-written ZPL with unrelated ^GB+^FR
         // sequences round-trips unchanged. ^FB block-text isn't part of
         // the reverse-text emit so collapsing is skipped there too.
-        const vertical = s.textRot === "R" || s.textRot === "B";
-        const expectedW = vertical ? s.textH : Math.max(1, Math.round(inkWidthDots));
-        const expectedH = vertical ? Math.max(1, Math.round(inkWidthDots)) : s.textH;
+        const vertical = s.field.textRot === "R" || s.field.textRot === "B";
+        const expectedW = vertical ? s.field.textH : Math.max(1, Math.round(inkWidthDots));
+        const expectedH = vertical ? Math.max(1, Math.round(inkWidthDots)) : s.field.textH;
         const collapse =
-          s.pendingReverseBg !== null &&
-          s.frActive &&
-          s.fbWidth === 0 &&
-          s.pendingReverseBg.x === s.x &&
-          s.pendingReverseBg.y === s.y &&
-          Math.abs(s.pendingReverseBg.w - expectedW) <= REVERSE_BBOX_TOLERANCE_DOTS &&
-          Math.abs(s.pendingReverseBg.h - expectedH) <= REVERSE_BBOX_TOLERANCE_DOTS;
+          s.reverseBg !== null &&
+          s.field.frActive &&
+          s.defaults.fbWidth === 0 &&
+          s.reverseBg.x === s.field.x &&
+          s.reverseBg.y === s.field.y &&
+          Math.abs(s.reverseBg.w - expectedW) <= REVERSE_BBOX_TOLERANCE_DOTS &&
+          Math.abs(s.reverseBg.h - expectedH) <= REVERSE_BBOX_TOLERANCE_DOTS;
         // Preserve any comment that was attached to the stashed ^GB
         // (e.g. a `^FX banner` before the bg). Merged with the text's
         // own comment so no import metadata is silently dropped.
         let mergedComment = comment;
         if (collapse) {
-          const bgComment = s.pendingReverseBg?.comment;
+          const bgComment = s.reverseBg?.comment;
           if (bgComment) {
             mergedComment = mergedComment ? `${bgComment}\n${mergedComment}` : bgComment;
           }
-          s.pendingReverseBg = null;
+          s.reverseBg = null;
         } else {
           commitPendingReverseBg();
         }
         const textProps: TextProps = {
           content: decoded,
-          fontHeight: s.textH,
-          fontWidth: s.textW,
-          rotation: s.textRot,
+          fontHeight: s.field.textH,
+          fontWidth: s.field.textW,
+          rotation: s.field.textRot,
           reverse: collapse ? true : getReverseFlag(),
-          printerFontName: s.pendingPrinterFontName,
-          fontId: s.pendingFontId,
+          printerFontName: s.field.pendingPrinterFontName,
+          fontId: s.field.pendingFontId,
         };
-        s.pendingPrinterFontName = undefined;
-        s.pendingFontId = undefined;
-        if (s.fbWidth > 0) {
-          textProps.blockWidth = s.fbWidth;
-          textProps.blockLines = s.fbLines;
-          textProps.blockLineSpacing = s.fbSpacing;
-          textProps.blockJustify = s.fbJustify;
+        s.field.pendingPrinterFontName = undefined;
+        s.field.pendingFontId = undefined;
+        if (s.defaults.fbWidth > 0) {
+          textProps.blockWidth = s.defaults.fbWidth;
+          textProps.blockLines = s.defaults.fbLines;
+          textProps.blockLineSpacing = s.defaults.fbSpacing;
+          textProps.blockJustify = s.defaults.fbJustify;
         }
         objects.push(
           makeObj("text", modelPos.x, modelPos.y, textProps, posType, mergedComment),
@@ -272,15 +272,15 @@ export function createFlushField(
         objects.push(
           makeObj(
             "code128",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              height: s.bcHeight,
-              moduleWidth: s.byModuleWidth,
-              printInterpretation: s.bcInterp,
-              checkDigit: s.bcCheck,
-              rotation: s.bcRotation,
+              height: s.field.bcHeight,
+              moduleWidth: s.defaults.byModuleWidth,
+              printInterpretation: s.field.bcInterp,
+              checkDigit: s.field.bcCheck,
+              rotation: s.field.bcRotation,
             } satisfies Code128Props,
             posType,
             comment,
@@ -291,15 +291,15 @@ export function createFlushField(
         objects.push(
           makeObj(
             "code39",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              height: s.bcHeight,
-              moduleWidth: s.byModuleWidth,
-              printInterpretation: s.bcInterp,
-              checkDigit: s.bcCheck,
-              rotation: s.bcRotation,
+              height: s.field.bcHeight,
+              moduleWidth: s.defaults.byModuleWidth,
+              printInterpretation: s.field.bcInterp,
+              checkDigit: s.field.bcCheck,
+              rotation: s.field.bcRotation,
             } satisfies Code39Props,
             posType,
             comment,
@@ -310,15 +310,15 @@ export function createFlushField(
         objects.push(
           makeObj(
             "ean13",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              height: s.bcHeight,
-              moduleWidth: s.byModuleWidth,
-              printInterpretation: s.bcInterp,
+              height: s.field.bcHeight,
+              moduleWidth: s.defaults.byModuleWidth,
+              printInterpretation: s.field.bcInterp,
               checkDigit: false, // EAN-13 has no user-controlled check digit (^BE auto-appends).
-              rotation: s.bcRotation,
+              rotation: s.field.bcRotation,
             } satisfies Ean13Props,
             posType,
             comment,
@@ -332,13 +332,13 @@ export function createFlushField(
         objects.push(
           makeObj(
             "qrcode",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content: data,
-              magnification: s.qrMag,
+              magnification: s.field.qrMag,
               errorCorrection: ec,
-              rotation: s.bcRotation,
+              rotation: s.field.bcRotation,
             } satisfies QrCodeProps,
             posType,
             comment,
@@ -350,13 +350,13 @@ export function createFlushField(
         objects.push(
           makeObj(
             "datamatrix",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              dimension: s.dmDim,
-              quality: s.dmQuality,
-              rotation: s.bcRotation,
+              dimension: s.field.dmDim,
+              quality: s.field.dmQuality,
+              rotation: s.field.bcRotation,
             } satisfies DataMatrixProps,
             posType,
             comment,
@@ -380,16 +380,16 @@ export function createFlushField(
       case "upcEanExtension":
         objects.push(
           makeObj(
-            s.fieldType,
-            s.x,
-            s.y,
+            s.field.fieldType,
+            s.field.x,
+            s.field.y,
             {
               content,
-              height: s.bcHeight,
-              moduleWidth: s.byModuleWidth,
-              printInterpretation: s.bcInterp,
-              checkDigit: s.bcCheck,
-              rotation: s.bcRotation,
+              height: s.field.bcHeight,
+              moduleWidth: s.defaults.byModuleWidth,
+              printInterpretation: s.field.bcInterp,
+              checkDigit: s.field.bcCheck,
+              rotation: s.field.bcRotation,
             } satisfies Barcode1DProps,
             posType,
             comment,
@@ -400,14 +400,14 @@ export function createFlushField(
         objects.push(
           makeObj(
             "gs1databar",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              moduleWidth: s.byModuleWidth,
-              symbology: s.gsSymbology,
-              segments: s.gsSegments,
-              rotation: s.bcRotation,
+              moduleWidth: s.defaults.byModuleWidth,
+              symbology: s.field.gsSymbology,
+              segments: s.field.gsSegments,
+              rotation: s.field.bcRotation,
             } satisfies Gs1DatabarProps,
             posType,
             comment,
@@ -418,15 +418,15 @@ export function createFlushField(
         objects.push(
           makeObj(
             "pdf417",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              rowHeight: s.pdfRowHeight,
-              securityLevel: s.pdfSecurity,
-              columns: s.pdfColumns,
-              moduleWidth: s.byModuleWidth,
-              rotation: s.bcRotation,
+              rowHeight: s.field.pdfRowHeight,
+              securityLevel: s.field.pdfSecurity,
+              columns: s.field.pdfColumns,
+              moduleWidth: s.defaults.byModuleWidth,
+              rotation: s.field.bcRotation,
             } satisfies Pdf417Props,
             posType,
             comment,
@@ -437,15 +437,15 @@ export function createFlushField(
         objects.push(
           makeObj(
             "code49",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              height: s.bcHeight,
-              moduleWidth: s.byModuleWidth,
-              printInterpretation: s.bcInterp,
-              mode: s.bcCode49Mode,
-              rotation: s.bcRotation,
+              height: s.field.bcHeight,
+              moduleWidth: s.defaults.byModuleWidth,
+              printInterpretation: s.field.bcInterp,
+              mode: s.field.bcCode49Mode,
+              rotation: s.field.bcRotation,
             } satisfies Code49Props,
             posType,
             comment,
@@ -456,13 +456,13 @@ export function createFlushField(
         objects.push(
           makeObj(
             "aztec",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              magnification: s.aztecMag,
+              magnification: s.field.aztecMag,
               ecLevel: 0,
-              rotation: s.bcRotation,
+              rotation: s.field.bcRotation,
             } satisfies AztecProps,
             posType,
             comment,
@@ -473,12 +473,12 @@ export function createFlushField(
         objects.push(
           makeObj(
             "maxicode",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              mode: s.maxicodeMode,
-              rotation: s.bcRotation,
+              mode: s.field.maxicodeMode,
+              rotation: s.field.bcRotation,
             } satisfies MaxicodeProps,
             posType,
             comment,
@@ -489,14 +489,14 @@ export function createFlushField(
         objects.push(
           makeObj(
             "micropdf417",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              moduleWidth: s.byModuleWidth,
-              rowHeight: s.mpdfRowHeight,
+              moduleWidth: s.defaults.byModuleWidth,
+              rowHeight: s.field.mpdfRowHeight,
               mode: 0,
-              rotation: s.bcRotation,
+              rotation: s.field.bcRotation,
             } satisfies MicroPdf417Props,
             posType,
             comment,
@@ -507,14 +507,14 @@ export function createFlushField(
         objects.push(
           makeObj(
             "codablock",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               content,
-              moduleWidth: s.byModuleWidth,
-              rowHeight: s.cbRowHeight,
-              securityLevel: s.cbSecurity,
-              rotation: s.bcRotation,
+              moduleWidth: s.defaults.byModuleWidth,
+              rowHeight: s.field.cbRowHeight,
+              securityLevel: s.field.cbSecurity,
+              rotation: s.field.bcRotation,
             } satisfies CodablockProps,
             posType,
             comment,
@@ -530,13 +530,13 @@ export function createFlushField(
         objects.push(
           makeObj(
             "symbol",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               symbol: code,
-              height: s.symH,
-              width: s.symW,
-              rotation: s.symRot,
+              height: s.field.symH,
+              width: s.field.symW,
+              rotation: s.field.symRot,
             } satisfies SymbolProps,
             posType,
             comment,
@@ -550,19 +550,19 @@ export function createFlushField(
     // pushed. Reuse an existing Variable when its fnNumber matches —
     // ZPL templates often reference the same slot multiple times,
     // and the binding should funnel to one Variable, not duplicates.
-    if (s.pendingFn !== null) {
+    if (s.comment.fnNumber !== null) {
       const justPushed = objects[objects.length - 1];
       if (justPushed) {
-        const variable = bootstrapVariable(s.pendingFn, content, s.pendingFnComment);
+        const variable = bootstrapVariable(s.comment.fnNumber, content, s.comment.fnComment);
         justPushed.variableId = variable.id;
       }
-      s.pendingFn = null;
-      s.pendingFnComment = undefined;
+      s.comment.fnNumber = null;
+      s.comment.fnComment = undefined;
     }
 
-    s.fieldType = null;
-    s.pendingFD = null;
-    s.frActive = false;
+    s.field.fieldType = null;
+    s.field.pendingFD = null;
+    s.field.frActive = false;
   };
 
   return flushField;

@@ -24,26 +24,22 @@ export type {
 export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
   const tokens = tokenize(zpl);
   const s = createParserState();
-  // Destructured references for sub-state objects whose internal
-  // mutations don't need `s.` qualification. Reads via `s.foo` for
-  // primitives only; collection references stay bare for terseness.
-  // Destructured aliases for high-frequency collection refs so the
-  // inline body keeps reading naturally. Primitives stay on `s.foo`
-  // (rebound writes need that). The three Map/Set collections that
-  // also count as state mutate via method calls so they read cleanest
-  // via `s.fontAliases.get(...)` etc — kept on `s.` for consistency.
+  // High-frequency collection refs from the `result` slice destructured
+  // for terse access in the orchestrator body. Primitives elsewhere
+  // stay on the `s.<group>.foo` path because their rebound writes need
+  // it; collections mutate via method calls so the bare refs work.
   const {
     objects, labelConfig, printerProfile, variables,
     skipped, partialCmds, browserLimit, unknown,
-  } = s;
+  } = s.result;
 
   /** Consume and return the pending ^FX comment, then clear it.
    *  Lives at the parseZPL level (not inside any family factory) so
    *  both the graphics family and flushField can take it as a peer
    *  dependency without a build-order constraint. */
   const takeComment = (): string | undefined => {
-    const c = s.pendingComment;
-    s.pendingComment = undefined;
+    const c = s.comment.pending;
+    s.comment.pending = undefined;
     return c;
   };
 
@@ -63,7 +59,7 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
 
   // ── Command handler map ────────────────────────────────────────────────────
   const resetComment: Handler = (_, rest) => {
-    s.pendingComment = rest.trim() || undefined;
+    s.comment.pending = rest.trim() || undefined;
   };
   // Hand-written ZPL often splits a logical comment across several `^FX` lines
   // before the field they describe. Accumulate them so each line survives on
@@ -71,7 +67,7 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
   const appendComment: Handler = (_, rest) => {
     const next = rest.trim();
     if (!next) return;
-    s.pendingComment = s.pendingComment ? `${s.pendingComment}\n${next}` : next;
+    s.comment.pending = s.comment.pending ? `${s.comment.pending}\n${next}` : next;
   };
 
   const handlers: Record<string, Handler> = {
@@ -100,8 +96,8 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
       // Defensive: flush any stash that survived a malformed prior
       // label (missing ^XZ) so it doesn't bleed into the new block.
       commitPendingReverseBg();
-      s.embedChar = "#";
-      s.clockChars = { ...DEFAULT_CLOCK_CHARS };
+      s.format.embedChar = "#";
+      s.format.clockChars = { ...DEFAULT_CLOCK_CHARS };
       resetComment(p, rest);
     },
     XZ(_, rest) {
@@ -134,26 +130,26 @@ export function parseZPL(zpl: string, dpmm = 8): ParsedZPL {
     // ^A{font}{rotation},{height},{width} — general font command (A0 and A@ are in the map;
     // remaining ^A* variants are dynamic keys that cannot be static map entries).
     if (cmd[0] === "A" && cmd.length === 2) {
-      s.fieldType = "text";
-      s.textRot = readRotation(rest[0], s.fwRotation);
-      s.textH = int(p[1], s.cfHeight || 30);
-      s.textW = int(p[2], s.cfWidth || 0);
+      s.field.fieldType = "text";
+      s.field.textRot = readRotation(rest[0], s.defaults.fwRotation);
+      s.field.textH = int(p[1], s.defaults.cfHeight || 30);
+      s.field.textW = int(p[2], s.defaults.cfWidth || 0);
       const fontChar = cmd[1] ?? "";
       // Round-trip semantics: when the font character matches the
       // current ^CF, treat the field as "use the label default" and
-      // leave s.pendingFontId undefined so the model carries no per-field
+      // leave s.field.pendingFontId undefined so the model carries no per-field
       // override. Otherwise pin the alias on the field so re-emitting
       // produces the same ^A{id} short form. Unknown aliases (no ^CW
       // and not a built-in) still go through — the printer would fall
       // back to font 0 at print, but storing the user's choice keeps
       // the import lossless for editing.
-      if (s.cfFontId && fontChar === s.cfFontId) {
-        s.pendingFontId = undefined;
+      if (s.defaults.cfFontId && fontChar === s.defaults.cfFontId) {
+        s.field.pendingFontId = undefined;
       } else {
-        s.pendingFontId = fontChar;
+        s.field.pendingFontId = fontChar;
       }
       if (
-        !s.fontAliases.has(fontChar) &&
+        !s.fonts.aliases.has(fontChar) &&
         !ZPL_BUILTIN_FONT_LETTERS.includes(fontChar)
       ) {
         partialCmds.add(`^${cmd}`);

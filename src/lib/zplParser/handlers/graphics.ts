@@ -54,13 +54,13 @@ export function createGraphicsHandlers(
   s: ParserState,
   takeComment: () => string | undefined,
 ): GraphicsFamily {
-  const getReverseFlag = () => s.lrActive || s.frActive || undefined;
+  const getReverseFlag = () => s.label.lrActive || s.field.frActive || undefined;
 
   const pushGBObject: GraphicsExports["pushGBObject"] = (
     gx, gy, w, h, t, color, rounding, reverseFlag, comment,
   ) => {
     if (h === t && w > t) {
-      s.objects.push(
+      s.result.objects.push(
         makeObj(
           "line",
           gx,
@@ -71,7 +71,7 @@ export function createGraphicsHandlers(
         ),
       );
     } else if (w === t && h > t) {
-      s.objects.push(
+      s.result.objects.push(
         makeObj(
           "line",
           gx,
@@ -83,7 +83,7 @@ export function createGraphicsHandlers(
       );
     } else {
       const filled = t >= Math.min(w, h);
-      s.objects.push(
+      s.result.objects.push(
         makeObj(
           "box",
           gx,
@@ -105,9 +105,9 @@ export function createGraphicsHandlers(
   };
 
   const commitPendingReverseBg = () => {
-    if (!s.pendingReverseBg) return;
-    const bg = s.pendingReverseBg;
-    s.pendingReverseBg = null;
+    if (!s.reverseBg) return;
+    const bg = s.reverseBg;
+    s.reverseBg = null;
     pushGBObject(bg.x, bg.y, bg.w, bg.h, bg.t, bg.color, bg.rounding, bg.reverseFlag, bg.comment);
   };
 
@@ -136,11 +136,11 @@ export function createGraphicsHandlers(
       const reverseFlag = getReverseFlag();
       if (filled && color === "B" && rounding === 0 && !reverseFlag) {
         commitPendingReverseBg();
-        s.pendingReverseBg = { x: s.x, y: s.y, w, h, t, color, rounding, reverseFlag, comment: gbComment };
+        s.reverseBg = { x: s.field.x, y: s.field.y, w, h, t, color, rounding, reverseFlag, comment: gbComment };
         return;
       }
       commitPendingReverseBg();
-      pushGBObject(s.x, s.y, w, h, t, color, rounding, reverseFlag, gbComment);
+      pushGBObject(s.field.x, s.field.y, w, h, t, color, rounding, reverseFlag, gbComment);
     },
     GD(p) {
       commitPendingReverseBg();
@@ -155,17 +155,17 @@ export function createGraphicsHandlers(
       // Recover start point and angle from bounding-box FO position
       // 'L': dx>0,dy>0 → obj.x=boxX, angle=atan2(h,w)
       // 'R': dx<0,dy>0 → obj.x=boxX+w, angle=atan2(h,-w)
-      const gdObjX = gdOri === "R" ? s.x + gdW : s.x;
+      const gdObjX = gdOri === "R" ? s.field.x + gdW : s.field.x;
       const gdAngle = Math.round(
         gdOri === "R"
           ? (Math.atan2(gdH, -gdW) * 180) / Math.PI
           : (Math.atan2(gdH, gdW) * 180) / Math.PI,
       );
-      s.objects.push(
+      s.result.objects.push(
         makeObj(
           "line",
           gdObjX,
-          s.y,
+          s.field.y,
           {
             angle: gdAngle,
             length: gdLen,
@@ -190,8 +190,8 @@ export function createGraphicsHandlers(
       //     inflate failure → browserLimit (payload unrecoverable).
       const format = rest[0]?.toUpperCase();
       if (format !== "A" && format !== "B" && format !== "C") {
-        s.skipped.push(`^GF${rest}`);
-        s.browserLimit.push(`^GF${rest}`);
+        s.result.skipped.push(`^GF${rest}`);
+        s.result.browserLimit.push(`^GF${rest}`);
         return;
       }
 
@@ -203,7 +203,7 @@ export function createGraphicsHandlers(
         if (commaPos === -1) break;
       }
       if (commaPos === -1) {
-        s.skipped.push(`^GF${rest}`);
+        s.result.skipped.push(`^GF${rest}`);
         return;
       }
 
@@ -213,7 +213,7 @@ export function createGraphicsHandlers(
       const gfRawData = gfRest.slice(commaPos + 1);
 
       if (gfBytesPerRow <= 0) {
-        s.skipped.push(`^GF${rest}`);
+        s.result.skipped.push(`^GF${rest}`);
         return;
       }
 
@@ -229,17 +229,17 @@ export function createGraphicsHandlers(
         `imported_${crypto.randomUUID().slice(0, 8)}.png`,
       );
       if (!gfImage) {
-        s.skipped.push(gfSummary);
-        s.browserLimit.push(gfSummary);
+        s.result.skipped.push(gfSummary);
+        s.result.browserLimit.push(gfSummary);
         return;
       }
-      if (!gfImage.crcOk) s.partialCmds.add("^GF");
-      const posType: "FT" | "FO" = s.positionIsFT ? "FT" : "FO";
-      s.objects.push(
+      if (!gfImage.crcOk) s.result.partialCmds.add("^GF");
+      const posType: "FT" | "FO" = s.field.positionIsFT ? "FT" : "FO";
+      s.result.objects.push(
         makeObj(
           "image",
-          s.x,
-          s.y,
+          s.field.x,
+          s.field.y,
           {
             imageId: gfImage.imageId,
             widthDots: gfImage.widthDots,
@@ -259,11 +259,11 @@ export function createGraphicsHandlers(
       const t = int(p[2], 3);
       const color = (p[3] ?? "B") as "B" | "W";
       const filled = t >= Math.min(w, h);
-      s.objects.push(
+      s.result.objects.push(
         makeObj(
           "ellipse",
-          s.x,
-          s.y,
+          s.field.x,
+          s.field.y,
           {
             width: w,
             height: h,
@@ -287,11 +287,11 @@ export function createGraphicsHandlers(
       const t = int(p[1], 3);
       const color = (p[2] ?? "B") as "B" | "W";
       const filled = t >= d;
-      s.objects.push(
+      s.result.objects.push(
         makeObj(
           "ellipse",
-          s.x,
-          s.y,
+          s.field.x,
+          s.field.y,
           {
             width: d,
             height: d,
@@ -322,18 +322,18 @@ export function createGraphicsHandlers(
       const xgPath = firstComma === -1 ? rest : rest.slice(0, firstComma);
       const parsed = parseStoragePath(xgPath);
       if (!parsed) {
-        s.skipped.push(`^XG${rest}`);
-        s.browserLimit.push(`^XG${rest}`);
+        s.result.skipped.push(`^XG${rest}`);
+        s.result.browserLimit.push(`^XG${rest}`);
         return;
       }
-      const uploaded = s.downloadedGraphics.get(formatStoragePath(parsed, true));
-      const posType: "FT" | "FO" = s.positionIsFT ? "FT" : "FO";
+      const uploaded = s.fonts.downloadedGraphics.get(formatStoragePath(parsed, true));
+      const posType: "FT" | "FO" = s.field.positionIsFT ? "FT" : "FO";
       if (uploaded) {
-        s.objects.push(
+        s.result.objects.push(
           makeObj(
             "image",
-            s.x,
-            s.y,
+            s.field.x,
+            s.field.y,
             {
               imageId: uploaded.imageId,
               widthDots: uploaded.widthDots,
@@ -350,12 +350,12 @@ export function createGraphicsHandlers(
       // Recall-only: no bytes available, but the ZPL is valid and the
       // printer side is assumed to resolve. Surface as partial so the
       // import report flags the degraded preview.
-      s.partialCmds.add("^XG");
-      s.objects.push(
+      s.result.partialCmds.add("^XG");
+      s.result.objects.push(
         makeObj(
           "image",
-          s.x,
-          s.y,
+          s.field.x,
+          s.field.y,
           {
             imageId: "",
             widthDots: 200,
@@ -371,10 +371,10 @@ export function createGraphicsHandlers(
     // ^GS{rotation},{height},{width} — selects the internal-font
     // legal-symbol glyph (^FD picks which: A=®, B=©, C=™, D=UL, E=CSA).
     GS(p) {
-      s.fieldType = "symbol";
-      s.symRot = readRotation(p[0]);
-      s.symH = int(p[1], 30);
-      s.symW = int(p[2], s.symH);
+      s.field.fieldType = "symbol";
+      s.field.symRot = readRotation(p[0]);
+      s.field.symH = int(p[1], 30);
+      s.field.symW = int(p[2], s.field.symH);
     },
 
     // ── ~DY downloaded TrueType / graphic payload ──────────────────────────
@@ -395,7 +395,7 @@ export function createGraphicsHandlers(
         if (rest[i] === ",") c.push(i);
       }
       if (c.length < 5) {
-        s.browserLimit.push(`~DY${rest}`);
+        s.result.browserLimit.push(`~DY${rest}`);
         return;
       }
       const [c0, c1, c2, c3, c4] = c;
@@ -406,7 +406,7 @@ export function createGraphicsHandlers(
         c3 === undefined ||
         c4 === undefined
       ) {
-        s.browserLimit.push(`~DY${rest}`);
+        s.result.browserLimit.push(`~DY${rest}`);
         return;
       }
       const path = rest.slice(0, c0);
@@ -422,8 +422,8 @@ export function createGraphicsHandlers(
       // device:stem.GRF path. A subsequent ^XG can then instantiate it.
       if (extCode === "G" && (fmt === "A" || fmt === "B" || fmt === "C")) {
         if (!path || isNaN(dyBytesPerRow) || dyBytesPerRow <= 0) {
-          s.skipped.push(dySummary);
-          s.browserLimit.push(dySummary);
+          s.result.skipped.push(dySummary);
+          s.result.browserLimit.push(dySummary);
           return;
         }
         const sizeStr = size > 0 ? String(size) : "";
@@ -436,21 +436,21 @@ export function createGraphicsHandlers(
           `uploaded_${path.replace(/[:.]/g, "_")}.png`,
         );
         if (!dyImage) {
-          s.skipped.push(dySummary);
-          s.browserLimit.push(dySummary);
+          s.result.skipped.push(dySummary);
+          s.result.browserLimit.push(dySummary);
           return;
         }
-        if (!dyImage.crcOk) s.partialCmds.add("~DY");
+        if (!dyImage.crcOk) s.result.partialCmds.add("~DY");
         // Path normalisation: ~DY uses `device:stem` without extension; the
         // ^XG side resolves `device:stem.GRF`. Store the `.GRF` form so the
         // XG lookup is direct.
         const parsedDyPath = parseStoragePath(path);
         if (!parsedDyPath) {
-          s.skipped.push(dySummary);
-          s.browserLimit.push(dySummary);
+          s.result.skipped.push(dySummary);
+          s.result.browserLimit.push(dySummary);
           return;
         }
-        s.downloadedGraphics.set(formatStoragePath(parsedDyPath, true), {
+        s.fonts.downloadedGraphics.set(formatStoragePath(parsedDyPath, true), {
           imageId: dyImage.imageId,
           widthDots: dyImage.widthDots,
           heightDots: dyImage.heightDots,
@@ -462,11 +462,11 @@ export function createGraphicsHandlers(
       // Only ASCII-hex TTF/OTF imports are supported. Z64 / compressed
       // payloads need a CRC-checked decoder and stay out of scope.
       if (fmt !== "A" || (extCode !== "T" && extCode !== "B")) {
-        s.browserLimit.push(dySummary);
+        s.result.browserLimit.push(dySummary);
         return;
       }
       if (!path || isNaN(size) || size <= 0 || data.length < size * 2) {
-        s.browserLimit.push(dySummary);
+        s.result.browserLimit.push(dySummary);
         return;
       }
       const bytes = new Uint8Array(size);
@@ -474,7 +474,7 @@ export function createGraphicsHandlers(
         const byteHex = data.slice(i * 2, i * 2 + 2);
         const b = parseInt(byteHex, 16);
         if (isNaN(b)) {
-          s.browserLimit.push(dySummary);
+          s.result.browserLimit.push(dySummary);
           return;
         }
         bytes[i] = b;
@@ -489,10 +489,10 @@ export function createGraphicsHandlers(
       const fullPath = path.includes(".") ? path : `${path}${ext}`;
       try {
         loadFontBytesSync(bytes, filename);
-        s.downloadedFontPaths.add(fullPath);
+        s.fonts.downloadedFontPaths.add(fullPath);
       } catch {
         // Oversized or otherwise unloadable — surface as browser-limit.
-        s.browserLimit.push(`~DY${path}`);
+        s.result.browserLimit.push(`~DY${path}`);
       }
     },
   };

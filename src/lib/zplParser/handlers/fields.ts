@@ -32,33 +32,33 @@ export function createFieldHandlers(
     // ── Field origin ──────────────────────────────────────────────────────
     FO(p) {
       flushField();
-      s.frActive = false;
-      s.x = int(p[0]) + s.lhX;
-      s.y = int(p[1]) + s.lhY + s.ltY;
+      s.field.frActive = false;
+      s.field.x = int(p[0]) + s.label.lhX;
+      s.field.y = int(p[1]) + s.label.lhY + s.label.ltY;
       // 3rd param is justification (0/1/2) — stored but not actively used.
-      s.positionIsFT = false;
+      s.field.positionIsFT = false;
     },
     FT(p) {
       flushField();
-      s.frActive = false;
-      s.x = int(p[0]) + s.lhX;
-      s.y = int(p[1]) + s.lhY + s.ltY;
-      s.positionIsFT = true;
+      s.field.frActive = false;
+      s.field.x = int(p[0]) + s.label.lhX;
+      s.field.y = int(p[1]) + s.label.lhY + s.label.ltY;
+      s.field.positionIsFT = true;
     },
 
     // ── Text ──────────────────────────────────────────────────────────────
     // ^A0{rotation},{height},{width}  e.g. ^A0N,30,0
     A0(p, rest) {
-      s.fieldType = "text";
-      s.textRot = readRotation(rest[0], s.fwRotation);
-      s.textH = int(p[1], s.cfHeight || 30);
-      s.textW = int(p[2], s.cfWidth || 0);
+      s.field.fieldType = "text";
+      s.field.textRot = readRotation(rest[0], s.defaults.fwRotation);
+      s.field.textH = int(p[1], s.defaults.cfHeight || 30);
+      s.field.textW = int(p[2], s.defaults.cfWidth || 0);
       // Set fontId="0" only when the current ^CF is not already 0 —
       // otherwise the field is just repeating the label default, and
       // we keep fontId undefined so the model says "use the default".
       // When no ^CF has fired, "0" is the historical baseline both the
       // generator and the printer fall back to, so it counts as default.
-      s.pendingFontId = s.cfFontId && s.cfFontId !== "0" ? "0" : undefined;
+      s.field.pendingFontId = s.defaults.cfFontId && s.defaults.cfFontId !== "0" ? "0" : undefined;
     },
 
     // ── Change alphanumeric default font ──────────────────────────────────
@@ -67,11 +67,11 @@ export function createFieldHandlers(
       const fontId = (p[0] ?? "").trim();
       const explicitHeight = parseInt(p[1] ?? "", 10);
       const explicitWidth = parseInt(p[2] ?? "", 10);
-      s.cfHeight = isNaN(explicitHeight) ? s.cfHeight : explicitHeight;
-      s.cfWidth = isNaN(explicitWidth) ? s.cfWidth : explicitWidth;
+      s.defaults.cfHeight = isNaN(explicitHeight) ? s.defaults.cfHeight : explicitHeight;
+      s.defaults.cfWidth = isNaN(explicitWidth) ? s.defaults.cfWidth : explicitWidth;
       if (fontId) {
         labelConfig.defaultFontId = fontId;
-        s.cfFontId = fontId;
+        s.defaults.cfFontId = fontId;
       }
       if (!isNaN(explicitHeight) && explicitHeight > 0) {
         labelConfig.defaultFontHeight = explicitHeight;
@@ -86,53 +86,53 @@ export function createFieldHandlers(
     FW(_, rest) {
       const fw = (rest[0] ?? "N").toUpperCase();
       if (fw === "N" || fw === "R" || fw === "I" || fw === "B") {
-        s.fwRotation = fw;
+        s.defaults.fwRotation = fw;
       }
     },
 
     // ── Field block ───────────────────────────────────────────────────────
     // ^FB{width},{lines},{lineSpacing},{justify},{hangingIndent}
     FB(p) {
-      s.fbWidth = int(p[0], 0);
-      s.fbLines = int(p[1], 1);
-      s.fbSpacing = int(p[2], 0);
+      s.defaults.fbWidth = int(p[0], 0);
+      s.defaults.fbLines = int(p[1], 1);
+      s.defaults.fbSpacing = int(p[2], 0);
       const fbJ = (p[3] ?? "L").toUpperCase();
-      s.fbJustify = fbJ === "C" || fbJ === "R" || fbJ === "J" ? fbJ : "L";
+      s.defaults.fbJustify = fbJ === "C" || fbJ === "R" || fbJ === "J" ? fbJ : "L";
       // ^FB also implies text if no ^A was specified.
-      if (!s.fieldType) {
-        s.fieldType = "text";
-        s.textH = s.cfHeight || 30;
-        s.textW = s.cfWidth || 0;
-        s.textRot = s.fwRotation;
+      if (!s.field.fieldType) {
+        s.field.fieldType = "text";
+        s.field.textH = s.defaults.cfHeight || 30;
+        s.field.textW = s.defaults.cfWidth || 0;
+        s.field.textRot = s.defaults.fwRotation;
       }
     },
 
     // ── Field hex indicator ───────────────────────────────────────────────
     FH(_, rest) {
-      s.fhActive = true;
-      s.fhDelimiter = rest[0] ?? "_";
+      s.format.fhActive = true;
+      s.format.fhDelimiter = rest[0] ?? "_";
     },
 
     // ── Field data / separator ────────────────────────────────────────────
     FD(_, rest) {
       // Implicit text field: ^FD without a prior ^A uses ^CF defaults.
-      // Skip the implicit promotion when s.pendingFn is set — that means
+      // Skip the implicit promotion when s.comment.fnNumber is set — that means
       // we're looking at a bare `^FN<n>^FD<default>^FS` Variable
       // declaration (the docs-example form for ^FE inline embeds),
       // which flushField then routes through the bare-declaration
       // path (no field object, just Variable registration).
-      if (!s.fieldType && s.pendingFn === null) {
-        s.fieldType = "text";
-        s.textH = s.cfHeight || 30;
-        s.textW = s.cfWidth || 0;
-        s.textRot = s.fwRotation;
+      if (!s.field.fieldType && s.comment.fnNumber === null) {
+        s.field.fieldType = "text";
+        s.field.textH = s.defaults.cfHeight || 30;
+        s.field.textW = s.defaults.cfWidth || 0;
+        s.field.textRot = s.defaults.fwRotation;
       }
-      s.pendingFD = rest;
+      s.field.pendingFD = rest;
     },
     FS() {
       flushField();
-      s.fhActive = false;
-      s.positionIsFT = false;
+      s.format.fhActive = false;
+      s.field.positionIsFT = false;
     },
 
     // ── Serialization ─────────────────────────────────────────────────────
@@ -142,7 +142,7 @@ export function createFieldHandlers(
       // object to serial.
       const snStart = p[0] ?? "";
       const snInc = int(p[1], 1);
-      const lastObj = s.objects[s.objects.length - 1];
+      const lastObj = s.result.objects[s.result.objects.length - 1];
       if (lastObj && lastObj.type === "text") {
         const tp = lastObj.props;
         const serialObj = makeObj(
@@ -160,52 +160,52 @@ export function createFieldHandlers(
           lastObj.positionType,
           lastObj.comment,
         );
-        s.objects[s.objects.length - 1] = serialObj;
+        s.result.objects[s.result.objects.length - 1] = serialObj;
       }
     },
     SF(p) {
       // ^SF{increment},{padDigits},{leadZero}
       // Appears BEFORE ^FD — set pending state so flushField creates serial.
-      s.snPending = true;
-      s.snIncrement = int(p[0], 1);
-      s.snMode = "SF";
+      s.field.snPending = true;
+      s.field.snIncrement = int(p[0], 1);
+      s.field.snMode = "SF";
     },
 
     // ── Label reverse / field reverse ─────────────────────────────────────
     LR(_, rest) {
-      s.lrActive = rest.toUpperCase().startsWith("Y");
+      s.label.lrActive = rest.toUpperCase().startsWith("Y");
     },
     FR() {
-      s.frActive = true;
+      s.field.frActive = true;
     },
 
     // ── Label home (origin offset) ────────────────────────────────────────
     LH(p) {
-      s.lhX = int(p[0], 0);
-      s.lhY = int(p[1], 0);
+      s.label.lhX = int(p[0], 0);
+      s.label.lhY = int(p[1], 0);
     },
 
     // ── Label top (vertical offset) ───────────────────────────────────────
     LT(_, rest) {
-      s.ltY = int(rest, 0);
+      s.label.ltY = int(rest, 0);
     },
 
     // ^CW {alias},{path} — register an alias for a printer-resident font.
-    // Subsequent ^A{alias} fields resolve to {path} via the s.fontAliases
+    // Subsequent ^A{alias} fields resolve to {path} via the s.fonts.aliases
     // map. The mapping is also persisted on labelConfig so the generator
     // can re-emit it on round-trip. Upsert by alias mirrors the
-    // Map-set semantics of s.fontAliases: a later ^CW for the same alias
+    // Map-set semantics of s.fonts.aliases: a later ^CW for the same alias
     // replaces the earlier mapping rather than accumulating duplicates.
     CW(p) {
       const alias = (p[0] ?? "").trim().toUpperCase();
       const path = (p[1] ?? "").trim();
       if (!/^[A-Z0-9]$/.test(alias) || !path) return;
-      s.fontAliases.set(alias, path);
+      s.fonts.aliases.set(alias, path);
       const list = (labelConfig.customFonts ?? []).filter(
         (m) => m.alias !== alias,
       );
       const entry: CustomFontMapping = { alias, path };
-      if (s.downloadedFontPaths.has(path)) {
+      if (s.fonts.downloadedFontPaths.has(path)) {
         // The bytes already shipped via ~DY earlier in the stream;
         // surface that intent on the model so re-emit will ~DY again.
         entry.embedInZpl = true;
@@ -222,28 +222,28 @@ export function createFieldHandlers(
     // ^A@{rotation},{height},{width},{drive}:{font} — TrueType font reference.
     // Can't load printer TrueType fonts; import as text with best-effort sizing.
     "A@"(p, rest) {
-      s.fieldType = "text";
-      s.textRot = readRotation(rest[0], s.fwRotation);
-      s.textH = int(p[1]) || s.cfHeight || 30;
-      s.textW = int(p[2]) || s.cfWidth || 0;
+      s.field.fieldType = "text";
+      s.field.textRot = readRotation(rest[0], s.defaults.fwRotation);
+      s.field.textH = int(p[1]) || s.defaults.cfHeight || 30;
+      s.field.textW = int(p[2]) || s.defaults.cfWidth || 0;
       const fontRef = p[3] ?? "";
       const colonIdx = fontRef.indexOf(":");
-      s.pendingPrinterFontName =
+      s.field.pendingPrinterFontName =
         (colonIdx >= 0 ? fontRef.slice(colonIdx + 1) : fontRef) || undefined;
-      s.partialCmds.add("^A@");
+      s.result.partialCmds.add("^A@");
     },
     // ^TB{rotation},{width},{height} — text block (alternative to ^A + ^FB)
     TB(p, rest) {
-      s.fieldType = "text";
-      s.textRot = readRotation(rest[0], s.fwRotation);
+      s.field.fieldType = "text";
+      s.field.textRot = readRotation(rest[0], s.defaults.fwRotation);
       const tbW = int(p[1], 0);
       const tbH = int(p[2], 0);
-      s.textH = s.cfHeight || 30;
-      s.textW = s.cfWidth || 0;
+      s.field.textH = s.defaults.cfHeight || 30;
+      s.field.textW = s.defaults.cfWidth || 0;
       if (tbW > 0) {
-        s.fbWidth = tbW;
-        s.fbLines = tbH > 0 ? Math.floor(tbH / (s.textH || 30)) : 1;
-        s.fbJustify = "L";
+        s.defaults.fbWidth = tbW;
+        s.defaults.fbLines = tbH > 0 ? Math.floor(tbH / (s.field.textH || 30)) : 1;
+        s.defaults.fbJustify = "L";
       }
     },
 
@@ -258,8 +258,8 @@ export function createFieldHandlers(
     // current decoder and surface as a partial import.
     CI(p) {
       const enc = ciToEncoding(int(p[0]));
-      s.fhDecoder = getDecoder(enc.label);
-      if (!enc.supported) s.partialCmds.add(`^CI${int(p[0])}`);
+      s.format.fhDecoder = getDecoder(enc.label);
+      if (!enc.supported) s.result.partialCmds.add(`^CI${int(p[0])}`);
     },
 
     // ^FN{n}: declares that the next field is a template slot. The
@@ -270,11 +270,11 @@ export function createFieldHandlers(
     FN(p) {
       const n = int(p[0]);
       if (n < FN_NUMBER_MIN || n > FN_NUMBER_MAX) {
-        s.partialCmds.add("^FN");
+        s.result.partialCmds.add("^FN");
         return;
       }
-      s.pendingFn = n;
-      s.pendingFnComment = s.pendingComment;
+      s.comment.fnNumber = n;
+      s.comment.fnComment = s.comment.pending;
     },
     FC(p) {
       // ^FC<a>,<b>,<c>: redefine clock chars. Missing/empty slots
@@ -284,17 +284,17 @@ export function createFieldHandlers(
         const c = raw?.[0];
         return c && c !== "^" && c !== "~" ? c : current;
       };
-      s.clockChars = {
-        date: accept(p[0], s.clockChars.date),
-        time: accept(p[1], s.clockChars.time),
-        tertiary: accept(p[2], s.clockChars.tertiary),
+      s.format.clockChars = {
+        date: accept(p[0], s.format.clockChars.date),
+        time: accept(p[1], s.format.clockChars.time),
+        tertiary: accept(p[2], s.format.clockChars.tertiary),
       };
     },
     FE(p) {
       // ^FE<char>: redefine the FN-embed delimiter used inside ^FD/^FV.
       // Single ASCII character; falls back to '#' when missing/invalid.
       const c = p[0]?.[0];
-      s.embedChar = c && c !== "^" && c !== "~" ? c : "#";
+      s.format.embedChar = c && c !== "^" && c !== "~" ? c : "#";
     },
   };
 }
