@@ -3,7 +3,7 @@ import { InformationCircleIcon, FolderPlusIcon } from "@heroicons/react/16/solid
 import { useLabelStore, useCurrentObjects } from "../../store/labelStore";
 import type { LabelCanvasHandle } from "../Canvas/LabelCanvas";
 import type { AlignAxis } from "../../lib/alignment";
-import { ObjectRegistry } from "../../registry";
+import { ObjectRegistry, ObjectPanels } from "../../registry";
 import { canGroupSelection, findObjectById, isGroup } from "../../types/Group";
 import { BWIP_APPROX_SEVERITY } from "../Canvas/bwipConstants";
 import { stripZplCommandChars } from "../../registry/zplHelpers";
@@ -153,7 +153,7 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
   }
 
   const definition = ObjectRegistry[obj.type];
-  const TypePanel = definition?.PropertiesPanel;
+  const TypePanel = ObjectPanels[obj.type]?.PropertiesPanel;
   const groupRow = isGroup(obj);
   // Groups intentionally have no registry entry; surface a folder-shape
   // glyph here so the header reads as something rather than blank.

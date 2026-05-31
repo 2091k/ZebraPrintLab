@@ -1,53 +1,10 @@
-import type { ObjectTypeDefinition } from '../types/ObjectType';
+import type { ObjectTypeUi } from '../types/ObjectType';
 import { useT } from '../lib/useT';
 import { inputCls, labelCls } from '../components/Properties/styles';
-import { fieldPos, wrapReverse } from './zplHelpers';
-import { commitWidthHeightTransform } from './transformHelpers';
 import { NumberInput } from '../components/Properties/NumberInput';
+import type { BoxProps } from './box';
 
-export interface BoxProps {
-  width: number;
-  height: number;
-  thickness: number;
-  filled: boolean;
-  color: 'B' | 'W';
-  rounding: number;
-  reverse?: boolean;
-}
-
-export const box: ObjectTypeDefinition<BoxProps> = {
-  label: 'Box',
-  icon: '□',
-  group: 'shape',
-  defaultProps: {
-    width: 200,
-    height: 100,
-    thickness: 3,
-    filled: false,
-    color: 'B',
-    rounding: 0,
-  },
-  defaultSize: { width: 200, height: 100 },
-
-  commitTransform: commitWidthHeightTransform,
-
-  toZPL: (obj) => {
-    const p = obj.props;
-    // Emit `thickness` verbatim so a ZPL round-trip is lossless. Only
-    // floor it up to `min(w,h)` when the user toggled `filled` but the
-    // stored thickness is below the firmware's solid threshold; this
-    // keeps a user-driven "make this solid" intent in the printed
-    // output even if they never bumped the thickness slider.
-    const solidThreshold = Math.min(p.width, p.height);
-    const t = p.filled
-      ? Math.max(p.thickness, solidThreshold)
-      : p.thickness;
-    return wrapReverse(
-      p.reverse,
-      `${fieldPos(obj)}^GB${p.width},${p.height},${t},${p.color},${p.rounding}^FS`,
-    );
-  },
-
+export const boxPanel: ObjectTypeUi<BoxProps> = {
   PropertiesPanel: ({ obj, onChange }) => {
     const t = useT();
     const p = obj.props;

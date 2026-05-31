@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ObjectRegistry, BARCODE_1D_TYPES, STACKED_2D_TYPES } from "./index";
+import { ObjectRegistry, ObjectPanels, BARCODE_1D_TYPES, STACKED_2D_TYPES } from "./index";
 
 describe("registry isolation baseline", () => {
   it("registers 34 object types", () => {
@@ -12,5 +12,27 @@ describe("registry isolation baseline", () => {
 
   it("classifies 3 stacked 2D barcodes", () => {
     expect(STACKED_2D_TYPES.size).toBe(3);
+  });
+
+  it("Core and Panels maps stay key-parallel", () => {
+    expect(Object.keys(ObjectPanels).sort()).toEqual(
+      Object.keys(ObjectRegistry).sort(),
+    );
+  });
+
+  it("split entries surface no PropertiesPanel on the Core map", () => {
+    // Derived from `<type>.panel.tsx` filenames so each new split is
+    // auto-enforced. Stage 6 will assert this against every key once
+    // all entries are split.
+    const panelFiles = import.meta.glob("./*.panel.tsx", { eager: false });
+    const splitTypes = Object.keys(panelFiles).map((p) =>
+      p.replace(/^\.\//, "").replace(/\.panel\.tsx$/, ""),
+    );
+    expect(splitTypes.length, "at least one split entry").toBeGreaterThan(0);
+    for (const type of splitTypes) {
+      expect(ObjectRegistry[type], `Core entry for "${type}"`).not.toHaveProperty(
+        "PropertiesPanel",
+      );
+    }
   });
 });

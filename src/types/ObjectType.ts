@@ -2,7 +2,8 @@ import type React from 'react';
 import type { LabelObjectBase, ObjectChanges, ObjectGroup } from './LabelObject';
 import type { HriBehavior, TransformContext, ZplEmitContext } from './ZplEmit';
 
-export interface ObjectTypeDefinition<P extends object = object> {
+/** Domain half of a registry entry: emits ZPL, no React deps. */
+export interface ObjectTypeCore<P extends object = object> {
   label: string;
   icon: string;
   group: ObjectGroup;
@@ -76,8 +77,16 @@ export interface ObjectTypeDefinition<P extends object = object> {
    *  that render an HRI text overlay; other types should leave this
    *  undefined. */
   hri?: HriBehavior;
+}
+
+/** UI half: the per-type PropertiesPanel React component. Lives in
+ *  `<type>.panel.tsx` so the domain `.ts` stays React-free. */
+export interface ObjectTypeUi<P extends object = object> {
   PropertiesPanel: React.ComponentType<{
     obj: LabelObjectBase & { props: P };
     onChange: (props: Partial<P>) => void;
   }>;
 }
+
+/** Bundled Core+Ui shape; phased out as entries split into `<type>.ts` + `<type>.panel.tsx`. */
+export type ObjectTypeDefinition<P extends object = object> = ObjectTypeCore<P> & ObjectTypeUi<P>;

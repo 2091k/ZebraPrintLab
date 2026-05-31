@@ -1,10 +1,5 @@
 import { z } from 'zod';
 import { intInRange, makeEnumGuard } from './typeHelpers';
-import { DARKNESS_INSTANT_RANGE } from './LabelConfig';
-
-// Re-export so existing consumers reading DARKNESS_INSTANT_RANGE from here
-// (parser handlers/labelConfig.ts) keep working. Source of truth: LabelConfig.
-export { DARKNESS_INSTANT_RANGE };
 
 /** ^ST real-time clock value (HTML5 datetime-local shape). */
 export const realtimeClockIsoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;

@@ -1,5 +1,5 @@
 import type { LabelObjectBase } from '../types/LabelObject';
-import type { ObjectTypeDefinition } from '../types/ObjectType';
+import type { ObjectTypeCore, ObjectTypeUi } from '../types/ObjectType';
 import { text } from './text.tsx';
 import type { TextProps } from './text.tsx';
 import { code128 } from './code128.tsx';
@@ -12,8 +12,9 @@ import { qrcode } from './qrcode.tsx';
 import type { QrCodeProps } from './qrcode.tsx';
 import { datamatrix } from './datamatrix.tsx';
 import type { DataMatrixProps } from './datamatrix.tsx';
-import { box } from './box.tsx';
-import type { BoxProps } from './box.tsx';
+import { box } from './box';
+import { boxPanel } from './box.panel';
+import type { BoxProps } from './box';
 import { ellipse } from './ellipse.tsx';
 import type { EllipseProps } from './ellipse.tsx';
 import { line } from './line.tsx';
@@ -122,12 +123,11 @@ export const BARCODE_1D_TYPES = new Set([
 
 export const STACKED_2D_TYPES = new Set(['pdf417', 'micropdf417', 'codablock']);
 
-// `any` is necessary here: each registry entry is an `ObjectTypeDefinition<P>`
-// with a different concrete `P`. Using `object` instead of `any` triggers
-// function-parameter contravariance (toZPL expects a specific props shape),
-// which TS rejects under strict.
+// `any`: each entry has a different concrete `P`. Bundled `.tsx` entries
+// satisfy both maps via structural typing; discriminated map deferred until
+// all entries split (Stage 7).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ObjectRegistry: Record<string, ObjectTypeDefinition<any>> = {
+export const ObjectRegistry: Record<string, ObjectTypeCore<any>> = {
   // text
   text,
   symbol,
@@ -169,3 +169,44 @@ export const ObjectRegistry: Record<string, ObjectTypeDefinition<any>> = {
   image,
 };
 
+/** Per-type PropertiesPanel components, keyed by registry type. Same
+ *  key set as {@link ObjectRegistry}; parity enforced by
+ *  `registry-isolation.test.ts`. Lives separate so the Core registry
+ *  stays React-shape-free (zplGenerator imports Core without UI). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const ObjectPanels: Record<string, ObjectTypeUi<any>> = {
+  text,
+  symbol,
+  code128,
+  ean13,
+  upca,
+  code39,
+  interleaved2of5,
+  gs1databar,
+  ean8,
+  upce,
+  upcEanExtension,
+  code49,
+  logmars,
+  code93,
+  codabar,
+  code11,
+  industrial2of5,
+  standard2of5,
+  msi,
+  plessey,
+  qrcode,
+  datamatrix,
+  pdf417,
+  aztec,
+  maxicode,
+  micropdf417,
+  codablock,
+  planet,
+  postal,
+  box: boxPanel,
+  ellipse,
+  line,
+  serial,
+  image,
+};
