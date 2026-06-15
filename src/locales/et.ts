@@ -838,6 +838,7 @@ const et = {
     builtinAliasWarning: 'Asendab printeri sisseehitatud fondi. Kasuta „Sisseehitatud fontide eelvaated" ainult redaktoris sidumiseks.',
     embedInZpl: 'Saada koos prinditööga',
     embedInZplHint: 'Saadab fondi baidid ZPL-voo sees (~DY). Kasuta, kui printeril faili veel pole. Vajab varjunime.',
+    embedLargeWarning: 'Suur font: saadetakse iga prinditööga ja võib aeglustada ZPL-i eelvaadet.',
     manualMappingsHeading: 'Printeri fondid',
     manualMappingsHint: 'Viide printeris juba olevatele fontidele, mida pole siia üles laaditud.',
     addManualMapping: 'Lisa printeri font',

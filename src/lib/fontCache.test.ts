@@ -6,6 +6,7 @@ import {
   loadFontFile,
   removeFont,
   subscribe,
+  fontByteLength,
   MAX_FONT_BYTES,
 } from './fontCache';
 
@@ -42,8 +43,37 @@ describe('fontCache', () => {
   it('loadFontFile stores font and can be retrieved via getFont', async () => {
     const entry = await loadFontFile(makeFakeFile('arial.ttf'), 'ARIAL.TTF');
     expect(entry.name).toBe('ARIAL.TTF');
-    expect(entry.dataUrl).toBe('data:font/truetype;base64,AAAA');
+    // Data URL is built from the bytes with a deterministic extension MIME.
+    expect(entry.dataUrl).toBe('data:font/ttf;base64,ZmFrZS1mb250LWRhdGE=');
     expect(getFont('ARIAL.TTF')).toBe(entry);
+  });
+
+  it('loadFontFile tags an .otf with the OpenType MIME, not TrueType', async () => {
+    const entry = await loadFontFile(makeFakeFile('helvetica.otf'), 'HELVETICA.OTF');
+    expect(entry.dataUrl.startsWith('data:font/otf;base64,')).toBe(true);
+  });
+
+  it('loadFontFile rejects and rolls back when the FontFace cannot register', async () => {
+    const realFontFace = globalThis.FontFace;
+    // Simulate an OTF the engine can't parse: FontFace.load rejects.
+    class FailingFontFace {
+      load(): Promise<this> { return Promise.reject(new Error('bad font')); }
+    }
+    Object.defineProperty(globalThis, 'FontFace', { configurable: true, value: FailingFontFace });
+    try {
+      await expect(loadFontFile(makeFakeFile('broken.otf'), 'BROKEN.OTF')).rejects.toThrow(
+        /could not be registered/,
+      );
+      expect(getFont('BROKEN.OTF')).toBeUndefined();
+    } finally {
+      Object.defineProperty(globalThis, 'FontFace', { configurable: true, value: realFontFace });
+    }
+  });
+
+  it('fontByteLength reports the decoded size without a full decode', async () => {
+    await loadFontFile(makeFakeFile('arial.ttf'), 'ARIAL.TTF');
+    expect(fontByteLength('ARIAL.TTF')).toBe('fake-font-data'.length);
+    expect(fontByteLength('MISSING.TTF')).toBeUndefined();
   });
 
   it('loadFontFile uppercases the printer name', async () => {

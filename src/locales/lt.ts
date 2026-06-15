@@ -838,6 +838,7 @@ const lt = {
     builtinAliasWarning: 'Pakeičia įmontuotą spausdintuvo šriftą. Naudokite „Įmontuotų šriftų peržiūros" tik redaktoriaus susiejimui.',
     embedInZpl: 'Siųsti su spausdinimo užduotimi',
     embedInZplHint: 'Siunčia šrifto baitus ZPL sraute (~DY). Naudokite, kai spausdintuvas dar neturi failo. Reikia slapyvardžio.',
+    embedLargeWarning: 'Didelis šriftas: siunčiamas su kiekviena spausdinimo užduotimi ir gali sulėtinti ZPL peržiūrą.',
     manualMappingsHeading: 'Spausdintuve esantys šriftai',
     manualMappingsHint: 'Nuoroda į spausdintuve jau esančius šriftus, kurie čia neįkelti.',
     addManualMapping: 'Pridėti spausdintuvo šriftą',

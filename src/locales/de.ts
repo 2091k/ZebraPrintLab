@@ -859,6 +859,7 @@ const de = {
     builtinAliasWarning: 'Überschreibt eingebaute Drucker-Schrift. Für reine Editor-Bindung „Vorschau für Drucker-Standardschriften" nutzen.',
     embedInZpl: 'Mit dem Druckjob mitsenden',
     embedInZplHint: 'Schickt die Schrift-Bytes im ZPL-Stream mit (~DY). Sinnvoll, wenn der Drucker die Datei noch nicht hat. Alias erforderlich.',
+    embedLargeWarning: 'Großer Font: wird mit jedem Druckjob gesendet und kann die ZPL-Vorschau verlangsamen.',
     manualMappingsHeading: 'Schriften auf dem Drucker',
     manualMappingsHint: 'Schriften referenzieren, die schon auf dem Drucker liegen, aber hier nicht hochgeladen sind.',
     addManualMapping: 'Drucker-Schrift hinzufügen',

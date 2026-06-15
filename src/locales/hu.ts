@@ -838,6 +838,7 @@ const hu = {
     builtinAliasWarning: 'Felülbírálja a nyomtató beépített betűtípusát. Csak szerkesztőhöz való kötéshez használd a „Beépített betűtípus előnézetek" lehetőséget.',
     embedInZpl: 'Küldés a nyomtatási feladattal',
     embedInZplHint: 'A betűtípus bájtjait a ZPL-folyamon belül küldi (~DY). Akkor használd, ha a nyomtatón még nincs meg a fájl. Alias szükséges.',
+    embedLargeWarning: 'Nagy betűtípus: minden nyomtatási feladattal együtt elküldésre kerül, és lassíthatja a ZPL előnézetet.',
     manualMappingsHeading: 'Betűtípusok a nyomtatón',
     manualMappingsHint: 'Hivatkozás a nyomtatón már lévő, itt fel nem töltött betűtípusokra.',
     addManualMapping: 'Nyomtató betűtípus hozzáadása',

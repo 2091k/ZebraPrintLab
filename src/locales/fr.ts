@@ -838,6 +838,7 @@ const fr = {
     builtinAliasWarning: 'Remplace la police intégrée de l\'imprimante. Utilise « Aperçus des polices intégrées » pour une liaison uniquement dans l\'éditeur.',
     embedInZpl: 'Envoyer avec le travail d\'impression',
     embedInZplHint: 'Envoie les octets de la police dans le flux ZPL (~DY). À utiliser quand l\'imprimante n\'a pas déjà le fichier. Nécessite un alias.',
+    embedLargeWarning: "Police volumineuse : envoyée avec chaque tâche d'impression et peut ralentir l'aperçu ZPL.",
     manualMappingsHeading: 'Polices résidentes',
     manualMappingsHint: 'Référencer des polices déjà présentes sur l\'imprimante mais non téléversées ici.',
     addManualMapping: 'Ajouter une police d\'imprimante',

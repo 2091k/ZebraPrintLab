@@ -838,6 +838,7 @@ const fi = {
     builtinAliasWarning: 'Korvaa tulostimen sisäänrakennetun fontin. Käytä "Sisäänrakennettujen fonttien esikatselut" pelkkään editori-sidontaan.',
     embedInZpl: 'Lähetä tulostustyön mukana',
     embedInZplHint: 'Lähettää fontin tavut ZPL-virrassa (~DY). Käytä, kun tulostimella ei ole tiedostoa jo. Vaatii aliaksen.',
+    embedLargeWarning: 'Suuri fontti: lähetetään jokaisen tulostustyön mukana ja voi hidastaa ZPL-esikatselua.',
     manualMappingsHeading: 'Fontit tulostimessa',
     manualMappingsHint: 'Viittaa fontteihin, jotka ovat jo tulostimessa mutta joita ei ole ladattu tänne.',
     addManualMapping: 'Lisää tulostimen fontti',

@@ -838,6 +838,7 @@ const ko = {
     builtinAliasWarning: '프린터 내장 글꼴을 재정의합니다. 편집기 전용 바인딩에는 "내장 글꼴 미리보기"를 사용하세요.',
     embedInZpl: '인쇄 작업과 함께 전송',
     embedInZplHint: 'ZPL 스트림 안에 글꼴 바이트를 전송합니다 (~DY). 프린터에 파일이 아직 없을 때 사용하세요. 별칭이 필요합니다.',
+    embedLargeWarning: '큰 글꼴: 모든 인쇄 작업과 함께 전송되며 ZPL 미리 보기를 느리게 할 수 있습니다.',
     manualMappingsHeading: '프린터 내 글꼴',
     manualMappingsHint: '프린터에 이미 있지만 여기에 업로드되지 않은 글꼴을 참조합니다.',
     addManualMapping: '프린터 글꼴 추가',

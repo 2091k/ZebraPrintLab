@@ -838,6 +838,7 @@ const sk = {
     builtinAliasWarning: 'Prepíše vstavané písmo tlačiarne. Pre väzbu len v editore použite „Náhľady vstavaných písiem".',
     embedInZpl: 'Posielať s tlačovou úlohou',
     embedInZplHint: 'Posiela bajty písma vo vnútri ZPL prúdu (~DY). Použi, keď tlačiareň súbor ešte nemá. Vyžaduje alias.',
+    embedLargeWarning: 'Veľké písmo: odosiela sa s každou tlačovou úlohou a môže spomaliť náhľad ZPL.',
     manualMappingsHeading: 'Písma uložené v tlačiarni',
     manualMappingsHint: 'Odkaz na písma, ktoré sú už v tlačiarni, ale tu nie sú nahrané.',
     addManualMapping: 'Pridať písmo tlačiarne',

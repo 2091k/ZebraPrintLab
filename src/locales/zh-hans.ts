@@ -838,6 +838,7 @@ const zhHans = {
     builtinAliasWarning: '覆盖打印机内置字体。仅在编辑器中绑定请使用「内置字体预览」。',
     embedInZpl: '随打印任务一起发送',
     embedInZplHint: '在 ZPL 流中发送字体字节 (~DY)。当打印机还没有该文件时使用。需要别名。',
+    embedLargeWarning: '大字体：随每个打印作业一起发送，可能会减慢 ZPL 预览。',
     manualMappingsHeading: '打印机内置字体',
     manualMappingsHint: '引用打印机中已有但未在此上传的字体。',
     addManualMapping: '添加打印机字体',

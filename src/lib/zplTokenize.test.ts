@@ -99,6 +99,21 @@ describe("tokenizeZplLine", () => {
     expect(tokens[0]).toEqual(["command", "~DG"]);
   });
 
+  it("treats a ~DY download payload as one opaque token, not split params", () => {
+    // The hex would otherwise explode into millions of number/enum tokens.
+    expect(compact("~DYE:FONT,A,T,8,,DEADBEEF")).toEqual([
+      ["command", "~DY"],
+      ["fieldData", "E:FONT,A,T,8,,DEADBEEF"],
+    ]);
+  });
+
+  it("treats an inline ^GF graphic payload as one opaque token", () => {
+    expect(compact("^GFA,8,8,2,DEADBEEF")).toEqual([
+      ["command", "^GF"],
+      ["fieldData", "A,8,8,2,DEADBEEF"],
+    ]);
+  });
+
   it("tokenizes a full multi-command line", () => {
     expect(compact("^BY2^FO176,171^BUN,100,Y,N,Y^FD01234567890^FS")).toEqual([
       ["command", "^BY"],

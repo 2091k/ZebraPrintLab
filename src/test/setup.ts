@@ -39,6 +39,17 @@ Object.defineProperty(globalThis, 'FileReader', {
   value: FakeFileReader,
 });
 
+// ── FontFace ──────────────────────────────────────────────────────────────────
+
+class FakeFontFace {
+  load(): Promise<this> { return Promise.resolve(this); }
+}
+
+Object.defineProperty(globalThis, 'FontFace', {
+  configurable: true,
+  value: FakeFontFace,
+});
+
 // ── navigator ─────────────────────────────────────────────────────────────────
 Object.defineProperty(globalThis, 'navigator', {
   configurable: true,
@@ -108,5 +119,6 @@ Object.defineProperty(globalThis, 'document', {
       if (tag === 'canvas') return createFakeCanvas();
       return {};
     },
+    fonts: { add() { /* noop */ } } as unknown as FontFaceSet,
   } as Partial<Document>,
 });

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   builtinFontFamily,
+  formatFontDownloadFromPath,
   getAvailableFontIds,
   isBuiltinFontId,
   nextFreeAlias,
@@ -9,6 +10,26 @@ import {
   resolvePreviewFontName,
   upsertCustomFontMapping,
 } from "./customFonts";
+import { loadFontFile, removeFont, EMBED_WARN_FONT_BYTES } from "./fontCache";
+
+describe("formatFontDownloadFromPath", () => {
+  const fileOf = (name: string, bytes: number) =>
+    new File([new Uint8Array(bytes)], name, { type: "font/ttf" });
+
+  it("emits a ~DY line with the byte count", async () => {
+    await loadFontFile(fileOf("small.ttf", 64), "SMALL.TTF");
+    const line = formatFontDownloadFromPath("E:SMALL.TTF");
+    expect(line?.startsWith("~DYE:SMALL,A,T,64,,")).toBe(true);
+    removeFont("SMALL.TTF");
+  });
+
+  it("still emits a large font (printer is the target; size only warns in the UI)", async () => {
+    await loadFontFile(fileOf("big.ttf", EMBED_WARN_FONT_BYTES + 1), "BIG.TTF");
+    const line = formatFontDownloadFromPath("E:BIG.TTF");
+    expect(line?.startsWith("~DYE:BIG,A,T,")).toBe(true);
+    removeFont("BIG.TTF");
+  });
+});
 
 describe("builtinFontFamily", () => {
   it("maps device fonts to their Labelary-matching faces", () => {

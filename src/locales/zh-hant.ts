@@ -838,6 +838,7 @@ const zhHant = {
     builtinAliasWarning: '覆蓋印表機內建字型。僅在編輯器中綁定請使用「內建字型預覽」。',
     embedInZpl: '隨列印工作一起傳送',
     embedInZplHint: '在 ZPL 串流中傳送字型位元組 (~DY)。當印表機尚未擁有該檔案時使用。需要別名。',
+    embedLargeWarning: '大字體：隨每個列印工作一起傳送，可能會減慢 ZPL 預覽。',
     manualMappingsHeading: '印表機內建字型',
     manualMappingsHint: '參照印表機中已有但未在此上傳的字型。',
     addManualMapping: '新增印表機字型',

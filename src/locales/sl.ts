@@ -838,6 +838,7 @@ const sl = {
     builtinAliasWarning: 'Prepiše vgrajeno pisavo tiskalnika. Za vezavo samo v urejevalniku uporabite „Predogledi vgrajenih pisav".',
     embedInZpl: 'Pošlji s tiskalniškim opravilom',
     embedInZplHint: 'Pošlje bajte pisave znotraj toka ZPL (~DY). Uporabi, ko tiskalnik datoteke še nima. Zahteva vzdevek.',
+    embedLargeWarning: 'Velika pisava: pošlje se z vsakim tiskalniškim opravilom in lahko upočasni predogled ZPL.',
     manualMappingsHeading: 'Pisave v tiskalniku',
     manualMappingsHint: 'Sklicevanje na pisave, ki so že v tiskalniku, vendar tukaj niso naložene.',
     addManualMapping: 'Dodaj pisavo tiskalnika',

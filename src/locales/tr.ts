@@ -838,6 +838,7 @@ const tr = {
     builtinAliasWarning: 'Yerleşik yazıcı yazı tipini geçersiz kılar. Yalnızca editör bağlaması için "Yerleşik yazı tipi önizlemeleri" kullanın.',
     embedInZpl: 'Yazdırma işiyle gönder',
     embedInZplHint: 'Yazı tipi baytlarını ZPL akışı içinde gönderir (~DY). Yazıcıda dosya henüz yokken kullanın. Bir takma ad gerektirir.',
+    embedLargeWarning: 'Büyük yazı tipi: her yazdırma işiyle gönderilir ve ZPL önizlemesini yavaşlatabilir.',
     manualMappingsHeading: 'Yazıcıda kayıtlı yazı tipleri',
     manualMappingsHint: 'Yazıcıda zaten bulunan ancak buraya yüklenmemiş yazı tiplerine referans verir.',
     addManualMapping: 'Yazıcı yazı tipi ekle',

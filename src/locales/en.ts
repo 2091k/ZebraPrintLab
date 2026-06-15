@@ -859,6 +859,7 @@ const en = {
     builtinAliasWarning: 'Overrides built-in printer font. Use "Built-in font previews" for editor-only binding.',
     embedInZpl: 'Send with print job',
     embedInZplHint: 'Ship the font bytes inside the ZPL stream (~DY). Use when the printer does not already have the file. Requires an alias.',
+    embedLargeWarning: 'Large font: sent with every print job and can slow the ZPL preview.',
     manualMappingsHeading: 'Printer-resident fonts',
     manualMappingsHint: 'Reference fonts already on the printer that are not uploaded here.',
     addManualMapping: 'Add printer font',

@@ -838,6 +838,7 @@ const da = {
     builtinAliasWarning: 'Tilsidesætter indbygget printerskrift. Brug "Visning af indbyggede skrifttyper" til binding kun i editor.',
     embedInZpl: 'Send med printopgaven',
     embedInZplHint: 'Sender skrifttypens bytes inde i ZPL-strømmen (~DY). Brug det, når printeren ikke allerede har filen. Kræver et alias.',
+    embedLargeWarning: 'Stor skrifttype: sendes med hvert udskriftsjob og kan gøre ZPL-forhåndsvisningen langsommere.',
     manualMappingsHeading: 'Skrifttyper på printeren',
     manualMappingsHint: 'Reference til skrifttyper, der allerede er på printeren, men ikke uploadet her.',
     addManualMapping: 'Tilføj printerskrifttype',

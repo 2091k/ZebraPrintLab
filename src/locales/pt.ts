@@ -838,6 +838,7 @@ const pt = {
     builtinAliasWarning: 'Substitui a fonte integrada da impressora. Use "Pré-visualizações de fontes integradas" para vinculação somente no editor.',
     embedInZpl: 'Enviar com o trabalho de impressão',
     embedInZplHint: 'Envia os bytes da fonte dentro do fluxo ZPL (~DY). Use quando a impressora ainda não tiver o arquivo. Requer um alias.',
+    embedLargeWarning: 'Fonte grande: enviada com cada trabalho de impressão e pode tornar a pré-visualização ZPL mais lenta.',
     manualMappingsHeading: 'Fontes residentes na impressora',
     manualMappingsHint: 'Referencia fontes já presentes na impressora mas não enviadas aqui.',
     addManualMapping: 'Adicionar fonte da impressora',

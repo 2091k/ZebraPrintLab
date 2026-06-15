@@ -838,6 +838,7 @@ const cs = {
     builtinAliasWarning: 'Přepisuje vestavěné písmo tiskárny. Pro vazbu pouze v editoru použijte „Náhledy vestavěných písem".',
     embedInZpl: 'Posílat s tiskovou úlohou',
     embedInZplHint: 'Pošle bajty písma uvnitř toku ZPL (~DY). Použij, když tiskárna soubor zatím nemá. Vyžaduje alias.',
+    embedLargeWarning: 'Velké písmo: odesílá se s každou tiskovou úlohou a může zpomalit náhled ZPL.',
     manualMappingsHeading: 'Písma uložená v tiskárně',
     manualMappingsHint: 'Odkaz na písma, která jsou již v tiskárně, ale zde nejsou nahrána.',
     addManualMapping: 'Přidat písmo tiskárny',

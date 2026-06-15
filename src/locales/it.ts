@@ -838,6 +838,7 @@ const it = {
     builtinAliasWarning: 'Sovrascrive il carattere integrato della stampante. Usa "Anteprime caratteri integrati" per binding solo nell\'editor.',
     embedInZpl: 'Invia con il lavoro di stampa',
     embedInZplHint: 'Invia i byte del carattere all\'interno del flusso ZPL (~DY). Usalo quando la stampante non ha già il file. Richiede un alias.',
+    embedLargeWarning: "Carattere grande: inviato con ogni processo di stampa e può rallentare l'anteprima ZPL.",
     manualMappingsHeading: 'Font residenti sulla stampante',
     manualMappingsHint: 'Riferimento a font già presenti sulla stampante ma non caricati qui.',
     addManualMapping: 'Aggiungi font della stampante',

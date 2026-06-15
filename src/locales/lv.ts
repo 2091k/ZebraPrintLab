@@ -838,6 +838,7 @@ const lv = {
     builtinAliasWarning: 'Pārraksta iebūvēto printera fontu. Izmantojiet „Iebūvēto fontu priekšskatījumi" tikai redaktora saistīšanai.',
     embedInZpl: 'Sūtīt ar drukas darbu',
     embedInZplHint: 'Nosūta fonta baitus ZPL plūsmā (~DY). Izmantojiet, kad printerim vēl nav faila. Nepieciešams aizstājvārds.',
+    embedLargeWarning: 'Liels fonts: tiek nosūtīts ar katru drukas darbu un var palēnināt ZPL priekšskatījumu.',
     manualMappingsHeading: 'Printera fonti',
     manualMappingsHint: 'Atsauce uz fontiem, kas jau ir printerī, bet nav augšupielādēti šeit.',
     addManualMapping: 'Pievienot printera fontu',

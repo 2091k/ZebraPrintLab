@@ -838,6 +838,7 @@ const nl = {
     builtinAliasWarning: 'Overschrijft ingebouwd printerlettertype. Gebruik "Voorvertoningen van ingebouwde lettertypen" voor binding alleen in de editor.',
     embedInZpl: 'Met de printopdracht meesturen',
     embedInZplHint: 'Verzendt de bytes van het lettertype binnen de ZPL-stroom (~DY). Gebruik dit wanneer de printer het bestand nog niet heeft. Vereist een alias.',
+    embedLargeWarning: 'Groot lettertype: wordt met elke afdruktaak meegestuurd en kan het ZPL-voorbeeld vertragen.',
     manualMappingsHeading: 'Lettertypen op de printer',
     manualMappingsHint: 'Verwijs naar lettertypen die al op de printer staan maar hier niet zijn geüpload.',
     addManualMapping: 'Printerlettertype toevoegen',

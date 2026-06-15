@@ -838,6 +838,7 @@ const sv = {
     builtinAliasWarning: 'Skriver över inbyggt skrivartypsnitt. Använd "Förhandsvisningar av inbyggda typsnitt" för bindning endast i editorn.',
     embedInZpl: 'Skicka med utskriftsjobbet',
     embedInZplHint: 'Skickar typsnittets bytes inom ZPL-strömmen (~DY). Använd när skrivaren inte redan har filen. Kräver ett alias.',
+    embedLargeWarning: 'Stort teckensnitt: skickas med varje utskriftsjobb och kan göra ZPL-förhandsgranskningen långsammare.',
     manualMappingsHeading: 'Typsnitt i skrivaren',
     manualMappingsHint: 'Referera till typsnitt som redan finns på skrivaren men inte är uppladdade här.',
     addManualMapping: 'Lägg till skrivartypsnitt',

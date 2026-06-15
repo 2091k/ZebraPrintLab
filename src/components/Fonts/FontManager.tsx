@@ -1,6 +1,11 @@
 import { useRef, useState, useCallback, type FocusEvent } from 'react';
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid';
-import { getAllFonts, loadFontFile, removeFont } from '../../lib/fontCache';
+import {
+  getAllFonts,
+  loadFontFile,
+  removeFont,
+  isEmbedLarge,
+} from '../../lib/fontCache';
 import { useFontCacheVersion } from '../../hooks/useFontCacheVersion';
 import { useLabelStore } from '../../store/labelStore';
 import { useT } from '../../lib/useT';
@@ -218,6 +223,7 @@ export function FontManager() {
               alias={alias}
               duplicate={isDuplicateAlias(alias)}
               embedInZpl={entry?.embedInZpl ?? false}
+              embedLarge={isEmbedLarge(font.name)}
               previewAliases={previewAliases}
               onAliasChange={(v) => setAliasForPath(path, v)}
               onEmbedChange={(v) => toggleEmbedForPath(path, v)}
@@ -319,6 +325,8 @@ interface FontEntryProps {
   alias: string;
   duplicate: boolean;
   embedInZpl: boolean;
+  /** Font is large; embedding still works but warns (bigger job, slower view). */
+  embedLarge: boolean;
   /** Built-in font IDs that map to this TTF as a preview binding. */
   previewAliases: string[];
   onAliasChange: (next: string) => void;
@@ -331,6 +339,7 @@ function FontEntry({
   alias,
   duplicate,
   embedInZpl,
+  embedLarge,
   previewAliases,
   onAliasChange,
   onEmbedChange,
@@ -342,6 +351,9 @@ function FontEntry({
   // no field can reference. Disable + tooltip when alias is empty so
   // the constraint is visible instead of silently failing at emit.
   const embedDisabled = !alias;
+  // "Embedding is actually active": gates both the checkbox state and the
+  // large-font warning so they never disagree.
+  const embedActive = embedInZpl && !embedDisabled;
   // Heads-up when the user picks a built-in letter (0, A-H): ^CW with
   // a built-in alias overrides the factory font on the printer, which
   // is rarely what the user wants; the "Built-in font previews"
@@ -390,7 +402,7 @@ function FontEntry({
           <input
             type="checkbox"
             className="accent-accent"
-            checked={embedInZpl && !embedDisabled}
+            checked={embedActive}
             disabled={embedDisabled}
             onChange={(e) => onEmbedChange(e.target.checked)}
           />
@@ -409,6 +421,11 @@ function FontEntry({
       {overridesBuiltin && (
         <p className="text-[10px] text-amber-500 leading-snug pl-1">
           {t.fonts.builtinAliasWarning}
+        </p>
+      )}
+      {embedLarge && embedActive && (
+        <p className="text-[10px] text-amber-500 leading-snug pl-1">
+          {t.fonts.embedLargeWarning}
         </p>
       )}
       {previewAliases.length > 0 && (

@@ -838,6 +838,7 @@ const pl = {
     builtinAliasWarning: 'Zastępuje wbudowaną czcionkę drukarki. Użyj „Podglądy wbudowanych czcionek" do powiązania tylko w edytorze.',
     embedInZpl: 'Wyślij z zadaniem drukowania',
     embedInZplHint: 'Wysyła bajty czcionki w strumieniu ZPL (~DY). Użyj, gdy drukarka jeszcze nie ma pliku. Wymaga aliasu.',
+    embedLargeWarning: 'Duża czcionka: wysyłana z każdym zadaniem drukowania i może spowolnić podgląd ZPL.',
     manualMappingsHeading: 'Czcionki w pamięci drukarki',
     manualMappingsHint: 'Odwołuje się do czcionek już w drukarce, niewgranych tutaj.',
     addManualMapping: 'Dodaj czcionkę drukarki',

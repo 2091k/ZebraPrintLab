@@ -838,6 +838,7 @@ const no = {
     builtinAliasWarning: 'Overstyrer innebygd skriverskrift. Bruk "Forhåndsvisninger av innebygde skrifter" for binding kun i editoren.',
     embedInZpl: 'Send med utskriftsjobben',
     embedInZplHint: 'Sender skriftens byte inne i ZPL-strømmen (~DY). Brukes når skriveren ikke allerede har filen. Krever et alias.',
+    embedLargeWarning: 'Stor skrift: sendes med hver utskriftsjobb og kan gjøre ZPL-forhåndsvisningen tregere.',
     manualMappingsHeading: 'Skrifter på skriveren',
     manualMappingsHint: 'Referer til skrifter som allerede ligger på skriveren, men ikke er lastet opp her.',
     addManualMapping: 'Legg til skriverskrift',

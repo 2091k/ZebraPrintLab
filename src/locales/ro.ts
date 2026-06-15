@@ -838,6 +838,7 @@ const ro = {
     builtinAliasWarning: 'Suprascrie fontul integrat al imprimantei. Folosește „Previzualizări fonturi integrate" pentru legare doar în editor.',
     embedInZpl: 'Trimite cu sarcina de imprimare',
     embedInZplHint: 'Trimite octeții fontului în fluxul ZPL (~DY). Folosește atunci când imprimanta nu are deja fișierul. Necesită un alias.',
+    embedLargeWarning: 'Font mare: trimis cu fiecare lucrare de imprimare și poate încetini previzualizarea ZPL.',
     manualMappingsHeading: 'Fonturi din imprimantă',
     manualMappingsHint: 'Referință la fonturi deja prezente pe imprimantă, neîncărcate aici.',
     addManualMapping: 'Adaugă font imprimantă',

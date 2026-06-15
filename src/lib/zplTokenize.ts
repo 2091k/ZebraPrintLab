@@ -29,6 +29,10 @@ export interface ZplToken {
 const STRUCTURAL = new Set(["XA", "XZ"]);
 const DATA_CMDS = new Set(["FD", "FV"]);
 const COMMENT_CMDS = new Set(["FX"]);
+// Opaque data payloads (embedded font/graphic hex or base64), not parameter
+// lists: the ~D* download family and the inline ^GF graphic field. Without
+// this, pushParams splits a multi-MB payload into millions of tokens.
+const OPAQUE_CMDS = new Set(["DY", "DG", "DB", "DT", "DU", "GF"]);
 
 const isCmdStart = (ch: string | undefined) => ch === "^" || ch === "~";
 
@@ -60,7 +64,7 @@ export function tokenizeZplLine(line: string): ZplToken[] {
       while (j < n && !isCmdStart(line[j])) j++;
       const run = line.slice(i, j);
       if (run) {
-        if (DATA_CMDS.has(code)) out.push({ type: "fieldData", value: run });
+        if (DATA_CMDS.has(code) || OPAQUE_CMDS.has(code)) out.push({ type: "fieldData", value: run });
         else if (COMMENT_CMDS.has(code)) out.push({ type: "comment", value: run });
         else pushParams(run, out);
       }

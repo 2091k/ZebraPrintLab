@@ -838,6 +838,7 @@ const ja = {
     builtinAliasWarning: 'プリンターの内蔵フォントを上書きします。エディタのみのバインドには「内蔵フォントのプレビュー」を使用してください。',
     embedInZpl: '印刷ジョブと一緒に送信',
     embedInZplHint: 'ZPLストリーム内でフォントのバイトを送信します (~DY)。プリンターにファイルがまだない場合に使用します。エイリアスが必要です。',
+    embedLargeWarning: '大きなフォント: 印刷ジョブごとに送信され、ZPL プレビューが遅くなることがあります。',
     manualMappingsHeading: 'プリンター内蔵フォント',
     manualMappingsHint: 'プリンターに既にあるがここにアップロードされていないフォントを参照します。',
     addManualMapping: 'プリンターフォントを追加',

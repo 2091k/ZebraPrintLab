@@ -838,6 +838,7 @@ const hr = {
     builtinAliasWarning: 'Nadjačava ugrađeni font pisača. Koristite "Pregledi ugrađenih fontova" za vezivanje samo u uređivaču.',
     embedInZpl: 'Pošalji s ispisnim zadatkom',
     embedInZplHint: 'Šalje bajtove fonta unutar ZPL toka (~DY). Koristi kada pisač još nema datoteku. Zahtijeva alias.',
+    embedLargeWarning: 'Veliki font: šalje se sa svakim zadatkom ispisa i može usporiti ZPL pregled.',
     manualMappingsHeading: 'Fontovi na pisaču',
     manualMappingsHint: 'Referenca na fontove koji se već nalaze na pisaču, ali nisu prenijeti ovdje.',
     addManualMapping: 'Dodaj font pisača',
