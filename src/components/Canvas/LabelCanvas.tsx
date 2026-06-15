@@ -368,10 +368,8 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
   useImperativeHandle(
     ref,
     () => {
-      // Build one AlignBox per top-level selected object (group = one bbox)
-      // plus the per-id apply closure. All in DOTS, so align/distribute is
-      // independent of zoom and view rotation. A group delta shifts every
-      // leaf (children carry absolute coordinates), mirroring group drag.
+      // All in DOTS, so align/distribute is zoom- and view-rotation-independent.
+      // A group is one bbox; its delta shifts every leaf (absolute coordinates).
       const buildSelection = (alignRef: AlignRef): {
         boxes: AlignBox[];
         ref: ReturnType<typeof selectionUnionDots>;

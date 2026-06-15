@@ -105,7 +105,7 @@ export function AlignToolbar({
   const tidyDisabled = selectionCount < 2;
 
   const segCls = (active: boolean) =>
-    `px-1.5 py-0.5 transition-colors ${active ? "bg-accent text-bg" : "text-muted hover:text-text"}`;
+    `px-1.5 py-0.5 transition-colors disabled:opacity-40 disabled:pointer-events-none ${active ? "bg-accent text-bg" : "text-muted hover:text-text"}`;
 
   return (
     <div

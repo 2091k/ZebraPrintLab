@@ -5,7 +5,6 @@ interface IconProps {
 // Align ops: a solid edge bar marks the reference edge; two bars of differing
 // length snap their matching edge to it. Mirrors Figma/Affinity align glyphs.
 
-/** Two bars flush to a solid left edge. */
 export function AlignLeftIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true" className={className}>
@@ -16,7 +15,6 @@ export function AlignLeftIcon({ className }: IconProps) {
   );
 }
 
-/** Two bars centred on a solid vertical mid-line. */
 export function AlignHCenterIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true" className={className}>
@@ -27,7 +25,6 @@ export function AlignHCenterIcon({ className }: IconProps) {
   );
 }
 
-/** Two bars flush to a solid right edge. */
 export function AlignRightIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true" className={className}>
@@ -38,7 +35,6 @@ export function AlignRightIcon({ className }: IconProps) {
   );
 }
 
-/** Two bars flush to a solid top edge. */
 export function AlignTopIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true" className={className}>
@@ -49,7 +45,6 @@ export function AlignTopIcon({ className }: IconProps) {
   );
 }
 
-/** Two bars centred on a solid horizontal mid-line. */
 export function AlignVMiddleIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true" className={className}>
@@ -60,7 +55,6 @@ export function AlignVMiddleIcon({ className }: IconProps) {
   );
 }
 
-/** Two bars flush to a solid bottom edge. */
 export function AlignBottomIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true" className={className}>
@@ -71,7 +65,6 @@ export function AlignBottomIcon({ className }: IconProps) {
   );
 }
 
-/** Three vertical bars with equal gaps; horizontal equal-gap distribute. */
 export function DistributeHIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true" className={className}>
@@ -82,7 +75,6 @@ export function DistributeHIcon({ className }: IconProps) {
   );
 }
 
-/** Scattered tiles snapping into an even 2x2 grid; one-click tidy/auto-arrange. */
 export function TidyIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true" className={className}>
@@ -94,7 +86,6 @@ export function TidyIcon({ className }: IconProps) {
   );
 }
 
-/** Three horizontal bars with equal gaps; vertical equal-gap distribute. */
 export function DistributeVIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true" className={className}>

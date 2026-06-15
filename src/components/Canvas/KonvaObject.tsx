@@ -475,10 +475,8 @@ function KonvaObjectInner({
   const x = offsetX + dotsToPx(obj.x, scale, dpmm);
   const y = offsetY + dotsToPx(obj.y, scale, dpmm);
 
-  // Publish the single-line text/serial footprint (dots) for align/distribute.
-  // Block (^FB) text is purely computable via blockBoundsDots, so only the
-  // single-line case needs the measured ink width. Upright is inkWidth x
-  // fontHeight; a quarter turn swaps the axes.
+  // Only single-line text/serial needs a measured footprint; block (^FB) text
+  // is purely computable via blockBoundsDots. A quarter turn swaps the axes.
   const isSingleLineText =
     (obj.type === "text" || obj.type === "serial") &&
     !!textMetrics &&

@@ -601,7 +601,7 @@ function LabelConfigPanel({
             onChange={(e) => {
               const raw = e.target.value.trim();
               const mm = raw === "" ? undefined : unitToMm(Number(raw), unit);
-              onUpdate({ safeAreaMm: mm && mm > 0 ? mm : undefined });
+              onUpdate({ safeAreaMm: mm !== undefined && mm > 0 ? mm : undefined });
             }}
           />
         </div>
