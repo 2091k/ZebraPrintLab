@@ -450,6 +450,22 @@ describe('loadDesign', () => {
     expect(objs()).toHaveLength(0);
     expect(state().currentPageIndex).toBe(0);
   });
+
+  it('drops legacy path-less customFonts bindings on load', () => {
+    state().loadDesign(
+      {
+        widthMm: 50,
+        heightMm: 30,
+        dpmm: 8,
+        customFonts: [
+          { alias: 'A' },
+          { alias: 'B', path: 'E:MY.TTF' },
+        ],
+      },
+      [{ objects: [] }],
+    );
+    expect(state().label.customFonts).toEqual([{ alias: 'B', path: 'E:MY.TTF' }]);
+  });
 });
 
 // ── appendPages ───────────────────────────────────────────────────────────────
@@ -1241,6 +1257,34 @@ describe('migrateLegacy — v4→v5 printerProfile extraction', () => {
       printerProfile: Record<string, unknown>;
     };
     expect(migrated.printerProfile.clockMode).toBeUndefined();
+  });
+
+  it('v7→v8 drops legacy path-less customFonts on rehydrate', () => {
+    const persisted = {
+      label: {
+        widthMm: 100,
+        heightMm: 50,
+        dpmm: 8,
+        customFonts: [
+          { alias: 'A' },
+          { alias: 'B', path: 'E:MY.TTF' },
+        ],
+      },
+      pages: [{ objects: [] }],
+    };
+    const migrated = migrateLegacy(persisted, 7) as typeof persisted;
+    expect(migrated.label.customFonts).toEqual([{ alias: 'B', path: 'E:MY.TTF' }]);
+  });
+
+  it('v7→v8 clears customFonts to undefined when only legacy entries remain', () => {
+    const persisted = {
+      label: { widthMm: 100, heightMm: 50, dpmm: 8, customFonts: [{ alias: 'A' }] },
+      pages: [{ objects: [] }],
+    };
+    const migrated = migrateLegacy(persisted, 7) as {
+      label: Record<string, unknown>;
+    };
+    expect(migrated.label.customFonts).toBeUndefined();
   });
 });
 

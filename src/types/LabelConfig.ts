@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { intInRange, makeEnumGuard } from './typeHelpers';
 
-/** Three row shapes: printer-resident custom (path+optional preview),
- *  built-in alias preview (alias 0/A-H, no path), or manual printer-side
- *  (path only, no bytes). Empty strings allowed for in-progress UI rows;
- *  completeness enforced at zplGenerator emit-time. */
+/** Two row shapes: uploaded font (path + optional preview, bytes in cache)
+ *  or manual printer-resident reference (path only, no bytes). Empty strings
+ *  allowed for in-progress UI rows; completeness enforced at zplGenerator
+ *  emit-time. Path-less rows are legacy (removed built-in-preview feature) and
+ *  are scrubbed at load by dropLegacyFontBindings. */
 export const customFontMappingSchema = z
   .object({
     alias: z.string().regex(/^[A-Z0-9]$/),

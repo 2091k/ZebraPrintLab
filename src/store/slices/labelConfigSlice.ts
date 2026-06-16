@@ -3,6 +3,7 @@ import type { LabelConfig } from '../../types/LabelConfig';
 import type { Page } from '../../types/Group';
 import type { Variable, CsvMapping } from '../../types/Variable';
 import { forgetImport } from '../../lib/csvImport';
+import { dropLegacyFontBindings } from '../../lib/customFonts';
 import { selectPreviewLocksEditor } from '../labelStore.selectors';
 import type { LabelState } from '../labelStore';
 
@@ -41,7 +42,9 @@ export const createLabelConfigSlice: StateCreator<LabelState, [], [], LabelConfi
     // cache belongs to that file, not the one being loaded.
     forgetImport();
     set({
-      label,
+      // Scrub legacy path-less font bindings at the load boundary so no
+      // component logic or extra undo step is needed.
+      label: { ...label, customFonts: dropLegacyFontBindings(label.customFonts) },
       pages: pages.length > 0 ? pages : [{ objects: [] }],
       currentPageIndex: 0,
       selectedIds: [],

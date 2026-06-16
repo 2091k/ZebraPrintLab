@@ -73,6 +73,17 @@ export function upsertCustomFontMapping(
   return [...withoutPath, { alias, path }];
 }
 
+/** Drop path-less canvas-only bindings left by the removed built-in
+ *  preview feature. Returns undefined when nothing remains so the field
+ *  stays absent. Uploaded fonts carry their preview via `path`. */
+export function dropLegacyFontBindings(
+  list: readonly CustomFontMapping[] | undefined,
+): CustomFontMapping[] | undefined {
+  if (!list) return undefined;
+  const next = list.filter((m) => m.path !== undefined);
+  return next.length > 0 ? next : undefined;
+}
+
 export const ZPL_BUILTIN_FONT_LETTERS = '0ABCDEFGH';
 const ALIAS_PREFERRED_ORDER = 'IJKLMNOPQRSTUVWXYZ123456789';
 

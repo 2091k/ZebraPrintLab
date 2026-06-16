@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   builtinFontFamily,
+  dropLegacyFontBindings,
   formatFontDownloadFromPath,
   getAvailableFontIds,
   isBuiltinFontId,
@@ -11,6 +12,22 @@ import {
   upsertCustomFontMapping,
 } from "./customFonts";
 import { loadFontFile, removeFont, EMBED_WARN_FONT_BYTES } from "./fontCache";
+
+describe("dropLegacyFontBindings", () => {
+  it("returns undefined for undefined or empty input", () => {
+    expect(dropLegacyFontBindings(undefined)).toBeUndefined();
+    expect(dropLegacyFontBindings([])).toBeUndefined();
+  });
+
+  it("removes path-less legacy bindings, keeps real entries", () => {
+    const kept = { alias: "A", path: "E:ARIAL.TTF" };
+    expect(dropLegacyFontBindings([kept, { alias: "B", previewFontName: "X.TTF" }])).toEqual([kept]);
+  });
+
+  it("returns undefined when only legacy bindings remain", () => {
+    expect(dropLegacyFontBindings([{ alias: "A", previewFontName: "X.TTF" }])).toBeUndefined();
+  });
+});
 
 describe("formatFontDownloadFromPath", () => {
   const fileOf = (name: string, bytes: number) =>

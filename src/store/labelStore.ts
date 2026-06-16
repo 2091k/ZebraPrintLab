@@ -4,6 +4,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { ObjectChanges } from '../types/LabelObject';
 import { PRINTER_PROFILE_FIELDS, printerProfileSchema } from '../types/PrinterProfile';
 import { visitLeavesInPages } from '../lib/objectTree';
+import { dropLegacyFontBindings } from '../lib/customFonts';
+import type { CustomFontMapping } from '../types/LabelConfig';
 import type { LabelObject } from '../types/Group';
 import {
   createPrinterProfileSlice,
@@ -117,6 +119,25 @@ export function migrateLegacy(persistedState: unknown, version: number): unknown
     const pp = (s as Record<string, unknown>).printerProfile;
     if (pp && typeof pp === 'object') {
       s = { ...s, printerProfile: migrateMaintenanceTypeCodes(pp as Record<string, unknown>) };
+    }
+  }
+
+  // v7→v8: drop path-less canvas-only font bindings left by the removed
+  // built-in preview feature. They still resolve on canvas via alias but
+  // only persist in saved JSON; scrub them so legacy sessions are clean.
+  if (version < 8) {
+    const label = s.label;
+    if (label && typeof label === 'object') {
+      const l = label as Record<string, unknown>;
+      if (Array.isArray(l.customFonts)) {
+        s = {
+          ...s,
+          label: {
+            ...l,
+            customFonts: dropLegacyFontBindings(l.customFonts as CustomFontMapping[]),
+          },
+        };
+      }
     }
   }
 
@@ -255,7 +276,7 @@ export const useLabelStore = create<LabelState>()(
     }),
     {
       name: 'zpl-designer-session',
-      version: 7,
+      version: 8,
       migrate: (persistedState, version) => migrateLegacy(persistedState, version) as LabelState,
       storage: createJSONStorage(() => localStorage),
       partialize: persistPartialize,
