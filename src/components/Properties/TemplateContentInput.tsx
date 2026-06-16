@@ -6,6 +6,8 @@ import {
   useLayoutEffect,
 } from "react";
 import { createPortal, flushSync } from "react-dom";
+import { useAnchoredPosition } from "../../hooks/useAnchoredPosition";
+import { Tooltip } from "../ui/Tooltip";
 import { useT } from "../../lib/useT";
 import { useLabelStore } from "../../store/labelStore";
 import { CLOCK_TOKEN_LABELS, type ClockChannel } from "../../lib/fcTemplate";
@@ -111,10 +113,11 @@ export function TemplateContentInput({
   const composingRef = useRef(false);
   const [open, setOpen] = useState(false);
   // Menu is portaled to body so the sidebar's overflow clip and stacking
-  // context can't hide it; track the field rect to anchor it (fixed coords).
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(
-    null,
-  );
+  // context can't hide it; anchor it to the field rect (fixed coords).
+  const menuPos = useAnchoredPosition(rootRef, open, (r) => ({
+    top: r.bottom + 4,
+    right: window.innerWidth - r.right,
+  }));
 
   const variableNames = useMemo(
     () => new Set(variables.map((v: Variable) => v.name)),
@@ -182,30 +185,6 @@ export function TemplateContentInput({
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  // Anchor the portaled menu to the field's bottom-right; reposition on
-  // scroll (sidebar scrolls) and resize so it tracks the trigger.
-  useLayoutEffect(() => {
-    if (!open) return;
-    let frame = 0;
-    const place = () => {
-      const r = rootRef.current?.getBoundingClientRect();
-      if (r) setMenuPos({ top: r.bottom + 4, right: window.innerWidth - r.right });
-    };
-    // Coalesce scroll/resize bursts into one measure per frame.
-    const schedule = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(place);
-    };
-    place();
-    window.addEventListener("scroll", schedule, true);
-    window.addEventListener("resize", schedule);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule, true);
-      window.removeEventListener("resize", schedule);
     };
   }, [open]);
 
@@ -387,16 +366,17 @@ export function TemplateContentInput({
         onCompositionEnd={onCompositionEnd}
         onDoubleClick={onDoubleClick}
       />
-      <button
-        type="button"
-        className="absolute top-1 right-1 px-1.5 rounded text-[10px] font-mono bg-surface border border-border text-muted hover:text-text hover:border-accent transition-colors"
-        title={t.app.insertVariable}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
-        {"{x}"}
-      </button>
+      <Tooltip className="absolute top-1 right-1" content={t.app.insertVariable}>
+        <button
+          type="button"
+          className="px-1.5 rounded text-[10px] font-mono bg-surface border border-border text-muted hover:text-text hover:border-accent transition-colors"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {"{x}"}
+        </button>
+      </Tooltip>
       {open && menuPos && createPortal(
         <div
           ref={menuRef}

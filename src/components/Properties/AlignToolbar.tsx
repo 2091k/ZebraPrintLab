@@ -1,4 +1,5 @@
 import { useT } from "../../lib/useT";
+import { Tooltip } from "../ui/Tooltip";
 import type { AlignOp, DistributeAxis, AlignRef } from "../../lib/align";
 import type { AlignSelectionRef } from "../../store/slices/uiSlice";
 import {
@@ -54,17 +55,17 @@ function AlignOpRow({
   return (
     <div className="flex flex-wrap items-center gap-1">
       {ops.map(({ op, title, Icon }) => (
-        <button
-          key={op}
-          type="button"
-          className={BUTTON_CLS}
-          title={title}
-          aria-label={title}
-          disabled={disabled}
-          onClick={() => onClick(op)}
-        >
-          <Icon className="w-3.5 h-3.5" />
-        </button>
+        <Tooltip key={op} content={title}>
+          <button
+            type="button"
+            className={BUTTON_CLS}
+            aria-label={title}
+            disabled={disabled}
+            onClick={() => onClick(op)}
+          >
+            <Icon className="w-3.5 h-3.5" />
+          </button>
+        </Tooltip>
       ))}
     </div>
   );
@@ -161,26 +162,28 @@ export function AlignToolbar({
           {t.properties.distributeSection}
         </span>
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            className={BUTTON_CLS}
-            title={distributeDisabled ? t.properties.distributeHint : t.properties.distributeH}
-            aria-label={t.properties.distributeH}
-            disabled={distributeDisabled}
-            onClick={() => onDistribute("h")}
-          >
-            <DistributeHIcon className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            className={BUTTON_CLS}
-            title={distributeDisabled ? t.properties.distributeHint : t.properties.distributeV}
-            aria-label={t.properties.distributeV}
-            disabled={distributeDisabled}
-            onClick={() => onDistribute("v")}
-          >
-            <DistributeVIcon className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip content={distributeDisabled ? t.properties.distributeHint : t.properties.distributeH}>
+            <button
+              type="button"
+              className={BUTTON_CLS}
+              aria-label={t.properties.distributeH}
+              disabled={distributeDisabled}
+              onClick={() => onDistribute("h")}
+            >
+              <DistributeHIcon className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
+          <Tooltip content={distributeDisabled ? t.properties.distributeHint : t.properties.distributeV}>
+            <button
+              type="button"
+              className={BUTTON_CLS}
+              aria-label={t.properties.distributeV}
+              disabled={distributeDisabled}
+              onClick={() => onDistribute("v")}
+            >
+              <DistributeVIcon className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -189,17 +192,18 @@ export function AlignToolbar({
         <span className="text-[10px] uppercase tracking-wide text-muted">
           {t.properties.tidySection}
         </span>
-        <button
-          type="button"
-          className={`${BUTTON_CLS} flex items-center gap-1.5 self-start`}
-          title={tidyDisabled ? t.properties.tidyHint : t.properties.tidyTooltip}
-          aria-label={t.properties.tidyUp}
-          disabled={tidyDisabled}
-          onClick={onTidy}
-        >
-          <TidyIcon className="w-3.5 h-3.5" />
-          <span className="text-[10px]">{t.properties.tidyUp}</span>
-        </button>
+        <Tooltip content={tidyDisabled ? t.properties.tidyHint : t.properties.tidyTooltip} className="self-start">
+          <button
+            type="button"
+            className={`${BUTTON_CLS} flex items-center gap-1.5`}
+            aria-label={t.properties.tidyUp}
+            disabled={tidyDisabled}
+            onClick={onTidy}
+          >
+            <TidyIcon className="w-3.5 h-3.5" />
+            <span className="text-[10px]">{t.properties.tidyUp}</span>
+          </button>
+        </Tooltip>
       </div>
     </div>
   );
