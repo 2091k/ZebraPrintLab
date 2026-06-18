@@ -8,6 +8,12 @@ const pl = {
     groupCode2d: '2D Matrycowy',
     groupCodePostal: 'Pocztowe i Legacy',
     groupShapes: 'Kształty',
+    searchPlaceholder: 'Szukaj obiektów…',
+    noResults: 'Brak wyników dla „{q}”',
+    favorites: 'Ulubione',
+    favoritesHint: 'Przypnij typy gwiazdką.',
+    pinFavorite: 'Dodaj do ulubionych',
+    unpinFavorite: 'Usuń z ulubionych',
   },
 
   types: {

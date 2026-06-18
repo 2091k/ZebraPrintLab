@@ -8,6 +8,12 @@ const lt = {
     groupCode2d: '2D Matrica',
     groupCodePostal: 'Pašto & Legacy',
     groupShapes: 'Figūros',
+    searchPlaceholder: 'Ieškoti objektų…',
+    noResults: 'Nėra atitikmenų „{q}“',
+    favorites: 'Mėgstami',
+    favoritesHint: 'Prisekite tipus žvaigždute.',
+    pinFavorite: 'Pridėti prie mėgstamų',
+    unpinFavorite: 'Pašalinti iš mėgstamų',
   },
 
   types: {

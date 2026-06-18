@@ -8,6 +8,12 @@ const zhHant = {
     groupCode2d: '二維矩陣',
     groupCodePostal: '郵政 & 舊式',
     groupShapes: '形狀',
+    searchPlaceholder: '搜尋物件…',
+    noResults: '沒有符合「{q}」的結果',
+    favorites: '收藏',
+    favoritesHint: '用星號釘選類型。',
+    pinFavorite: '加入收藏',
+    unpinFavorite: '從收藏中移除',
   },
 
   types: {

@@ -8,6 +8,12 @@ const ko = {
     groupCode2d: '2D 매트릭스',
     groupCodePostal: '우편 & 레거시',
     groupShapes: '도형',
+    searchPlaceholder: '객체 검색…',
+    noResults: '"{q}"에 대한 결과 없음',
+    favorites: '즐겨찾기',
+    favoritesHint: '별로 유형을 고정하세요.',
+    pinFavorite: '즐겨찾기에 추가',
+    unpinFavorite: '즐겨찾기에서 제거',
   },
 
   types: {

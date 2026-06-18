@@ -8,6 +8,12 @@ const el = {
     groupCode2d: '2D Μήτρα',
     groupCodePostal: 'Ταχυδρομικά & Παλαιά',
     groupShapes: 'Σχήματα',
+    searchPlaceholder: 'Αναζήτηση αντικειμένων…',
+    noResults: 'Καμία αντιστοιχία για «{q}»',
+    favorites: 'Αγαπημένα',
+    favoritesHint: 'Καρφιτσώστε τύπους με το αστέρι.',
+    pinFavorite: 'Προσθήκη στα αγαπημένα',
+    unpinFavorite: 'Αφαίρεση από τα αγαπημένα',
   },
 
   types: {

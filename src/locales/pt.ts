@@ -8,6 +8,12 @@ const pt = {
     groupCode2d: '2D Matricial',
     groupCodePostal: 'Postal e Legados',
     groupShapes: 'Formas',
+    searchPlaceholder: 'Pesquisar objetos…',
+    noResults: 'Nenhum resultado para "{q}"',
+    favorites: 'Favoritos',
+    favoritesHint: 'Fixe tipos com a estrela.',
+    pinFavorite: 'Adicionar aos favoritos',
+    unpinFavorite: 'Remover dos favoritos',
   },
 
   types: {

@@ -8,6 +8,12 @@ const sl = {
     groupCode2d: '2D Matrica',
     groupCodePostal: 'Poštni in Legacy',
     groupShapes: 'Oblike',
+    searchPlaceholder: 'Iskanje objektov…',
+    noResults: 'Ni zadetkov za „{q}“',
+    favorites: 'Priljubljene',
+    favoritesHint: 'Pripnite vrste z zvezdico.',
+    pinFavorite: 'Dodaj med priljubljene',
+    unpinFavorite: 'Odstrani iz priljubljenih',
   },
 
   types: {

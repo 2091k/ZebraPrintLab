@@ -8,6 +8,12 @@ const tr = {
     groupCode2d: '2D Matris',
     groupCodePostal: 'Posta ve Eski',
     groupShapes: 'Şekiller',
+    searchPlaceholder: 'Nesne ara…',
+    noResults: '"{q}" için sonuç yok',
+    favorites: 'Favoriler',
+    favoritesHint: 'Türleri yıldız ile sabitleyin.',
+    pinFavorite: 'Favorilere ekle',
+    unpinFavorite: 'Favorilerden kaldır',
   },
 
   types: {

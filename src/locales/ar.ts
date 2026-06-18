@@ -8,6 +8,12 @@ const ar = {
     groupCode2d: 'مصفوفة 2D',
     groupCodePostal: 'بريدي وإرث',
     groupShapes: 'أشكال',
+    searchPlaceholder: 'بحث عن كائنات…',
+    noResults: 'لا نتائج لـ "{q}"',
+    favorites: 'المفضلة',
+    favoritesHint: 'ثبّت الأنواع باستخدام النجمة.',
+    pinFavorite: 'إضافة إلى المفضلة',
+    unpinFavorite: 'إزالة من المفضلة',
   },
 
   types: {

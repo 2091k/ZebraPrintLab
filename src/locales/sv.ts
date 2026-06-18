@@ -8,6 +8,12 @@ const sv = {
     groupCode2d: '2D Matris',
     groupCodePostal: 'Post & Legacy',
     groupShapes: 'Former',
+    searchPlaceholder: 'Sök objekt…',
+    noResults: 'Inga träffar för "{q}"',
+    favorites: 'Favoriter',
+    favoritesHint: 'Fäst typer med stjärnan.',
+    pinFavorite: 'Lägg till i favoriter',
+    unpinFavorite: 'Ta bort från favoriter',
   },
 
   types: {

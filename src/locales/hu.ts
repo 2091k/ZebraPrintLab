@@ -8,6 +8,12 @@ const hu = {
     groupCode2d: '2D Mátrix',
     groupCodePostal: 'Postai és Legacy',
     groupShapes: 'Alakzatok',
+    searchPlaceholder: 'Objektumok keresése…',
+    noResults: 'Nincs találat erre: „{q}”',
+    favorites: 'Kedvencek',
+    favoritesHint: 'Rögzítsen típusokat a csillaggal.',
+    pinFavorite: 'Hozzáadás a kedvencekhez',
+    unpinFavorite: 'Eltávolítás a kedvencekből',
   },
 
   types: {

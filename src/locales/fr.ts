@@ -8,6 +8,12 @@ const fr = {
     groupCode2d: '2D Matriciel',
     groupCodePostal: 'Postal & Obsolètes',
     groupShapes: 'Formes',
+    searchPlaceholder: 'Rechercher des objets…',
+    noResults: 'Aucun résultat pour «{q}»',
+    favorites: 'Favoris',
+    favoritesHint: "Épinglez des types avec l'étoile.",
+    pinFavorite: 'Ajouter aux favoris',
+    unpinFavorite: 'Retirer des favoris',
   },
 
   types: {

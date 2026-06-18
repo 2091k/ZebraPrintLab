@@ -8,6 +8,12 @@ const fa = {
     groupCode2d: 'ماتریسی 2D',
     groupCodePostal: 'پستی و قدیمی',
     groupShapes: 'اشکال',
+    searchPlaceholder: 'جستجوی اشیا…',
+    noResults: 'نتیجه‌ای برای «{q}» یافت نشد',
+    favorites: 'علاقه‌مندی‌ها',
+    favoritesHint: 'نوع‌ها را با ستاره سنجاق کنید.',
+    pinFavorite: 'افزودن به علاقه‌مندی‌ها',
+    unpinFavorite: 'حذف از علاقه‌مندی‌ها',
   },
 
   types: {
