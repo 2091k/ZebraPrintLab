@@ -5,7 +5,6 @@ import { lookupBoundVariable, shouldShowFallbackTint } from "../../lib/variableB
 import { BarcodeObject } from "./BarcodeObject";
 import { LineObject } from "./LineObject";
 import { ImageObject } from "./ImageObject";
-import type Konva from "konva";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
 import { measureInkWidthPx } from "../../lib/labelGeometry/measureTextDots";
 import { outlineInset } from "../../lib/shapeGeometry";
@@ -441,8 +440,7 @@ function KonvaObjectInner({
   offsetY,
   isSelected,
   onSelect,
-  onChange,
-  snap,
+  dragHandlers,
 }: Props) {
   const fontVersion = useFontCacheVersion();
   const colors = useColorScheme();
@@ -504,26 +502,9 @@ function KonvaObjectInner({
     return () => clearMeasuredBounds(obj.id);
   }, [obj.id, isSingleLineText]);
 
-  // Snap a stage-position to the nearest grid point, returns stage-position.
-  const snapPos = (stageX: number, stageY: number) => ({
-    x:
-      offsetX +
-      dotsToPx(snap(pxToDots(stageX - offsetX, scale, dpmm)), scale, dpmm),
-    y:
-      offsetY +
-      dotsToPx(snap(pxToDots(stageY - offsetY, scale, dpmm)), scale, dpmm),
-  });
-
-  const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
-    e.target.position(snapPos(e.target.x(), e.target.y()));
-  };
-
-  const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-    onChange({
-      x: pxToDots(e.target.x() - offsetX, scale, dpmm),
-      y: pxToDots(e.target.y() - offsetY, scale, dpmm),
-    });
-  };
+  // Whole-object drag (snap + commit) is centralized in the drag controller.
+  const handleDragMove = dragHandlers?.onDragMove;
+  const handleDragEnd = dragHandlers?.onDragEnd;
 
   // selectObjects directly so leaf-in-group pierces auto-promotion.
   const openEditor = () => {

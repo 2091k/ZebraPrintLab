@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Group, Line as KLine, Rect } from "react-konva";
 import type Konva from "konva";
 import type { LabelObject } from "../../types/Group";
@@ -67,6 +67,8 @@ export function LineObject({
   onSelect,
   onChange,
   snap,
+  dragHandlers,
+  registerMover,
   getOthersSnapshot,
   labelRect,
   setGuides,
@@ -106,6 +108,15 @@ export function LineObject({
   });
   const dx = dragDelta.x;
   const dy = dragDelta.y;
+
+  // Whole-line body drag is driven by the central drag controller; it can't
+  // move our node directly (the visible line is state-driven), so we register a
+  // mover that shifts dragDelta. Endpoint/thickness handles stay local.
+  useEffect(() => {
+    if (!registerMover) return;
+    registerMover(obj.id, (lx, ly) => setDragDelta({ x: lx, y: ly }));
+    return () => registerMover(obj.id, null);
+  }, [obj.id, registerMover]);
 
   // Visual endpoints: handle-drag overrides whole-line delta
   const dispX1 = livePt1?.x ?? x1 + dx;
@@ -378,25 +389,7 @@ export function LineObject({
         strokeWidth={Math.max(lineStrokeWidth, 14)}
         draggable={!obj.locked}
         {...selectionHandlers(onSelect)}
-        onDragMove={(e) => {
-          // Snap absolute (not delta) so off-grid lines drift onto the grid.
-          const newX = snap(obj.x + pxToDots(e.target.x(), scale, dpmm));
-          const newY = snap(obj.y + pxToDots(e.target.y(), scale, dpmm));
-          const deltaXPx = dotsToPx(newX - obj.x, scale, dpmm);
-          const deltaYPx = dotsToPx(newY - obj.y, scale, dpmm);
-          e.target.position({ x: deltaXPx, y: deltaYPx });
-          setDragDelta({ x: deltaXPx, y: deltaYPx });
-        }}
-        onDragEnd={(e) => {
-          const deltaXPx = e.target.x();
-          const deltaYPx = e.target.y();
-          e.target.position({ x: 0, y: 0 });
-          setDragDelta({ x: 0, y: 0 });
-          onChange({
-            x: obj.x + pxToDots(deltaXPx, scale, dpmm),
-            y: obj.y + pxToDots(deltaYPx, scale, dpmm),
-          });
-        }}
+        {...dragHandlers}
       />
       {isSelected && (
         <>

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, type ReactElement } from "react";
 import { Group, Image as KImage, Path, Rect } from "react-konva";
-import type Konva from "konva";
 import type { LabelObject } from "../../types/Group";
 import { dotsToPx, pxToDots } from "../../lib/coordinates";
 import { getImage } from "../../lib/imageCache";
@@ -23,8 +22,7 @@ export function ImageObject({
   offsetY,
   isSelected,
   onSelect,
-  onChange,
-  snap,
+  dragHandlers,
 }: Props) {
   const p = obj.props;
   const colors = useColorScheme();
@@ -78,26 +76,9 @@ export function ImageObject({
     };
   }, [cached]);
 
-  // Snap during drag for visual feedback; commit only on dragEnd so
-  // the store doesn't update on every mouse pixel. Mirrors the
-  // pattern KonvaObjectInner uses for shape/text objects.
-  const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
-    e.target.position({
-      x:
-        offsetX +
-        dotsToPx(snap(pxToDots(e.target.x() - offsetX, scale, dpmm)), scale, dpmm),
-      y:
-        offsetY +
-        dotsToPx(snap(pxToDots(e.target.y() - offsetY, scale, dpmm)), scale, dpmm),
-    });
-  };
-
-  const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-    onChange({
-      x: pxToDots(e.target.x() - offsetX, scale, dpmm),
-      y: pxToDots(e.target.y() - offsetY, scale, dpmm),
-    });
-  };
+  // Whole-object drag (snap + commit) is centralized in the drag controller.
+  const handleDragMove = dragHandlers?.onDragMove;
+  const handleDragEnd = dragHandlers?.onDragEnd;
 
   if (htmlImg && cached) {
     return (
