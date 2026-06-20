@@ -80,10 +80,11 @@
      marker families without collision. */
   --color-info:      #67c8e0;
   /* Validation: amber = warning (truncation, soft mismatch), red =
-     error (missing required, unresolvable marker). Kept distinct
-     from accent so the user can scan severity at a glance. */
+     error (missing required, unresolvable marker), green = ok (valid,
+     verified). Kept distinct from accent so the user can scan severity. */
   --color-warning:   #f59e0b;
   --color-error:     #ef4444;
+  --color-ok:        #5fbf6a;
   /* ZPL syntax highlight: field-data payload (^FD), the actual printed
      content. Green reads as "literal/string" and stays clear of the
      amber commands and cyan numeric params. */
@@ -110,6 +111,7 @@
   --color-info:      #0e7490;
   --color-warning:   #b45309;
   --color-error:     #b91c1c;
+  --color-ok:        #2e7d32;
   --color-string:    #4a7a35;
 }
 

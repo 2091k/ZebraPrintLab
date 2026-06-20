@@ -8,6 +8,8 @@ import { NumberInput } from '../components/Properties/NumberInput';
 import { TemplateContentInput } from '../components/Properties/TemplateContentInput';
 import { SectionCard, StaticSectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { EanInlineStatus } from '../components/Properties/EanInlineStatus';
+import type { EanUpcType } from '../lib/eanUpcValidate';
 import type { Barcode1DProps } from './barcode1d';
 
 /** Per-symbology locale block: labels rendered by the panel. */
@@ -32,6 +34,9 @@ export interface Barcode1DPanelConfig {
    *  showZplCommands is on. Height / HRI / check-digit / rotation are params
    *  of this command; module width is `^BY`, content is `^FD`. */
   zplCommand: string;
+  /** Opt-in: show the inline EAN/UPC length + check-digit helper under the
+   *  content field (fixed-digit symbologies only). */
+  eanValidation?: EanUpcType;
 }
 
 export function createBarcode1DPanel(config: Barcode1DPanelConfig): ObjectTypeUi<Barcode1DProps> {
@@ -62,8 +67,11 @@ export function createBarcode1DPanel(config: Barcode1DPanelConfig): ObjectTypeUi
                 maxLength={config.contentSpec?.maxLength}
                 placeholder={loc.placeholder}
               />
-              {!hasValidLength(p.content, config.contentSpec) && loc.placeholder && (
+              {!config.eanValidation && !hasValidLength(p.content, config.contentSpec) && loc.placeholder && (
                 <p className="font-mono text-[10px] text-warning">{loc.placeholder}</p>
+              )}
+              {config.eanValidation && (
+                <EanInlineStatus type={config.eanValidation} content={p.content} />
               )}
             </div>
           </StaticSectionCard>

@@ -6,4 +6,5 @@ export const ean13Panel = createBarcode1DPanel({
   hasCheckDigit: false,
   contentSpec: { charset: '0-9', maxLength: 12 },
   hriAboveConfigurable: true,
+  eanValidation: 'ean13',
 });
