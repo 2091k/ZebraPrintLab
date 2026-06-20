@@ -42,6 +42,18 @@ function gs1BwipText(content: string): string {
   return gs1ContentToElementString(content);
 }
 
+/** ^B0 `d` param (AztecProps.ecLevel) -> bwip bcid + size options. Default and
+ *  EC% (1-99) stay on the compact bcid to match Zebra's compact-preferred auto
+ *  sizing; 101-104/201-232 force a compact/full symbol of that layer count; 300
+ *  is the fixed Rune. Layer counts verified against Labelary. */
+function aztecBwipOptions(ecLevel: number): Record<string, unknown> {
+  if (ecLevel === 300) return { bcid: "azteccode", format: "rune" };
+  if (ecLevel >= 201 && ecLevel <= 232) return { bcid: "azteccode", format: "full", layers: ecLevel - 200 };
+  if (ecLevel >= 101 && ecLevel <= 104) return { bcid: "azteccodecompact", layers: ecLevel - 100 };
+  if (ecLevel >= 1 && ecLevel <= 99) return { bcid: "azteccodecompact", eclevel: ecLevel };
+  return { bcid: "azteccodecompact" };
+}
+
 const GS1_DATABAR_BCID: Record<Gs1DatabarProps["symbology"], string> = {
   1: "databaromni",
   2: "databartruncated",
@@ -499,7 +511,9 @@ export function buildBwipOptions(
     }
     case "aztec": {
       const p = obj.props;
-      opts = { bcid, text: p.content || " ", scale: BWIP_SCALE };
+      // Map ^B0 d-param (ecLevel) to bwip bcid/format/size so the preview matches
+      // the print: compact/full layer count and Rune drive the actual symbol size.
+      opts = { ...aztecBwipOptions(p.ecLevel), text: p.content || " ", scale: BWIP_SCALE };
       break;
     }
     case "maxicode": {
