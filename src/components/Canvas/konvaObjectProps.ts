@@ -36,6 +36,17 @@ export interface KonvaObjectProps {
   onSelect: (addToSelection: boolean) => void;
   onChange: (changes: ObjectChanges) => void;
   snap: (dots: number) => number;
+  /** Per-node whole-object drag handlers from useKonvaDragController. Renderers
+   *  spread these onto their draggable node so move/snap/commit live in one
+   *  place (the move counterpart to the Transformer hook). The drag-start
+   *  capture rides on the Stage via event bubbling. */
+  dragHandlers?: {
+    onDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void;
+    onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void;
+  };
+  /** Register a custom live-mover so state-driven renderers (lines) follow the
+   *  centralized drag instead of relying on node position. */
+  registerMover?: (id: string, mover: ((localDx: number, localDy: number) => void) | null) => void;
   /** Snap-guide hooks used by line endpoint resize. Other shapes route
    *  through Konva's Transformer (useKonvaTransformer's boundBoxFunc)
    *  which has its own snap pipeline; lines manage their own endpoint

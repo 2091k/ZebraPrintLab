@@ -16,7 +16,6 @@ import { isGroup, getAllLeaves, expandSelection, selectionTargetId, findObjectBy
 import { pxToDots, SCREEN_PX_PER_MM } from "../../lib/coordinates";
 import { SNAP_OPTIONS } from "../../lib/units";
 import type { Unit } from "../../lib/units";
-import { computeSnap } from "../../lib/snapGuides";
 import type { SnapGuide } from "../../lib/snapGuides";
 import { computeAlignDeltas, computeDistribute, computeTidy } from "../../lib/align";
 import type { AlignOp, AlignBox, DistributeAxis, AlignRef } from "../../lib/align";
@@ -37,6 +36,7 @@ import { useT } from "../../lib/useT";
 import { useCanvasPanZoom } from "./hooks/useCanvasPanZoom";
 import { useCanvasLasso } from "./hooks/useCanvasLasso";
 import { useKonvaTransformer } from "./hooks/useKonvaTransformer";
+import { useKonvaDragController } from "./hooks/useKonvaDragController";
 import { PaginationControl } from "./PaginationControl";
 import { Tooltip } from "../ui/Tooltip";
 import {
@@ -372,6 +372,21 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     [visualLabelX, visualLabelY, visualLabelWidthPx, visualLabelHeightPx],
   );
 
+  // Whole-object drag (single + multi snap, commit), the move counterpart to
+  // useKonvaTransformer. Renderers spread its node handlers onto their draggable
+  // node; the drag-start capture rides on the Stage via bubbling.
+  const dragController = useKonvaDragController({
+    stageRef,
+    transformerRef,
+    scale,
+    dpmm: label.dpmm,
+    snapEnabled,
+    snapUnitDots: snapUnit,
+    labelRectPx: transformerSnapLabelRect,
+    viewRotation,
+    setGuides,
+  });
+
   useImperativeHandle(
     ref,
     () => {
@@ -639,58 +654,6 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     updateObject(id, finalChanges);
   };
 
-  // Object-snap: applied after grid-snap on every dragmove, single-object only.
-  const handleStageDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
-    if (snapEnabled) return;
-    const node = e.target;
-    const objId = node.id();
-    if (!objId || !stageRef.current) return;
-
-    const objs = getCurrentObjects();
-    const obj = findObjectById(objs, objId);
-    if (!obj) return;
-
-    const stage = stageRef.current;
-    const dr = node.getClientRect({ relativeTo: stage });
-    const draggedRect = { id: objId, x: dr.x, y: dr.y, width: dr.width, height: dr.height };
-
-    const otherRects = [];
-    for (const o of getAllLeaves(objs)) {
-      if (o.id === objId) continue;
-      const n = stage.findOne<Konva.Node>(`#${o.id}`);
-      if (!n) continue;
-      const r = n.getClientRect({ relativeTo: stage });
-      otherRects.push({ id: o.id, x: r.x, y: r.y, width: r.width, height: r.height });
-    }
-
-    // Stage space; clientRect already accounts for Group transform.
-    const labelRect = {
-      id: "_lbl",
-      x: visualLabelX,
-      y: visualLabelY,
-      width: visualLabelWidthPx,
-      height: visualLabelHeightPx,
-    };
-
-    const result = computeSnap(
-      draggedRect,
-      otherRects,
-      undefined,
-      labelRect,
-      labelRect,
-    );
-    // result is screen-space; node.position() is group-local, so inverse-rotate.
-    const screenDx = result.x - dr.x;
-    const screenDy = result.y - dr.y;
-    if (screenDx !== 0 || screenDy !== 0) {
-      const [localDx, localDy] = inverseRotateDelta(screenDx, screenDy, viewRotation);
-      node.position({ x: node.x() + localDx, y: node.y() + localDy });
-    }
-    setGuides(result.guides);
-  };
-
-  const handleStageDragEnd = () => setGuides([]);
-
   const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (previewLocks) return;
     if (consumeDidPan()) return;
@@ -899,10 +862,12 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
           onMouseDown={onStageMouseDown}
           onDragStart={(e) => {
             cancelLasso();
-            if (isPanningRef.current) e.target.stopDrag();
+            if (isPanningRef.current) {
+              e.target.stopDrag();
+              return;
+            }
+            dragController.onDragStart(e);
           }}
-          onDragMove={handleStageDragMove}
-          onDragEnd={handleStageDragEnd}
         >
           {/* Object layer */}
           <Layer>
@@ -985,6 +950,8 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
                     }}
                     onChange={(changes) => handleObjectChange(obj.id, changes)}
                     snap={snap}
+                    dragHandlers={dragController.nodeDragHandlers}
+                    registerMover={dragController.registerMover}
                     getOthersSnapshot={snapEnabled ? undefined : getOthersSnapshot}
                     labelRect={transformerSnapLabelRect}
                     setGuides={setGuides}

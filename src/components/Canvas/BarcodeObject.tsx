@@ -57,8 +57,7 @@ export function BarcodeObject({
   offsetY,
   isSelected,
   onSelect,
-  onChange,
-  snap,
+  dragHandlers,
 }: KonvaObjectProps) {
   const groupRef = useRef<Konva.Group>(null);
   const overlayGroupRef = useRef<Konva.Group>(null);
@@ -211,39 +210,10 @@ export function BarcodeObject({
   const x = offsetX + dotsToPx(displayX, scale, dpmm) - dim.barLeftPx;
   const y = offsetY + dotsToPx(displayY, scale, dpmm) - dim.barTopPx;
 
-  const snapPos = (sx: number, sy: number) => ({
-    x:
-      offsetX +
-      dotsToPx(snap(pxToDots(sx - offsetX, scale, dpmm)), scale, dpmm),
-    y:
-      offsetY +
-      dotsToPx(snap(pxToDots(sy - offsetY, scale, dpmm)), scale, dpmm),
-  });
-
-  const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
-    e.target.position(snapPos(e.target.x(), e.target.y()));
-  };
-
-  const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-    // Inverse of the render-path math: Group origin is bbox top-left,
-    // FO/FT semantics anchor at the bars, so we add back the bbox shift
-    // (barLeftPx/barTopPx) before converting pixels to dots, then undo
-    // the FT/FO Y-shift to recover the saved obj.x/obj.y.
-    const finalX = pxToDots(
-      e.target.x() + dim.barLeftPx - offsetX,
-      scale,
-      dpmm,
-    );
-    const yDots = pxToDots(
-      e.target.y() + dim.barTopPx - offsetY,
-      scale,
-      dpmm,
-    );
-    const finalY = obj.positionType === "FT"
-      ? yDots + ftYShiftDots
-      : yDots - foYShiftDots;
-    onChange({ x: finalX, y: finalY });
-  };
+  // Whole-object drag (snap + commit) is centralized in the drag controller;
+  // the commit is a pure translation, so the bar-anchor offset math is moot.
+  const handleDragMove = dragHandlers?.onDragMove;
+  const handleDragEnd = dragHandlers?.onDragEnd;
 
   if (barcodeCanvas) {
     // Konva crop prop is undefined when no cropping is needed; passing it
@@ -425,7 +395,7 @@ export function BarcodeObject({
           {...clipProps}
           draggable={!obj.locked}
           {...selectionHandlers(onSelect)}
-          onDragMove={(e) => e.target.position(snapPos(e.target.x(), e.target.y()))}
+          onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
           onTransform={useUprightTransform ? handleTransform : undefined}
           onTransformEnd={useUprightTransform ? handleTransformEnd : undefined}
