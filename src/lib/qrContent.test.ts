@@ -84,6 +84,11 @@ describe("parseQr never throws on malformed input", () => {
   it("keeps '=' inside a mailto body (splits on the first = only)", () => {
     expect(parseQr("mailto:a@b.c?body=a=b").fields.body).toBe("a=b");
   });
+  it("skips a malformed WiFi field without a colon and parses the rest", () => {
+    const r = parseQr("WIFI:T:WPA;S:net;BADFIELD;P:pw;;");
+    expect(r.type).toBe("wifi");
+    expect(r.fields).toMatchObject({ auth: "WPA", ssid: "net", password: "pw" });
+  });
 });
 
 describe("parseQr classification", () => {
