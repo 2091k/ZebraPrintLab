@@ -302,7 +302,7 @@ describe('barcode rotation in ZPL output', () => {
     ['code39',     '^B3I,', 'I', { height: 100, moduleWidth: 2, printInterpretation: true, checkDigit: false }],
     ['ean13',      '^BEB,', 'B', { height: 100, moduleWidth: 2, printInterpretation: true }],
     ['qrcode',     '^BQR,', 'R', { magnification: 4, errorCorrection: 'Q' }],
-    ['datamatrix', '^BXI,', 'I', { dimension: 5, quality: 200 }],
+    ['datamatrix', '^BXI,', 'I', { dimension: 5, quality: 200, gs1: false }],
     ['pdf417',     '^B7B,', 'B', { rowHeight: 4, securityLevel: 0, columns: 0, moduleWidth: 2 }],
     ['aztec',      '^B0R,', 'R', { magnification: 4, ecLevel: 0 }],
     ['codabar',    '^BKR,', 'R', { height: 100, moduleWidth: 2, printInterpretation: true, checkDigit: false }],

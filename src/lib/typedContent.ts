@@ -199,7 +199,7 @@ function parseEmail(content: string): ContentFields {
   return f;
 }
 
-/** Classify and parse existing QR content. Specific prefixes first; URI schemes
+/** Classify and parse existing barcode content. Specific prefixes first; URI schemes
  *  matched case-insensitively. Unknown content becomes plain text. */
 export function parseContent(content: string): { type: ContentType; fields: ContentFields } {
   const t = content.trimStart();
