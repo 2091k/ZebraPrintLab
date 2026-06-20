@@ -110,6 +110,7 @@ Both `.zpl` and `.json` round-trip cleanly. `.zpl` preserves all printable conte
 - CSV batch printing: import a CSV, map columns to Variables, print or export with efficient printer-side data merge (template ships once, each row sends only its overrides)
 - GS1 content builder: assemble GS1 content from Application Identifiers (DataBar Expanded and GS1 DataMatrix), validated per field and against GS1 combination rules
 - Content builder: generate typed QR/DataMatrix content (URL, WiFi, contact, email, phone, SMS, geo) with the right encoding and escaping
+- EAN/UPC inline validation: live length counter, computed check-digit preview, and a GS1 prefix hint right under the content field
 - Printer settings: label-level hardware tuning plus a Setup Script for clock, locale, encoding, and printer identity
 - 32 UI languages (auto-detected from browser)
 - Light / dark mode (follows OS setting)

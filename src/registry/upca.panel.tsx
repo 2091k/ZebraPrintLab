@@ -6,4 +6,5 @@ export const upcaPanel = createBarcode1DPanel({
   hasCheckDigit: false,
   contentSpec: { charset: '0-9', maxLength: 11 },
   hriAboveConfigurable: true,
+  eanValidation: 'upca',
 });

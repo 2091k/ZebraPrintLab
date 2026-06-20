@@ -6,4 +6,5 @@ export const upcePanel = createBarcode1DPanel({
   hasCheckDigit: false,
   contentSpec: { charset: '0-9', maxLength: 6 },
   hriAboveConfigurable: true,
+  eanValidation: 'upce',
 });
