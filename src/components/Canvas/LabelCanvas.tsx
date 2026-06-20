@@ -405,9 +405,10 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
   // part (follows the drag) and a static part (locked, stays put) so the chrome
   // reflects the real union, not a rigid translate.
   const selectionFrameRef = useRef<Konva.Rect>(null);
+  // Movable group sub-outlines share one drag offset.
+  const subOutlineGroupRef = useRef<Konva.Group>(null);
   const isMultiFrame = attachableIds.length > 1;
-  // Distinguish a persistent group (one group selected -> solid frame) from an
-  // ad-hoc multi-selection (several top-level picks -> dashed frame).
+  // One selected group = solid frame (persistent); several picks = dashed (ad-hoc).
   const isMultiSelection = selectedIds.length > 1;
   const frameCtx = { label, measured: measuredBoundsMap() };
   // Hidden leaves never render, so the old client-rect path ignored them; keep
@@ -432,6 +433,21 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
   const selectionFrameBase = isMultiFrame ? toFramePx(selectionUnionDots(objects, visibleSelIds, frameCtx)) : null;
   const movableFrameBase = hasSelection ? toFramePx(selectionUnionDots(objects, movableSelIds, frameCtx)) : null;
   const staticFrameBase = hasSelection ? toFramePx(selectionUnionDots(objects, staticSelIds, frameCtx)) : null;
+  // Sub-outlines mark group members; per group, split visible leaves
+  // movable/static (mirrors the main frame).
+  const movableGroupRects: { x: number; y: number; width: number; height: number }[] = [];
+  const staticGroupRects: typeof movableGroupRects = [];
+  if (isMultiSelection) {
+    for (const id of selectedIds) {
+      const o = findObjectById(objects, id);
+      if (!o || !isGroup(o) || o.visible === false) continue;
+      const leaves = getAllLeaves(o.children).filter((l) => visibleLeafById.has(l.id));
+      const movable = toFramePx(selectionUnionDots(objects, leaves.filter((l) => !visibleLeafById.get(l.id)?.locked).map((l) => l.id), frameCtx));
+      const fixed = toFramePx(selectionUnionDots(objects, leaves.filter((l) => visibleLeafById.get(l.id)?.locked).map((l) => l.id), frameCtx));
+      if (movable) movableGroupRects.push(movable);
+      if (fixed) staticGroupRects.push(fixed);
+    }
+  }
   // Action-bar bounds: live client-rects during a transformer resize (model
   // commits only at the end), else optical model bounds (matches the drag center).
   const getBarBounds = (): BarBounds | null => {
@@ -490,6 +506,8 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
       if (!live) return;
       selectionFrameRef.current?.position({ x: live.x, y: live.y });
       selectionFrameRef.current?.size({ width: live.width, height: live.height });
+      // Movable sub-outlines follow the drag (reset to 0 on end).
+      subOutlineGroupRef.current?.position({ x: dx, y: dy });
       // Shared clamp/flip policy; measure the bar lazily since a drag that selects
       // a new object renders it only after selectObject (absent at drag start).
       const bar = actionBarRef.current;
@@ -1125,11 +1143,47 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
               {!previewLocks && selectionFrameBase && (
                 <Rect
                   ref={selectionFrameRef}
-                  stroke={colors.selection}
+                  stroke={allSelectedLocked ? colors.accent : colors.selection}
                   strokeWidth={1.5}
-                  dash={isMultiSelection ? [6, 4] : undefined}
+                  dash={isMultiSelection || allSelectedLocked ? [6, 4] : undefined}
                   listening={false}
                 />
+              )}
+
+              {/* Box per group member: movable parts (blue) drag; locked parts
+                  (amber, the locked convention) stay put. */}
+              {!previewLocks && movableGroupRects.length > 0 && (
+                <Group ref={subOutlineGroupRef} listening={false}>
+                  {movableGroupRects.map((r, i) => (
+                    <Rect
+                      key={i}
+                      x={r.x}
+                      y={r.y}
+                      width={r.width}
+                      height={r.height}
+                      stroke={colors.selection}
+                      strokeWidth={1}
+                      listening={false}
+                    />
+                  ))}
+                </Group>
+              )}
+              {!previewLocks && staticGroupRects.length > 0 && (
+                <Group listening={false}>
+                  {staticGroupRects.map((r, i) => (
+                    <Rect
+                      key={i}
+                      x={r.x}
+                      y={r.y}
+                      width={r.width}
+                      height={r.height}
+                      stroke={colors.accent}
+                      strokeWidth={1}
+                      dash={[6, 4]}
+                      listening={false}
+                    />
+                  ))}
+                </Group>
               )}
 
               {/* Drag-snap guides: group-local, so they rotate with the view. */}
