@@ -122,7 +122,8 @@ export const GS1_EXPANDED_CHARSET = `0-9A-Za-z!"%&'*+,./:;<=>?_${GS1_GS}-`;
 export const GS1_SAMPLE_CONTENT = "0109501101530003";
 
 /** Escape-sequence control character we emit for GS1 DataMatrix (^BX g param).
- *  FNC1 is then written as `<escape>1`, both leading and as AI separator. */
+ *  FNC1 is then written as `<escape>1`, both leading and as AI separator. Keep
+ *  it outside `^`/`~` so it never collides with fdField's ^FH escaping. */
 export const GS1_DATAMATRIX_ESCAPE = "_";
 
 /** ^FD field data for GS1 DataMatrix: a leading FNC1, each GS separator as the
