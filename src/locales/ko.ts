@@ -68,7 +68,7 @@ const ko = {
     includeInExport: 'ZPL 출력에 포함',
     includeInExportHint: '선택을 해제하면 디자인에는 남지만 생성된 ZPL에서는 제외됩니다.',
     lock: '잠금',
-    lockHint: '이동, 크기 조정, 삭제를 차단합니다. 레이어 패널 또는 캔버스에서 Alt+클릭으로 선택하세요.',
+    lockHint: '이동, 크기 조정, 삭제를 차단합니다. 캔버스에서 클릭하거나 레이어 패널에서 선택하세요.',
     multipleSelectedFmt: '{n}개 항목 선택됨',
     multipleSelectedHint: '화살표 키로 이동',
     groupSelection: '선택 항목 그룹화',

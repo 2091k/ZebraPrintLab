@@ -5,6 +5,7 @@ import { RotationSelect } from '../components/Properties/RotationSelect';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { SectionCard, StaticSectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { fieldGridCols, fieldGridCell } from '../components/ui/formStyles';
 import {
   type Code49Props,
   type Code49Mode,
@@ -30,7 +31,7 @@ export const code49Panel: ObjectTypeUi<Code49Props> = {
         </StaticSectionCard>
 
         <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid grid-cols-2 ${fieldGridCols}`}>
             <NumberInput
               label={loc.height}
               value={p.height}
@@ -38,6 +39,7 @@ export const code49Panel: ObjectTypeUi<Code49Props> = {
               max={code49MaxHeight(p.moduleWidth)}
               onChange={(height) => onChange({ height })}
               zplCmd="^B4"
+              className={fieldGridCell}
             />
             <NumberInput
               label={loc.moduleWidth}
@@ -46,6 +48,7 @@ export const code49Panel: ObjectTypeUi<Code49Props> = {
               max={10}
               onChange={(moduleWidth) => onChange({ moduleWidth })}
               zplCmd="^BY"
+              className={fieldGridCell}
             />
           </div>
 

@@ -68,7 +68,7 @@ const en = {
     includeInExport: 'Include in ZPL output',
     includeInExportHint: 'Uncheck to keep this object in the design but omit it from the generated ZPL.',
     lock: 'Lock',
-    lockHint: 'Prevents moving, resizing and deleting. Select via the Layers panel or Alt+click on the canvas.',
+    lockHint: 'Prevents moving, resizing and deleting. Select it on the canvas or via the Layers panel.',
     multipleSelectedFmt: '{n} objects selected',
     multipleSelectedHint: 'use arrow keys to move',
     groupSelection: 'Group selection',

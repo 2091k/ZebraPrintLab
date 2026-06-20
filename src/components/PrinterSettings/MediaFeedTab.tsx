@@ -9,6 +9,7 @@ import {
   ZplEnumSubCustomSelect,
   ZplField,
 } from "./zplFieldPrimitives";
+import { fieldGridCols, fieldGridCell } from "../ui/formStyles";
 
 type LocMediaFeed = ReturnType<typeof useT>["printerSettings"]["mediaFeed"];
 
@@ -111,7 +112,7 @@ export function MediaFeedTab() {
           parent ZplField carries the ^MF tag. */}
       <ZplField>
         <ZplCommandLabel text={loc.mediaFeedHeading} command="^MF" />
-        <div className="grid grid-cols-2 gap-2">
+        <div className={`grid grid-cols-2 ${fieldGridCols}`}>
           <ZplEnumSubCustomSelect
             label={loc.mediaFeedPowerUp}
             values={MEDIA_FEED_VALUES}
@@ -119,6 +120,7 @@ export function MediaFeedTab() {
             onChange={(v) => setLabelConfig({ mediaFeedPowerUp: v })}
             defaultLabel={t.printerSettings.defaultOption}
             optionLabel={(m) => loc[FEED_LABEL_KEYS[m]]}
+            className={fieldGridCell}
           />
           <ZplEnumSubCustomSelect
             label={loc.mediaFeedHeadClose}
@@ -127,6 +129,7 @@ export function MediaFeedTab() {
             onChange={(v) => setLabelConfig({ mediaFeedHeadClose: v })}
             defaultLabel={t.printerSettings.defaultOption}
             optionLabel={(m) => loc[FEED_LABEL_KEYS[m]]}
+            className={fieldGridCell}
           />
         </div>
       </ZplField>

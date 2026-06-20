@@ -4,6 +4,7 @@ import { inputCls } from "../components/Properties/styles";
 import { RotationSelect } from "../components/Properties/RotationSelect";
 import { NumberInput } from "../components/Properties/NumberInput";
 import { SectionCard, StaticSectionCard } from "../components/Properties/SectionCard";
+import { fieldGridCols, fieldGridCell } from "../components/ui/formStyles";
 import type { Tlc39Props } from "./tlc39";
 
 export const tlc39Panel: ObjectTypeUi<Tlc39Props> = {
@@ -23,13 +24,14 @@ export const tlc39Panel: ObjectTypeUi<Tlc39Props> = {
         </StaticSectionCard>
 
         <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid grid-cols-2 ${fieldGridCols}`}>
             <NumberInput
               label={loc.height}
               value={p.height}
               min={1}
               onChange={(height) => onChange({ height })}
               zplCmd="^BT"
+              className={fieldGridCell}
             />
             <NumberInput
               label={loc.moduleWidth}
@@ -38,10 +40,11 @@ export const tlc39Panel: ObjectTypeUi<Tlc39Props> = {
               max={10}
               onChange={(moduleWidth) => onChange({ moduleWidth })}
               zplCmd="^BY"
+              className={fieldGridCell}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid grid-cols-2 ${fieldGridCols}`}>
             <NumberInput
               label={loc.microPdfRowHeight}
               value={p.microPdfRowHeight}
@@ -49,6 +52,7 @@ export const tlc39Panel: ObjectTypeUi<Tlc39Props> = {
               max={255}
               onChange={(microPdfRowHeight) => onChange({ microPdfRowHeight })}
               zplCmd="^BT"
+              className={fieldGridCell}
             />
             <NumberInput
               label={loc.microPdfRows}
@@ -57,6 +61,7 @@ export const tlc39Panel: ObjectTypeUi<Tlc39Props> = {
               max={10}
               onChange={(microPdfRows) => onChange({ microPdfRows })}
               zplCmd="^BT"
+              className={fieldGridCell}
             />
           </div>
 

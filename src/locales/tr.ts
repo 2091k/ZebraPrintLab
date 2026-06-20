@@ -68,7 +68,7 @@ const tr = {
     includeInExport: 'ZPL çıktısına dahil et',
     includeInExportHint: 'Nesneyi tasarımda tutmak ama oluşturulan ZPL\'ye dahil etmemek için işareti kaldırın.',
     lock: 'Kilitle',
-    lockHint: 'Taşıma, yeniden boyutlandırma ve silmeyi engeller. Katmanlar panelinden veya tuvalde Alt+tıklama ile seçin.',
+    lockHint: 'Taşıma, yeniden boyutlandırma ve silmeyi engeller. Tuvalde veya Katmanlar panelinden seçin.',
     multipleSelectedFmt: '{n} nesne seçildi',
     multipleSelectedHint: 'oklarla taşı',
     groupSelection: 'Seçimi grupla',

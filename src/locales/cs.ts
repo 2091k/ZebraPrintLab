@@ -68,7 +68,7 @@ const cs = {
     includeInExport: 'Zahrnout do výstupu ZPL',
     includeInExportHint: 'Zrušte zaškrtnutí, chcete-li objekt ponechat v návrhu, ale vynechat ze generovaného ZPL.',
     lock: 'Uzamknout',
-    lockHint: 'Brání přesouvání, změně velikosti a smazání. Výběr přes panel vrstev nebo Alt+klikem na plátně.',
+    lockHint: 'Brání přesouvání, změně velikosti a smazání. Vyberte jej na plátně nebo přes panel vrstev.',
     multipleSelectedFmt: 'Vybráno objektů: {n}',
     multipleSelectedHint: 'šipkami posunete',
     groupSelection: 'Seskupit výběr',

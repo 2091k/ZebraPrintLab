@@ -6,6 +6,7 @@ import { RotationSelect } from "../components/Properties/RotationSelect";
 import { NumberInput } from "../components/Properties/NumberInput";
 import { SectionCard, StaticSectionCard } from "../components/Properties/SectionCard";
 import { FieldLabel } from "../components/Properties/ZplCmd";
+import { fieldGridCols, fieldGridCell } from "../components/ui/formStyles";
 import { type SerialProps, serialSpec } from "./serial";
 
 export const serialPanel: ObjectTypeUi<SerialProps> = {
@@ -17,8 +18,8 @@ export const serialPanel: ObjectTypeUi<SerialProps> = {
     return (
       <>
         <StaticSectionCard title={t.properties.contentSection}>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
+          <div className={`grid grid-cols-2 ${fieldGridCols}`}>
+            <div className={fieldGridCell}>
               <FieldLabel cmd="^FD">{t.registry.serial.content}</FieldLabel>
               <input
                 className={inputCls}
@@ -34,18 +35,20 @@ export const serialPanel: ObjectTypeUi<SerialProps> = {
               min={1}
               onChange={(increment) => onChange({ increment })}
               zplCmd={serialCmd}
+              className={fieldGridCell}
             />
           </div>
         </StaticSectionCard>
 
         <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid grid-cols-2 ${fieldGridCols}`}>
             <NumberInput
               label={t.registry.serial.fontHeight}
               value={p.fontHeight}
               min={1}
               onChange={(fontHeight) => onChange({ fontHeight })}
               zplCmd="^A"
+              className={fieldGridCell}
             />
             <NumberInput
               label={t.registry.serial.fontWidth}
@@ -53,6 +56,7 @@ export const serialPanel: ObjectTypeUi<SerialProps> = {
               min={0}
               onChange={(fontWidth) => onChange({ fontWidth })}
               zplCmd="^A"
+              className={fieldGridCell}
             />
           </div>
 

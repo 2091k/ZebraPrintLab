@@ -68,7 +68,7 @@ const it = {
     includeInExport: 'Includi nell\'output ZPL',
     includeInExportHint: 'Deseleziona per mantenere l\'oggetto nel design ma escluderlo dallo ZPL generato.',
     lock: 'Blocca',
-    lockHint: 'Impedisce spostamento, ridimensionamento e cancellazione. Seleziona dal pannello Livelli o con Alt+clic sulla tela.',
+    lockHint: 'Impedisce spostamento, ridimensionamento e cancellazione. Selezionalo sulla tela o dal pannello Livelli.',
     multipleSelectedFmt: '{n} oggetti selezionati',
     multipleSelectedHint: 'frecce per spostare',
     groupSelection: 'Raggruppa selezione',

@@ -68,7 +68,7 @@ const zhHant = {
     includeInExport: '納入 ZPL 輸出',
     includeInExportHint: '取消勾選可保留設計中的物件，但不寫入產生的 ZPL。',
     lock: '鎖定',
-    lockHint: '禁止移動、調整大小與刪除。可從「圖層」面板選取，或在畫布上 Alt+點擊。',
+    lockHint: '禁止移動、調整大小與刪除。可在畫布上選取，或從「圖層」面板選取。',
     multipleSelectedFmt: '已選擇 {n} 個物件',
     multipleSelectedHint: '方向鍵移動',
     groupSelection: '群組所選',

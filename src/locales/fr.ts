@@ -68,7 +68,7 @@ const fr = {
     includeInExport: 'Inclure dans la sortie ZPL',
     includeInExportHint: 'Décochez pour conserver cet objet dans la conception mais l\'omettre du ZPL généré.',
     lock: 'Verrouiller',
-    lockHint: 'Empêche le déplacement, le redimensionnement et la suppression. Sélection via le panneau Calques ou Alt+clic sur le canevas.',
+    lockHint: 'Empêche le déplacement, le redimensionnement et la suppression. Sélectionnez-le sur le canevas ou via le panneau Calques.',
     multipleSelectedFmt: '{n} objets sélectionnés',
     multipleSelectedHint: 'flèches pour déplacer',
     groupSelection: 'Grouper la sélection',

@@ -68,7 +68,7 @@ const zhHans = {
     includeInExport: '包含在 ZPL 输出中',
     includeInExportHint: '取消勾选可将该对象保留在设计中，但不输出到生成的 ZPL。',
     lock: '锁定',
-    lockHint: '禁止移动、缩放与删除。可在“图层”面板中选择，或在画布上 Alt+点击。',
+    lockHint: '禁止移动、缩放与删除。可在画布上选择，或在“图层”面板中选择。',
     multipleSelectedFmt: '已选择 {n} 个对象',
     multipleSelectedHint: '方向键移动',
     groupSelection: '组合所选',

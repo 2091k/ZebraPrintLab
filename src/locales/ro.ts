@@ -68,7 +68,7 @@ const ro = {
     includeInExport: 'Include în ieșirea ZPL',
     includeInExportHint: 'Debifează pentru a păstra obiectul în design, dar a-l omite din ZPL-ul generat.',
     lock: 'Blochează',
-    lockHint: 'Împiedică mutarea, redimensionarea și ștergerea. Selectează din panoul Straturi sau cu Alt+clic pe pânză.',
+    lockHint: 'Împiedică mutarea, redimensionarea și ștergerea. Selectează-l pe pânză sau din panoul Straturi.',
     multipleSelectedFmt: '{n} obiecte selectate',
     multipleSelectedHint: 'săgeți pentru mutare',
     groupSelection: 'Grupează selecția',

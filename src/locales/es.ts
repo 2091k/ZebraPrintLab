@@ -68,7 +68,7 @@ const es = {
     includeInExport: 'Incluir en salida ZPL',
     includeInExportHint: 'Desmarca para mantener el objeto en el diseño pero omitirlo del ZPL generado.',
     lock: 'Bloquear',
-    lockHint: 'Impide mover, redimensionar y eliminar. Selecciona desde el panel Capas o con Alt+clic en el lienzo.',
+    lockHint: 'Impide mover, redimensionar y eliminar. Selecciónalo en el lienzo o desde el panel Capas.',
     multipleSelectedFmt: '{n} objetos seleccionados',
     multipleSelectedHint: 'flechas para mover',
     groupSelection: 'Agrupar selección',

@@ -22,7 +22,7 @@ export function ZplCommandLabel({
   htmlFor?: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-2">
+    <div className="flex items-start justify-between gap-2">
       <label htmlFor={htmlFor} className={labelCls}>
         {text}
       </label>
@@ -76,13 +76,16 @@ export function ZplField({ children }: { children: ReactNode }) {
 export function ZplSubField({
   label,
   children,
+  className,
 }: {
   label: string;
   children: (id: string) => ReactNode;
+  /** Replaces the cell layout entirely (not merged), e.g. `fieldGridCell`. */
+  className?: string;
 }) {
   const id = useId();
   return (
-    <div className="flex flex-col gap-1">
+    <div className={className ?? "flex flex-col gap-1"}>
       <label htmlFor={id} className={labelCls}>
         {label}
       </label>
@@ -273,6 +276,7 @@ export function ZplEnumSubCustomSelect<T extends string>({
   optionLabel,
   optionBadge,
   disabled,
+  className,
 }: {
   label: string;
   values: readonly T[];
@@ -283,6 +287,8 @@ export function ZplEnumSubCustomSelect<T extends string>({
   optionLabel: (v: T) => string;
   optionBadge?: (v: T) => string;
   disabled?: boolean;
+  /** Replaces the cell layout entirely (not merged), e.g. `fieldGridCell`. */
+  className?: string;
 }) {
   const groups = [
     {
@@ -297,7 +303,7 @@ export function ZplEnumSubCustomSelect<T extends string>({
     },
   ];
   return (
-    <div className="flex flex-col gap-1">
+    <div className={className ?? "flex flex-col gap-1"}>
       <label className={labelCls}>{label}</label>
       <Select
         aria-label={label}

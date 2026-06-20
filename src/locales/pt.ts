@@ -68,7 +68,7 @@ const pt = {
     includeInExport: 'Incluir na saída ZPL',
     includeInExportHint: 'Desmarque para manter o objeto no design mas omiti-lo do ZPL gerado.',
     lock: 'Bloquear',
-    lockHint: 'Impede mover, redimensionar e excluir. Selecione no painel Camadas ou com Alt+clique no canvas.',
+    lockHint: 'Impede mover, redimensionar e excluir. Selecione-o no canvas ou no painel Camadas.',
     multipleSelectedFmt: '{n} objetos selecionados',
     multipleSelectedHint: 'setas para mover',
     groupSelection: 'Agrupar seleção',

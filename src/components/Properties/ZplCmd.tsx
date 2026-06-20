@@ -30,7 +30,7 @@ export function FieldLabel({
   htmlFor?: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-2">
+    <div className="flex items-start justify-between gap-2">
       <label htmlFor={htmlFor} className={labelCls}>
         {children}
       </label>

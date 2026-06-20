@@ -68,7 +68,7 @@ const hr = {
     includeInExport: 'Uključi u ZPL izlaz',
     includeInExportHint: 'Odznačite kako bi objekt ostao u dizajnu, ali bio izostavljen iz generiranog ZPL-a.',
     lock: 'Zaključaj',
-    lockHint: 'Sprječava pomicanje, promjenu veličine i brisanje. Odabir s ploče Slojevi ili Alt+klikom na platnu.',
+    lockHint: 'Sprječava pomicanje, promjenu veličine i brisanje. Odaberite ga na platnu ili s ploče Slojevi.',
     multipleSelectedFmt: 'Odabrano objekata: {n}',
     multipleSelectedHint: 'strelicama pomičeš',
     groupSelection: 'Grupiraj odabir',

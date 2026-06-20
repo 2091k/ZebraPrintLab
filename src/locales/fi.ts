@@ -68,7 +68,7 @@ const fi = {
     includeInExport: 'Sisällytä ZPL-tulosteeseen',
     includeInExportHint: 'Poista valinta säilyttääksesi objektin suunnitelmassa mutta jättääksesi sen pois luodusta ZPL:stä.',
     lock: 'Lukitse',
-    lockHint: 'Estää siirtämisen, koon muuttamisen ja poistamisen. Valitse Tasot-paneelista tai Alt+napsautuksella kankaalla.',
+    lockHint: 'Estää siirtämisen, koon muuttamisen ja poistamisen. Valitse se kankaalla tai Tasot-paneelista.',
     multipleSelectedFmt: '{n} objektia valittu',
     multipleSelectedHint: 'nuolinäppäimillä siirrät',
     groupSelection: 'Ryhmittele valinta',

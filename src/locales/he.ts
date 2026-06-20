@@ -68,7 +68,7 @@ const he = {
     includeInExport: 'כלול בפלט ZPL',
     includeInExportHint: 'בטל סימון כדי להשאיר את האובייקט בעיצוב אך להשמיט אותו מ‑ZPL שנוצר.',
     lock: 'נעל',
-    lockHint: 'מונע הזזה, שינוי גודל ומחיקה. בחירה דרך לוח השכבות או באמצעות Alt+לחיצה על הקנבס.',
+    lockHint: 'מונע הזזה, שינוי גודל ומחיקה. בחר אותו על הקנבס או דרך לוח השכבות.',
     multipleSelectedFmt: '{n} פריטים נבחרו',
     multipleSelectedHint: 'מקשי החצים מזיזים',
     groupSelection: 'קבץ בחירה',

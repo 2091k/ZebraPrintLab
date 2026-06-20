@@ -15,6 +15,9 @@ interface NumberInputProps {
   /** Optional ZPL command this field emits; shown as a tag when the
    *  showZplCommands preference is on. */
   zplCmd?: string;
+  /** Replaces the cell layout entirely (not merged), e.g. `fieldGridCell` for
+   *  subgrid; omit for the default flex column. */
+  className?: string;
 }
 
 /**
@@ -32,9 +35,10 @@ export function NumberInput({
   disabled,
   readOnly,
   zplCmd,
+  className,
 }: NumberInputProps) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className={className ?? 'flex flex-col gap-1'}>
       <FieldLabel cmd={zplCmd}>{label}</FieldLabel>
       <input
         type="number"

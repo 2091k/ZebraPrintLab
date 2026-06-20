@@ -68,7 +68,7 @@ const da = {
     includeInExport: 'Inkludér i ZPL-output',
     includeInExportHint: 'Fjern markeringen for at beholde objektet i designet, men udelade det fra det genererede ZPL.',
     lock: 'Lås',
-    lockHint: 'Forhindrer flytning, ændring af størrelse og sletning. Markering via Lag-panelet eller Alt+klik på lærredet.',
+    lockHint: 'Forhindrer flytning, ændring af størrelse og sletning. Markér det på lærredet eller via Lag-panelet.',
     multipleSelectedFmt: '{n} objekter valgt',
     multipleSelectedHint: 'piletaster flytter',
     groupSelection: 'Gruppér valg',

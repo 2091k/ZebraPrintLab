@@ -68,7 +68,7 @@ const no = {
     includeInExport: 'Inkluder i ZPL-utdata',
     includeInExportHint: 'Fjern haken for å beholde objektet i designet, men utelate det fra generert ZPL.',
     lock: 'Lås',
-    lockHint: 'Hindrer flytting, størrelsesendring og sletting. Velg fra Lag-panelet eller med Alt+klikk på lerretet.',
+    lockHint: 'Hindrer flytting, størrelsesendring og sletting. Velg det på lerretet eller fra Lag-panelet.',
     multipleSelectedFmt: '{n} objekter valgt',
     multipleSelectedHint: 'piltaster flytter',
     groupSelection: 'Grupper utvalg',

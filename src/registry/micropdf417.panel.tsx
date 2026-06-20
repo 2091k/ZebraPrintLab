@@ -4,6 +4,7 @@ import { inputCls } from "../components/Properties/styles";
 import { RotationSelect } from "../components/Properties/RotationSelect";
 import { NumberInput } from "../components/Properties/NumberInput";
 import { SectionCard, StaticSectionCard } from "../components/Properties/SectionCard";
+import { fieldGridCols, fieldGridCell } from "../components/ui/formStyles";
 import type { MicroPdf417Props } from "./micropdf417";
 
 export const micropdf417Panel: ObjectTypeUi<MicroPdf417Props> = {
@@ -23,13 +24,14 @@ export const micropdf417Panel: ObjectTypeUi<MicroPdf417Props> = {
         </StaticSectionCard>
 
         <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid grid-cols-2 ${fieldGridCols}`}>
             <NumberInput
               label={loc.rowHeight}
               value={p.rowHeight}
               min={1}
               onChange={(rowHeight) => onChange({ rowHeight })}
               zplCmd="^BF"
+              className={fieldGridCell}
             />
             <NumberInput
               label={loc.moduleWidth}
@@ -38,6 +40,7 @@ export const micropdf417Panel: ObjectTypeUi<MicroPdf417Props> = {
               max={10}
               onChange={(moduleWidth) => onChange({ moduleWidth })}
               zplCmd="^BY"
+              className={fieldGridCell}
             />
           </div>
 

@@ -11,6 +11,7 @@ import {
   ZplField,
   ZplSubField,
 } from "./zplFieldPrimitives";
+import { fieldGridCols, fieldGridCell } from "../ui/formStyles";
 
 type LocPrintQuality = ReturnType<typeof useT>["printerSettings"]["printQuality"];
 
@@ -54,8 +55,8 @@ export function PrintQualityTab() {
           so group them under one ZplField + tag header. */}
       <ZplField>
         <ZplCommandLabel text={loc.printSpeedHeading} command="^PR" />
-        <div className="grid grid-cols-3 gap-2">
-          <ZplSubField label={loc.printSpeed}>
+        <div className={`grid grid-cols-3 ${fieldGridCols}`}>
+          <ZplSubField label={loc.printSpeed} className={fieldGridCell}>
             {(id) => (
               <BoundedIntControl
                 id={id}
@@ -66,7 +67,7 @@ export function PrintQualityTab() {
               />
             )}
           </ZplSubField>
-          <ZplSubField label={loc.slewSpeed}>
+          <ZplSubField label={loc.slewSpeed} className={fieldGridCell}>
             {(id) => (
               <BoundedIntControl
                 id={id}
@@ -77,7 +78,7 @@ export function PrintQualityTab() {
               />
             )}
           </ZplSubField>
-          <ZplSubField label={loc.backfeedSpeed}>
+          <ZplSubField label={loc.backfeedSpeed} className={fieldGridCell}>
             {(id) => (
               <BoundedIntControl
                 id={id}

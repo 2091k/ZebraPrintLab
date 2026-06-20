@@ -5,6 +5,7 @@ import { NumberInput } from '../components/Properties/NumberInput';
 import { RotationSelect } from '../components/Properties/RotationSelect';
 import { SectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel } from '../components/Properties/ZplCmd';
+import { fieldGridCols, fieldGridCell } from '../components/ui/formStyles';
 import { type SymbolProps, type SymbolCode, GS_SYMBOLS } from './symbol';
 
 export const symbolPanel: ObjectTypeUi<SymbolProps> = {
@@ -27,13 +28,14 @@ export const symbolPanel: ObjectTypeUi<SymbolProps> = {
             ))}
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className={`grid grid-cols-2 ${fieldGridCols}`}>
           <NumberInput
             label={t.registry.symbol.height}
             value={p.height}
             min={1}
             onChange={(height) => onChange({ height })}
             zplCmd="^GS"
+            className={fieldGridCell}
           />
           <NumberInput
             label={t.registry.symbol.width}
@@ -41,6 +43,7 @@ export const symbolPanel: ObjectTypeUi<SymbolProps> = {
             min={1}
             onChange={(width) => onChange({ width })}
             zplCmd="^GS"
+            className={fieldGridCell}
           />
         </div>
         <RotationSelect

@@ -4,6 +4,7 @@ import { inputCls, labelCls } from '../components/Properties/styles';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { SectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { fieldGridCols, fieldGridCell } from '../components/ui/formStyles';
 import type { EllipseProps } from './ellipse';
 
 export const ellipsePanel: ObjectTypeUi<EllipseProps> = {
@@ -24,13 +25,14 @@ export const ellipsePanel: ObjectTypeUi<EllipseProps> = {
             zplCmd={cmd}
           />
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid grid-cols-2 ${fieldGridCols}`}>
             <NumberInput
               label={t.registry.ellipse.width}
               value={p.width}
               min={1}
               onChange={(width) => onChange({ width })}
               zplCmd={cmd}
+              className={fieldGridCell}
             />
             <NumberInput
               label={t.registry.ellipse.height}
@@ -38,6 +40,7 @@ export const ellipsePanel: ObjectTypeUi<EllipseProps> = {
               min={1}
               onChange={(height) => onChange({ height })}
               zplCmd={cmd}
+              className={fieldGridCell}
             />
           </div>
         )}

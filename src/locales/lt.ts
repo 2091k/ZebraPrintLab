@@ -68,7 +68,7 @@ const lt = {
     includeInExport: 'Įtraukti į ZPL išvestį',
     includeInExportHint: 'Atžymėkite, jei norite palikti objektą maketo, bet praleisti jį generuojamame ZPL.',
     lock: 'Užrakinti',
-    lockHint: 'Neleidžia perkelti, keisti dydžio ir ištrinti. Pasirinkite iš sluoksnių skydelio arba Alt+spustelėjimu drobėje.',
+    lockHint: 'Neleidžia perkelti, keisti dydžio ir ištrinti. Pasirinkite jį drobėje arba iš sluoksnių skydelio.',
     multipleSelectedFmt: 'Pasirinkta objektų: {n}',
     multipleSelectedHint: 'rodyklėmis perkeli',
     groupSelection: 'Grupuoti pasirinkimą',

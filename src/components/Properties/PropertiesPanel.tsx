@@ -29,6 +29,7 @@ import { AlignToolbar } from "./AlignToolbar";
 import { VariableBindingControl } from "../Variables/VariableBindingControl";
 import { applyBindingToObject, clockCtxFromLabel, lookupBoundVariable } from "../../lib/variableBinding";
 import { inputCls, labelCls } from "./styles";
+import { fieldGridCols, fieldGridCell } from "../ui/formStyles";
 import type { LabelConfig } from "../../types/LabelConfig";
 
 /** Tooltip-icon flagging that the canvas render is approximate for
@@ -277,8 +278,8 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
           }
         >
           {!groupRow && (
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1">
+            <div className={`grid grid-cols-2 ${fieldGridCols}`}>
+              <div className={fieldGridCell}>
                 <FieldLabel cmd={obj.positionType === "FT" ? "^FT" : "^FO"}>
                   {t.properties.x}
                 </FieldLabel>
@@ -297,7 +298,7 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
                   }
                 />
               </div>
-              <div className="flex flex-col gap-1">
+              <div className={fieldGridCell}>
                 <FieldLabel cmd={obj.positionType === "FT" ? "^FT" : "^FO"}>
                   {t.properties.y}
                 </FieldLabel>
@@ -520,8 +521,8 @@ function LabelConfigPanel({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col gap-1">
+        <div className={`grid grid-cols-2 ${fieldGridCols}`}>
+          <div className={fieldGridCell}>
             <FieldLabel cmd="^PW">{t.label.width}</FieldLabel>
             <input
               type="number"
@@ -534,7 +535,7 @@ function LabelConfigPanel({
               }
             />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className={fieldGridCell}>
             <FieldLabel cmd="^LL">{t.label.height}</FieldLabel>
             <input
               type="number"
@@ -600,9 +601,9 @@ function LabelConfigPanel({
               <InformationCircleIcon className="w-3.5 h-3.5 ml-1 inline-block align-text-bottom text-muted cursor-help" />
             </Tooltip>
           </label>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-baseline justify-between gap-2">
+          <div className={`grid grid-cols-3 ${fieldGridCols}`}>
+            <div className={fieldGridCell}>
+              <div className="flex items-start justify-between gap-2">
                 <label className="text-[10px] text-muted">{t.label.labelHomeX}</label>
                 <ZplCmd cmd="^LH" />
               </div>
@@ -616,8 +617,8 @@ function LabelConfigPanel({
                 }
               />
             </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-baseline justify-between gap-2">
+            <div className={fieldGridCell}>
+              <div className="flex items-start justify-between gap-2">
                 <label className="text-[10px] text-muted">{t.label.labelHomeY}</label>
                 <ZplCmd cmd="^LH" />
               </div>
@@ -631,8 +632,8 @@ function LabelConfigPanel({
                 }
               />
             </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-baseline justify-between gap-2">
+            <div className={fieldGridCell}>
+              <div className="flex items-start justify-between gap-2">
                 <label className="text-[10px] text-muted">{t.label.labelTop}</label>
                 <ZplCmd cmd="^LT" />
               </div>
@@ -750,9 +751,9 @@ function LabelConfigPanel({
             onChange={(v) => onUpdate({ defaultFontId: v || undefined })}
           />
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-baseline justify-between gap-2">
+        <div className={`grid grid-cols-2 ${fieldGridCols}`}>
+          <div className={fieldGridCell}>
+            <div className="flex items-start justify-between gap-2">
               <label className="text-[10px] text-muted">{t.label.defaultFontHeight}</label>
               <ZplCmd cmd="^CF" />
             </div>
@@ -766,8 +767,8 @@ function LabelConfigPanel({
               }
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <div className="flex items-baseline justify-between gap-2">
+          <div className={fieldGridCell}>
+            <div className="flex items-start justify-between gap-2">
               <label className="text-[10px] text-muted">{t.label.defaultFontWidth}</label>
               <ZplCmd cmd="^CF" />
             </div>

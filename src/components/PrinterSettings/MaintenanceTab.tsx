@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { useT } from "../../lib/useT";
 import { useLabelStore } from "../../store/labelStore";
-import { labelCls } from "../ui/formStyles";
+import { labelCls, fieldGridCols, fieldGridCell } from "../ui/formStyles";
 import { Select } from "../ui/Select";
 import type { PrinterProfile } from "../../types/PrinterProfile";
 import {
@@ -88,7 +88,7 @@ export function MaintenanceTab() {
           }}
         />
         <div
-          className={`grid grid-cols-4 items-end gap-2 pl-2 mt-1 border-l-2 ${
+          className={`grid grid-cols-4 ${fieldGridCols} pl-2 mt-1 border-l-2 ${
             alert ? "border-accent/60" : "border-border/40"
           }`}
         >
@@ -101,8 +101,9 @@ export function MaintenanceTab() {
             onChange={(v) => {
               if (v) updateAlert("print", v);
             }}
+            className={fieldGridCell}
           />
-          <ZplSubField label={loc.alertThreshold}>
+          <ZplSubField label={loc.alertThreshold} className={fieldGridCell}>
             {(id) => (
               <BoundedIntControl
                 id={id}
@@ -117,7 +118,7 @@ export function MaintenanceTab() {
               />
             )}
           </ZplSubField>
-          <ZplSubField label={loc.alertFrequency}>
+          <ZplSubField label={loc.alertFrequency} className={fieldGridCell}>
             {(id) => (
               <BoundedIntControl
                 id={id}
@@ -141,6 +142,7 @@ export function MaintenanceTab() {
             onChange={(v) => {
               if (v) updateAlert("units", v);
             }}
+            className={fieldGridCell}
           />
         </div>
       </ZplField>

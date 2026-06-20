@@ -68,7 +68,7 @@ const nl = {
     includeInExport: 'Opnemen in ZPL-uitvoer',
     includeInExportHint: 'Vink uit om dit object in het ontwerp te behouden, maar uit de gegenereerde ZPL weg te laten.',
     lock: 'Vergrendelen',
-    lockHint: 'Voorkomt verplaatsen, vergroten/verkleinen en verwijderen. Selecteer via het Lagen-paneel of Alt+klik op het canvas.',
+    lockHint: 'Voorkomt verplaatsen, vergroten/verkleinen en verwijderen. Selecteer het op het canvas of via het Lagen-paneel.',
     multipleSelectedFmt: '{n} objecten geselecteerd',
     multipleSelectedHint: 'pijltoetsen om te verplaatsen',
     groupSelection: 'Selectie groeperen',

@@ -68,7 +68,7 @@ const pl = {
     includeInExport: 'Dołącz do wyjścia ZPL',
     includeInExportHint: 'Odznacz, aby zachować obiekt w projekcie, ale pominąć go w wygenerowanym ZPL.',
     lock: 'Zablokuj',
-    lockHint: 'Blokuje przesuwanie, zmianę rozmiaru i usuwanie. Wybór z panelu Warstwy lub Alt+kliknięciem na płótnie.',
+    lockHint: 'Blokuje przesuwanie, zmianę rozmiaru i usuwanie. Wybierz go na płótnie lub z panelu Warstwy.',
     multipleSelectedFmt: 'Wybrano obiektów: {n}',
     multipleSelectedHint: 'strzałki przesuwają',
     groupSelection: 'Grupuj zaznaczenie',

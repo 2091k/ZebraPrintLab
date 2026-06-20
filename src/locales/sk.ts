@@ -68,7 +68,7 @@ const sk = {
     includeInExport: 'Zahrnúť do výstupu ZPL',
     includeInExportHint: 'Zrušte označenie, ak chcete objekt ponechať v návrhu, ale vynechať z generovaného ZPL.',
     lock: 'Uzamknúť',
-    lockHint: 'Bráni presúvaniu, zmene veľkosti a odstráneniu. Výber z panela Vrstvy alebo Alt+klikom na plátno.',
+    lockHint: 'Bráni presúvaniu, zmene veľkosti a odstráneniu. Vyberte ho na plátne alebo z panela Vrstvy.',
     multipleSelectedFmt: 'Vybraných objektov: {n}',
     multipleSelectedHint: 'šípkami posuniete',
     groupSelection: 'Zoskupiť výber',

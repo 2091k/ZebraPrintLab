@@ -68,7 +68,7 @@ const hu = {
     includeInExport: 'Beillesztés a ZPL kimenetbe',
     includeInExportHint: 'Vegye ki a pipát, hogy az objektum a tervben maradjon, de kimaradjon a generált ZPL-ből.',
     lock: 'Zárolás',
-    lockHint: 'Megakadályozza a mozgatást, átméretezést és törlést. Kijelölés a Rétegek panelről vagy Alt+kattintással a vásznon.',
+    lockHint: 'Megakadályozza a mozgatást, átméretezést és törlést. Jelölje ki a vásznon vagy a Rétegek panelről.',
     multipleSelectedFmt: '{n} objektum kijelölve',
     multipleSelectedHint: 'nyilakkal mozgasd',
     groupSelection: 'Kijelölés csoportosítása',

@@ -15,6 +15,7 @@ import { FieldLabel, ZplCmd } from "../components/Properties/ZplCmd";
 import { Select } from "../components/ui/Select";
 import { fontSelectGroups } from "../components/Properties/fontSelectGroups";
 import { deriveBlockTextPatch, FB_DEFAULTS } from "../lib/textBlock";
+import { fieldGridCols, fieldGridCell } from "../components/ui/formStyles";
 import type { TextProps } from "./text";
 
 export const textPanel: ObjectTypeUi<TextProps> = {
@@ -83,13 +84,14 @@ export const textPanel: ObjectTypeUi<TextProps> = {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid grid-cols-2 ${fieldGridCols}`}>
             <NumberInput
               label={t.registry.text.fontHeight}
               value={p.fontHeight}
               min={1}
               onChange={(fontHeight) => onChange({ fontHeight })}
               zplCmd="^A"
+              className={fieldGridCell}
             />
             <NumberInput
               label={t.registry.text.fontWidth}
@@ -97,6 +99,7 @@ export const textPanel: ObjectTypeUi<TextProps> = {
               min={0}
               onChange={(fontWidth) => onChange({ fontWidth })}
               zplCmd="^A"
+              className={fieldGridCell}
             />
           </div>
 

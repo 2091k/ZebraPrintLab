@@ -5,6 +5,7 @@ import { inputCls, labelCls } from '../components/Properties/styles';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { SectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { fieldGridCols, fieldGridCell } from '../components/ui/formStyles';
 import { type LineProps, pickAngle } from './line';
 
 /**
@@ -41,7 +42,7 @@ export const linePanel: ObjectTypeUi<LineProps> = {
     const cmd = norm === 0 || norm === 90 ? '^GB' : '^GD';
     return (
       <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
-        <div className="grid grid-cols-2 gap-2">
+        <div className={`grid grid-cols-2 ${fieldGridCols}`}>
           <NumberInput
             label={t.registry.line.length}
             value={p.length}
@@ -58,6 +59,7 @@ export const linePanel: ObjectTypeUi<LineProps> = {
               )
             }
             zplCmd={cmd}
+            className={fieldGridCell}
           />
           <NumberInput
             label={t.registry.line.angle}
@@ -66,6 +68,7 @@ export const linePanel: ObjectTypeUi<LineProps> = {
             max={359}
             onChange={(angle) => onChange({ angle })}
             zplCmd={cmd}
+            className={fieldGridCell}
           />
         </div>
 

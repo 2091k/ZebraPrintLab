@@ -68,7 +68,7 @@ const sl = {
     includeInExport: 'Vključi v izhod ZPL',
     includeInExportHint: 'Odznačite, da objekt ostane v zasnovi, vendar bo izpuščen iz ustvarjenega ZPL-ja.',
     lock: 'Zakleni',
-    lockHint: 'Onemogoča premikanje, spreminjanje velikosti in brisanje. Izberite s plošče Sloji ali z Alt+klikom na platnu.',
+    lockHint: 'Onemogoča premikanje, spreminjanje velikosti in brisanje. Izberite ga na platnu ali s plošče Sloji.',
     multipleSelectedFmt: 'Izbranih objektov: {n}',
     multipleSelectedHint: 's puščicami premikaš',
     groupSelection: 'Združi izbor',

@@ -68,7 +68,7 @@ const sv = {
     includeInExport: 'Inkludera i ZPL-utdata',
     includeInExportHint: 'Avmarkera för att behålla objektet i designen men utelämna det från genererad ZPL.',
     lock: 'Lås',
-    lockHint: 'Hindrar flytt, storleksändring och borttagning. Markera via Lager-panelen eller Alt+klick på arbetsytan.',
+    lockHint: 'Hindrar flytt, storleksändring och borttagning. Markera det på arbetsytan eller via Lager-panelen.',
     multipleSelectedFmt: '{n} objekt markerade',
     multipleSelectedHint: 'pilar för att flytta',
     groupSelection: 'Gruppera markering',

@@ -4,6 +4,7 @@ import { inputCls } from "../components/Properties/styles";
 import { RotationSelect } from "../components/Properties/RotationSelect";
 import { NumberInput } from "../components/Properties/NumberInput";
 import { SectionCard, StaticSectionCard } from "../components/Properties/SectionCard";
+import { fieldGridCols, fieldGridCell } from "../components/ui/formStyles";
 import type { Pdf417Props } from "./pdf417";
 
 export const pdf417Panel: ObjectTypeUi<Pdf417Props> = {
@@ -23,13 +24,14 @@ export const pdf417Panel: ObjectTypeUi<Pdf417Props> = {
         </StaticSectionCard>
 
         <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid grid-cols-2 ${fieldGridCols}`}>
             <NumberInput
               label={loc.rowHeight}
               value={p.rowHeight}
               min={1}
               onChange={(rowHeight) => onChange({ rowHeight })}
               zplCmd="^B7"
+              className={fieldGridCell}
             />
             <NumberInput
               label={loc.moduleWidth}
@@ -38,10 +40,11 @@ export const pdf417Panel: ObjectTypeUi<Pdf417Props> = {
               max={10}
               onChange={(moduleWidth) => onChange({ moduleWidth })}
               zplCmd="^BY"
+              className={fieldGridCell}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid grid-cols-2 ${fieldGridCols}`}>
             <NumberInput
               label={loc.securityLevel}
               value={p.securityLevel}
@@ -49,6 +52,7 @@ export const pdf417Panel: ObjectTypeUi<Pdf417Props> = {
               max={8}
               onChange={(securityLevel) => onChange({ securityLevel })}
               zplCmd="^B7"
+              className={fieldGridCell}
             />
             <NumberInput
               label={loc.columns}
@@ -57,6 +61,7 @@ export const pdf417Panel: ObjectTypeUi<Pdf417Props> = {
               max={30}
               onChange={(columns) => onChange({ columns })}
               zplCmd="^B7"
+              className={fieldGridCell}
             />
           </div>
 

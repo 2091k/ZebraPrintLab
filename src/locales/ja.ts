@@ -68,7 +68,7 @@ const ja = {
     includeInExport: 'ZPL出力に含める',
     includeInExportHint: 'チェックを外すと、デザイン上に残しつつ、生成された ZPL からは除外されます。',
     lock: 'ロック',
-    lockHint: '移動・サイズ変更・削除を防ぎます。レイヤーパネルから、またはキャンバス上で Alt+クリックして選択します。',
+    lockHint: '移動・サイズ変更・削除を防ぎます。キャンバス上で、またはレイヤーパネルから選択します。',
     multipleSelectedFmt: '{n} 個のオブジェクトが選択されました',
     multipleSelectedHint: '矢印キーで移動',
     groupSelection: '選択をグループ化',

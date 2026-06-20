@@ -1,5 +1,6 @@
 import { useT } from "../../lib/useT";
 import { labelCls } from "./styles";
+import { fieldGridCols, fieldGridCell } from "../ui/formStyles";
 import { NumberInput } from "./NumberInput";
 import { JustifyButtons } from "./JustifyButtons";
 import type { TextProps } from "../../registry/text";
@@ -69,27 +70,28 @@ export function BlockTextSettings({ props: p, onChange }: Props) {
           onChange={(blockJustify) => onChange({ blockJustify })}
         />
       </div>
-      {/* items-end keeps the inputs flush even when only one label
-          wraps to two lines (e.g. "BLOCKBREITE (PUNKTE)" vs "MAX. ZEILEN"). */}
-      <div className="grid grid-cols-2 gap-2 items-end">
+      <div className={`grid grid-cols-2 ${fieldGridCols}`}>
         <NumberInput
           label={t.registry.text.blockWidth}
           value={p.blockWidth ?? 0}
           min={1}
           onChange={(blockWidth) => onChange({ blockWidth })}
+          className={fieldGridCell}
         />
         <NumberInput
           label={t.registry.text.blockLines}
           value={p.blockLines ?? 1}
           min={1}
           onChange={(blockLines) => onChange({ blockLines })}
+          className={fieldGridCell}
         />
       </div>
-      <div className="grid grid-cols-2 gap-2 items-end">
+      <div className={`grid grid-cols-2 ${fieldGridCols}`}>
         <NumberInput
           label={t.registry.text.blockLineSpacing}
           value={p.blockLineSpacing ?? 0}
           onChange={(blockLineSpacing) => onChange({ blockLineSpacing })}
+          className={fieldGridCell}
         />
         <NumberInput
           label={t.registry.text.blockHangingIndent}
@@ -98,6 +100,7 @@ export function BlockTextSettings({ props: p, onChange }: Props) {
           onChange={(blockHangingIndent) =>
             onChange({ blockHangingIndent: blockHangingIndent || undefined })
           }
+          className={fieldGridCell}
         />
       </div>
       {tooNarrow && (

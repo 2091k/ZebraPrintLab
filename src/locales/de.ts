@@ -68,7 +68,7 @@ const de = {
     includeInExport: 'In ZPL-Ausgabe einbeziehen',
     includeInExportHint: 'Häkchen entfernen, um das Objekt im Design zu behalten, aber nicht in die ZPL-Ausgabe zu schreiben.',
     lock: 'Sperren',
-    lockHint: 'Blockiert Verschieben, Größenänderung und Löschen. Auswahl per Ebenen-Panel oder Alt+Klick im Canvas.',
+    lockHint: 'Blockiert Verschieben, Größenänderung und Löschen. Auswahl per Klick im Canvas oder über das Ebenen-Panel.',
     multipleSelectedFmt: '{n} Objekte ausgewählt',
     multipleSelectedHint: 'Pfeiltasten zum Verschieben',
     groupSelection: 'Auswahl gruppieren',

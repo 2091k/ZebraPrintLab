@@ -68,7 +68,7 @@ const lv = {
     includeInExport: 'Iekļaut ZPL izvadē',
     includeInExportHint: 'Noņemiet atzīmi, lai objekts paliktu dizainā, taču netiktu iekļauts ģenerētajā ZPL.',
     lock: 'Bloķēt',
-    lockHint: 'Neļauj pārvietot, mainīt izmēru un dzēst. Atlasiet no slāņu paneļa vai ar Alt+klikšķi audeklā.',
+    lockHint: 'Neļauj pārvietot, mainīt izmēru un dzēst. Atlasiet to audeklā vai no slāņu paneļa.',
     multipleSelectedFmt: 'Atlasīti {n} objekti',
     multipleSelectedHint: 'ar bultiņām pārvietot',
     groupSelection: 'Grupēt atlasi',

@@ -9,3 +9,7 @@ export const buttonCls = 'px-3 py-1.5 rounded text-xs font-mono bg-surface-2 bor
  *  across the app (properties fields + Printer Settings tabs) so the command
  *  hint reads the same everywhere. */
 export const zplCommandTagCls = 'font-mono text-[10px] text-muted/60 tracking-tight shrink-0';
+/** Subgrid aligns labels and controls across sibling cells. Pair `fieldGridCols`
+ *  on the container (with `grid grid-cols-N`) with `fieldGridCell` on each cell. */
+export const fieldGridCols = 'gap-x-2 gap-y-1 grid-rows-[auto_auto]';
+export const fieldGridCell = 'grid grid-rows-subgrid row-span-2';

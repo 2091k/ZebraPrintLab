@@ -68,7 +68,7 @@ const et = {
     includeInExport: 'Kaasa ZPL-väljundis',
     includeInExportHint: 'Märke eemaldamine jätab objekti kujundusse, kuid välja jätab loodud ZPL-ist.',
     lock: 'Lukusta',
-    lockHint: 'Takistab liigutamist, suuruse muutmist ja kustutamist. Vali kihtide paanilt või Alt+klõpsuga lõuendil.',
+    lockHint: 'Takistab liigutamist, suuruse muutmist ja kustutamist. Vali see lõuendil või kihtide paanilt.',
     multipleSelectedFmt: '{n} objekti valitud',
     multipleSelectedHint: 'nooltega liigutad',
     groupSelection: 'Grupeeri valik',
