@@ -49,17 +49,13 @@ export interface VariablesSlice {
   setVariables: (variables: Variable[]) => void;
 }
 
-/** Names are load-bearing for the `«name»` marker grammar, so a name can never
- *  contain the guillemet delimiters (they would corrupt tokenising/renaming). */
-const cleanVariableName = (raw: string): string => raw.replace(/[«»]/g, '').trim();
-
 export const createVariablesSlice: StateCreator<LabelState, [], [], VariablesSlice> = (set, get) => ({
   variables: [],
 
   addVariable: (input) => {
     const state = get();
     if (selectPreviewLocksEditor(state)) return null;
-    const trimmedName = cleanVariableName(input.name);
+    const trimmedName = input.name.trim();
     if (trimmedName === '') return null;
     if (state.variables.some((v) => v.name === trimmedName)) return null;
 
@@ -93,7 +89,7 @@ export const createVariablesSlice: StateCreator<LabelState, [], [], VariablesSli
 
       let patched = changes;
       if (changes.name !== undefined) {
-        const trimmed = cleanVariableName(changes.name);
+        const trimmed = changes.name.trim();
         if (trimmed === '') return {};
         if (state.variables.some((v) => v.id !== id && v.name === trimmed)) return {};
         patched = { ...patched, name: trimmed };
