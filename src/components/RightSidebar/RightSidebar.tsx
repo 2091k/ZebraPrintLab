@@ -83,7 +83,11 @@ export function RightSidebar({ canvasRef, onCollapse }: Props) {
           </Tooltip>
         )}
       </div>
-      <div className="flex-1 overflow-y-auto">
+      {/* relative: contains the panels' absolutely-positioned `sr-only` section
+          headings (card layout, #168) so they scroll with the panel instead of
+          escaping to the viewport and stretching the document past 100vh (which
+          let focus-scroll shift the whole app, leaving a grey strip below). */}
+      <div className="relative flex-1 overflow-y-auto">
         {tab === 'properties' && <PropertiesPanel canvasRef={canvasRef} />}
         {tab === 'layers' && <LayersPanel />}
         {tab === 'variables' && <VariablesPanel />}
