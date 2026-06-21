@@ -14,6 +14,7 @@ import {
 } from '../lib/gs1';
 import { SectionCard, StaticSectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel } from '../components/Properties/ZplCmd';
+import { Select } from '../components/ui/Select';
 import { type Gs1DatabarProps, SYMBOLOGY_LABELS } from './gs1databar';
 
 // Stable specs so filterContent's WeakMap cache hits across keystrokes.
@@ -70,21 +71,20 @@ export const gs1databarPanel: ObjectTypeUi<Gs1DatabarProps> = {
 
           <div className="flex flex-col gap-1">
             <FieldLabel cmd="^BR">{loc.symbology}</FieldLabel>
-            <select
-              className={inputCls}
+            <Select<Gs1DatabarProps['symbology']>
               value={p.symbology}
-              onChange={(e) => {
-                const symbology = Number(e.target.value) as Gs1DatabarProps['symbology'];
+              aria-label={loc.symbology}
+              onChange={(symbology) => {
                 // Leaving Expanded: reduce multi-AI content to a bare GTIN so the
                 // preview (derived GTIN) and the emitted ZPL stay in sync.
                 const leavingExpanded = isExpanded && !GS1_DATABAR_EXPANDED_SYMBOLOGIES.has(symbology);
                 onChange(leavingExpanded ? { symbology, content: gtinBodyFromContent(p.content) } : { symbology });
               }}
-            >
-              {Object.entries(SYMBOLOGY_LABELS).map(([val, name]) => (
-                <option key={val} value={val}>{name}</option>
-              ))}
-            </select>
+              groups={[{ options: Object.entries(SYMBOLOGY_LABELS).map(([val, name]) => ({
+                value: Number(val) as Gs1DatabarProps['symbology'],
+                label: name,
+              })) }]}
+            />
           </div>
 
           {p.symbology === 7 && (

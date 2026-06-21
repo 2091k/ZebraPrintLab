@@ -1,9 +1,11 @@
 import type { ObjectTypeUi } from '../types/ObjectType';
 import { useT } from '../lib/useT';
-import { inputCls, labelCls } from '../components/Properties/styles';
-import { NumberInput } from '../components/Properties/NumberInput';
+import { useLabelStore } from '../store/labelStore';
+import { labelCls } from '../components/Properties/styles';
+import { UnitNumberInput } from '../components/Properties/UnitNumberInput';
 import { SectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { Select } from '../components/ui/Select';
 import { fieldGridCols, fieldGridCell } from '../components/ui/formStyles';
 import type { EllipseProps } from './ellipse';
 
@@ -11,34 +13,35 @@ export const ellipsePanel: ObjectTypeUi<EllipseProps> = {
   PropertiesPanel: ({ obj, onChange }) => {
     const t = useT();
     const p = obj.props;
+    const showZpl = useLabelStore((s) => s.showZplCommands);
     // The generator emits ^GC when the axes are equal (a circle), else ^GE
     // (independent of the lockAspect editor toggle). Badge mirrors that.
     const cmd = p.width === p.height ? '^GC' : '^GE';
     return (
       <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
         {p.lockAspect ? (
-          <NumberInput
+          <UnitNumberInput
             label={t.registry.circle.diameter}
-            value={p.width}
-            min={1}
-            onChange={(d) => onChange({ width: d, height: d })}
+            valueDots={p.width}
+            minDots={1}
+            onChangeDots={(d) => onChange({ width: d, height: d })}
             zplCmd={cmd}
           />
         ) : (
           <div className={`grid grid-cols-2 ${fieldGridCols}`}>
-            <NumberInput
+            <UnitNumberInput
               label={t.registry.ellipse.width}
-              value={p.width}
-              min={1}
-              onChange={(width) => onChange({ width })}
+              valueDots={p.width}
+              minDots={1}
+              onChangeDots={(width) => onChange({ width })}
               zplCmd={cmd}
               className={fieldGridCell}
             />
-            <NumberInput
+            <UnitNumberInput
               label={t.registry.ellipse.height}
-              value={p.height}
-              min={1}
-              onChange={(height) => onChange({ height })}
+              valueDots={p.height}
+              minDots={1}
+              onChangeDots={(height) => onChange({ height })}
               zplCmd={cmd}
               className={fieldGridCell}
             />
@@ -88,25 +91,26 @@ export const ellipsePanel: ObjectTypeUi<EllipseProps> = {
         </div>
 
         {!p.filled && (
-          <NumberInput
+          <UnitNumberInput
             label={t.registry.ellipse.thickness}
-            value={p.thickness}
-            min={1}
-            onChange={(thickness) => onChange({ thickness })}
+            valueDots={p.thickness}
+            minDots={1}
+            onChangeDots={(thickness) => onChange({ thickness })}
             zplCmd={cmd}
           />
         )}
 
         <div className="flex flex-col gap-1">
           <FieldLabel cmd={cmd}>{t.registry.ellipse.color}</FieldLabel>
-          <select
-            className={inputCls}
+          <Select<EllipseProps['color']>
             value={p.color}
-            onChange={(e) => onChange({ color: e.target.value as EllipseProps['color'] })}
-          >
-            <option value="B">{t.registry.ellipse.colorB}</option>
-            <option value="W">{t.registry.ellipse.colorW}</option>
-          </select>
+            onChange={(color) => onChange({ color })}
+            aria-label={t.registry.ellipse.color}
+            groups={[{ options: [
+              { value: 'B', label: t.registry.ellipse.colorB, badge: showZpl ? 'B' : undefined },
+              { value: 'W', label: t.registry.ellipse.colorW, badge: showZpl ? 'W' : undefined },
+            ] }]}
+          />
         </div>
 
         <div className="flex items-center justify-between gap-2">

@@ -1,8 +1,9 @@
-import { useState, type ChangeEvent } from 'react';
+import { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/16/solid';
 import { useLabelStore } from '../../store/labelStore';
 import type { LabelObject } from '../../types/Group';
 import { inputCls } from '../Properties/styles';
+import { Select } from '../ui/Select';
 import { FieldLabel } from '../ui/FieldLabel';
 import { ZplCmd } from '../Properties/ZplCmd';
 import { Tooltip } from '../ui/Tooltip';
@@ -35,8 +36,7 @@ export function VariableBindingControl({ obj }: Props) {
     ? variables.find((v) => v.id === boundId)
     : undefined;
 
-  const handleSelect = (e: ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
+  const handleSelect = (value: string) => {
     setError(null);
     if (value === '') {
       // 'Not bound' picked: clear any existing binding.
@@ -125,20 +125,25 @@ export function VariableBindingControl({ obj }: Props) {
         </div>
       ) : (
         <div className="flex items-center gap-1.5">
-          <select
-            className={`${inputCls} flex-1`}
-            aria-label={tv.sectionTitle}
-            value={boundVariable?.id ?? ''}
-            onChange={handleSelect}
-          >
-            <option value="">{tv.notBound}</option>
-            {variables.map((entry) => (
-              <option key={entry.id} value={entry.id}>
-                {formatVariableOption(entry.name, entry.defaultValue, tv.emptyDefault)}
-              </option>
-            ))}
-            <option value={CREATE_NEW_SENTINEL}>{tv.createNew}</option>
-          </select>
+          <div className="flex-1 min-w-0">
+            <Select<string>
+              aria-label={tv.sectionTitle}
+              value={boundVariable?.id ?? ''}
+              onChange={handleSelect}
+              groups={[
+                {
+                  options: [
+                    { value: '', label: tv.notBound },
+                    ...variables.map((entry) => ({
+                      value: entry.id,
+                      label: formatVariableOption(entry.name, entry.defaultValue, tv.emptyDefault),
+                    })),
+                    { value: CREATE_NEW_SENTINEL, label: tv.createNew },
+                  ],
+                },
+              ]}
+            />
+          </div>
           {boundVariable && (
             <Tooltip content={tv.unbindAria}>
               <button

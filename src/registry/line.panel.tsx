@@ -1,10 +1,12 @@
 import type { ObjectTypeUi } from '../types/ObjectType';
 import { useT } from '../lib/useT';
 import { useLabelStore } from '../store/labelStore';
-import { inputCls, labelCls } from '../components/Properties/styles';
+import { labelCls } from '../components/Properties/styles';
 import { NumberInput } from '../components/Properties/NumberInput';
+import { UnitNumberInput } from '../components/Properties/UnitNumberInput';
 import { SectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { Select } from '../components/ui/Select';
 import { fieldGridCols, fieldGridCell } from '../components/ui/formStyles';
 import { type LineProps, pickAngle } from './line';
 
@@ -36,6 +38,7 @@ export const linePanel: ObjectTypeUi<LineProps> = {
     const t = useT();
     const p = obj.props;
     const viewRotation = useLabelStore((s) => s.canvasSettings.viewRotation);
+    const showZpl = useLabelStore((s) => s.showZplCommands);
     // Axis-aligned lines emit ^GB (a thin box); diagonals emit ^GD. Badge
     // reflects what the current angle produces.
     const norm = ((p.angle % 180) + 180) % 180;
@@ -43,21 +46,22 @@ export const linePanel: ObjectTypeUi<LineProps> = {
     return (
       <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
         <div className={`grid grid-cols-2 ${fieldGridCols}`}>
-          <NumberInput
+          <UnitNumberInput
             label={t.registry.line.length}
-            value={p.length}
-            min={1}
+            valueDots={p.length}
+            minDots={1}
             // Shrinking length below the current thickness would land
             // the model in the ^GB promotion regime where t > length
             // prints `t × t`; auto-clamp thickness down to match the
             // new length, mirroring the endpoint-handle drag.
-            onChange={(length) =>
+            onChangeDots={(length) => {
+              if (length === undefined) return;
               onChange(
                 length < p.thickness
                   ? { length, thickness: length }
                   : { length },
-              )
-            }
+              );
+            }}
             zplCmd={cmd}
             className={fieldGridCell}
           />
@@ -72,28 +76,29 @@ export const linePanel: ObjectTypeUi<LineProps> = {
           />
         </div>
 
-        <NumberInput
+        <UnitNumberInput
           label={t.registry.line.thickness}
-          value={p.thickness}
-          min={1}
+          valueDots={p.thickness}
+          minDots={1}
           // Capped at length so the ZPL output stays out of the ^GB
           // promotion regime (max(w, t) × max(h, t)), where the printer
           // would extend the line beyond its declared length.
-          max={p.length}
-          onChange={(thickness) => onChange({ thickness })}
+          maxDots={p.length}
+          onChangeDots={(thickness) => onChange({ thickness })}
           zplCmd={cmd}
         />
 
         <div className="flex flex-col gap-1">
           <FieldLabel cmd={cmd}>{t.registry.line.color}</FieldLabel>
-          <select
-            className={inputCls}
+          <Select<LineProps['color']>
             value={p.color}
-            onChange={(e) => onChange({ color: e.target.value as LineProps['color'] })}
-          >
-            <option value="B">{t.registry.line.colorB}</option>
-            <option value="W">{t.registry.line.colorW}</option>
-          </select>
+            onChange={(color) => onChange({ color })}
+            aria-label={t.registry.line.color}
+            groups={[{ options: [
+              { value: 'B', label: t.registry.line.colorB, badge: showZpl ? 'B' : undefined },
+              { value: 'W', label: t.registry.line.colorW, badge: showZpl ? 'W' : undefined },
+            ] }]}
+          />
         </div>
 
         <div className="flex flex-col gap-1">

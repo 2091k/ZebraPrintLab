@@ -21,6 +21,7 @@ import type { Unit } from "../../lib/units";
 import { useT } from "../../lib/useT";
 import { parseIntOrUndef } from "../../lib/inputParse";
 import { SectionCard, StaticSectionCard } from "./SectionCard";
+import { UnitNumberInput } from "./UnitNumberInput";
 import { FieldLabel, ZplCmd } from "./ZplCmd";
 import { Tooltip } from "../ui/Tooltip";
 import { Select } from "../ui/Select";
@@ -31,6 +32,15 @@ import { applyBindingToObject, clockCtxFromLabel, lookupBoundVariable } from "..
 import { inputCls, labelCls } from "./styles";
 import { fieldGridCols, fieldGridCell } from "../ui/formStyles";
 import type { LabelConfig } from "../../types/LabelConfig";
+
+/** Optional dot value from a unit-string input: empty stays unset, otherwise
+ *  the entered unit value is converted back to dots. */
+function dotsFromUnitOrUndef(raw: string, unit: Unit, dpmm: number): number | undefined {
+  if (raw.trim() === "") return undefined;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return undefined;
+  return Math.round(mmToDots(unitToMm(n, unit), dpmm));
+}
 
 /** Tooltip-icon flagging that the canvas render is approximate for
  *  the given object type. Two severities collapse into one icon
@@ -413,30 +423,30 @@ interface Preset {
 
 const PRESETS: Preset[] = [
   {
-    label: '4" × 6"  — 101 × 152 mm',
+    label: '4" × 6" (101 × 152 mm)',
     widthMm: 101.6,
     heightMm: 152.4,
     dpmm: 8,
   },
   {
-    label: '4" × 4"  — 101 × 101 mm',
+    label: '4" × 4" (101 × 101 mm)',
     widthMm: 101.6,
     heightMm: 101.6,
     dpmm: 8,
   },
-  { label: '4" × 3"  — 101 × 76 mm', widthMm: 101.6, heightMm: 76.2, dpmm: 8 },
-  { label: '4" × 2"  — 101 × 51 mm', widthMm: 101.6, heightMm: 50.8, dpmm: 8 },
-  { label: '3" × 2"  — 76 × 51 mm', widthMm: 76.2, heightMm: 50.8, dpmm: 8 },
-  { label: '2" × 1"  — 51 × 25 mm', widthMm: 50.8, heightMm: 25.4, dpmm: 8 },
+  { label: '4" × 3" (101 × 76 mm)', widthMm: 101.6, heightMm: 76.2, dpmm: 8 },
+  { label: '4" × 2" (101 × 51 mm)', widthMm: 101.6, heightMm: 50.8, dpmm: 8 },
+  { label: '3" × 2" (76 × 51 mm)', widthMm: 76.2, heightMm: 50.8, dpmm: 8 },
+  { label: '2" × 1" (51 × 25 mm)', widthMm: 50.8, heightMm: 25.4, dpmm: 8 },
   { label: "100 × 150 mm", widthMm: 100, heightMm: 150, dpmm: 8 },
   { label: "100 × 100 mm", widthMm: 100, heightMm: 100, dpmm: 8 },
   { label: "100 × 50 mm", widthMm: 100, heightMm: 50, dpmm: 8 },
   { label: "62 × 29 mm  (Brother)", widthMm: 62, heightMm: 29, dpmm: 12 },
   { label: "57 × 32 mm  (Brother)", widthMm: 57, heightMm: 32, dpmm: 12 },
-  { label: "DIN A7  —  74 × 105 mm", widthMm: 74, heightMm: 105, dpmm: 8 },
-  { label: "DIN A6  — 105 × 148 mm", widthMm: 105, heightMm: 148, dpmm: 8 },
-  { label: "DIN A5  — 148 × 210 mm", widthMm: 148, heightMm: 210, dpmm: 8 },
-  { label: "DIN A4  — 210 × 297 mm", widthMm: 210, heightMm: 297, dpmm: 8 },
+  { label: "DIN A7 (74 × 105 mm)", widthMm: 74, heightMm: 105, dpmm: 8 },
+  { label: "DIN A6 (105 × 148 mm)", widthMm: 105, heightMm: 148, dpmm: 8 },
+  { label: "DIN A5 (148 × 210 mm)", widthMm: 148, heightMm: 210, dpmm: 8 },
+  { label: "DIN A4 (210 × 297 mm)", widthMm: 210, heightMm: 297, dpmm: 8 },
 ];
 
 // ── LabelConfigPanel ───────────────────────────────────────────────────────────
@@ -465,9 +475,9 @@ function LabelConfigPanel({
     ? PRESETS.indexOf(matchedPreset).toString()
     : "custom";
 
-  const handlePreset = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (e.target.value === "custom") return;
-    const p = PRESETS[Number(e.target.value)];
+  const handlePreset = (value: string) => {
+    if (value === "custom") return;
+    const p = PRESETS[Number(value)];
     if (!p) return;
     onUpdate({ widthMm: p.widthMm, heightMm: p.heightMm, dpmm: p.dpmm });
   };
@@ -490,18 +500,18 @@ function LabelConfigPanel({
         <StaticSectionCard title={t.label.formatSection}>
         <div className="flex flex-col gap-1">
           <label className={labelCls}>{t.label.preset}</label>
-          <select
-            className={inputCls}
+          <Select<string>
             value={presetValue}
             onChange={handlePreset}
-          >
-            <option value="custom">{t.label.presetCustom}</option>
-            {PRESETS.map((p, i) => (
-              <option key={i} value={i}>
-                {p.label}
-              </option>
-            ))}
-          </select>
+            groups={[
+              {
+                options: [
+                  { value: "custom", label: t.label.presetCustom },
+                  ...PRESETS.map((p, i) => ({ value: String(i), label: p.label })),
+                ],
+              },
+            ]}
+          />
         </div>
 
         <div className="flex items-center justify-between">
@@ -552,16 +562,20 @@ function LabelConfigPanel({
 
         <div className="flex flex-col gap-1">
           <label className={labelCls}>{t.label.dpmm}</label>
-          <select
-            className={inputCls}
+          <Select<number>
             value={label.dpmm}
-            onChange={(e) => onUpdate({ dpmm: Number(e.target.value) })}
-          >
-            <option value={6}>{t.label.dpmm6}</option>
-            <option value={8}>{t.label.dpmm8}</option>
-            <option value={12}>{t.label.dpmm12}</option>
-            <option value={24}>{t.label.dpmm24}</option>
-          </select>
+            onChange={(value) => onUpdate({ dpmm: value })}
+            groups={[
+              {
+                options: [
+                  { value: 6, label: t.label.dpmm6 },
+                  { value: 8, label: t.label.dpmm8 },
+                  { value: 12, label: t.label.dpmm12 },
+                  { value: 24, label: t.label.dpmm24 },
+                ],
+              },
+            ]}
+          />
         </div>
 
         <div className="flex flex-col gap-1">
@@ -604,64 +618,63 @@ function LabelConfigPanel({
           <div className={`grid grid-cols-3 ${fieldGridCols}`}>
             <div className={fieldGridCell}>
               <div className="flex items-start justify-between gap-2">
-                <label className="text-[10px] text-muted">{t.label.labelHomeX}</label>
+                <label className="text-[10px] text-muted">{`${t.label.labelHomeX} (${unitLabel(unit)})`}</label>
                 <ZplCmd cmd="^LH" />
               </div>
               <input
                 type="number"
                 className={inputCls}
-                value={label.labelHomeX ?? ""}
+                value={label.labelHomeX === undefined ? "" : mmToUnit(dotsToMm(label.labelHomeX, label.dpmm), unit)}
                 min={0}
+                step={unitStep(unit)}
                 onChange={(e) =>
-                  onUpdate({ labelHomeX: parseIntOrUndef(e.target.value) })
+                  onUpdate({ labelHomeX: dotsFromUnitOrUndef(e.target.value, unit, label.dpmm) })
                 }
               />
             </div>
             <div className={fieldGridCell}>
               <div className="flex items-start justify-between gap-2">
-                <label className="text-[10px] text-muted">{t.label.labelHomeY}</label>
+                <label className="text-[10px] text-muted">{`${t.label.labelHomeY} (${unitLabel(unit)})`}</label>
                 <ZplCmd cmd="^LH" />
               </div>
               <input
                 type="number"
                 className={inputCls}
-                value={label.labelHomeY ?? ""}
+                value={label.labelHomeY === undefined ? "" : mmToUnit(dotsToMm(label.labelHomeY, label.dpmm), unit)}
                 min={0}
+                step={unitStep(unit)}
                 onChange={(e) =>
-                  onUpdate({ labelHomeY: parseIntOrUndef(e.target.value) })
+                  onUpdate({ labelHomeY: dotsFromUnitOrUndef(e.target.value, unit, label.dpmm) })
                 }
               />
             </div>
             <div className={fieldGridCell}>
               <div className="flex items-start justify-between gap-2">
-                <label className="text-[10px] text-muted">{t.label.labelTop}</label>
+                <label className="text-[10px] text-muted">{`${t.label.labelTop} (${unitLabel(unit)})`}</label>
                 <ZplCmd cmd="^LT" />
               </div>
               <input
                 type="number"
                 className={inputCls}
-                value={label.labelTop ?? ""}
-                min={-120}
-                max={120}
+                value={label.labelTop === undefined ? "" : mmToUnit(dotsToMm(label.labelTop, label.dpmm), unit)}
+                min={mmToUnit(dotsToMm(-120, label.dpmm), unit)}
+                max={mmToUnit(dotsToMm(120, label.dpmm), unit)}
+                step={unitStep(unit)}
                 onChange={(e) =>
-                  onUpdate({ labelTop: parseIntOrUndef(e.target.value) })
+                  onUpdate({ labelTop: dotsFromUnitOrUndef(e.target.value, unit, label.dpmm) })
                 }
               />
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <FieldLabel cmd="^LS">{t.label.labelShift}</FieldLabel>
-          <input
-            type="number"
-            className={inputCls}
-            value={label.labelShift ?? 0}
-            onChange={(e) =>
-              onUpdate({ labelShift: Number(e.target.value) || undefined })
-            }
-          />
-        </div>
+        <UnitNumberInput
+          label={t.label.labelShift}
+          valueDots={label.labelShift}
+          allowUnset
+          onChangeDots={(labelShift) => onUpdate({ labelShift })}
+          zplCmd="^LS"
+        />
 
         <div className="flex flex-col gap-1">
           <FieldLabel cmd="^PQ">{t.label.printQuantity}</FieldLabel>
@@ -752,36 +765,24 @@ function LabelConfigPanel({
           />
         </div>
         <div className={`grid grid-cols-2 ${fieldGridCols}`}>
-          <div className={fieldGridCell}>
-            <div className="flex items-start justify-between gap-2">
-              <label className="text-[10px] text-muted">{t.label.defaultFontHeight}</label>
-              <ZplCmd cmd="^CF" />
-            </div>
-            <input
-              type="number"
-              className={inputCls}
-              min={1}
-              value={label.defaultFontHeight ?? ""}
-              onChange={(e) =>
-                onUpdate({ defaultFontHeight: parseIntOrUndef(e.target.value) })
-              }
-            />
-          </div>
-          <div className={fieldGridCell}>
-            <div className="flex items-start justify-between gap-2">
-              <label className="text-[10px] text-muted">{t.label.defaultFontWidth}</label>
-              <ZplCmd cmd="^CF" />
-            </div>
-            <input
-              type="number"
-              className={inputCls}
-              min={0}
-              value={label.defaultFontWidth ?? ""}
-              onChange={(e) =>
-                onUpdate({ defaultFontWidth: parseIntOrUndef(e.target.value) })
-              }
-            />
-          </div>
+          <UnitNumberInput
+            label={t.label.defaultFontHeight}
+            valueDots={label.defaultFontHeight}
+            minDots={1}
+            allowUnset
+            onChangeDots={(defaultFontHeight) => onUpdate({ defaultFontHeight })}
+            zplCmd="^CF"
+            className={fieldGridCell}
+          />
+          <UnitNumberInput
+            label={t.label.defaultFontWidth}
+            valueDots={label.defaultFontWidth}
+            minDots={0}
+            allowUnset
+            onChangeDots={(defaultFontWidth) => onUpdate({ defaultFontWidth })}
+            zplCmd="^CF"
+            className={fieldGridCell}
+          />
         </div>
         </div>
         </SectionCard>

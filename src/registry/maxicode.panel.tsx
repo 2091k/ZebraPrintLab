@@ -5,6 +5,7 @@ import { validateMaxicodeBwip } from "../components/Canvas/bwipHelpers";
 import { RotationSelect } from "../components/Properties/RotationSelect";
 import { SectionCard, StaticSectionCard } from "../components/Properties/SectionCard";
 import { FieldLabel } from "../components/Properties/ZplCmd";
+import { Select } from "../components/ui/Select";
 import { type MaxicodeProps, ALL_MODES } from "./maxicode";
 
 export const maxicodePanel: ObjectTypeUi<MaxicodeProps> = {
@@ -36,19 +37,12 @@ export const maxicodePanel: ObjectTypeUi<MaxicodeProps> = {
         <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
           <div className="flex flex-col gap-1">
             <FieldLabel cmd="^BV">{loc.mode}</FieldLabel>
-            <select
-              className={inputCls}
+            <Select<MaxicodeProps["mode"]>
               value={p.mode}
-              onChange={(e) =>
-                onChange({ mode: Number(e.target.value) as MaxicodeProps["mode"] })
-              }
-            >
-              {ALL_MODES.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+              onChange={(mode) => onChange({ mode })}
+              aria-label={loc.mode}
+              groups={[{ options: ALL_MODES.map((m) => ({ value: m, label: String(m) })) }]}
+            />
             {diagnostic && (
               <p className={`text-[10px] leading-snug ${diagnostic.className}`}>
                 {diagnostic.text}

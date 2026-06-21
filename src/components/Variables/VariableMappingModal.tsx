@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/16/solid';
 import { useLabelStore } from '../../store/labelStore';
 import { useT } from '../../lib/useT';
@@ -18,6 +18,7 @@ import {
 import { DialogShell } from '../ui/DialogShell';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { inputCls } from '../Properties/styles';
+import { Select } from '../ui/Select';
 import { getVariableSource } from '../../lib/variableBinding';
 import { VariableSourceBadge } from './VariableSourceBadge';
 import { Tooltip } from '../ui/Tooltip';
@@ -217,8 +218,7 @@ export function VariableMappingModal({ onClose }: Props) {
   }
 
   const handleChangeBinding =
-    (variableId: string) => (e: ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value;
+    (variableId: string) => (value: string) => {
       setDraftBindings((prev) => {
         if (value === '') {
           if (!(variableId in prev)) return prev;
@@ -406,18 +406,20 @@ export function VariableMappingModal({ onClose }: Props) {
                       ) : null}
                     </td>
                     <td className="py-1.5 pr-3">
-                      <select
-                        className={`${inputCls} ${isDuplicate ? 'border-amber-400' : ''}`}
-                        value={boundHeader ?? ''}
-                        onChange={handleChangeBinding(v.id)}
-                      >
-                        <option value="">{tv.csvIgnoreOption}</option>
-                        {virtualHeaders.map((h) => (
-                          <option key={h} value={h}>
-                            {h}
-                          </option>
-                        ))}
-                      </select>
+                      <div className={isDuplicate ? 'rounded border border-amber-400' : ''}>
+                        <Select<string>
+                          value={boundHeader ?? ''}
+                          onChange={handleChangeBinding(v.id)}
+                          groups={[
+                            {
+                              options: [
+                                { value: '', label: tv.csvIgnoreOption },
+                                ...virtualHeaders.map((h) => ({ value: h, label: h })),
+                              ],
+                            },
+                          ]}
+                        />
+                      </div>
                       {isDuplicate && (
                         <p className="mt-0.5 font-mono text-[9px] text-amber-400">
                           {tv.csvDuplicateColumn}
@@ -554,16 +556,20 @@ function CsvOptionsEditor({ value, onChange }: CsvOptionsEditorProps) {
         <label className="font-mono text-[10px] text-muted uppercase tracking-wider">
           {tv.csvDelimiterLabel}
         </label>
-        <select
-          className={inputCls}
+        <Select<string>
           value={value.delimiter}
-          onChange={(e) => onChange({ ...value, delimiter: e.target.value })}
-        >
-          <option value="">{tv.csvDelimiterAuto}</option>
-          <option value=",">{tv.csvDelimiterComma}</option>
-          <option value=";">{tv.csvDelimiterSemicolon}</option>
-          <option value={'\t'}>{tv.csvDelimiterTab}</option>
-        </select>
+          onChange={(delimiter) => onChange({ ...value, delimiter })}
+          groups={[
+            {
+              options: [
+                { value: '', label: tv.csvDelimiterAuto },
+                { value: ',', label: tv.csvDelimiterComma },
+                { value: ';', label: tv.csvDelimiterSemicolon },
+                { value: '\t', label: tv.csvDelimiterTab },
+              ],
+            },
+          ]}
+        />
       </div>
 
       <label className="flex items-center gap-2 font-mono text-[10px] text-text cursor-pointer">
@@ -596,16 +602,20 @@ function CsvOptionsEditor({ value, onChange }: CsvOptionsEditorProps) {
         <label className="font-mono text-[10px] text-muted uppercase tracking-wider">
           {tv.csvEncodingLabel}
         </label>
-        <select
-          className={inputCls}
+        <Select<string>
           value={value.encoding}
-          onChange={(e) => onChange({ ...value, encoding: e.target.value })}
-        >
-          <option value="utf-8">{tv.csvEncodingUtf8}</option>
-          <option value="windows-1252">{tv.csvEncodingWin1252}</option>
-          <option value="iso-8859-1">{tv.csvEncodingIso88591}</option>
-          <option value="utf-16le">{tv.csvEncodingUtf16le}</option>
-        </select>
+          onChange={(encoding) => onChange({ ...value, encoding })}
+          groups={[
+            {
+              options: [
+                { value: 'utf-8', label: tv.csvEncodingUtf8 },
+                { value: 'windows-1252', label: tv.csvEncodingWin1252 },
+                { value: 'iso-8859-1', label: tv.csvEncodingIso88591 },
+                { value: 'utf-16le', label: tv.csvEncodingUtf16le },
+              ],
+            },
+          ]}
+        />
       </div>
     </div>
   );

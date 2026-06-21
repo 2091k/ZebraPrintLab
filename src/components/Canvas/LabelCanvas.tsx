@@ -17,6 +17,7 @@ import { isGroup, getAllLeaves, expandSelection, selectionTargetId, findObjectBy
 import { pxToDots, dotsToPx, SCREEN_PX_PER_MM } from "../../lib/coordinates";
 import { SNAP_OPTIONS } from "../../lib/units";
 import type { Unit } from "../../lib/units";
+import { Select } from "../ui/Select";
 import type { SnapGuide } from "../../lib/snapGuides";
 import { computeAlignDeltas, computeDistribute, computeTidy } from "../../lib/align";
 import type { AlignOp, AlignBox, DistributeAxis, AlignRef } from "../../lib/align";
@@ -953,18 +954,18 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
             {t.app.toggleSnap}
           </button>
         </Tooltip>
-        <select
-          value={snapSizeMm}
-          onChange={(e) => onSnapSizeChange(Number(e.target.value))}
-          disabled={!snapEnabled}
-          className="h-6 rounded px-1 text-xs bg-surface-2 border border-border text-text disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {SNAP_OPTIONS[unit].map((o) => (
-            <option key={o.mm} value={o.mm}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        <div className="w-28">
+          <Select<number>
+            value={snapSizeMm}
+            onChange={(value) => onSnapSizeChange(value)}
+            disabled={!snapEnabled}
+            groups={[
+              {
+                options: SNAP_OPTIONS[unit].map((o) => ({ value: o.mm, label: o.label })),
+              },
+            ]}
+          />
+        </div>
         <div className="w-px h-3.5 bg-border mx-0.5" />
         <button
           onClick={zoomOut}

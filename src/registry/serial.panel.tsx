@@ -4,8 +4,10 @@ import { inputCls } from "../components/Properties/styles";
 import { filterContent } from "./contentSpec";
 import { RotationSelect } from "../components/Properties/RotationSelect";
 import { NumberInput } from "../components/Properties/NumberInput";
+import { UnitNumberInput } from "../components/Properties/UnitNumberInput";
 import { SectionCard, StaticSectionCard } from "../components/Properties/SectionCard";
 import { FieldLabel } from "../components/Properties/ZplCmd";
+import { Select } from "../components/ui/Select";
 import { fieldGridCols, fieldGridCell } from "../components/ui/formStyles";
 import { type SerialProps, serialSpec } from "./serial";
 
@@ -42,19 +44,19 @@ export const serialPanel: ObjectTypeUi<SerialProps> = {
 
         <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
           <div className={`grid grid-cols-2 ${fieldGridCols}`}>
-            <NumberInput
+            <UnitNumberInput
               label={t.registry.serial.fontHeight}
-              value={p.fontHeight}
-              min={1}
-              onChange={(fontHeight) => onChange({ fontHeight })}
+              valueDots={p.fontHeight}
+              minDots={1}
+              onChangeDots={(fontHeight) => onChange({ fontHeight })}
               zplCmd="^A"
               className={fieldGridCell}
             />
-            <NumberInput
+            <UnitNumberInput
               label={t.registry.serial.fontWidth}
-              value={p.fontWidth}
-              min={0}
-              onChange={(fontWidth) => onChange({ fontWidth })}
+              valueDots={p.fontWidth}
+              minDots={0}
+              onChangeDots={(fontWidth) => onChange({ fontWidth })}
               zplCmd="^A"
               className={fieldGridCell}
             />
@@ -68,16 +70,15 @@ export const serialPanel: ObjectTypeUi<SerialProps> = {
 
           <div className="flex flex-col gap-1">
             <FieldLabel cmd={serialCmd}>{t.registry.serial.zplMode}</FieldLabel>
-            <select
-              className={inputCls}
+            <Select<SerialProps["zplMode"]>
               value={p.zplMode}
-              onChange={(e) =>
-                onChange({ zplMode: e.target.value as SerialProps["zplMode"] })
-              }
-            >
-              <option value="SN">{t.registry.serial.zplModeSN}</option>
-              <option value="SF">{t.registry.serial.zplModeSF}</option>
-            </select>
+              onChange={(zplMode) => onChange({ zplMode })}
+              aria-label={t.registry.serial.zplMode}
+              groups={[{ options: [
+                { value: "SN", label: t.registry.serial.zplModeSN },
+                { value: "SF", label: t.registry.serial.zplModeSF },
+              ] }]}
+            />
           </div>
         </SectionCard>
       </>

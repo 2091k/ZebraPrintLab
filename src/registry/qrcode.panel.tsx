@@ -6,6 +6,7 @@ import { RotationSelect } from '../components/Properties/RotationSelect';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { SectionCard, StaticSectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel } from '../components/Properties/ZplCmd';
+import { Select } from '../components/ui/Select';
 import { type QrCodeProps, MAGNIFICATION_MIN, MAGNIFICATION_MAX } from './qrcode';
 
 export const qrcodePanel: ObjectTypeUi<QrCodeProps> = {
@@ -13,6 +14,7 @@ export const qrcodePanel: ObjectTypeUi<QrCodeProps> = {
     const t = useT();
     const p = obj.props;
     const openContentBuilder = useLabelStore((s) => s.openContentBuilder);
+    const showZpl = useLabelStore((s) => s.showZplCommands);
     return (
       <>
         <StaticSectionCard title={t.properties.contentSection} cmd="^FD">
@@ -44,16 +46,17 @@ export const qrcodePanel: ObjectTypeUi<QrCodeProps> = {
 
           <div className="flex flex-col gap-1">
             <FieldLabel cmd="^BQ">{t.registry.qrcode.errorCorrection}</FieldLabel>
-            <select
-              className={inputCls}
+            <Select<QrCodeProps['errorCorrection']>
               value={p.errorCorrection}
-              onChange={(e) => onChange({ errorCorrection: e.target.value as QrCodeProps['errorCorrection'] })}
-            >
-              <option value="L">{t.registry.qrcode.ecL}</option>
-              <option value="M">{t.registry.qrcode.ecM}</option>
-              <option value="Q">{t.registry.qrcode.ecQ}</option>
-              <option value="H">{t.registry.qrcode.ecH}</option>
-            </select>
+              onChange={(errorCorrection) => onChange({ errorCorrection })}
+              aria-label={t.registry.qrcode.errorCorrection}
+              groups={[{ options: [
+                { value: 'L', label: t.registry.qrcode.ecL, badge: showZpl ? 'L' : undefined },
+                { value: 'M', label: t.registry.qrcode.ecM, badge: showZpl ? 'M' : undefined },
+                { value: 'Q', label: t.registry.qrcode.ecQ, badge: showZpl ? 'Q' : undefined },
+                { value: 'H', label: t.registry.qrcode.ecH, badge: showZpl ? 'H' : undefined },
+              ] }]}
+            />
           </div>
 
           <RotationSelect value={p.rotation} onChange={(rotation) => onChange({ rotation })} zplCmd="^BQ" />

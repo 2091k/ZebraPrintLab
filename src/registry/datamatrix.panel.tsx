@@ -7,6 +7,7 @@ import { RotationSelect } from '../components/Properties/RotationSelect';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { SectionCard, StaticSectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { Select } from '../components/ui/Select';
 import { filterContent } from './contentSpec';
 import { GS1_EXPANDED_CHARSET, GS1_SAMPLE_CONTENT, elementStringToContent, parseGs1ToSegments } from '../lib/gs1';
 import { type DataMatrixProps, DIMENSION_MIN, DIMENSION_MAX } from './datamatrix';
@@ -21,6 +22,7 @@ export const datamatrixPanel: ObjectTypeUi<DataMatrixProps> = {
     const loc = t.registry.datamatrix;
     const openContentBuilder = useLabelStore((s) => s.openContentBuilder);
     const openGs1Builder = useLabelStore((s) => s.openGs1Builder);
+    const showZpl = useLabelStore((s) => s.showZplCommands);
     return (
       <>
         <StaticSectionCard title={t.properties.contentSection} cmd="^FD">
@@ -92,18 +94,19 @@ export const datamatrixPanel: ObjectTypeUi<DataMatrixProps> = {
 
           <div className="flex flex-col gap-1">
             <FieldLabel cmd="^BX">{loc.quality}</FieldLabel>
-            <select
-              className={`${inputCls} disabled:opacity-50`}
+            <Select<DataMatrixProps['quality']>
               value={p.quality}
               disabled={p.gs1}
-              onChange={(e) => onChange({ quality: Number(e.target.value) as DataMatrixProps['quality'] })}
-            >
-              <option value={0}>{loc.qualityAuto}</option>
-              <option value={50}>{loc.quality50}</option>
-              <option value={80}>{loc.quality80}</option>
-              <option value={140}>{loc.quality140}</option>
-              <option value={200}>{loc.quality200}</option>
-            </select>
+              onChange={(quality) => onChange({ quality })}
+              aria-label={loc.quality}
+              groups={[{ options: [
+                { value: 0, label: loc.qualityAuto, badge: showZpl ? '0' : undefined },
+                { value: 50, label: loc.quality50, badge: showZpl ? '50' : undefined },
+                { value: 80, label: loc.quality80, badge: showZpl ? '80' : undefined },
+                { value: 140, label: loc.quality140, badge: showZpl ? '140' : undefined },
+                { value: 200, label: loc.quality200, badge: showZpl ? '200' : undefined },
+              ] }]}
+            />
           </div>
 
           <RotationSelect value={p.rotation} onChange={(rotation) => onChange({ rotation })} zplCmd="^BX" />

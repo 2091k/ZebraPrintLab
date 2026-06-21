@@ -2,6 +2,7 @@ import { useT } from "../../lib/useT";
 import { labelCls } from "./styles";
 import { fieldGridCols, fieldGridCell } from "../ui/formStyles";
 import { NumberInput } from "./NumberInput";
+import { UnitNumberInput } from "./UnitNumberInput";
 import { JustifyButtons } from "./JustifyButtons";
 import type { TextProps } from "../../registry/text";
 import {
@@ -71,11 +72,12 @@ export function BlockTextSettings({ props: p, onChange }: Props) {
         />
       </div>
       <div className={`grid grid-cols-2 ${fieldGridCols}`}>
-        <NumberInput
+        <UnitNumberInput
           label={t.registry.text.blockWidth}
-          value={p.blockWidth ?? 0}
-          min={1}
-          onChange={(blockWidth) => onChange({ blockWidth })}
+          valueDots={p.blockWidth}
+          minDots={1}
+          allowUnset
+          onChangeDots={(blockWidth) => onChange({ blockWidth })}
           className={fieldGridCell}
         />
         <NumberInput
@@ -87,19 +89,19 @@ export function BlockTextSettings({ props: p, onChange }: Props) {
         />
       </div>
       <div className={`grid grid-cols-2 ${fieldGridCols}`}>
-        <NumberInput
+        <UnitNumberInput
           label={t.registry.text.blockLineSpacing}
-          value={p.blockLineSpacing ?? 0}
-          onChange={(blockLineSpacing) => onChange({ blockLineSpacing })}
+          valueDots={p.blockLineSpacing}
+          allowUnset
+          onChangeDots={(blockLineSpacing) => onChange({ blockLineSpacing })}
           className={fieldGridCell}
         />
-        <NumberInput
+        <UnitNumberInput
           label={t.registry.text.blockHangingIndent}
-          value={p.blockHangingIndent ?? 0}
-          min={0}
-          onChange={(blockHangingIndent) =>
-            onChange({ blockHangingIndent: blockHangingIndent || undefined })
-          }
+          valueDots={p.blockHangingIndent}
+          minDots={0}
+          allowUnset
+          onChangeDots={(blockHangingIndent) => onChange({ blockHangingIndent })}
           className={fieldGridCell}
         />
       </div>
