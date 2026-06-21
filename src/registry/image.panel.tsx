@@ -167,7 +167,7 @@ export const imagePanel: ObjectTypeUi<ImageProps> = {
             label={t.registry.image.widthDots}
             valueDots={p.widthDots}
             minDots={8}
-            onChangeDots={handleWidthChange}
+            onChangeDots={(w) => w !== undefined && handleWidthChange(w)}
             zplCmd={p.storedAs ? "~DY" : "^GF"}
           />
 

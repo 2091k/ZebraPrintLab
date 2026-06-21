@@ -54,13 +54,14 @@ export const linePanel: ObjectTypeUi<LineProps> = {
             // the model in the ^GB promotion regime where t > length
             // prints `t × t`; auto-clamp thickness down to match the
             // new length, mirroring the endpoint-handle drag.
-            onChangeDots={(length) =>
+            onChangeDots={(length) => {
+              if (length === undefined) return;
               onChange(
                 length < p.thickness
                   ? { length, thickness: length }
                   : { length },
-              )
-            }
+              );
+            }}
             zplCmd={cmd}
             className={fieldGridCell}
           />

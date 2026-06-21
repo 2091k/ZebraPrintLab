@@ -670,8 +670,9 @@ function LabelConfigPanel({
 
         <UnitNumberInput
           label={t.label.labelShift}
-          valueDots={label.labelShift ?? 0}
-          onChangeDots={(v) => onUpdate({ labelShift: v || undefined })}
+          valueDots={label.labelShift}
+          allowUnset
+          onChangeDots={(labelShift) => onUpdate({ labelShift })}
           zplCmd="^LS"
         />
 
@@ -766,17 +767,19 @@ function LabelConfigPanel({
         <div className={`grid grid-cols-2 ${fieldGridCols}`}>
           <UnitNumberInput
             label={t.label.defaultFontHeight}
-            valueDots={label.defaultFontHeight ?? 0}
+            valueDots={label.defaultFontHeight}
             minDots={1}
-            onChangeDots={(v) => onUpdate({ defaultFontHeight: v || undefined })}
+            allowUnset
+            onChangeDots={(defaultFontHeight) => onUpdate({ defaultFontHeight })}
             zplCmd="^CF"
             className={fieldGridCell}
           />
           <UnitNumberInput
             label={t.label.defaultFontWidth}
-            valueDots={label.defaultFontWidth ?? 0}
+            valueDots={label.defaultFontWidth}
             minDots={0}
-            onChangeDots={(v) => onUpdate({ defaultFontWidth: v || undefined })}
+            allowUnset
+            onChangeDots={(defaultFontWidth) => onUpdate({ defaultFontWidth })}
             zplCmd="^CF"
             className={fieldGridCell}
           />

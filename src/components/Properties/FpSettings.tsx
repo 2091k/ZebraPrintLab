@@ -84,8 +84,9 @@ export function FpSettings({ props: p, onChange }: Props) {
       <div title={gapDisabled ? t.registry.text.fpCharGapVHint : undefined}>
         <UnitNumberInput
           label={t.registry.text.fpCharGap}
-          valueDots={p.fpCharGap ?? 0}
+          valueDots={p.fpCharGap}
           minDots={0}
+          allowUnset
           disabled={gapDisabled}
           onChangeDots={(fpCharGap) => onChange({ fpCharGap })}
         />

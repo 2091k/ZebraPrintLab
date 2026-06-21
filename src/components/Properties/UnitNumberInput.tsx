@@ -6,13 +6,15 @@ import { dotsToMm, mmToDots } from '../../lib/coordinates';
 
 interface UnitNumberInputProps {
   label: string;
-  /** Stored value, in dots. */
-  valueDots: number;
-  onChangeDots: (next: number) => void;
+  /** Stored value, in dots; undefined renders an empty field when allowUnset. */
+  valueDots: number | undefined;
+  onChangeDots: (next: number | undefined) => void;
   /** Minimum, in dots (clamped after conversion). */
   minDots?: number;
   /** Maximum, in dots (clamped after conversion). */
   maxDots?: number;
+  /** Allow clearing the field to emit undefined (optional props). */
+  allowUnset?: boolean;
   disabled?: boolean;
   zplCmd?: string;
   /** Replaces the cell layout (e.g. fieldGridCell); omit for the default column. */
@@ -31,6 +33,7 @@ export function UnitNumberInput({
   onChangeDots,
   minDots,
   maxDots,
+  allowUnset,
   disabled,
   zplCmd,
   className,
@@ -44,12 +47,16 @@ export function UnitNumberInput({
       <input
         type="number"
         className={inputCls}
-        value={toUnit(valueDots)}
+        value={valueDots === undefined ? '' : toUnit(valueDots)}
         min={minDots !== undefined ? toUnit(minDots) : undefined}
         max={maxDots !== undefined ? toUnit(maxDots) : undefined}
         step={unitStep(unit)}
         disabled={disabled}
         onChange={(e) => {
+          if (allowUnset && e.target.value === '') {
+            onChangeDots(undefined);
+            return;
+          }
           let dots = mmToDots(unitToMm(Number(e.target.value), unit), dpmm);
           if (isNaN(dots)) return;
           if (minDots !== undefined && dots < minDots) dots = minDots;
