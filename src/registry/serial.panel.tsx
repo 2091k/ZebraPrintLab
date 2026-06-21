@@ -6,6 +6,7 @@ import { RotationSelect } from "../components/Properties/RotationSelect";
 import { NumberInput } from "../components/Properties/NumberInput";
 import { SectionCard, StaticSectionCard } from "../components/Properties/SectionCard";
 import { FieldLabel } from "../components/Properties/ZplCmd";
+import { Select } from "../components/ui/Select";
 import { fieldGridCols, fieldGridCell } from "../components/ui/formStyles";
 import { type SerialProps, serialSpec } from "./serial";
 
@@ -68,16 +69,15 @@ export const serialPanel: ObjectTypeUi<SerialProps> = {
 
           <div className="flex flex-col gap-1">
             <FieldLabel cmd={serialCmd}>{t.registry.serial.zplMode}</FieldLabel>
-            <select
-              className={inputCls}
+            <Select<SerialProps["zplMode"]>
               value={p.zplMode}
-              onChange={(e) =>
-                onChange({ zplMode: e.target.value as SerialProps["zplMode"] })
-              }
-            >
-              <option value="SN">{t.registry.serial.zplModeSN}</option>
-              <option value="SF">{t.registry.serial.zplModeSF}</option>
-            </select>
+              onChange={(zplMode) => onChange({ zplMode })}
+              aria-label={t.registry.serial.zplMode}
+              groups={[{ options: [
+                { value: "SN", label: t.registry.serial.zplModeSN },
+                { value: "SF", label: t.registry.serial.zplModeSF },
+              ] }]}
+            />
           </div>
         </SectionCard>
       </>

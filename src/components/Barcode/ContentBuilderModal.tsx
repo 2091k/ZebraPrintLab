@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BarcodeContentModalShell } from "./BarcodeContentModalShell";
 import { useT } from "../../lib/useT";
 import { inputCls } from "../ui/formStyles";
+import { Select } from "../ui/Select";
 import { useLabelStore, useCurrentObjects, getCurrentObjects } from "../../store/labelStore";
 import { findObjectById } from "../../types/Group";
 import { encodeContent, parseContent, recommendedEc, isContentComplete, CONTENT_TYPES, type ContentType, type ContentFields } from "../../lib/typedContent";
@@ -145,16 +146,20 @@ function ContentBuilder({ objectId }: { objectId: string }) {
                     onChange={(e) => setField(f.key, e.target.value)}
                   />
                 ) : f.kind === "auth" ? (
-                  <select
+                  <Select<string>
                     id={`content-${f.key}`}
-                    className={inputCls}
                     value={fields[f.key] || "WPA"}
-                    onChange={(e) => setField(f.key, e.target.value)}
-                  >
-                    <option value="WPA">WPA/WPA2/WPA3</option>
-                    <option value="WEP">WEP</option>
-                    <option value="nopass">{tc.fAuthOpen}</option>
-                  </select>
+                    onChange={(value) => setField(f.key, value)}
+                    groups={[
+                      {
+                        options: [
+                          { value: "WPA", label: "WPA/WPA2/WPA3" },
+                          { value: "WEP", label: "WEP" },
+                          { value: "nopass", label: tc.fAuthOpen },
+                        ],
+                      },
+                    ]}
+                  />
                 ) : (
                   <input
                     id={`content-${f.key}`}

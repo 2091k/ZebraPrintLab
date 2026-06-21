@@ -1,9 +1,11 @@
 import type { ObjectTypeUi } from '../types/ObjectType';
 import { useT } from '../lib/useT';
-import { inputCls, labelCls } from '../components/Properties/styles';
+import { useLabelStore } from '../store/labelStore';
+import { labelCls } from '../components/Properties/styles';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { SectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { Select } from '../components/ui/Select';
 import { fieldGridCols, fieldGridCell } from '../components/ui/formStyles';
 import type { BoxProps } from './box';
 
@@ -11,6 +13,7 @@ export const boxPanel: ObjectTypeUi<BoxProps> = {
   PropertiesPanel: ({ obj, onChange }) => {
     const t = useT();
     const p = obj.props;
+    const showZpl = useLabelStore((s) => s.showZplCommands);
     return (
       <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>
         <div className={`grid grid-cols-2 ${fieldGridCols}`}>
@@ -58,14 +61,15 @@ export const boxPanel: ObjectTypeUi<BoxProps> = {
         <div className={`grid grid-cols-2 ${fieldGridCols}`}>
           <div className={fieldGridCell}>
             <FieldLabel cmd="^GB">{t.registry.box.color}</FieldLabel>
-            <select
-              className={inputCls}
+            <Select<BoxProps['color']>
               value={p.color}
-              onChange={(e) => onChange({ color: e.target.value as BoxProps['color'] })}
-            >
-              <option value="B">{t.registry.box.colorB}</option>
-              <option value="W">{t.registry.box.colorW}</option>
-            </select>
+              onChange={(color) => onChange({ color })}
+              aria-label={t.registry.box.color}
+              groups={[{ options: [
+                { value: 'B', label: t.registry.box.colorB, badge: showZpl ? 'B' : undefined },
+                { value: 'W', label: t.registry.box.colorW, badge: showZpl ? 'W' : undefined },
+              ] }]}
+            />
           </div>
           <NumberInput
             label={t.registry.box.rounding}

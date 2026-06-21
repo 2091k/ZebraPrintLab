@@ -1,9 +1,11 @@
 import type { ObjectTypeUi } from '../types/ObjectType';
 import { useT } from '../lib/useT';
-import { inputCls, labelCls } from '../components/Properties/styles';
+import { useLabelStore } from '../store/labelStore';
+import { labelCls } from '../components/Properties/styles';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { SectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { Select } from '../components/ui/Select';
 import { fieldGridCols, fieldGridCell } from '../components/ui/formStyles';
 import type { EllipseProps } from './ellipse';
 
@@ -11,6 +13,7 @@ export const ellipsePanel: ObjectTypeUi<EllipseProps> = {
   PropertiesPanel: ({ obj, onChange }) => {
     const t = useT();
     const p = obj.props;
+    const showZpl = useLabelStore((s) => s.showZplCommands);
     // The generator emits ^GC when the axes are equal (a circle), else ^GE
     // (independent of the lockAspect editor toggle). Badge mirrors that.
     const cmd = p.width === p.height ? '^GC' : '^GE';
@@ -99,14 +102,15 @@ export const ellipsePanel: ObjectTypeUi<EllipseProps> = {
 
         <div className="flex flex-col gap-1">
           <FieldLabel cmd={cmd}>{t.registry.ellipse.color}</FieldLabel>
-          <select
-            className={inputCls}
+          <Select<EllipseProps['color']>
             value={p.color}
-            onChange={(e) => onChange({ color: e.target.value as EllipseProps['color'] })}
-          >
-            <option value="B">{t.registry.ellipse.colorB}</option>
-            <option value="W">{t.registry.ellipse.colorW}</option>
-          </select>
+            onChange={(color) => onChange({ color })}
+            aria-label={t.registry.ellipse.color}
+            groups={[{ options: [
+              { value: 'B', label: t.registry.ellipse.colorB, badge: showZpl ? 'B' : undefined },
+              { value: 'W', label: t.registry.ellipse.colorW, badge: showZpl ? 'W' : undefined },
+            ] }]}
+          />
         </div>
 
         <div className="flex items-center justify-between gap-2">

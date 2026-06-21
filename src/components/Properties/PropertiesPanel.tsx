@@ -413,30 +413,30 @@ interface Preset {
 
 const PRESETS: Preset[] = [
   {
-    label: '4" × 6"  — 101 × 152 mm',
+    label: '4" × 6" (101 × 152 mm)',
     widthMm: 101.6,
     heightMm: 152.4,
     dpmm: 8,
   },
   {
-    label: '4" × 4"  — 101 × 101 mm',
+    label: '4" × 4" (101 × 101 mm)',
     widthMm: 101.6,
     heightMm: 101.6,
     dpmm: 8,
   },
-  { label: '4" × 3"  — 101 × 76 mm', widthMm: 101.6, heightMm: 76.2, dpmm: 8 },
-  { label: '4" × 2"  — 101 × 51 mm', widthMm: 101.6, heightMm: 50.8, dpmm: 8 },
-  { label: '3" × 2"  — 76 × 51 mm', widthMm: 76.2, heightMm: 50.8, dpmm: 8 },
-  { label: '2" × 1"  — 51 × 25 mm', widthMm: 50.8, heightMm: 25.4, dpmm: 8 },
+  { label: '4" × 3" (101 × 76 mm)', widthMm: 101.6, heightMm: 76.2, dpmm: 8 },
+  { label: '4" × 2" (101 × 51 mm)', widthMm: 101.6, heightMm: 50.8, dpmm: 8 },
+  { label: '3" × 2" (76 × 51 mm)', widthMm: 76.2, heightMm: 50.8, dpmm: 8 },
+  { label: '2" × 1" (51 × 25 mm)', widthMm: 50.8, heightMm: 25.4, dpmm: 8 },
   { label: "100 × 150 mm", widthMm: 100, heightMm: 150, dpmm: 8 },
   { label: "100 × 100 mm", widthMm: 100, heightMm: 100, dpmm: 8 },
   { label: "100 × 50 mm", widthMm: 100, heightMm: 50, dpmm: 8 },
   { label: "62 × 29 mm  (Brother)", widthMm: 62, heightMm: 29, dpmm: 12 },
   { label: "57 × 32 mm  (Brother)", widthMm: 57, heightMm: 32, dpmm: 12 },
-  { label: "DIN A7  —  74 × 105 mm", widthMm: 74, heightMm: 105, dpmm: 8 },
-  { label: "DIN A6  — 105 × 148 mm", widthMm: 105, heightMm: 148, dpmm: 8 },
-  { label: "DIN A5  — 148 × 210 mm", widthMm: 148, heightMm: 210, dpmm: 8 },
-  { label: "DIN A4  — 210 × 297 mm", widthMm: 210, heightMm: 297, dpmm: 8 },
+  { label: "DIN A7 (74 × 105 mm)", widthMm: 74, heightMm: 105, dpmm: 8 },
+  { label: "DIN A6 (105 × 148 mm)", widthMm: 105, heightMm: 148, dpmm: 8 },
+  { label: "DIN A5 (148 × 210 mm)", widthMm: 148, heightMm: 210, dpmm: 8 },
+  { label: "DIN A4 (210 × 297 mm)", widthMm: 210, heightMm: 297, dpmm: 8 },
 ];
 
 // ── LabelConfigPanel ───────────────────────────────────────────────────────────
@@ -465,9 +465,9 @@ function LabelConfigPanel({
     ? PRESETS.indexOf(matchedPreset).toString()
     : "custom";
 
-  const handlePreset = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (e.target.value === "custom") return;
-    const p = PRESETS[Number(e.target.value)];
+  const handlePreset = (value: string) => {
+    if (value === "custom") return;
+    const p = PRESETS[Number(value)];
     if (!p) return;
     onUpdate({ widthMm: p.widthMm, heightMm: p.heightMm, dpmm: p.dpmm });
   };
@@ -490,18 +490,18 @@ function LabelConfigPanel({
         <StaticSectionCard title={t.label.formatSection}>
         <div className="flex flex-col gap-1">
           <label className={labelCls}>{t.label.preset}</label>
-          <select
-            className={inputCls}
+          <Select<string>
             value={presetValue}
             onChange={handlePreset}
-          >
-            <option value="custom">{t.label.presetCustom}</option>
-            {PRESETS.map((p, i) => (
-              <option key={i} value={i}>
-                {p.label}
-              </option>
-            ))}
-          </select>
+            groups={[
+              {
+                options: [
+                  { value: "custom", label: t.label.presetCustom },
+                  ...PRESETS.map((p, i) => ({ value: String(i), label: p.label })),
+                ],
+              },
+            ]}
+          />
         </div>
 
         <div className="flex items-center justify-between">
@@ -552,16 +552,20 @@ function LabelConfigPanel({
 
         <div className="flex flex-col gap-1">
           <label className={labelCls}>{t.label.dpmm}</label>
-          <select
-            className={inputCls}
+          <Select<number>
             value={label.dpmm}
-            onChange={(e) => onUpdate({ dpmm: Number(e.target.value) })}
-          >
-            <option value={6}>{t.label.dpmm6}</option>
-            <option value={8}>{t.label.dpmm8}</option>
-            <option value={12}>{t.label.dpmm12}</option>
-            <option value={24}>{t.label.dpmm24}</option>
-          </select>
+            onChange={(value) => onUpdate({ dpmm: value })}
+            groups={[
+              {
+                options: [
+                  { value: 6, label: t.label.dpmm6 },
+                  { value: 8, label: t.label.dpmm8 },
+                  { value: 12, label: t.label.dpmm12 },
+                  { value: 24, label: t.label.dpmm24 },
+                ],
+              },
+            ]}
+          />
         </div>
 
         <div className="flex flex-col gap-1">

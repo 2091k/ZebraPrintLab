@@ -2,6 +2,7 @@ import { useState } from "react";
 import { XMarkIcon } from "@heroicons/react/16/solid";
 import { useT } from "../../lib/useT";
 import { DialogShell } from "../ui/DialogShell";
+import { Select } from "../ui/Select";
 import {
   discoverBrowserPrintDevices,
   sendViaBrowserPrint,
@@ -207,25 +208,25 @@ export function PrintToZebraDialog({ zpl, onClose }: Props) {
               <label className="font-mono text-[10px] text-muted uppercase tracking-widest">
                 {t.zebraPrint.printer}
               </label>
-              <select
+              <Select<string>
                 value={selectedUid}
-                onChange={(e) => {
-                  const uid = e.target.value;
+                onChange={(uid) => {
                   setSelectedUid(uid);
                   localStorage.setItem(LS_PRINTER_UID, uid);
                 }}
                 disabled={devices.length === 0}
-                className="bg-bg border border-border rounded px-2 py-1 text-xs font-mono text-text focus:outline-none focus:border-accent disabled:opacity-50"
-              >
-                {devices.length === 0 && (
-                  <option value="">{t.zebraPrint.noPrinters}</option>
-                )}
-                {devices.map((d) => (
-                  <option key={d.uid} value={d.uid}>
-                    {d.name || d.manufacturer || d.uid}
-                  </option>
-                ))}
-              </select>
+                groups={[
+                  {
+                    options:
+                      devices.length === 0
+                        ? [{ value: "", label: t.zebraPrint.noPrinters }]
+                        : devices.map((d) => ({
+                            value: d.uid,
+                            label: d.name || d.manufacturer || d.uid,
+                          })),
+                  },
+                ]}
+              />
             </div>
             <button
               onClick={handleDiscover}

@@ -5,6 +5,7 @@ import { RotationSelect } from '../components/Properties/RotationSelect';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { SectionCard, StaticSectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { Select } from '../components/ui/Select';
 import { fieldGridCols, fieldGridCell } from '../components/ui/formStyles';
 import {
   type Code49Props,
@@ -54,17 +55,15 @@ export const code49Panel: ObjectTypeUi<Code49Props> = {
 
           <div className="flex flex-col gap-1">
             <FieldLabel cmd="^B4">{loc.mode}</FieldLabel>
-            <select
-              className={inputCls}
+            <Select<Code49Mode>
               value={p.mode}
-              onChange={(e) => onChange({ mode: e.target.value as Code49Mode })}
-            >
-              {CODE49_MODES.map((m) => (
-                <option key={m} value={m}>
-                  {m === 'A' ? `A — ${loc.modeAuto}` : m}
-                </option>
-              ))}
-            </select>
+              onChange={(mode) => onChange({ mode })}
+              aria-label={loc.mode}
+              groups={[{ options: CODE49_MODES.map((m) => ({
+                value: m,
+                label: m === 'A' ? `A - ${loc.modeAuto}` : m,
+              })) }]}
+            />
           </div>
 
           <div className="flex items-center justify-between gap-2">

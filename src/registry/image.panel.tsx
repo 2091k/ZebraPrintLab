@@ -11,12 +11,12 @@ import {
   MAX_STORAGE_NAME_LEN,
   STORAGE_DEVICES,
   STORAGE_NAME_FILTER_RE,
-  type StorageDevice,
 } from '../lib/storagePath';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { Tooltip } from '../components/ui/Tooltip';
 import { SectionCard, StaticSectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
+import { Select } from '../components/ui/Select';
 import type { ImageProps } from './image';
 
 export const imagePanel: ObjectTypeUi<ImageProps> = {
@@ -90,16 +90,17 @@ export const imagePanel: ObjectTypeUi<ImageProps> = {
             <label className={labelCls}>{t.registry.image.source}</label>
             {allImages.length > 0 && (
               <div className="flex items-center gap-1">
-                <select
-                  className={`${inputCls} flex-1`}
-                  value={p.imageId}
-                  onChange={(e) => handleImageSelect(e.target.value)}
-                >
-                  <option value="">{t.registry.image.selectImage}</option>
-                  {allImages.map((img) => (
-                    <option key={img.id} value={img.id}>{img.name}</option>
-                  ))}
-                </select>
+                <div className="flex-1 min-w-0">
+                  <Select<string>
+                    value={p.imageId}
+                    onChange={handleImageSelect}
+                    aria-label={t.registry.image.source}
+                    groups={[{ options: [
+                      { value: '', label: t.registry.image.selectImage },
+                      ...allImages.map((img) => ({ value: img.id, label: img.name })),
+                    ] }]}
+                  />
+                </div>
                 {/* Delete the *cached* file (data-URL) from imageCache +
                     localStorage. Different from removing the image-object
                     via Del: this clears the bytes shared across all
@@ -205,22 +206,14 @@ export const imagePanel: ObjectTypeUi<ImageProps> = {
             {storedAs ? (
               <>
                 <div className="grid grid-cols-[auto_1fr] gap-2">
-                  <select
-                    className={inputCls}
+                  <Select<string>
                     value={storedAs.device}
-                    onChange={(e) =>
-                      onChange({
-                        storedAs: {
-                          ...storedAs,
-                          device: e.target.value as StorageDevice,
-                        },
-                      })
+                    aria-label={t.registry.image.storage}
+                    onChange={(device) =>
+                      onChange({ storedAs: { ...storedAs, device } })
                     }
-                  >
-                    {STORAGE_DEVICES.map((d) => (
-                      <option key={d} value={d}>{d}:</option>
-                    ))}
-                  </select>
+                    groups={[{ options: STORAGE_DEVICES.map((d) => ({ value: d, label: `${d}:` })) }]}
+                  />
                   <input
                     className={inputCls}
                     value={storedAs.name}

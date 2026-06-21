@@ -1,7 +1,7 @@
-import { ZPL_ROTATIONS, isZplRotation, type ZplRotation } from '../../registry/rotation';
+import { ZPL_ROTATIONS, type ZplRotation } from '../../registry/rotation';
 import { useT } from '../../lib/useT';
-import { inputCls } from './styles';
 import { FieldLabel } from './ZplCmd';
+import { Select } from '../ui/Select';
 
 interface Props {
   value: ZplRotation;
@@ -15,15 +15,12 @@ export function RotationSelect({ value, onChange, zplCmd }: Props) {
   return (
     <div className="flex flex-col gap-1">
       <FieldLabel cmd={zplCmd}>{t.registry.text.rotation}</FieldLabel>
-      <select
-        className={inputCls}
+      <Select<ZplRotation>
         value={value}
-        onChange={(e) => isZplRotation(e.target.value) && onChange(e.target.value)}
-      >
-        {ZPL_ROTATIONS.map((r) => (
-          <option key={r} value={r}>{t.registry.text[`rotation${r}`]}</option>
-        ))}
-      </select>
+        onChange={onChange}
+        aria-label={t.registry.text.rotation}
+        groups={[{ options: ZPL_ROTATIONS.map((r) => ({ value: r, label: t.registry.text[`rotation${r}`] })) }]}
+      />
     </div>
   );
 }
