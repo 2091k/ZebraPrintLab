@@ -1,10 +1,12 @@
 import type { ObjectTypeUi } from "../types/ObjectType";
 import { useT } from "../lib/useT";
 import { useLabelStore } from "../store/labelStore";
-import { inputCls } from "../components/Properties/styles";
 import { RotationSelect } from "../components/Properties/RotationSelect";
 import { NumberInput } from "../components/Properties/NumberInput";
 import { SectionCard, StaticSectionCard } from "../components/Properties/SectionCard";
+import { VariableContentField } from "../components/Properties/VariableContentField";
+import { builderButtonCls } from "../components/ui/formStyles";
+import { fieldHasVariable, asLabelObject } from "../lib/variableField";
 import {
   type AztecProps,
   MAGNIFICATION_MIN,
@@ -19,21 +21,15 @@ export const aztecPanel: ObjectTypeUi<AztecProps> = {
     const p = obj.props;
     const loc = t.registry.aztec;
     const openContentBuilder = useLabelStore((s) => s.openContentBuilder);
+    const variables = useLabelStore((s) => s.variables);
+    // The typed-content builder writes a literal string; it can't coexist with
+    // variable chips, so it's disabled once the field carries a variable.
+    const bound = fieldHasVariable(asLabelObject(obj), variables);
     return (
       <>
         <StaticSectionCard title={t.properties.contentSection} cmd="^FD">
-          {/* textarea, not input: typed content (vCard) carries real newlines. */}
-          <textarea
-            className={`${inputCls} resize-y min-h-9`}
-            aria-label={loc.content}
-            value={p.content}
-            onChange={(e) => onChange({ content: e.target.value })}
-          />
-          <button
-            type="button"
-            onClick={() => openContentBuilder(obj.id)}
-            className="self-start text-xs px-2 py-1 rounded border border-border bg-surface-2 hover:bg-border transition-colors"
-          >
+          <VariableContentField obj={obj} multiline placeholder={loc.content} />
+          <button type="button" disabled={bound} onClick={() => openContentBuilder(obj.id)} className={builderButtonCls}>
             {t.contentBuilder.button}
           </button>
         </StaticSectionCard>

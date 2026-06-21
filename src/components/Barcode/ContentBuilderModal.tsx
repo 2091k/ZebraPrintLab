@@ -90,7 +90,10 @@ function ContentBuilder({ objectId }: { objectId: string }) {
     target && "props" in target ? (target.props as { errorCorrection?: string }).errorCorrection : undefined;
 
   const apply = () => {
-    updateObject(objectId, { props: { content } });
+    // Builder writes a literal typed string, so any single-bind must clear:
+    // otherwise the field stays ^FN-bound and the new content becomes a stale
+    // fallback (the preview/export dual-state bug).
+    updateObject(objectId, { variableId: undefined, props: { content } });
     closeContentBuilder();
   };
   const applyEc = () => updateObject(objectId, { props: { errorCorrection: ec } });

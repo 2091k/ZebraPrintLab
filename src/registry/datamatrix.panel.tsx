@@ -1,14 +1,16 @@
 import type { ObjectTypeUi } from '../types/ObjectType';
 import { useT } from '../lib/useT';
 import { useLabelStore } from '../store/labelStore';
-import { inputCls } from '../components/Properties/styles';
-import { labelCls } from '../components/ui/formStyles';
+import { labelCls, builderButtonCls } from '../components/ui/formStyles';
 import { RotationSelect } from '../components/Properties/RotationSelect';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { SectionCard, StaticSectionCard } from '../components/Properties/SectionCard';
+import { VariableContentField } from '../components/Properties/VariableContentField';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
 import { Select } from '../components/ui/Select';
 import { filterContent } from './contentSpec';
+import { fieldHasVariable, asLabelObject } from '../lib/variableField';
+import { sanitiseAroundMarkers } from '../lib/markerTokens';
 import { GS1_EXPANDED_CHARSET, GS1_SAMPLE_CONTENT, elementStringToContent, parseGs1ToSegments } from '../lib/gs1';
 import { type DataMatrixProps, DIMENSION_MIN, DIMENSION_MAX } from './datamatrix';
 
@@ -23,36 +25,36 @@ export const datamatrixPanel: ObjectTypeUi<DataMatrixProps> = {
     const openContentBuilder = useLabelStore((s) => s.openContentBuilder);
     const openGs1Builder = useLabelStore((s) => s.openGs1Builder);
     const showZpl = useLabelStore((s) => s.showZplCommands);
+    const variables = useLabelStore((s) => s.variables);
+    // Builders write a literal string; disabled once the field carries a chip.
+    const bound = fieldHasVariable(asLabelObject(obj), variables);
     return (
       <>
         <StaticSectionCard title={t.properties.contentSection} cmd="^FD">
-          {/* textarea, not input: typed content (vCard) carries real newlines. */}
-          <textarea
-            className={`${inputCls} resize-y min-h-9`}
-            aria-label={loc.content}
-            value={p.content}
-            onChange={(e) => {
-              const raw = e.target.value;
-              // GS1 mode filters to the GS1 charset so parens never reach export.
-              if (!p.gs1) { onChange({ content: raw }); return; }
-              const pasted = elementStringToContent(raw);
-              onChange({ content: pasted !== null ? pasted : filterContent(raw, GS1_SPEC) });
-            }}
+          <VariableContentField
+            obj={obj}
+            multiline
+            placeholder={loc.content}
+            sanitise={
+              p.gs1
+                ? (raw) => {
+                    // No markers: keep the element-string paste shortcut.
+                    if (!raw.includes('«')) {
+                      const pasted = elementStringToContent(raw);
+                      return pasted !== null ? pasted : filterContent(raw, GS1_SPEC);
+                    }
+                    // With chips, filter only literal slices so markers survive.
+                    return sanitiseAroundMarkers(raw, (s) => filterContent(s, GS1_SPEC));
+                  }
+                : undefined
+            }
           />
           {p.gs1 ? (
-            <button
-              type="button"
-              onClick={() => openGs1Builder(obj.id)}
-              className="self-start text-xs px-2 py-1 rounded border border-border bg-surface-2 hover:bg-border transition-colors"
-            >
+            <button type="button" disabled={bound} onClick={() => openGs1Builder(obj.id)} className={builderButtonCls}>
               {t.gs1builder.button}
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={() => openContentBuilder(obj.id)}
-              className="self-start text-xs px-2 py-1 rounded border border-border bg-surface-2 hover:bg-border transition-colors"
-            >
+            <button type="button" disabled={bound} onClick={() => openContentBuilder(obj.id)} className={builderButtonCls}>
               {t.contentBuilder.button}
             </button>
           )}
@@ -72,7 +74,11 @@ export const datamatrixPanel: ObjectTypeUi<DataMatrixProps> = {
                       ? {
                           gs1: true,
                           quality: 200,
-                          ...(parseGs1ToSegments(p.content) === null ? { content: GS1_SAMPLE_CONTENT } : {}),
+                          // A bound field's content comes from the variable; only
+                          // seed a literal sample for an unbound, non-GS1 field.
+                          ...(!bound && parseGs1ToSegments(p.content) === null
+                            ? { content: GS1_SAMPLE_CONTENT }
+                            : {}),
                         }
                       : { gs1: false },
                   )

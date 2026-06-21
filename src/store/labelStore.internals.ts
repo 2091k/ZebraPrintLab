@@ -2,7 +2,7 @@ import { isGroup, type LabelObject, type Page } from '../types/Group';
 import type { ObjectChanges } from '../types/LabelObject';
 import type { LocaleCode } from '../locales';
 import { locales } from '../locales';
-import { renameTemplateMarker } from '../lib/fnTemplate';
+import { renameTemplateMarker, substituteTemplateMarker } from '../lib/fnTemplate';
 import { getObjectStringContent } from '../lib/variableBinding';
 import { getEntry } from '../registry';
 
@@ -41,6 +41,33 @@ export function rewriteTemplateMarkers(
     changed = true;
     const props = (obj as { props: object }).props;
     return { ...obj, props: { ...props, content: renamed } } as LabelObject;
+  });
+  return changed ? next : objects;
+}
+
+/** Replace every `«name»` marker with `replacement` across a subtree's leaf
+ *  `content`. Identity-preserving when nothing matched (see
+ *  {@link rewriteTemplateMarkers}). Used on variable deletion. */
+export function substituteTemplateMarkers(
+  objects: LabelObject[],
+  name: string,
+  replacement: string,
+): LabelObject[] {
+  let changed = false;
+  const next = objects.map((obj) => {
+    if (isGroup(obj)) {
+      const nextChildren = substituteTemplateMarkers(obj.children, name, replacement);
+      if (nextChildren === obj.children) return obj;
+      changed = true;
+      return { ...obj, children: nextChildren };
+    }
+    const content = getObjectStringContent(obj);
+    if (content === undefined) return obj;
+    const substituted = substituteTemplateMarker(content, name, replacement);
+    if (substituted === content) return obj;
+    changed = true;
+    const props = (obj as { props: object }).props;
+    return { ...obj, props: { ...props, content: substituted } } as LabelObject;
   });
   return changed ? next : objects;
 }

@@ -50,23 +50,39 @@ Object.defineProperty(globalThis, 'FontFace', {
   value: FakeFontFace,
 });
 
-// ── navigator ─────────────────────────────────────────────────────────────────
-Object.defineProperty(globalThis, 'navigator', {
-  configurable: true,
-  value: { language: 'en-US' } as Partial<Navigator>,
-});
+// A real DOM (jsdom) is present only for files that opt in via
+// `// @vitest-environment jsdom`; the default lane is pure Node. The stubs
+// below would clobber jsdom's window/document, so apply them only when no
+// real DOM exists.
+const hasRealDom =
+  typeof window !== 'undefined' && typeof document !== 'undefined' && !!document.body;
 
-// ── window (matchMedia is read at store init for the initial theme) ──────────
-Object.defineProperty(globalThis, 'window', {
-  configurable: true,
-  value: {
-    matchMedia: () => ({
-      matches: false,
-      addEventListener: () => { /* noop */ },
-      removeEventListener: () => { /* noop */ },
-    }),
-  } as unknown as Window,
-});
+if (!hasRealDom) {
+  // ── navigator ───────────────────────────────────────────────────────────────
+  Object.defineProperty(globalThis, 'navigator', {
+    configurable: true,
+    value: { language: 'en-US' } as Partial<Navigator>,
+  });
+
+  // ── window (matchMedia is read at store init for the initial theme) ────────
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: {
+      matchMedia: () => ({
+        matches: false,
+        addEventListener: () => { /* noop */ },
+        removeEventListener: () => { /* noop */ },
+      }),
+    } as unknown as Window,
+  });
+} else if (!window.matchMedia) {
+  // jsdom lacks matchMedia, still read at store init.
+  window.matchMedia = (() => ({
+    matches: false,
+    addEventListener: () => { /* noop */ },
+    removeEventListener: () => { /* noop */ },
+  })) as unknown as typeof window.matchMedia;
+}
 
 // Canvas stub for the ^GFA parser path.
 
@@ -112,13 +128,15 @@ function createFakeCanvas() {
   };
 }
 
-Object.defineProperty(globalThis, 'document', {
-  configurable: true,
-  value: {
-    createElement(tag: string): unknown {
-      if (tag === 'canvas') return createFakeCanvas();
-      return {};
-    },
-    fonts: { add() { /* noop */ } } as unknown as FontFaceSet,
-  } as Partial<Document>,
-});
+if (!hasRealDom) {
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: {
+      createElement(tag: string): unknown {
+        if (tag === 'canvas') return createFakeCanvas();
+        return {};
+      },
+      fonts: { add() { /* noop */ } } as unknown as FontFaceSet,
+    } as Partial<Document>,
+  });
+}

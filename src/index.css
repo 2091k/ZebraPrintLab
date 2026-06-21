@@ -79,6 +79,10 @@
      editor, distinct from accent so the editor can colour-code
      marker families without collision. */
   --color-info:      #67c8e0;
+  /* Variable (^FN) token chips: indigo keeps them distinct from the
+     amber accent (used for UI focus) and the cyan clock tokens. */
+  --color-indigo:    #8b9cf5;
+  --color-indigo-dim:#2e3566;
   /* Validation: amber = warning (truncation, soft mismatch), red =
      error (missing required, unresolvable marker), green = ok (valid,
      verified). Kept distinct from accent so the user can scan severity. */
@@ -109,6 +113,8 @@
   --color-accent:    #d97706;
   --color-accent-dim:#fef3c7;
   --color-info:      #0e7490;
+  --color-indigo:    #4f46e5;
+  --color-indigo-dim:#e0e3fb;
   --color-warning:   #b45309;
   --color-error:     #b91c1c;
   --color-ok:        #2e7d32;

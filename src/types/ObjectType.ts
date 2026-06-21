@@ -30,6 +30,12 @@ export interface ObjectTypeCore<P extends object = object> {
    *  uniformScale (the canvas is square by construction). */
   uniformScaleProp?: { name: keyof P & string; min: number; max: number };
   toZPL: (obj: LabelObjectBase & { props: P }, ctx?: ZplEmitContext) => string;
+  /** Optional ^FD payload transform (QR `{ec}A,` prefix, UPC-E compaction, GS1
+   *  FNC1 escaping). Returned per object so the single emit AND the CSV batch
+   *  ^FN override apply the same transform; undefined when none applies. */
+  fdTransform?: (
+    obj: LabelObjectBase & { props: P },
+  ) => ((payload: string) => string) | undefined;
   /** Pure hook for type-specific clamp/invariant on incoming changes. */
   normalizeChanges?: (
     obj: LabelObjectBase & { props: P },

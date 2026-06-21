@@ -33,6 +33,15 @@ export function tokeniseMarkers(
   return out;
 }
 
+/** Apply `fn` to the literal slices between `«…»` markers, leaving the markers
+ *  untouched. Lets a charset filter run on a field without eating its chips. */
+export function sanitiseAroundMarkers(raw: string, fn: (slice: string) => string): string {
+  return raw
+    .split(/(«[^»]+»)/)
+    .map((s, i) => (i % 2 === 0 ? fn(s) : s))
+    .join("");
+}
+
 /** backspace: pos after `»` or inside; delete: pos before `«` or inside. */
 export function findAtomicMarker(
   content: string,

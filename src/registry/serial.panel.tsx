@@ -23,6 +23,9 @@ export const serialPanel: ObjectTypeUi<SerialProps> = {
           <div className={`grid grid-cols-2 ${fieldGridCols}`}>
             <div className={fieldGridCell}>
               <FieldLabel cmd="^FD">{t.registry.serial.content}</FieldLabel>
+              {/* Counter seed, not a bindable type: a plain charset-filtered
+                  input, no VariableContentField (the ^SN/^SF payload is not an
+                  ^FD variable slot). */}
               <input
                 className={inputCls}
                 value={p.content}

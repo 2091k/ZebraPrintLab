@@ -33,6 +33,9 @@ export const datamatrix: ObjectTypeCore<DataMatrixProps> = {
 
   uniformScaleProp: { name: 'dimension', min: DIMENSION_MIN, max: DIMENSION_MAX },
 
+  // GS1 mode FNC1-escapes the payload; shared with the CSV batch override.
+  fdTransform: (obj) => (obj.props.gs1 ? gs1ContentToDataMatrixFd : undefined),
+
   toZPL: (obj, ctx) => {
     const p = obj.props;
     if (p.gs1) {

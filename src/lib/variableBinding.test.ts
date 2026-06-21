@@ -166,6 +166,21 @@ describe('applyBindingToObject', () => {
     const o = obj('v1', 'DEFAULT');
     expect(applyBindingToObject(o, [variable()])).toBe(o);
   });
+
+  it('does NOT recursively resolve markers nested in a single-bind default (matches export)', () => {
+    // outer is single-bound; its default literally contains «inner». The
+    // exporter emits this verbatim, so preview must keep it literal too.
+    const outer = variable({ id: 'v1', name: 'outer', defaultValue: '«inner»' });
+    const inner = variable({ id: 'v2', name: 'inner', defaultValue: 'X' });
+    const out = applyBindingToObject(obj('v1'), [outer, inner]);
+    expect((out as unknown as { props: { content: string } }).props.content).toBe('«inner»');
+  });
+
+  it('still resolves markers in a template field (no variableId)', () => {
+    const v = variable({ id: 'v2', name: 'inner', defaultValue: 'X' });
+    const out = applyBindingToObject(obj(undefined, 'a«inner»b'), [v]);
+    expect((out as unknown as { props: { content: string } }).props.content).toBe('aXb');
+  });
 });
 
 describe('getVariableSource', () => {

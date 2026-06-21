@@ -7,7 +7,7 @@ import { useFontCacheVersion } from "../hooks/useFontCacheVersion";
 import { useLabelStore } from "../store/labelStore";
 import { RotationSelect } from "../components/Properties/RotationSelect";
 import { UnitNumberInput } from "../components/Properties/UnitNumberInput";
-import { TemplateContentInput } from "../components/Properties/TemplateContentInput";
+import { VariableContentField } from "../components/Properties/VariableContentField";
 import { BlockTextSettings } from "../components/Properties/BlockTextSettings";
 import { FpSettings } from "../components/Properties/FpSettings";
 import { SectionCard, StaticSectionCard, ToggleSectionCard } from "../components/Properties/SectionCard";
@@ -58,12 +58,9 @@ export const textPanel: ObjectTypeUi<TextProps> = {
     return (
       <>
         <StaticSectionCard title={t.registry.text.content} cmd="^FD">
-          <TemplateContentInput
-            objectId={obj.id}
-            value={p.content}
-            onChange={(content) =>
-              onChange(deriveBlockTextPatch(content, p, p.fontHeight, p.fontWidth))
-            }
+          <VariableContentField
+            obj={obj}
+            extraPatch={(content) => deriveBlockTextPatch(content, p, p.fontHeight, p.fontWidth)}
           />
         </StaticSectionCard>
 
