@@ -1,5 +1,6 @@
 import { ZPL_ROTATIONS, type ZplRotation } from '../../registry/rotation';
 import { useT } from '../../lib/useT';
+import { useLabelStore } from '../../store/labelStore';
 import { FieldLabel } from './ZplCmd';
 import { Select } from '../ui/Select';
 
@@ -12,6 +13,7 @@ interface Props {
 
 export function RotationSelect({ value, onChange, zplCmd }: Props) {
   const t = useT();
+  const showZpl = useLabelStore((s) => s.showZplCommands);
   return (
     <div className="flex flex-col gap-1">
       <FieldLabel cmd={zplCmd}>{t.registry.text.rotation}</FieldLabel>
@@ -19,7 +21,11 @@ export function RotationSelect({ value, onChange, zplCmd }: Props) {
         value={value}
         onChange={onChange}
         aria-label={t.registry.text.rotation}
-        groups={[{ options: ZPL_ROTATIONS.map((r) => ({ value: r, label: t.registry.text[`rotation${r}`] })) }]}
+        groups={[{ options: ZPL_ROTATIONS.map((r) => ({
+          value: r,
+          label: t.registry.text[`rotation${r}`],
+          badge: showZpl ? r : undefined,
+        })) }]}
       />
     </div>
   );
