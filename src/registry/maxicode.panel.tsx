@@ -1,11 +1,13 @@
 import type { ObjectTypeUi } from "../types/ObjectType";
 import { useT } from "../lib/useT";
-import { inputCls } from "../components/Properties/styles";
+import { useLabelStore } from "../store/labelStore";
 import { validateMaxicodeBwip } from "../components/Canvas/bwipHelpers";
 import { RotationSelect } from "../components/Properties/RotationSelect";
 import { SectionCard, StaticSectionCard } from "../components/Properties/SectionCard";
+import { VariableContentField } from "../components/Properties/VariableContentField";
 import { FieldLabel } from "../components/Properties/ZplCmd";
 import { Select } from "../components/ui/Select";
+import { fieldMode, boundDefaultOrContent, asLabelObject } from "../lib/variableField";
 import { type MaxicodeProps, ALL_MODES } from "./maxicode";
 
 export const maxicodePanel: ObjectTypeUi<MaxicodeProps> = {
@@ -13,10 +15,16 @@ export const maxicodePanel: ObjectTypeUi<MaxicodeProps> = {
     const t = useT();
     const p = obj.props;
     const loc = t.registry.maxicode;
+    const variables = useLabelStore((s) => s.variables);
     // Resolve the diagnostic line beneath the mode dropdown. Hard
     // errors (bwip-js encoder rejections, mostly SCM-format issues
-    // in mode 2/3) win over the soft mode-6 advisory.
-    const error = validateMaxicodeBwip(p.content, p.mode);
+    // in mode 2/3) win over the soft mode-6 advisory. A template field's
+    // content is markers (no fixed value), so skip it; single-bind validates
+    // the variable's current default (the printed value).
+    const lo = asLabelObject(obj);
+    const error = fieldMode(lo, variables) === "template"
+      ? null
+      : validateMaxicodeBwip(boundDefaultOrContent(lo, variables), p.mode);
     const advisory = p.mode === 6 ? loc.mode6Advisory : null;
     const diagnostic = error
       ? { text: error, className: "text-error font-mono" }
@@ -26,12 +34,7 @@ export const maxicodePanel: ObjectTypeUi<MaxicodeProps> = {
     return (
       <>
         <StaticSectionCard title={t.properties.contentSection} cmd="^FD">
-          <input
-            className={inputCls}
-            aria-label={loc.content}
-            value={p.content}
-            onChange={(e) => onChange({ content: e.target.value })}
-          />
+          <VariableContentField obj={obj} multiline={false} placeholder={loc.content} />
         </StaticSectionCard>
 
         <SectionCard id={`${obj.type}-settings`} title={t.properties.settingsSection}>

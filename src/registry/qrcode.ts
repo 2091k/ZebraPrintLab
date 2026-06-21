@@ -1,6 +1,14 @@
 import type { ObjectTypeCore } from '../types/ObjectType';
+import type { LabelObjectBase } from '../types/LabelObject';
 import { fieldPos, fdFieldFor } from './zplHelpers';
 import { type ZplRotation } from './rotation';
+
+/** ZPL prefixes the QR payload with `{ec}A,` inside ^FD. Shared by toZPL and
+ *  the CSV batch override so a per-row value also gets the prefix. */
+const qrFdTransform =
+  (obj: LabelObjectBase & { props: QrCodeProps }) =>
+  (s: string): string =>
+    `${obj.props.errorCorrection}A,${s}`;
 
 export const MAGNIFICATION_MIN = 1;
 export const MAGNIFICATION_MAX = 10;
@@ -28,16 +36,17 @@ export const qrcode: ObjectTypeCore<QrCodeProps> = {
 
   uniformScaleProp: { name: 'magnification', min: MAGNIFICATION_MIN, max: MAGNIFICATION_MAX },
 
+  fdTransform: qrFdTransform,
+
   toZPL: (obj, ctx) => {
     const p = obj.props;
-    // ZPL prefixes the QR payload with `{ec}A,` inside ^FD. When the field
-    // is bound to a variable, the variable's defaultValue stands in for the
-    // full payload including that prefix; Phase 1 keeps fdFieldFor honest
-    // and one-shot; smarter QR-data-only binding is a Phase 2 concern.
+    // Prefix passed as the fdFieldFor transform (not baked into content) so it
+    // composes with the binding: single-bind default / template / CSV override
+    // all get the prefix instead of the payload being emitted raw.
     return [
       fieldPos(obj),
       `^BQ${p.rotation},2,${p.magnification}`,
-      fdFieldFor(obj, `${p.errorCorrection}A,${p.content}`, ctx),
+      fdFieldFor(obj, p.content, ctx, qrFdTransform(obj)),
     ].join('');
   },
 

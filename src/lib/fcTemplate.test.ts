@@ -9,7 +9,51 @@ import {
   pickClockChars,
   isDefaultClockChars,
   DEFAULT_CLOCK_CHARS,
+  clockMarkerBody,
+  parseClockBody,
+  formatClockLabel,
+  CLOCK_TOKEN_LABELS,
+  type ClockChannel,
 } from "./fcTemplate";
+
+describe("clockMarkerBody / parseClockBody", () => {
+  it("round-trips every token on every channel", () => {
+    for (const ch of [1, 2, 3] as ClockChannel[]) {
+      for (const { token } of CLOCK_TOKEN_LABELS) {
+        const p = parseClockBody(clockMarkerBody(ch, token));
+        expect(p).not.toBeNull();
+        expect(p!.channel).toBe(ch);
+        expect(p!.entry.token).toBe(token);
+      }
+    }
+  });
+
+  it("emits a bare clock: prefix for channel 1, numbered for 2/3", () => {
+    expect(clockMarkerBody(1, "Y")).toBe("clock:Y");
+    expect(clockMarkerBody(2, "m")).toBe("clock2:m");
+    expect(clockMarkerBody(3, "d")).toBe("clock3:d");
+  });
+
+  it("rejects malformed or unknown bodies", () => {
+    for (const b of ["clock:Q", "clock4:Y", "clockX", "clock:", "clock1:Y", "clock:YY", ""]) {
+      expect(parseClockBody(b)).toBeNull();
+    }
+  });
+});
+
+describe("formatClockLabel", () => {
+  const labelFor = (k: string) => `L:${k}`;
+  it("resolves the token label for channel 1 without a suffix", () => {
+    expect(formatClockLabel("clock:Y", labelFor)).toBe("L:clockYear4");
+  });
+  it("suffixes the channel number for channels 2 and 3", () => {
+    expect(formatClockLabel("clock2:m", labelFor)).toBe("L:clockMonth 2");
+    expect(formatClockLabel("clock3:d", labelFor)).toBe("L:clockDay 3");
+  });
+  it("falls back to the raw body when unparseable", () => {
+    expect(formatClockLabel("clock:Q", labelFor)).toBe("clock:Q");
+  });
+});
 import { clockOffsetSchema, labelConfigSchema } from "../types/LabelConfig";
 
 // Fixed reference date used across formatter tests so the assertions

@@ -6,6 +6,23 @@ import type { Variable } from "../types/Variable";
 const MARKER_BODY = /«([^»]+)»/;
 const markerRe = () => /«([^»]+)»/g;
 
+/** Replace every `«name»` marker with a literal `replacement` (identity-
+ *  preserving on no match). Used when a variable is deleted so its template
+ *  fields keep the last-known value as literal text, not an orphan marker. */
+export function substituteTemplateMarker(
+  content: string,
+  name: string,
+  replacement: string,
+): string {
+  let touched = false;
+  const next = content.replace(markerRe(), (full, n: string) => {
+    if (n !== name) return full;
+    touched = true;
+    return replacement;
+  });
+  return touched ? next : content;
+}
+
 /** Identity-preserving on no-match. */
 export function renameTemplateMarker(
   content: string,
@@ -25,6 +42,30 @@ export function renameTemplateMarker(
 /** True when `content` carries at least one `«…»` marker. */
 export function hasTemplateMarkers(content: string): boolean {
   return MARKER_BODY.test(content);
+}
+
+/** A length cap bounds only a purely-literal payload: once a template marker is
+ *  present the printed length is the variable's value (unknown here), so the cap
+ *  is skipped to avoid truncating the canonical `«…»` token. Returns `value`
+ *  unchanged when no cap applies. */
+export function capLiteralLength(value: string, maxLength: number | undefined): string {
+  if (maxLength === undefined || hasTemplateMarkers(value)) return value;
+  return value.length > maxLength ? value.slice(0, maxLength) : value;
+}
+
+/** Characters of `insertion` that may be inserted into `value` (replacing a
+ *  selection of `selectionLen` chars) under a literal length cap. `Infinity`
+ *  when no cap applies (cap undefined, or a marker is present in either side). */
+export function literalInsertRoom(
+  value: string,
+  selectionLen: number,
+  insertion: string,
+  maxLength: number | undefined,
+): number {
+  if (maxLength === undefined || hasTemplateMarkers(value) || hasTemplateMarkers(insertion)) {
+    return Infinity;
+  }
+  return Math.max(0, maxLength - (value.length - selectionLen));
 }
 
 /** Source order with duplicates (caller dedupes). */

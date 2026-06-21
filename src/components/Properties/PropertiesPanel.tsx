@@ -27,8 +27,6 @@ import { Tooltip } from "../ui/Tooltip";
 import { Select } from "../ui/Select";
 import { fontSelectGroups } from "./fontSelectGroups";
 import { AlignToolbar } from "./AlignToolbar";
-import { VariableBindingControl } from "../Variables/VariableBindingControl";
-import { applyBindingToObject, clockCtxFromLabel, lookupBoundVariable } from "../../lib/variableBinding";
 import { inputCls, labelCls } from "./styles";
 import { fieldGridCols, fieldGridCell } from "../ui/formStyles";
 import type { LabelConfig } from "../../types/LabelConfig";
@@ -120,8 +118,6 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
   const {
     selectedIds,
     updateObject,
-    updateVariable,
-    variables,
     groupSelection,
     label,
     setLabelConfig,
@@ -248,32 +244,18 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
         )}
 
         {/* Per-type panel first; each panel renders its own SectionCards
-            (Content and/or Settings). Binding routing is unchanged: a patched obj
-            feeds the panel and content edits re-route to updateVariable while
-            other props go to updateObject. */}
-        {TypePanel && !groupRow && (() => {
-          const boundVariable = lookupBoundVariable(obj, variables);
-          const patchedObj = boundVariable
-            ? applyBindingToObject(obj, variables, null, "preview", clockCtxFromLabel(label))
-            : obj;
-          const handleChange = boundVariable
-            ? (props: object) => {
-                const next = { ...(props as Record<string, unknown>) };
-                if (typeof next.content === 'string') {
-                  updateVariable(boundVariable.id, {
-                    defaultValue: next.content,
-                  });
-                  delete next.content;
-                }
-                if (Object.keys(next).length > 0) {
-                  updateObject(obj.id, { props: next });
-                }
-              }
-            : (props: object) => updateObject(obj.id, { props });
+            (Content and/or Settings). Binding lives inside the content field
+            (VariableContentField), so the panel sees the raw obj and plain
+            prop writes; no content re-routing here. */}
+        {TypePanel && !groupRow && (
           // Key by id so switching objects remounts the panel and resets its
           // transient reveal state (e.g. the Typography "Advanced" toggle).
-          return <TypePanel key={obj.id} obj={patchedObj} onChange={handleChange} />;
-        })()}
+          <TypePanel
+            key={obj.id}
+            obj={obj}
+            onChange={(props: object) => updateObject(obj.id, { props })}
+          />
+        )}
 
         {/* Position & alignment. Groups have no per-leaf x/y (children store
             world coordinates), so the inputs are hidden; align still applies
@@ -340,19 +322,6 @@ export function PropertiesPanel({ canvasRef }: PropertiesPanelProps) {
             selectionCount={selectedIds.length}
           />
         </SectionCard>
-
-        {/* Variable binding: types that emit a ^FD content block. Opens
-            automatically when already bound; the open-state persists per
-            bound/unbound id in localStorage. */}
-        {definition?.bindable && !groupRow && (
-          <SectionCard
-            id={obj.variableId ? 'properties-variable-bound' : 'properties-variable-unbound'}
-            title={t.variables.sectionTitle}
-            defaultOpen={!!obj.variableId}
-          >
-            <VariableBindingControl obj={obj} />
-          </SectionCard>
-        )}
 
         {/* Options: comment (^FX, leaves only), lock, include-in-export.
             Collapsed by default since these are set rarely. */}

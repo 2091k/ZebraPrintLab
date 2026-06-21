@@ -64,6 +64,39 @@ function channelOf(suffix: string | undefined): ClockChannel {
   return suffix === "2" ? 2 : suffix === "3" ? 3 : 1;
 }
 
+/** Marker body for a clock token on a channel: `clock:T` / `clock2:T` / `clock3:T`.
+ *  Single source for the `«clock…»` body grammar shared by the UI. */
+export function clockMarkerBody(channel: ClockChannel, token: string): string {
+  return channel === 1 ? `clock:${token}` : `clock${channel}:${token}`;
+}
+
+/** Parse a clock marker body (`clock:Y` / `clock2:m`) into its channel and label
+ *  catalogue entry, or null when malformed / unknown token. */
+export function parseClockBody(
+  body: string,
+): { channel: ClockChannel; entry: (typeof CLOCK_TOKEN_LABELS)[number] } | null {
+  const m = body.match(/^clock([23]?):([A-Za-z])$/);
+  if (!m) return null;
+  const entry = CLOCK_TOKEN_LABELS.find((x) => x.token === m[2]);
+  return entry ? { channel: channelOf(m[1]), entry } : null;
+}
+
+/** Label keys this catalogue uses; resolver callers index translations by it. */
+export type ClockLabelKey = (typeof CLOCK_TOKEN_LABELS)[number]["labelKey"];
+
+/** Localised label for a clock marker body (`clock:Y` / `clock2:m`): the token
+ *  label from `labelFor`, suffixed with the channel number for 2/3. Falls back
+ *  to the raw body when unparseable. `labelFor` keeps this translation-agnostic. */
+export function formatClockLabel(
+  body: string,
+  labelFor: (labelKey: ClockLabelKey) => string,
+): string {
+  const p = parseClockBody(body);
+  if (!p) return body;
+  const label = labelFor(p.entry.labelKey);
+  return p.channel === 1 ? label : `${label} ${p.channel}`;
+}
+
 function dateForChannel(dates: ChannelDates, channel: ClockChannel): Date {
   return channel === 2 ? dates.secondary : channel === 3 ? dates.tertiary : dates.primary;
 }

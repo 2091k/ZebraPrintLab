@@ -16,7 +16,7 @@ import { formatLabelMetaComment } from './zplLabelMeta';
 import type { ClockOffset, CustomFontMapping, LabelConfig } from '../types/LabelConfig';
 import type { ZplEmitContext } from '../types/ZplEmit';
 import type { Variable } from '../types/Variable';
-import { isGroup, type LabelObject, type Page } from '../types/Group';
+import { isGroup, walkObjects, type LabelObject, type Page } from '../types/Group';
 import { formatFontDownloadFromPath } from './customFonts';
 import type { ImageProps } from '../registry/image';
 import { formatStoragePath } from './storagePath';
@@ -176,21 +176,32 @@ export function generateBatchZpl(
     `^XA\n^DF${BATCH_TEMPLATE_PATH}\n`,
   );
 
-  const overrides: { fn: number; colIdx: number }[] = [];
+  const identity = (s: string) => s;
+  // Excluded leaves aren't in the stored template, so don't source a transform
+  // from one (it could shadow an exported field sharing the same variable).
+  const leaves = [...walkObjects(objects)].filter((o) => o.includeInExport !== false);
+  const overrides: { fn: number; colIdx: number; transform: (s: string) => string }[] = [];
   for (const v of variables) {
     const header = csvMapping.bindings[v.id];
     if (header === undefined) continue;
     const colIdx = csvDataset.headers.indexOf(header);
     if (colIdx === -1) continue;
-    overrides.push({ fn: v.fnNumber, colIdx });
+    // Apply the bound field's ^FD transform (QR prefix, UPC-E compaction, GS1
+    // escaping) to each row value, matching the single-format export so the
+    // recall doesn't overwrite ^FN with an untransformed payload.
+    const bound = leaves.find((o) => o.variableId === v.id);
+    const transform =
+      (bound && !isGroup(bound) ? getEntry(bound.type)?.fdTransform?.(bound) : undefined) ??
+      identity;
+    overrides.push({ fn: v.fnNumber, colIdx, transform });
   }
 
   const recallBlocks = csvDataset.rows.map((row) => {
     const lines: string[] = ['^XA', `^XF${BATCH_TEMPLATE_PATH}`];
-    for (const { fn, colIdx } of overrides) {
+    for (const { fn, colIdx, transform } of overrides) {
       const value = row[colIdx] ?? '';
       // fdField applies ^FH hex-escape for ^/~ so fields don't terminate early.
-      lines.push(`^FN${fn}${fdField(value)}`);
+      lines.push(`^FN${fn}${fdField(transform(value))}`);
     }
     lines.push('^XZ');
     return lines.join('\n');

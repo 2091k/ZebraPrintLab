@@ -18,6 +18,7 @@ interface MockNode {
   tagName?: string;
   childNodes: MockNode[];
   parentNode?: MockNode;
+  getAttribute?: (name: string) => string | null;
 }
 
 const text = (v: string): MockNode => ({ nodeType: 3, nodeValue: v, childNodes: [] });
@@ -29,6 +30,19 @@ const el = (tag: string, children: MockNode[] = []): MockNode => {
 };
 const root = (children: MockNode[]): MockNode => el("DIV", children);
 const span = (s: string): MockNode => el("SPAN", [text(s)]);
+
+/** Atomic marker widget: canonical `«…»` in data-m, visible content differs
+ *  (the rendered chip). The walkers must read data-m, not the visible text. */
+const widget = (marker: string, visible = "x"): MockNode => {
+  const node: MockNode = {
+    nodeType: 1,
+    tagName: "SPAN",
+    childNodes: [text(visible)],
+    getAttribute: (name) => (name === "data-m" ? marker : null),
+  };
+  for (const c of node.childNodes) c.parentNode = node;
+  return node;
+};
 
 describe("domToPlainText", () => {
   it("concatenates text from sibling spans", () => {
@@ -119,6 +133,14 @@ describe("findCaretPosition", () => {
     expect(pos.node).toBe(r as unknown as Node);
   });
 
+  it("clamps a negative target to the field start (never a negative offset)", () => {
+    const t1 = text("abc");
+    const r = root([el("SPAN", [t1])]);
+    const pos = findCaretPosition(r as unknown as Node, -5);
+    expect(pos.node).toBe(t1 as unknown as Node);
+    expect(pos.offset).toBe(0);
+  });
+
   it("places caret right AFTER a <br> (so typing lands on the next line)", () => {
     const t1 = text("a");
     const brEl = br();
@@ -141,6 +163,40 @@ describe("findCaretPosition", () => {
       const pos = findCaretPosition(r as unknown as Node, i);
       const back = getCaretOffset(r as unknown as Node, pos.node, pos.offset);
       expect(back).toBe(i);
+    }
+  });
+});
+
+describe("atomic marker widgets (data-m)", () => {
+  it("domToPlainText reads data-m, not the visible chip text", () => {
+    const r = root([text("a"), widget("«sku»", "sku"), text("b")]);
+    expect(domToPlainText(r as unknown as Node)).toBe("a«sku»b");
+  });
+
+  it("getCaretOffset counts the canonical length and treats the widget as atomic", () => {
+    const w = widget("«sku»", "sku");
+    const r = root([w]);
+    // Caret before the widget (root offset 0) and after it (root offset 1).
+    expect(getCaretOffset(r as unknown as Node, r as unknown as Node, 0)).toBe(0);
+    expect(getCaretOffset(r as unknown as Node, r as unknown as Node, 1)).toBe(5);
+  });
+
+  it("findCaretPosition snaps to the widget boundaries, never inside", () => {
+    const w = widget("«sku»", "sku");
+    const r = root([w]);
+    expect(findCaretPosition(r as unknown as Node, 0)).toEqual({ node: r, offset: 0 });
+    // A position "inside" the marker (1..5) and at its end snaps to after.
+    expect(findCaretPosition(r as unknown as Node, 3)).toEqual({ node: r, offset: 1 });
+    expect(findCaretPosition(r as unknown as Node, 5)).toEqual({ node: r, offset: 1 });
+  });
+
+  it("round-trips at the widget boundaries within surrounding text", () => {
+    const r = root([text("a"), widget("«sku»", "sku"), text("b")]);
+    expect(domToPlainText(r as unknown as Node)).toBe("a«sku»b");
+    // Boundaries: 0 (before a), 1 (before widget), 6 (after widget), 7 (after b).
+    for (const i of [0, 1, 6, 7]) {
+      const pos = findCaretPosition(r as unknown as Node, i);
+      expect(getCaretOffset(r as unknown as Node, pos.node, pos.offset)).toBe(i);
     }
   });
 });

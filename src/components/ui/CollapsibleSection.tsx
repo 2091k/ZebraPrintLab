@@ -7,6 +7,8 @@ interface CollapsibleSectionProps {
   id: string;
   title: ReactNode;
   defaultOpen?: boolean;
+  /** Optional right-aligned summary shown in the header (e.g. token counts). */
+  annotation?: ReactNode;
   children: ReactNode;
 }
 
@@ -19,6 +21,7 @@ export function CollapsibleSection({
   id,
   title,
   defaultOpen = true,
+  annotation,
   children,
 }: CollapsibleSectionProps) {
   const [open, setOpen] = useCollapsibleState(id, defaultOpen);
@@ -32,13 +35,16 @@ export function CollapsibleSection({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls={contentId}
-        className="flex items-center justify-between gap-2 px-1 pt-1 pb-1.5 text-muted hover:text-text transition-colors"
+        className="flex items-center gap-2 px-1 pt-1 pb-1.5 text-muted hover:text-text transition-colors"
       >
         <span className="font-mono text-[10px] font-medium uppercase tracking-widest">
           {title}
         </span>
+        {annotation != null && (
+          <span className="ml-auto font-mono text-[10px] text-muted/70">{annotation}</span>
+        )}
         <ChevronDownIcon
-          className={`w-3 h-3 shrink-0 transition-transform ${open ? '' : '-rotate-90'}`}
+          className={`w-3 h-3 shrink-0 transition-transform ${annotation != null ? '' : 'ml-auto'} ${open ? '' : '-rotate-90'}`}
         />
       </button>
       {open && (

@@ -1011,6 +1011,83 @@ describe('generateZPL — parse/generate roundtrip', () => {
     expect(zpl).toContain('^FD_1#5#^FS');
   });
 
+  it('UPC-E single-bind emits the ^FN default through fdContent (NS-prefixed)', () => {
+    const variable = { id: 'v1', name: 'upc', fnNumber: 3, defaultValue: '654321' };
+    const obj: LabelObject = {
+      id: 'u',
+      type: 'upce',
+      x: 10,
+      y: 10,
+      variableId: 'v1',
+      props: {
+        content: '012345',
+        height: 100,
+        moduleWidth: 2,
+        printInterpretation: true,
+        printInterpretationAbove: false,
+        checkDigit: false,
+        rotation: 'N',
+      },
+    } as unknown as LabelObject;
+    const zpl = generateZPL(BASE_LABEL, [obj], [variable]);
+    // The default value is compacted + NS-prefixed (fdContent), not emitted raw.
+    expect(zpl).toContain('^FN3^FD0654321');
+    expect(zpl).not.toContain('^FN3^FD654321^FS');
+  });
+
+  it('UPC-E template field preserves the embed (fdContent skipped, not digit-extracted)', () => {
+    const variable = { id: 'v1', name: 'upc', fnNumber: 2, defaultValue: '123456' };
+    const obj: LabelObject = {
+      id: 'u',
+      type: 'upce',
+      x: 10,
+      y: 10,
+      props: {
+        content: 'x«upc»', // literal + marker => template, not single-bind
+        height: 100, moduleWidth: 2,
+        printInterpretation: true, printInterpretationAbove: false, checkDigit: false, rotation: 'N',
+      },
+    } as unknown as LabelObject;
+    const zpl = generateZPL(BASE_LABEL, [obj], [variable]);
+    // The embed survives; the digit-only transform must not collapse it.
+    expect(zpl).toMatch(/\^FDx#2#/);
+  });
+
+  it('single-bind default containing a marker is emitted literally (export == preview, ^FN kept)', () => {
+    // outer is single-bound; its default literally contains «inner». Export must
+    // NOT expand «inner» to an embed, and must keep outer's own ^FN.
+    const outer = { id: 'v1', name: 'outer', fnNumber: 1, defaultValue: '«inner»' };
+    const inner = { id: 'v2', name: 'inner', fnNumber: 7, defaultValue: 'L7' };
+    const obj: LabelObject = {
+      id: 't',
+      type: 'text',
+      x: 10,
+      y: 10,
+      variableId: 'v1',
+      props: { content: '«inner»', fontHeight: 30, fontWidth: 0, rotation: 'N' },
+    } as unknown as LabelObject;
+    const zpl = generateZPL(BASE_LABEL, [obj], [outer, inner]);
+    expect(zpl).toContain('^FN1^FD«inner»');
+    // inner's marker must not be resolved into an embed for this field.
+    expect(zpl).not.toMatch(/\^FD#7#/);
+  });
+
+  it('QR single-bind keeps the {ec}A, prefix on the ^FN default', () => {
+    const variable = { id: 'v1', name: 'url', fnNumber: 4, defaultValue: 'https://x.io' };
+    const obj: LabelObject = {
+      id: 'q',
+      type: 'qrcode',
+      x: 10,
+      y: 10,
+      variableId: 'v1',
+      props: { content: 'https://x.io', magnification: 4, errorCorrection: 'Q', rotation: 'N' },
+    } as unknown as LabelObject;
+    const zpl = generateZPL(BASE_LABEL, [obj], [variable]);
+    // Prefix composes with the binding; the default is not emitted raw.
+    expect(zpl).toContain('^FN4^FDQA,https://x.io');
+    expect(zpl).not.toContain('^FN4^FDhttps://x.io');
+  });
+
   it('does not leak ^B4 mode from one symbol to the next', () => {
     // Two B4 fields back-to-back: first explicit mode=3, second omits
     // the mode parameter. The second must default to 'A' even though
@@ -1271,5 +1348,35 @@ describe('generateBatchZpl', () => {
     const result = generateBatchZpl(baseLabel, objects, variables, dataset, mapping);
     expect(result).toContain('^DFR:LBL.ZPL');
     expect(result).not.toContain('^XFR:LBL.ZPL');
+  });
+
+  it('applies the QR {ec}A, transform to each CSV override (not raw)', () => {
+    const variables = [{ id: 'v1', name: 'url', fnNumber: 1, defaultValue: 'https://d' }];
+    const qr = {
+      id: 'q', type: 'qrcode', x: 10, y: 10, variableId: 'v1',
+      props: { content: 'https://d', magnification: 4, errorCorrection: 'Q', rotation: 'N' },
+    } as unknown as LabelObject;
+    const dataset = { headers: ['url'], rows: [['https://row']] };
+    const result = generateBatchZpl(baseLabel, [qr], variables, dataset, { bindings: { v1: 'url' } });
+    const recall = result.split('^XFR:LBL.ZPL').slice(1).join('^XFR:LBL.ZPL');
+    expect(recall).toContain('^FN1^FDQA,https://row');
+    expect(recall).not.toContain('^FN1^FDhttps://row');
+  });
+
+  it('applies the UPC-E compaction transform to each CSV override', () => {
+    const variables = [{ id: 'v1', name: 'upc', fnNumber: 1, defaultValue: '123456' }];
+    const upceObj = {
+      id: 'u', type: 'upce', x: 10, y: 10, variableId: 'v1',
+      props: {
+        content: '123456', height: 100, moduleWidth: 2,
+        printInterpretation: true, printInterpretationAbove: false, checkDigit: false, rotation: 'N',
+      },
+    } as unknown as LabelObject;
+    const dataset = { headers: ['upc'], rows: [['654321']] };
+    const result = generateBatchZpl(baseLabel, [upceObj], variables, dataset, { bindings: { v1: 'upc' } });
+    const recall = result.split('^XFR:LBL.ZPL').slice(1).join('^XFR:LBL.ZPL');
+    // NS-prefixed + compacted, not the raw row value.
+    expect(recall).toContain('^FN1^FD0654321');
+    expect(recall).not.toContain('^FN1^FD654321^FS');
   });
 });

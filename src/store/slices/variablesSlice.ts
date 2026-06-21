@@ -7,9 +7,15 @@ import {
   type Variable,
   type VariableInput,
 } from '../../types/Variable';
-import { stripVariableIdFromObjects } from '../../types/Group';
-import { rewriteTemplateMarkers } from '../labelStore.internals';
-import { selectPreviewLocksEditor } from '../labelStore.selectors';
+import { stripVariableIdFromObjects, findAncestors, mapObjectById } from '../../types/Group';
+import type { ObjectChanges } from '../../types/LabelObject';
+import {
+  rewriteTemplateMarkers,
+  substituteTemplateMarkers,
+  applyObjectChanges,
+  updateCurrentObjects,
+} from '../labelStore.internals';
+import { selectPreviewLocksEditor, currentObjects } from '../labelStore.selectors';
 import type { LabelState } from '../labelStore';
 
 export interface VariablesSlice {
@@ -24,6 +30,16 @@ export interface VariablesSlice {
   /** Patch fields on an existing variable. Validates name + fnNumber
    *  uniqueness; rejects silently (no-op) on conflict. */
   updateVariable: (id: string, changes: Partial<Omit<Variable, 'id'>>) => void;
+  /** Set a single-bound variable's default value AND mirror it onto the
+   *  bound object in one write, so the undo timeline records a single entry
+   *  (the field's content tracks the default for the unbind fallback and
+   *  ^FB re-derivation). */
+  setBoundDefault: (
+    variableId: string,
+    defaultValue: string,
+    objectId: string,
+    objectChanges: ObjectChanges,
+  ) => void;
   /** Delete a variable and unbind every field that referenced it
    *  across every page. */
   removeVariable: (id: string) => void;
@@ -33,13 +49,17 @@ export interface VariablesSlice {
   setVariables: (variables: Variable[]) => void;
 }
 
+/** Names are load-bearing for the `«name»` marker grammar, so a name can never
+ *  contain the guillemet delimiters (they would corrupt tokenising/renaming). */
+const cleanVariableName = (raw: string): string => raw.replace(/[«»]/g, '').trim();
+
 export const createVariablesSlice: StateCreator<LabelState, [], [], VariablesSlice> = (set, get) => ({
   variables: [],
 
   addVariable: (input) => {
     const state = get();
     if (selectPreviewLocksEditor(state)) return null;
-    const trimmedName = input.name.trim();
+    const trimmedName = cleanVariableName(input.name);
     if (trimmedName === '') return null;
     if (state.variables.some((v) => v.name === trimmedName)) return null;
 
@@ -73,7 +93,7 @@ export const createVariablesSlice: StateCreator<LabelState, [], [], VariablesSli
 
       let patched = changes;
       if (changes.name !== undefined) {
-        const trimmed = changes.name.trim();
+        const trimmed = cleanVariableName(changes.name);
         if (trimmed === '') return {};
         if (state.variables.some((v) => v.id !== id && v.name === trimmed)) return {};
         patched = { ...patched, name: trimmed };
@@ -99,6 +119,29 @@ export const createVariablesSlice: StateCreator<LabelState, [], [], VariablesSli
       return next;
     }),
 
+  setBoundDefault: (variableId, defaultValue, objectId, objectChanges) =>
+    set((state) => {
+      if (selectPreviewLocksEditor(state)) return {};
+      const existing = state.variables.find((v) => v.id === variableId);
+      if (!existing) return {};
+      // No-op guard: an onChange that re-emits the same value must not push an
+      // undo entry. The mirrored content is deterministic in defaultValue, so
+      // an unchanged default means an unchanged write.
+      if (existing.defaultValue === defaultValue) return {};
+      const variables = state.variables.map((v) =>
+        v.id === variableId ? { ...v, defaultValue } : v,
+      );
+      const ancestorLocked = findAncestors(currentObjects(state), objectId).some(
+        (g) => !!g.locked,
+      );
+      const pages = updateCurrentObjects(state, (curr) =>
+        mapObjectById(curr, objectId, (obj) =>
+          applyObjectChanges(obj, objectChanges, ancestorLocked),
+        ),
+      );
+      return { variables, ...pages };
+    }),
+
   setVariables: (variables) =>
     set((state) => {
       if (selectPreviewLocksEditor(state)) return {};
@@ -109,20 +152,30 @@ export const createVariablesSlice: StateCreator<LabelState, [], [], VariablesSli
   removeVariable: (id) =>
     set((state) => {
       if (selectPreviewLocksEditor(state)) return {};
-      if (!state.variables.some((v) => v.id === id)) return {};
+      const removed = state.variables.find((v) => v.id === id);
+      if (!removed) return {};
       let pagesChanged = false;
+      // Strip marker delimiters from the replacement: the content model can't
+      // store a literal `«…»`, so a default containing one would re-parse as a
+      // new marker (a phantom re-bind) after substitution. Keep it literal.
+      const literalDefault = removed.defaultValue.replace(/[«»]/g, '');
       const nextPages = state.pages.map((p) => {
+        // Drop the single-bind id AND substitute any `«name»` template marker
+        // with the deleted variable's default, so no orphan marker survives to
+        // print literally (mirrors the unbind-keeps-value flow).
         const stripped = stripVariableIdFromObjects(p.objects, id);
-        if (stripped === p.objects) return p;
+        const substituted = substituteTemplateMarkers(stripped, removed.name, literalDefault);
+        if (substituted === p.objects) return p;
         pagesChanged = true;
-        return { ...p, objects: stripped };
+        return { ...p, objects: substituted };
       });
       // Drop any csvMapping binding pointing at the deleted variable so
       // the design file doesn't carry orphan references.
       let nextMapping = state.csvMapping;
       if (state.csvMapping && id in state.csvMapping.bindings) {
-        const { [id]: _drop, ...rest } = state.csvMapping.bindings;
-        void _drop;
+        const rest = Object.fromEntries(
+          Object.entries(state.csvMapping.bindings).filter(([k]) => k !== id),
+        );
         nextMapping = { ...state.csvMapping, bindings: rest };
       }
       return {

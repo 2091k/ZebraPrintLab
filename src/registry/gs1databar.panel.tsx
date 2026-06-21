@@ -13,8 +13,12 @@ import {
   elementStringToContent,
 } from '../lib/gs1';
 import { SectionCard, StaticSectionCard } from '../components/Properties/SectionCard';
+import { VariableContentField } from '../components/Properties/VariableContentField';
 import { FieldLabel } from '../components/Properties/ZplCmd';
 import { Select } from '../components/ui/Select';
+import { builderButtonCls } from '../components/ui/formStyles';
+import { fieldHasVariable, asLabelObject } from '../lib/variableField';
+import { sanitiseAroundMarkers } from '../lib/markerTokens';
 import { type Gs1DatabarProps, SYMBOLOGY_LABELS } from './gs1databar';
 
 // Stable specs so filterContent's WeakMap cache hits across keystrokes.
@@ -27,30 +31,29 @@ export const gs1databarPanel: ObjectTypeUi<Gs1DatabarProps> = {
     const p = obj.props;
     const loc = t.registry.gs1databar;
     const openGs1Builder = useLabelStore((s) => s.openGs1Builder);
+    const variables = useLabelStore((s) => s.variables);
     const isExpanded = GS1_DATABAR_EXPANDED_SYMBOLOGIES.has(p.symbology);
+    const spec = isExpanded ? EXPANDED_SPEC : GTIN_SPEC;
+    const bound = fieldHasVariable(asLabelObject(obj), variables);
     return (
       <>
         <StaticSectionCard title={t.properties.contentSection} cmd="^FD">
-          <input
-            className={inputCls}
-            aria-label={isExpanded ? loc.content : loc.gtinLabel}
-            value={p.content}
-            onChange={(e) => {
-              const raw = e.target.value;
-              // Paste of an element string "(01)…(10)…" (whitespace tolerated):
-              // store as raw content with GS separators so the filter doesn't
-              // silently drop the parens and merge variable AIs.
-              const pasted = isExpanded ? elementStringToContent(raw) : null;
-              if (pasted !== null) { onChange({ content: pasted }); return; }
-              onChange({ content: filterContent(raw, isExpanded ? EXPANDED_SPEC : GTIN_SPEC) });
+          <VariableContentField
+            obj={obj}
+            multiline={false}
+            placeholder={isExpanded ? loc.content : loc.gtinLabel}
+            sanitise={(raw) => {
+              // No markers: keep the element-string paste shortcut "(01)…(10)…".
+              if (!raw.includes('«')) {
+                const pasted = isExpanded ? elementStringToContent(raw) : null;
+                return pasted !== null ? pasted : filterContent(raw, spec);
+              }
+              // With chips, filter only the literal slices so markers survive.
+              return sanitiseAroundMarkers(raw, (s) => filterContent(s, spec));
             }}
           />
           {isExpanded ? (
-            <button
-              type="button"
-              onClick={() => openGs1Builder(obj.id)}
-              className="self-start text-xs px-2 py-1 rounded border border-border bg-surface-2 hover:bg-border transition-colors"
-            >
+            <button type="button" disabled={bound} onClick={() => openGs1Builder(obj.id)} className={builderButtonCls}>
               {t.gs1builder.button}
             </button>
           ) : (
@@ -78,7 +81,8 @@ export const gs1databarPanel: ObjectTypeUi<Gs1DatabarProps> = {
                 // Leaving Expanded: reduce multi-AI content to a bare GTIN so the
                 // preview (derived GTIN) and the emitted ZPL stay in sync.
                 const leavingExpanded = isExpanded && !GS1_DATABAR_EXPANDED_SYMBOLOGIES.has(symbology);
-                onChange(leavingExpanded ? { symbology, content: gtinBodyFromContent(p.content) } : { symbology });
+                // Don't rewrite a bound field's content: the variable owns it.
+                onChange(leavingExpanded && !bound ? { symbology, content: gtinBodyFromContent(p.content) } : { symbology });
               }}
               groups={[{ options: Object.entries(SYMBOLOGY_LABELS).map(([val, name]) => ({
                 value: Number(val) as Gs1DatabarProps['symbology'],

@@ -146,14 +146,15 @@ export function applyBindingToObject<T extends LabelObject>(
   const content = getObjectStringContent(obj);
   if (content === undefined) return obj;
 
-  // 1) variableId single-bind, then 2) «name» template substitution so
-  // a single-bind value containing markers still resolves.
+  // Single-bind (variableId) OR template (`«name»` markers in content), never
+  // both. A single-bind value is emitted as-is by the exporter (fdFieldFor
+  // reads variable.defaultValue raw), so preview must NOT recursively resolve
+  // markers nested inside it, otherwise preview and export diverge.
   let next = content;
   const variable = lookupBoundVariable(obj, variables);
   if (variable) {
     next = resolveVariableValue(variable, active, mode);
-  }
-  if (hasTemplateMarkers(next)) {
+  } else if (hasTemplateMarkers(next)) {
     // O(N+V) vs O(N*V).
     const byName = new Map(variables.map((v) => [v.name, v]));
     next = resolveTemplateMarkers(next, (name) => {
@@ -161,7 +162,7 @@ export function applyBindingToObject<T extends LabelObject>(
       return v ? resolveVariableValue(v, active, mode) : undefined;
     });
   }
-  if (mode === "preview" && hasClockMarkers(next)) {
+  if (!variable && mode === "preview" && hasClockMarkers(next)) {
     const ctx = clock ?? {};
     const dates = ctx.dates ?? channelDatesFrom(
       ctx.now ?? new Date(),

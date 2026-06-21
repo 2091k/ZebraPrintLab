@@ -6,6 +6,9 @@ import {
   embedsToMarkers,
   markersToEmbeds,
   pickEmbedChar,
+  capLiteralLength,
+  literalInsertRoom,
+  substituteTemplateMarker,
 } from "./fnTemplate";
 import type { Variable } from "../types/Variable";
 
@@ -99,5 +102,56 @@ describe("pickEmbedChar", () => {
   });
   it("returns null when every candidate is taken", () => {
     expect(pickEmbedChar(["#@|%&?!"])).toBe(null);
+  });
+});
+
+describe("capLiteralLength", () => {
+  it("caps a purely-literal value to maxLength", () => {
+    expect(capLiteralLength("123456789", 5)).toBe("12345");
+  });
+  it("leaves a short value untouched", () => {
+    expect(capLiteralLength("12", 5)).toBe("12");
+  });
+  it("never caps when a marker is present (printed length is the variable's)", () => {
+    expect(capLiteralLength("«sku»0123456789", 3)).toBe("«sku»0123456789");
+  });
+  it("is a no-op when no cap is set", () => {
+    expect(capLiteralLength("123456789", undefined)).toBe("123456789");
+  });
+});
+
+describe("literalInsertRoom", () => {
+  it("returns remaining room accounting for the replaced selection", () => {
+    expect(literalInsertRoom("123", 0, "ABC", 5)).toBe(2);
+    expect(literalInsertRoom("123", 2, "ABC", 5)).toBe(4);
+  });
+  it("clamps to zero when the field is already full", () => {
+    expect(literalInsertRoom("12345", 0, "X", 5)).toBe(0);
+  });
+  it("returns Infinity when no cap is set", () => {
+    expect(literalInsertRoom("123", 0, "X", undefined)).toBe(Infinity);
+  });
+  it("returns Infinity when a marker is present in the value or the insertion", () => {
+    expect(literalInsertRoom("«sku»", 0, "X", 5)).toBe(Infinity);
+    expect(literalInsertRoom("12", 0, "«sku»", 5)).toBe(Infinity);
+  });
+});
+
+describe("substituteTemplateMarker", () => {
+  it("replaces a marker with the literal replacement", () => {
+    expect(substituteTemplateMarker("Hello «sku»", "sku", "ABC")).toBe("Hello ABC");
+  });
+  it("replaces every occurrence", () => {
+    expect(substituteTemplateMarker("«sku»-«sku»", "sku", "X")).toBe("X-X");
+  });
+  it("leaves other markers untouched", () => {
+    expect(substituteTemplateMarker("«sku» «lot»", "sku", "X")).toBe("X «lot»");
+  });
+  it("is identity-preserving when the name is absent", () => {
+    const s = "no markers here";
+    expect(substituteTemplateMarker(s, "sku", "X")).toBe(s);
+  });
+  it("can delete a marker by replacing with empty string", () => {
+    expect(substituteTemplateMarker("a«sku»b", "sku", "")).toBe("ab");
   });
 });

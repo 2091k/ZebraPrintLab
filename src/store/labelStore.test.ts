@@ -1382,6 +1382,27 @@ describe('variables', () => {
     expect(state().variables[0]?.defaultValue).toBe('y');
   });
 
+  it('setBoundDefault updates variable + bound object content in one undo entry', () => {
+    state().addObject('text');
+    const objId = defined(ids()[0]);
+    const varId = defined(state().addVariable({ name: 'sku', defaultValue: 'x' }));
+    state().updateObject(objId, { variableId: varId });
+    useLabelStore.temporal.getState().clear();
+
+    state().setBoundDefault(varId, 'NEW', objId, { props: { content: 'NEW' } });
+
+    expect(state().variables.find((v) => v.id === varId)?.defaultValue).toBe('NEW');
+    expect(props(objs().find((o) => o.id === objId)).content).toBe('NEW');
+    expect(useLabelStore.temporal.getState().pastStates.length).toBe(1);
+  });
+
+  it('setBoundDefault is a no-op for an unknown variable id', () => {
+    state().addObject('text');
+    const objId = defined(ids()[0]);
+    state().setBoundDefault('ghost', 'NEW', objId, { props: { content: 'NEW' } });
+    expect(props(objs().find((o) => o.id === objId)).content).not.toBe('NEW');
+  });
+
   it('updateVariable rejects renaming to an existing name', () => {
     state().addVariable({ name: 'a' });
     const id = defined(state().addVariable({ name: 'b' }));
@@ -1445,6 +1466,75 @@ describe('variables', () => {
     const group = state().pages[1]?.objects[0];
     if (!group || !isGroup(group)) throw new Error('expected group');
     expect(group.children[0]?.variableId).toBeUndefined();
+  });
+
+  it('removeVariable substitutes template markers with the default in leaf + group', () => {
+    const varId = defined(state().addVariable({ name: 'sku', defaultValue: 'ABC' }));
+    useLabelStore.setState({
+      pages: [
+        {
+          objects: [
+            {
+              id: 'obj-1',
+              type: 'text',
+              x: 0,
+              y: 0,
+              rotation: 0,
+              props: { content: 'Hello «sku»', fontHeight: 30, fontWidth: 30, rotation: 'N' },
+            } as LabelObject,
+            {
+              id: 'grp-1',
+              type: 'group',
+              x: 0,
+              y: 0,
+              rotation: 0,
+              children: [
+                {
+                  id: 'obj-2',
+                  type: 'text',
+                  x: 0,
+                  y: 0,
+                  rotation: 0,
+                  props: { content: '«sku»/«sku»', fontHeight: 30, fontWidth: 30, rotation: 'N' },
+                } as LabelObject,
+              ],
+            } as LabelObject,
+          ],
+        },
+      ],
+    });
+
+    state().removeVariable(varId);
+
+    expect(props(state().pages[0]?.objects[0]).content).toBe('Hello ABC');
+    const group = state().pages[0]?.objects[1];
+    if (!group || !isGroup(group)) throw new Error('expected group');
+    expect(props(group.children[0]).content).toBe('ABC/ABC');
+  });
+
+  it('removeVariable strips marker delimiters from the substituted default (no phantom re-bind)', () => {
+    const varId = defined(state().addVariable({ name: 'sku', defaultValue: '«lot»' }));
+    useLabelStore.setState({
+      pages: [
+        {
+          objects: [
+            {
+              id: 'obj-1',
+              type: 'text',
+              x: 0,
+              y: 0,
+              rotation: 0,
+              props: { content: '«sku»', fontHeight: 30, fontWidth: 30, rotation: 'N' },
+            } as LabelObject,
+          ],
+        },
+      ],
+    });
+
+    state().removeVariable(varId);
+
+    // The default «lot» must not survive as a marker, else the field re-binds.
+    expect(props(state().pages[0]?.objects[0]).content).toBe('lot');
   });
 
   it('removeVariable leaves pages untouched when no field referenced the variable', () => {

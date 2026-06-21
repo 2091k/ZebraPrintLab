@@ -1,8 +1,9 @@
-import type { ObjectGroup } from '../types/LabelObject';
+import type { LabelObjectBase, ObjectGroup } from '../types/LabelObject';
 import type { ObjectTypeCore } from '../types/ObjectType';
 import type { HriBehavior } from '../types/ZplEmit';
 import { fieldPos, fdFieldFor } from './zplHelpers';
 import { commitBarcodeWidthHeightTransform } from './transformHelpers';
+import { hasTemplateMarkers } from '../lib/fnTemplate';
 import { type ZplRotation } from './rotation';
 
 export interface Barcode1DProps {
@@ -51,6 +52,20 @@ export function createBarcode1DCore(config: Barcode1DCoreConfig): ObjectTypeCore
     checkDigit: false,
     rotation: 'N',
   };
+  // Obj-aware ^FD transform: apply fdContent to a literal/single-bind payload,
+  // but never to a template (its payload is an embed reference fdContent would
+  // mangle). Shared by toZPL and the batch override via the fdTransform hook.
+  const fdTransformFor = config.fdContent
+    ? (obj: LabelObjectBase & { props: Barcode1DProps }) =>
+        // Skip only a true template (no binding, markers in content): its
+        // payload expands to an embed the digit transform would mangle. A
+        // single-bind field (variableId set) always keeps the transform so its
+        // default and any CSV override are compacted the same way.
+        !obj.variableId && hasTemplateMarkers(obj.props.content)
+          ? undefined
+          : config.fdContent
+    : undefined;
+
   // Single source for the palette command icon: derive the `^Bx` prefix from
   // the same zplCommand the generator uses, so there's no second literal.
   const zplCmd = config.zplCommand(defaultProps).match(/^\^[A-Z0-9]{2}/)?.[0];
@@ -72,6 +87,12 @@ export function createBarcode1DCore(config: Barcode1DCoreConfig): ObjectTypeCore
       ? undefined
       : commitBarcodeWidthHeightTransform,
 
+    // e.g. UPC-E compaction; shared with the CSV batch override so a per-row
+    // value is compacted the same way as the single-format default. Skipped on
+    // a template field: fdContent reformats a literal value and would corrupt
+    // the embed reference (#n#) that a template payload expands to.
+    fdTransform: fdTransformFor,
+
     toZPL: (obj, ctx) => {
       // g (HRI above) is only valid when f (interpretation) is on, and
       // interpretationLocked symbologies (e.g. ^BR) have no HRI in ZPL at all.
@@ -91,7 +112,7 @@ export function createBarcode1DCore(config: Barcode1DCoreConfig): ObjectTypeCore
         byCmd,
         fieldPos(obj),
         config.zplCommand(p),
-        fdFieldFor(obj, config.fdContent ? config.fdContent(p.content) : p.content, ctx),
+        fdFieldFor(obj, p.content, ctx, fdTransformFor?.(obj)),
       ].filter(Boolean).join('');
     },
   };

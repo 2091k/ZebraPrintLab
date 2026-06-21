@@ -16,21 +16,20 @@ import {
   nextDefaultVariableName,
   type Variable,
 } from '../../types/Variable';
-import { walkObjects, type LabelObject } from '../../types/Group';
 import { inputCls } from '../Properties/styles';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { FieldLabel } from '../ui/FieldLabel';
 import { Tooltip } from '../ui/Tooltip';
 import { useT } from '../../lib/useT';
 import type { Translations } from '../../locales';
-import { getObjectStringContent, getVariableSource, type VariableSource } from '../../lib/variableBinding';
-import { extractTemplateRefs } from '../../lib/fnTemplate';
+import { getVariableSource, type VariableSource } from '../../lib/variableBinding';
+import { countBindings } from '../../lib/variableField';
 import { VariableSourceBadge } from './VariableSourceBadge';
 
 export function VariablesPanel() {
   const t = useT();
   const tv = t.variables;
   const variables = useLabelStore((s) => s.variables);
+  const showZpl = useLabelStore((s) => s.showZplCommands);
   const pages = useLabelStore((s) => s.pages);
   const addVariable = useLabelStore((s) => s.addVariable);
   const updateVariable = useLabelStore((s) => s.updateVariable);
@@ -274,6 +273,7 @@ export function VariablesPanel() {
                 source={source}
                 boundHeader={boundHeader}
                 error={rowError[entry.id]}
+                showZpl={showZpl}
                 tv={tv}
                 onChangeName={(name) =>
                   tryUpdate(entry.id, { name }, tv.nameInUse)
@@ -356,6 +356,8 @@ interface RowProps {
   source: VariableSource;
   boundHeader: string | undefined;
   error?: string;
+  /** Power-user flag: reveals the editable ^FN slot field. */
+  showZpl: boolean;
   tv: Translations['variables'];
   onChangeName: (next: string) => void;
   onChangeFnNumber: (next: number) => void;
@@ -373,6 +375,7 @@ function VariableRow({
   source,
   boundHeader,
   error,
+  showZpl,
   tv,
   onChangeName,
   onChangeFnNumber,
@@ -416,69 +419,72 @@ function VariableRow({
 
   return (
     <li className="flex flex-col gap-1.5">
-      <div className="flex items-end gap-2">
-        <div className="flex-1 flex flex-col gap-0.5">
-          <FieldLabel text={tv.nameLabel} help={tv.nameHelp} />
-          <input
-            className={inputCls}
-            value={name}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              setName(e.target.value);
-              onDirtyChange();
-            }}
-            onBlur={commitName}
-          />
-        </div>
-        <div className="w-14 flex flex-col gap-0.5">
-          <FieldLabel text={tv.fnLabel} help={tv.fnHelp} />
-          <input
-            type="number"
-            min={FN_NUMBER_MIN}
-            max={FN_NUMBER_MAX}
-            className={inputCls}
-            value={fn}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              setFn(e.target.value);
-              onDirtyChange();
-            }}
-            onBlur={commitFn}
-          />
-        </div>
+      <div className="flex items-center gap-2">
+        <input
+          // Indigo = variable identity (matches the token chips); dimmed to
+          // muted when the variable is placed nowhere in the label. The `!`
+          // beats `text-text` from inputCls (same specificity, later in sheet).
+          className={`${inputCls} flex-1 min-w-0 ${bindings === 0 ? "text-muted!" : "text-indigo!"}`}
+          aria-label={tv.nameLabel}
+          value={name}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            setName(e.target.value);
+            onDirtyChange();
+          }}
+          onBlur={commitName}
+        />
+        {/* ^FN slot is a ZPL low-level detail (auto-assigned otherwise); only
+            the power-user flag reveals the editable field. */}
+        {showZpl && (
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="font-mono text-[10px] text-muted/60">FN</span>
+            <input
+              type="number"
+              min={FN_NUMBER_MIN}
+              max={FN_NUMBER_MAX}
+              className={`${inputCls} w-12`}
+              aria-label={tv.fnLabel}
+              value={fn}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setFn(e.target.value);
+                onDirtyChange();
+              }}
+              onBlur={commitFn}
+            />
+          </div>
+        )}
         <button
           onClick={onRequestDelete}
           aria-label={tv.removeAriaFmt.replace('{name}', variable.name)}
-          className="p-1.5 rounded text-muted hover:text-amber-400 hover:bg-surface-2 transition-colors"
+          className="p-1.5 rounded text-muted hover:text-amber-400 hover:bg-surface-2 transition-colors shrink-0"
         >
           <TrashIcon className="w-3.5 h-3.5" />
         </button>
       </div>
-      <div className="flex flex-col gap-0.5">
-        <FieldLabel text={tv.defaultLabel} help={tv.defaultHelp} />
-        <input
-          className={inputCls}
-          value={def}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setDef(e.target.value)}
-          onBlur={commitDef}
-        />
-      </div>
+      <input
+        className={inputCls}
+        aria-label={tv.defaultLabel}
+        placeholder={tv.defaultLabel}
+        value={def}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setDef(e.target.value)}
+        onBlur={commitDef}
+      />
       <div className="flex justify-between items-center font-mono text-[9px] uppercase tracking-wider text-muted gap-2">
-        <span>
+        <span className={bindings === 0 ? 'opacity-60' : undefined}>
           {bindings === 0
             ? tv.noBindings
             : bindings === 1
               ? tv.bindingsSingular
               : tv.bindingsPluralFmt.replace('{n}', String(bindings))}
         </span>
+        {/* Source badge only carries meaning under CSV; getVariableSource
+            returns 'default' when there is no dataset, so this also hides it
+            in the common no-CSV state (no more "— default" on every row). */}
         {error ? (
           <span className="text-amber-400">{error}</span>
-        ) : (
-          <VariableSourceBadge
-            source={source}
-            boundHeader={boundHeader}
-            size="xs"
-            showLabel
-          />
-        )}
+        ) : source !== 'default' ? (
+          <VariableSourceBadge source={source} boundHeader={boundHeader} size="xs" showLabel />
+        ) : null}
       </div>
     </li>
   );
@@ -494,42 +500,5 @@ function formatDeleteMessage(
 ): string {
   const template = count === 0 ? tv.deleteUnboundFmt : tv.deleteBoundFmt;
   return template.replace('{name}', name).replace('{n}', String(count));
-}
-
-/** Walk every page (groups too) and tally how many fields reference each
- *  variable, either via single-bind `variableId` OR via inline
- *  `«name»` template markers in their content. Returns a Map keyed by
- *  variable.id. Variables with no bindings are absent; callers
- *  default to 0. */
-function countBindings(
-  pages: { objects: LabelObject[] }[],
-  variables: readonly Variable[],
-): Map<string, number> {
-  const known = new Set(variables.map((v) => v.id));
-  const byName = new Map(variables.map((v) => [v.name, v.id]));
-  const counts = new Map<string, number>();
-  for (const page of pages) {
-    for (const obj of walkObjects(page.objects)) {
-      // De-dupe per OBJECT across both binding styles: a field with
-      // both `variableId === V` and `«V»` in its content counts as
-      // one usage of V, not two. Mirrors how the user thinks about
-      // "where is V used"; one field = one place.
-      const refsInThisObj = new Set<string>();
-      if (obj.variableId && known.has(obj.variableId)) {
-        refsInThisObj.add(obj.variableId);
-      }
-      const c = getObjectStringContent(obj);
-      if (c !== undefined) {
-        for (const name of extractTemplateRefs(c)) {
-          const id = byName.get(name);
-          if (id) refsInThisObj.add(id);
-        }
-      }
-      for (const id of refsInThisObj) {
-        counts.set(id, (counts.get(id) ?? 0) + 1);
-      }
-    }
-  }
-  return counts;
 }
 

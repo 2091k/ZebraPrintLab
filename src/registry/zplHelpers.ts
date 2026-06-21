@@ -107,7 +107,17 @@ export function fdFieldFor(
   ctx?: ZplEmitContext,
   transform: (payload: string) => string = (s) => s,
 ): string {
-  // ^FE first then ^FC; absent ctx delim signals "templates not emittable".
+  // Single-bind wins, mirroring preview (`applyBindingToObject`): emit the
+  // variable's ^FN + default literally, never expanding a marker that happens
+  // to sit inside the (mirrored) default. Resolving variableId before markers
+  // is what keeps preview and export from diverging on such a value.
+  const id = obj.variableId;
+  if (id && ctx?.variables) {
+    const variable = ctx.variables.find((v) => v.id === id);
+    if (variable) return `^FN${variable.fnNumber}${fdField(transform(variable.defaultValue))}`;
+  }
+  // Template path: ^FE embeds first then ^FC clock; absent ctx delim signals
+  // "templates not emittable" and the content stays literal.
   let payload = content;
   if (ctx?.variables && ctx.embedChar && hasTemplateMarkers(payload)) {
     payload = markersToEmbeds(payload, ctx.variables, ctx.embedChar).payload;
@@ -115,10 +125,5 @@ export function fdFieldFor(
   if (ctx?.clockChars && hasClockMarkers(payload)) {
     payload = markersToTokens(payload, ctx.clockChars);
   }
-  if (payload !== content) return fdField(transform(payload));
-  const id = obj.variableId;
-  if (!id || !ctx?.variables) return fdField(transform(content));
-  const variable = ctx.variables.find((v) => v.id === id);
-  if (!variable) return fdField(transform(content));
-  return `^FN${variable.fnNumber}${fdField(transform(variable.defaultValue))}`;
+  return fdField(transform(payload));
 }

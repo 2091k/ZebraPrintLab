@@ -1,12 +1,15 @@
 import type { ObjectTypeUi } from '../types/ObjectType';
 import type { Translations } from '../locales';
 import { useT } from '../lib/useT';
+import { useLabelStore } from '../store/labelStore';
 import { labelCls } from '../components/Properties/styles';
 import { filterContent, hasValidLength, type ContentSpec } from './contentSpec';
 import { RotationSelect } from '../components/Properties/RotationSelect';
 import { NumberInput } from '../components/Properties/NumberInput';
 import { UnitNumberInput } from '../components/Properties/UnitNumberInput';
-import { TemplateContentInput } from '../components/Properties/TemplateContentInput';
+import { VariableContentField } from '../components/Properties/VariableContentField';
+import { fieldMode, boundDefaultOrContent, asLabelObject } from '../lib/variableField';
+import { sanitiseAroundMarkers } from '../lib/markerTokens';
 import { SectionCard, StaticSectionCard } from '../components/Properties/SectionCard';
 import { FieldLabel, ZplCmd } from '../components/Properties/ZplCmd';
 import { EanInlineStatus } from '../components/Properties/EanInlineStatus';
@@ -46,33 +49,32 @@ export function createBarcode1DPanel(config: Barcode1DPanelConfig): ObjectTypeUi
       const t = useT();
       const loc = config.locale(t);
       const p = obj.props;
+      const variables = useLabelStore((s) => s.variables);
+      // Validate the literal value AND the single-bind default. Only a template
+      // field's content is markers, not a printable length.
+      const validate = fieldMode(asLabelObject(obj), variables) !== 'template';
+      // Single-bind prints the variable's current default, not p.content (a
+      // mirror that goes stale when the default is edited in the Variables panel).
+      const validationContent = boundDefaultOrContent(asLabelObject(obj), variables);
       return (
         <>
           <StaticSectionCard title={t.properties.contentSection}>
             <div className="flex flex-col gap-1">
               <FieldLabel cmd="^FD">{loc.content}</FieldLabel>
-              <TemplateContentInput
-                objectId={obj.id}
+              <VariableContentField
+                obj={obj}
                 multiline={false}
-                value={p.content}
-                onChange={(content) => onChange({ content })}
                 sanitise={(raw) =>
-                  // Preserve `«name»` markers; sanitise the literal slices between them.
-                  raw
-                    .split(/(«[^»]+»)/)
-                    .map((s, i) =>
-                      i % 2 === 0 ? filterContent(s, config.contentSpec) : s,
-                    )
-                    .join('')
+                  sanitiseAroundMarkers(raw, (s) => filterContent(s, config.contentSpec))
                 }
                 maxLength={config.contentSpec?.maxLength}
                 placeholder={loc.placeholder}
               />
-              {!config.eanValidation && !hasValidLength(p.content, config.contentSpec) && loc.placeholder && (
+              {validate && !config.eanValidation && !hasValidLength(validationContent, config.contentSpec) && loc.placeholder && (
                 <p className="font-mono text-[10px] text-warning">{loc.placeholder}</p>
               )}
-              {config.eanValidation && (
-                <EanInlineStatus type={config.eanValidation} content={p.content} />
+              {validate && config.eanValidation && (
+                <EanInlineStatus type={config.eanValidation} content={validationContent} />
               )}
             </div>
           </StaticSectionCard>
