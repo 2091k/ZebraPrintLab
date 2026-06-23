@@ -3,6 +3,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   Cog6ToothIcon,
+  InformationCircleIcon,
   PlusIcon,
   TableCellsIcon,
   TrashIcon,
@@ -108,11 +109,8 @@ export function VariablesPanel() {
 
   return (
     <div className="flex flex-col gap-3 p-3">
-      <div className="flex items-start justify-between gap-2">
-        <p className="font-mono text-[10px] text-muted leading-relaxed flex-1">
-          {tv.panelHint}
-        </p>
-        {variables.length > 0 && (
+      {variables.length > 0 && (
+        <div className="flex items-start justify-end gap-2">
           <Tooltip
             content={
               csvRenderMode === 'preview'
@@ -138,8 +136,8 @@ export function VariablesPanel() {
               {csvRenderMode === 'preview' ? tv.csvBadgePreviewMode : tv.csvBadgeSchemaMode}
             </button>
           </Tooltip>
-        )}
-      </div>
+        </div>
+      )}
 
       {!csvDataset && csvMapping && Object.keys(csvMapping.bindings).length > 0 && (
         /* Mapping persisted (design.json or localStorage) but no CSV
@@ -299,14 +297,21 @@ export function VariablesPanel() {
         </ul>
       )}
 
-      <button
-        onClick={handleAdd}
-        disabled={allSlotsTaken}
-        className="flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-mono border border-dashed border-border text-muted hover:text-text hover:border-border-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        <PlusIcon className="w-3.5 h-3.5" />
-        {tv.add}
-      </button>
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={handleAdd}
+          disabled={allSlotsTaken}
+          className="flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-mono border border-dashed border-border text-muted hover:text-text hover:border-border-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <PlusIcon className="w-3.5 h-3.5" />
+          {tv.add}
+        </button>
+        <Tooltip content={tv.panelHint}>
+          <button type="button" aria-label={tv.panelHint} className="shrink-0 text-muted/60 hover:text-text cursor-help">
+            <InformationCircleIcon className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+        </Tooltip>
+      </div>
 
       {panelError && (
         <p className="font-mono text-[10px] text-amber-400">{panelError}</p>

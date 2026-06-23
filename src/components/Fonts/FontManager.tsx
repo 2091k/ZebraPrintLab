@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, type FocusEvent } from 'react';
-import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid';
+import { PlusIcon, TrashIcon, InformationCircleIcon } from '@heroicons/react/16/solid';
 import {
   getAllFonts,
   loadFontFile,
@@ -411,7 +411,6 @@ function ManualMappingsSection({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs text-muted px-1 leading-relaxed">{hint}</p>
       {rows.map(({ entry: m, index }) => {
         const dup = isDuplicateAlias(m.alias);
         const path = m.path ?? '';
@@ -458,10 +457,17 @@ function ManualMappingsSection({
           </div>
         );
       })}
-      <button type="button" className={addBtnCls} onClick={onAdd}>
-        <PlusIcon className="w-3 h-3 text-accent" />
-        {addLabel}
-      </button>
+      <div className="flex items-center gap-1.5">
+        <button type="button" className={addBtnCls} onClick={onAdd}>
+          <PlusIcon className="w-3 h-3 text-accent" />
+          {addLabel}
+        </button>
+        <Tooltip content={hint}>
+          <button type="button" aria-label={hint} className="shrink-0 text-muted/60 hover:text-text cursor-help">
+            <InformationCircleIcon className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+        </Tooltip>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import {
   TableCellsIcon,
 } from '@heroicons/react/16/solid';
 import { useT } from '../../lib/useT';
+import { Tooltip } from '../ui/Tooltip';
 import type { VariableSource } from '../../lib/variableBinding';
 
 interface Props {
@@ -63,17 +64,18 @@ export function VariableSourceBadge({
         : 'default';
 
   return (
-    <span
-      title={tip}
-      aria-label={label}
-      className={`inline-flex items-center gap-1 ${colorCls}`}
-    >
-      <Icon className={`${iconSize} shrink-0`} />
-      {showLabel && (
-        <span className="font-mono text-[9px] normal-case tracking-normal">
-          {label}
-        </span>
-      )}
-    </span>
+    <Tooltip content={tip}>
+      <span
+        aria-label={label}
+        className={`inline-flex items-center gap-1 ${colorCls}`}
+      >
+        <Icon className={`${iconSize} shrink-0`} />
+        {showLabel && (
+          <span className="font-mono text-[9px] normal-case tracking-normal">
+            {label}
+          </span>
+        )}
+      </span>
+    </Tooltip>
   );
 }

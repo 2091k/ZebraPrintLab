@@ -5,6 +5,7 @@ import { BlockTextSettings } from "./BlockTextSettings";
 import { BlockDragModeToggle } from "./BlockDragModeToggle";
 import { SectionCard } from "./SectionCard";
 import { ZplCmd } from "./ZplCmd";
+import { Tooltip } from "../ui/Tooltip";
 import { fieldGridCols, fieldGridCell } from "../ui/formStyles";
 import { FB_DEFAULTS } from "../../lib/textBlock";
 import { resolveTextMode, type TextMode, type TextProps } from "../../registry/text";
@@ -79,23 +80,22 @@ export function TextModeSection({
     <SectionCard id="text-mode" title={t.registry.text.textMode}>
       <div className="grid grid-cols-3 gap-1">
         {modes.map((m) => (
-          <button
-            key={m.key}
-            type="button"
-            title={m.hint}
-            aria-label={`${m.label}: ${m.hint}`}
-            aria-pressed={mode === m.key}
-            className={`flex flex-col items-center gap-0.5 rounded border px-1 py-1.5 text-[11px] transition-colors ${
-              mode === m.key
-                ? "border-accent ring-1 ring-accent text-text"
-                : "border-border text-muted hover:text-text"
-            }`}
-            onClick={() => setMode(m.key)}
-          >
-            <ModeIcon icon={m.icon} />
-            <span>{m.label}</span>
-            <ZplCmd cmd={m.cmd} />
-          </button>
+          <Tooltip key={m.key} content={m.hint} className="w-full">
+            <button
+              type="button"
+              aria-pressed={mode === m.key}
+              className={`w-full flex flex-col items-center gap-0.5 rounded border px-1 py-1.5 text-[11px] transition-colors ${
+                mode === m.key
+                  ? "border-accent ring-1 ring-accent text-text"
+                  : "border-border text-muted hover:text-text"
+              }`}
+              onClick={() => setMode(m.key)}
+            >
+              <ModeIcon icon={m.icon} />
+              <span>{m.label}</span>
+              <ZplCmd cmd={m.cmd} />
+            </button>
+          </Tooltip>
         ))}
       </div>
 

@@ -81,16 +81,18 @@ export function FpSettings({ props: p, onChange }: Props) {
           })}
         </div>
       </div>
-      <div title={gapDisabled ? t.registry.text.fpCharGapVHint : undefined}>
-        <UnitNumberInput
-          label={t.registry.text.fpCharGap}
-          valueDots={p.fpCharGap}
-          minDots={0}
-          allowUnset
-          disabled={gapDisabled}
-          onChangeDots={(fpCharGap) => onChange({ fpCharGap })}
-        />
-      </div>
+      <Tooltip content={gapDisabled ? t.registry.text.fpCharGapVHint : undefined} className="w-full">
+        <div>
+          <UnitNumberInput
+            label={t.registry.text.fpCharGap}
+            valueDots={p.fpCharGap}
+            minDots={0}
+            allowUnset
+            disabled={gapDisabled}
+            onChangeDots={(fpCharGap) => onChange({ fpCharGap })}
+          />
+        </div>
+      </Tooltip>
     </div>
   );
 }

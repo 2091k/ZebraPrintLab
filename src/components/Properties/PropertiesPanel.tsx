@@ -700,19 +700,18 @@ function LabelConfigPanel({
           />
         </div>
 
-        <label
-          className="flex items-center gap-2 text-xs"
-          title={t.label.overridePauseCountHint}
-        >
-          <input
-            type="checkbox"
-            checked={label.overridePauseCount === "Y"}
-            onChange={(e) =>
-              onUpdate({
-                overridePauseCount: e.target.checked ? "Y" : undefined,
-              })
-            }
-          />
+        <label className="flex w-full items-center gap-2 text-xs">
+          <Tooltip content={t.label.overridePauseCountHint}>
+            <input
+              type="checkbox"
+              checked={label.overridePauseCount === "Y"}
+              onChange={(e) =>
+                onUpdate({
+                  overridePauseCount: e.target.checked ? "Y" : undefined,
+                })
+              }
+            />
+          </Tooltip>
           {t.label.overridePauseCount}
         </label>
         </div>

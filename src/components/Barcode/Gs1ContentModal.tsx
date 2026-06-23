@@ -3,6 +3,7 @@ import { TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { BarcodeContentModalShell } from "./BarcodeContentModalShell";
 import { useT } from "../../lib/useT";
 import { inputCls } from "../ui/formStyles";
+import { Tooltip } from "../ui/Tooltip";
 import { useLabelStore, getCurrentObjects } from "../../store/labelStore";
 import { findObjectById } from "../../types/Group";
 import {
@@ -139,7 +140,9 @@ function Gs1Builder({ objectId }: { objectId: string }) {
                       aria-label={aiName(seg.ai)}
                     />
                     {fnc1After(i) && (
-                      <span className="font-mono text-[9px] text-muted shrink-0" title={tg.fnc1}>FNC1</span>
+                      <Tooltip content={tg.fnc1} className="shrink-0">
+                        <span className="font-mono text-[9px] text-muted">FNC1</span>
+                      </Tooltip>
                     )}
                     <button type="button" aria-label={tg.remove} onClick={() => removeAt(i)} className="text-muted hover:text-error shrink-0">
                       <TrashIcon className="w-4 h-4" />
