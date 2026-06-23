@@ -53,11 +53,38 @@ describe("rotateSelectionChanges", () => {
     expect(c?.props).toEqual({ rotation: "N" });
   });
 
-  it("line adds 90deg to the angle and rotates the start point", () => {
+  it("line 90deg re-anchors the band so its centre stays put", () => {
     const ln = leaf("line", 10, 10, { angle: 0, length: 50, thickness: 2, color: "B" });
     const c = rotateSelectionChanges([ln], [ln.id], ctx(), 1).get(ln.id);
-    // bbox (10,10,50,2) centre (35,11); start (10,10) -> (36,-14); angle 90
-    expect(c).toEqual({ x: 36, y: -14, props: { angle: 90 } });
+    // horizontal 50x2 (centre 35,11) -> vertical 2x50 still centred at (35,11): TL (34,-14)
+    expect(c).toEqual({ x: 34, y: -14, props: { angle: 90 } });
+  });
+
+  it("axis-aligned bar keeps its centre across 180/270deg (was off by thickness)", () => {
+    // Vertical bar bbox (100,100,20,80), centre (110,140); pivot = its centre.
+    const bar = () => leaf("line", 100, 100, { angle: 90, length: 80, thickness: 20, color: "B" });
+    // 180deg: still vertical (20x80), angle 270; centre stays (110,140) so the
+    // ^GB FO (bottom-left for 270) is (100, 100+80) = (100,180).
+    expect(rotateSelectionChanges([bar()], [bar().id], ctx(), 2).get(bar().id)).toEqual({
+      x: 100, y: 180, props: { angle: 270 },
+    });
+    // 270deg: horizontal (80x20), angle 0; centre (110,140) so top-left = (70,130).
+    expect(rotateSelectionChanges([bar()], [bar().id], ctx(), 3).get(bar().id)).toEqual({
+      x: 70, y: 130, props: { angle: 0 },
+    });
+  });
+
+  it("four quarter turns return a line to integer origin (no trig-float drift)", () => {
+    let ln = leaf("line", 100, 100, { angle: 0, length: 50, thickness: 8, color: "B" });
+    for (let i = 0; i < 4; i++) {
+      const c = rotateSelectionChanges([ln], [ln.id], ctx(), 1).get(ln.id)!;
+      // Every intermediate anchor must stay integer (cos/sin residue not leaked).
+      expect(Number.isInteger(c.x)).toBe(true);
+      expect(Number.isInteger(c.y)).toBe(true);
+      const props = (ln as unknown as { props: object }).props;
+      ln = { ...ln, x: c.x!, y: c.y!, props: { ...props, ...c.props } } as unknown as LabelObject;
+    }
+    expect({ x: ln.x, y: ln.y }).toEqual({ x: 100, y: 100 });
   });
 
   it("multi-select rotates each leaf about the shared union centre", () => {

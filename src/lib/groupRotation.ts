@@ -34,6 +34,27 @@ function advanceRotation(r: string, steps: number): string {
   return ZPL_ROTATIONS[(((i + steps) % 4) + 4) % 4] ?? r;
 }
 
+/** Axis-aligned line angles (0/90/180/270) emit ^GB; other angles emit ^GD. */
+function isAxisAligned(angle: number): boolean {
+  return (((angle % 90) + 90) % 90) === 0;
+}
+
+/** A leaf's bbox rotated `steps` quarter turns about `pivot`, dims swapping on
+ *  odd steps. Rounded: box bounds are already integer (round is a no-op), but a
+ *  line's bounds carry trig residue (lineBounds uses cos/sin, e.g. cos(270deg)
+ *  is ~-1e-16), which would otherwise leak a `99.99999` anchor into the model. */
+function rotatedRect(leaf: LeafObject, pivot: Vec, steps: number, ctx: ObjectBoundsCtx) {
+  const b = objectBoundsDots(leaf, ctx);
+  const c1 = rotateAbout({ x: b.x, y: b.y }, pivot, steps);
+  const c2 = rotateAbout({ x: b.x + b.width, y: b.y + b.height }, pivot, steps);
+  return {
+    x: Math.round(Math.min(c1.x, c2.x)),
+    y: Math.round(Math.min(c1.y, c2.y)),
+    width: Math.round(Math.abs(c2.x - c1.x)),
+    height: Math.round(Math.abs(c2.y - c1.y)),
+  };
+}
+
 function leafChanges(
   leaf: LeafObject,
   pivot: Vec,
@@ -42,21 +63,26 @@ function leafChanges(
 ): ObjectChanges {
   if (leaf.type === "line") {
     const p = leaf.props as { angle: number };
-    const a = rotateAbout({ x: leaf.x, y: leaf.y }, pivot, steps);
     const angle = (((p.angle + 90 * steps) % 360) + 360) % 360;
+    // Axis-aligned bars emit ^GB, whose ^FO anchor is NOT the bbox top-left for
+    // every angle: 180 anchors at the top-right, 270 at the bottom-left (see
+    // line.toZPL). Rotating the raw anchor would land off by `thickness` when the
+    // turn changes that convention, so rotate the bbox then re-anchor.
+    if (isAxisAligned(p.angle)) {
+      const r = rotatedRect(leaf, pivot, steps, ctx);
+      const x = angle === 180 ? r.x + r.width : r.x;
+      const y = angle === 270 ? r.y + r.height : r.y;
+      return { x, y, props: { angle } };
+    }
+    // Diagonal (^GD): the anchor is a centreline endpoint, so rotating it about
+    // the pivot keeps the line rigid.
+    const a = rotateAbout({ x: leaf.x, y: leaf.y }, pivot, steps);
     return { x: Math.round(a.x), y: Math.round(a.y), props: { angle } };
   }
 
-  // Box / ellipse: rotate two opposite corners. Integer corners about an integer
-  // pivot stay integer (a quarter turn maps the lattice onto itself), so this is
-  // exact (no rounding drift) and the dims swap for odd steps automatically.
   if (leaf.type === "box" || leaf.type === "ellipse") {
-    const b = objectBoundsDots(leaf, ctx);
-    const c1 = rotateAbout({ x: b.x, y: b.y }, pivot, steps);
-    const c2 = rotateAbout({ x: b.x + b.width, y: b.y + b.height }, pivot, steps);
-    const x = Math.min(c1.x, c2.x);
-    const y = Math.min(c1.y, c2.y);
-    return { x, y, props: { width: Math.abs(c2.x - c1.x), height: Math.abs(c2.y - c1.y) } };
+    const r = rotatedRect(leaf, pivot, steps, ctx);
+    return { x: r.x, y: r.y, props: { width: r.width, height: r.height } };
   }
 
   // Symbol / image: footprint can't turn (Zebra rotates only the symbol glyph,
