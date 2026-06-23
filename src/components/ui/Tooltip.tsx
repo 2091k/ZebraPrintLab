@@ -2,12 +2,14 @@ import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from
 import type { ReactElement, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAnchoredPosition } from "../../hooks/useAnchoredPosition";
+import { resolveTooltipPosition } from "../../lib/tooltipPosition";
 
 interface TooltipProps {
   /** Hover/focus hint. Falsy renders the child untouched (no wrapper). */
   content: ReactNode;
   /** Single focusable element; gets aria-describedby while the tip is open. */
   children: ReactElement;
+  /** Preferred side; flips automatically when there's no room. */
   placement?: "top" | "bottom";
   /** Hover dwell before showing; shorter than native title's ~1s. */
   delayMs?: number;
@@ -18,18 +20,28 @@ interface TooltipProps {
 /**
  * Hover/focus tooltip that replaces native `title`. Listeners sit on a wrapper
  * span so a `disabled` child still triggers it (disabled controls swallow their
- * own events). Portaled to body with fixed coords so the scrollable properties
- * panel can't clip it; repositions on scroll/resize.
+ * own events). Portaled to body with fixed coords; the position is measured from
+ * the rendered tip so it flips to the side with room and clamps into the
+ * viewport (never clipped behind the top menu bar or a side edge).
  */
 export function Tooltip({ content, children, placement = "top", delayMs = 120, className }: TooltipProps) {
   const id = useId();
   const wrapRef = useRef<HTMLSpanElement>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef(0);
   const [open, setOpen] = useState(false);
-  const pos = useAnchoredPosition(wrapRef, open, (r) => ({
-    top: placement === "top" ? r.top - 6 : r.bottom + 6,
-    left: r.left + r.width / 2,
-  }));
+
+  // The tip is rendered (hidden) whenever open, so its size is known by the time
+  // useAnchoredPosition measures; resolveTooltipPosition then flips/clamps it.
+  const pos = useAnchoredPosition(wrapRef, open, (a) => {
+    const t = tipRef.current?.getBoundingClientRect();
+    return resolveTooltipPosition(
+      a,
+      { width: t?.width ?? 0, height: t?.height ?? 0 },
+      { width: window.innerWidth, height: window.innerHeight },
+      { preferred: placement },
+    );
+  });
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
@@ -65,17 +77,15 @@ export function Tooltip({ content, children, placement = "top", delayMs = 120, c
       onBlur={hide}
     >
       {trigger}
-      {open && pos &&
+      {open &&
         createPortal(
           <div
+            ref={tipRef}
             id={id}
             role="tooltip"
-            className="fixed z-[60] px-2 py-1 rounded bg-surface border border-border text-[10px] font-mono text-text shadow-lg pointer-events-none max-w-64 whitespace-normal"
-            style={{
-              top: pos.top,
-              left: pos.left,
-              transform: placement === "top" ? "translate(-50%, -100%)" : "translateX(-50%)",
-            }}
+            // Hidden until measured to avoid a flash at the provisional 0,0.
+            className="fixed z-[60] px-2 py-1 rounded bg-surface border border-border text-[10px] font-mono text-text shadow-lg pointer-events-none max-w-xs whitespace-normal break-words"
+            style={{ top: pos?.top ?? 0, left: pos?.left ?? 0, opacity: pos ? 1 : 0 }}
           >
             {content}
           </div>,

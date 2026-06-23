@@ -482,10 +482,8 @@ export function VariableMappingModal({ onClose }: Props) {
         </div>
 
         {virtualRows.length > 0 && (
-          <div
-            className="flex items-center gap-2 font-mono text-xs text-text"
-            title={tv.csvActiveRowTooltip}
-          >
+          <Tooltip content={tv.csvActiveRowTooltip} className="w-full">
+          <div className="flex w-full items-center gap-2 font-mono text-xs text-text">
             <label htmlFor="variable-mapping-preview-row" className="text-muted">
               {tv.csvActiveRowLabel}:
             </label>
@@ -510,6 +508,7 @@ export function VariableMappingModal({ onClose }: Props) {
               {tv.csvActiveRowOf} {virtualRows.length}
             </span>
           </div>
+          </Tooltip>
         )}
 
         <CollapsibleSection

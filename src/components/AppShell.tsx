@@ -67,16 +67,17 @@ function ExpandStrip({
 }) {
   const Icon = side === "left" ? ChevronDoubleRightIcon : ChevronDoubleLeftIcon;
   return (
-    <button
-      onClick={onExpand}
-      title={title}
-      aria-label={title}
-      className={`w-5 shrink-0 ${
-        side === "left" ? "border-r" : "border-l"
-      } border-border bg-surface hover:bg-surface-2 flex items-start justify-center pt-2 text-muted hover:text-text transition-colors`}
-    >
-      <Icon className="w-3.5 h-3.5" />
-    </button>
+    <Tooltip content={title} className="shrink-0 h-full">
+      <button
+        onClick={onExpand}
+        aria-label={title}
+        className={`w-5 h-full ${
+          side === "left" ? "border-r" : "border-l"
+        } border-border bg-surface hover:bg-surface-2 flex items-start justify-center pt-2 text-muted hover:text-text transition-colors`}
+      >
+        <Icon className="w-3.5 h-3.5" />
+      </button>
+    </Tooltip>
   );
 }
 
@@ -375,14 +376,15 @@ export function AppShell() {
         ) : (
           <aside className="w-56 shrink-0 border-r border-border bg-surface flex flex-col min-h-0">
             <div className="shrink-0 flex justify-end border-b border-border bg-surface px-1 py-0.5">
-              <button
-                onClick={leftPanel.collapse}
-                title={t.app.collapse}
-                aria-label={t.app.collapse}
-                className="p-0.5 text-muted hover:text-text transition-colors"
-              >
-                <ChevronDoubleLeftIcon className="w-3.5 h-3.5" />
-              </button>
+              <Tooltip content={t.app.collapse}>
+                <button
+                  onClick={leftPanel.collapse}
+                  aria-label={t.app.collapse}
+                  className="p-0.5 text-muted hover:text-text transition-colors"
+                >
+                  <ChevronDoubleLeftIcon className="w-3.5 h-3.5" />
+                </button>
+              </Tooltip>
             </div>
             <ObjectPalette />
           </aside>
