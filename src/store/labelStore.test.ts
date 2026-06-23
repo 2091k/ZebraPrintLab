@@ -198,6 +198,65 @@ describe('convertObjectType', () => {
   });
 });
 
+// ── palette rows ──────────────────────────────────────────────────────────────
+
+describe('palette rows', () => {
+  const tv = (rows: { type: string; variant: string }[]) => rows.map((r) => ({ type: r.type, variant: r.variant }));
+  beforeEach(() => {
+    useLabelStore.setState({ paletteRows: [{ id: 'text', type: 'text', variant: 'text' }] });
+    state().setPaletteView('list');
+  });
+
+  it('addPaletteRow appends at the type default variant (duplicates allowed)', () => {
+    state().addPaletteRow('shape');
+    expect(tv(state().paletteRows)).toEqual([
+      { type: 'text', variant: 'text' },
+      { type: 'shape', variant: 'line' },
+    ]);
+    // Generated, distinct id for the stable drag key.
+    expect(state().paletteRows[1]?.id).not.toBe(state().paletteRows[0]?.id);
+  });
+
+  it('removePaletteRow drops by index', () => {
+    state().addPaletteRow('shape');
+    state().removePaletteRow(0);
+    expect(tv(state().paletteRows)).toEqual([{ type: 'shape', variant: 'line' }]);
+  });
+
+  it('setPaletteRowVariant updates one row', () => {
+    state().setPaletteRowVariant(0, 'text-fb');
+    expect(state().paletteRows[0]).toMatchObject({ type: 'text', variant: 'text-fb' });
+  });
+
+  it('setPaletteView toggles the view', () => {
+    state().setPaletteView('flat');
+    expect(state().paletteView).toBe('flat');
+  });
+
+  it('reorderPaletteRows moves a row by id; no-ops on unknown or equal id', () => {
+    useLabelStore.setState({
+      paletteRows: [
+        { id: 'a', type: 'text', variant: 'text' },
+        { id: 'b', type: 'shape', variant: 'line' },
+        { id: 'c', type: 'image', variant: 'image' },
+      ],
+    });
+    state().reorderPaletteRows('c', 'a');
+    expect(state().paletteRows.map((r) => r.id)).toEqual(['c', 'a', 'b']);
+    state().reorderPaletteRows('a', 'a');
+    state().reorderPaletteRows('missing', 'a');
+    expect(state().paletteRows.map((r) => r.id)).toEqual(['c', 'a', 'b']);
+  });
+
+  it('togglePaletteEditing flips the curation flag', () => {
+    expect(state().paletteEditing).toBe(false);
+    state().togglePaletteEditing();
+    expect(state().paletteEditing).toBe(true);
+    state().togglePaletteEditing();
+    expect(state().paletteEditing).toBe(false);
+  });
+});
+
 // ── removeObject ──────────────────────────────────────────────────────────────
 
 describe('removeObject', () => {
@@ -1466,6 +1525,50 @@ describe('migrateLegacy — v4→v5 printerProfile extraction', () => {
       label: Record<string, unknown>;
     };
     expect(migrated.label.customFonts).toBeUndefined();
+  });
+
+  it('v8→v9 backfills unique paletteRow ids so sortable keys never collide', () => {
+    const persisted = {
+      paletteRows: [
+        { type: 'text', variant: 'text' },
+        { type: 'shape', variant: 'line' },
+        { type: 'shape', variant: 'box' },
+      ],
+    };
+    const migrated = migrateLegacy(persisted, 8) as { paletteRows: { id: string }[] };
+    const ids = migrated.paletteRows.map((r) => r.id);
+    expect(ids.every((id) => typeof id === 'string' && id.length > 0)).toBe(true);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('v8→v9 keeps already-valid unique ids untouched', () => {
+    const persisted = {
+      paletteRows: [
+        { id: 'text', type: 'text', variant: 'text' },
+        { id: 'image', type: 'image', variant: 'image' },
+      ],
+    };
+    const migrated = migrateLegacy(persisted, 8) as { paletteRows: { id: string }[] };
+    expect(migrated.paletteRows.map((r) => r.id)).toEqual(['text', 'image']);
+  });
+
+  it('v8→v9 drops the dead paletteFavorites key', () => {
+    const persisted = { paletteFavorites: ['text', 'box'] };
+    const migrated = migrateLegacy(persisted, 8) as Record<string, unknown>;
+    expect('paletteFavorites' in migrated).toBe(false);
+  });
+
+  it('v8→v9 backfill stays unique when a legacy id collides with the fallback', () => {
+    // 'shape-1' is exactly what the id-less second row would generate.
+    const persisted = {
+      paletteRows: [
+        { id: 'shape-1', type: 'text', variant: 'text' },
+        { type: 'shape', variant: 'line' },
+      ],
+    };
+    const migrated = migrateLegacy(persisted, 8) as { paletteRows: { id: string }[] };
+    const ids = migrated.paletteRows.map((r) => r.id);
+    expect(new Set(ids).size).toBe(2);
   });
 });
 

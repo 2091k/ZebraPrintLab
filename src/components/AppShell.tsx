@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { DndContext, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { makePaletteCollision } from "../dnd/collision";
 import { ObjectPalette } from "./Palette/ObjectPalette";
+import { PaletteViewToggle } from "./Palette/PaletteViewToggle";
+import { PaletteEditToggle } from "./Palette/PaletteEditToggle";
 import { LabelCanvas } from "./Canvas/LabelCanvas";
 import type { LabelCanvasHandle } from "./Canvas/LabelCanvas";
 import { RightSidebar } from "./RightSidebar/RightSidebar";
@@ -115,6 +118,8 @@ export function AppShell() {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
+  const paletteEditing = useLabelStore((s) => s.paletteEditing);
+  const collisionDetection = makePaletteCollision(paletteEditing);
 
   useGlobalShortcuts();
   const { handleNew, handleSave, handleLoad, loadInputRef, loadError, dismissLoadError } = useDesignFileActions();
@@ -369,22 +374,26 @@ export function AppShell() {
       )}
 
       {/* Main area: 3 columns */}
-      <DndContext sensors={sensors}>
+      <DndContext sensors={sensors} collisionDetection={collisionDetection}>
       <div className="flex flex-1 min-h-0">
         {leftPanel.collapsed ? (
           <ExpandStrip side="left" onExpand={leftPanel.expand} title={t.app.expand} />
         ) : (
           <aside className="w-56 shrink-0 border-r border-border bg-surface flex flex-col min-h-0">
-            <div className="shrink-0 flex justify-end border-b border-border bg-surface px-1 py-0.5">
+            <div className="shrink-0 flex border-b border-border bg-surface">
               <Tooltip content={t.app.collapse}>
                 <button
                   onClick={leftPanel.collapse}
                   aria-label={t.app.collapse}
-                  className="p-0.5 text-muted hover:text-text transition-colors"
+                  className="px-2 flex items-center justify-center border-r border-border text-muted hover:text-text transition-colors"
                 >
                   <ChevronDoubleLeftIcon className="w-3.5 h-3.5" />
                 </button>
               </Tooltip>
+              <div className="flex flex-1 items-center px-2">
+                <PaletteEditToggle />
+              </div>
+              <PaletteViewToggle />
             </div>
             <ObjectPalette />
           </aside>

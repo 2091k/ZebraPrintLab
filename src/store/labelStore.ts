@@ -141,6 +141,37 @@ export function migrateLegacy(persistedState: unknown, version: number): unknown
     }
   }
 
+  // v8→v9: paletteRows replaced the old paletteFavorites and gained a stable
+  // `id` (the sortable/reorder key). Saves from before the field rehydrate with
+  // id=undefined, collapsing every sortable id to `palrow-undefined`, so dnd-kit
+  // keeps only the last row. Drop the dead favorites key and backfill ids,
+  // guaranteeing uniqueness so the fallback can't recreate the collision.
+  if (version < 9) {
+    if ('paletteFavorites' in s) {
+      s = { ...s };
+      delete (s as Record<string, unknown>).paletteFavorites;
+    }
+    if (Array.isArray(s.paletteRows)) {
+      const seen = new Set<string>();
+      s = {
+        ...s,
+        paletteRows: (s.paletteRows as unknown[]).map((r, i) => {
+          const row = r && typeof r === 'object' ? (r as Record<string, unknown>) : {};
+          const type = typeof row.type === 'string' ? row.type : 'text';
+          let id = typeof row.id === 'string' && row.id ? row.id : '';
+          if (!id || seen.has(id)) {
+            let n = i;
+            do {
+              id = `${type}-${n++}`;
+            } while (seen.has(id));
+          }
+          seen.add(id);
+          return { ...row, id };
+        }),
+      };
+    }
+  }
+
   // Re-validate the rehydrated profile so a legacy snapshot that
   // violates the schema or a cross-field rule can't crash the slice's
   // safeParse on the next patch. Cross-field issues report a path
@@ -246,7 +277,8 @@ export const persistPartialize = (state: LabelState) => ({
   theme: state.theme,
   labelaryNoticeAcknowledged: state.labelaryNoticeAcknowledged,
   canvasSettings: state.canvasSettings,
-  paletteFavorites: state.paletteFavorites,
+  paletteRows: state.paletteRows,
+  paletteView: state.paletteView,
   showZplCommands: state.showZplCommands,
   variables: state.variables,
   csvMapping: state.csvMapping,
@@ -278,7 +310,7 @@ export const useLabelStore = create<LabelState>()(
     }),
     {
       name: 'zpl-designer-session',
-      version: 8,
+      version: 9,
       migrate: (persistedState, version) => migrateLegacy(persistedState, version) as LabelState,
       storage: createJSONStorage(() => localStorage),
       partialize: persistPartialize,

@@ -8,6 +8,7 @@ import {
   thirdPartyDefaults,
 } from '../labelStore.internals';
 import type { LabelState } from '../labelStore';
+import { defaultPaletteRows, variantsOfType } from '../../registry/paletteTypes';
 
 export interface CanvasSettings {
   showGrid: boolean;
@@ -41,6 +42,16 @@ export type PrinterSettingsTab =
 
 export type SidebarTab = 'properties' | 'layers' | 'variables' | 'fonts';
 
+/** One curated palette entry instance: a registry/preset variant under a
+ *  curated type. Duplicates allowed (two `shape` rows: line + box); `id` is the
+ *  stable per-row key drag-reorder needs (content isn't unique). */
+export interface PaletteRow {
+  id: string;
+  type: string;
+  variant: string;
+}
+export type PaletteView = 'list' | 'flat';
+
 /** What a ^FB block's resize handles edit: the wrap frame (blockWidth /
  *  line cap) or the glyphs (font width = stretch / height). Alt+drag flips
  *  it for one drag. Transient editor state; never stored in the design. */
@@ -65,9 +76,15 @@ export interface UiSlice {
   /** Whether the user has dismissed the one-time Labelary privacy notice. */
   labelaryNoticeAcknowledged: boolean;
   canvasSettings: CanvasSettings;
-  /** Palette favorites: registry type-IDs the user pinned to the top of the
-   *  object palette. Persisted (a UI preference), not undoable. */
-  paletteFavorites: string[];
+  /** Curated object-palette rows ({type, variant} instances, duplicates
+   *  allowed) and the palette view mode. Persisted UI preferences, not
+   *  undoable; default = one row per type at its default variant. */
+  paletteRows: PaletteRow[];
+  paletteView: PaletteView;
+  /** Curation mode for the type-list: shows remove buttons + "add type" and
+   *  turns the grip into a reorder handle (canvas-spawn drag is suspended).
+   *  Transient editor state, not persisted. */
+  paletteEditing: boolean;
   /** Power-user opt-in: show the emitted ZPL command next to each properties
    *  field. Persisted UI preference; default off so beginners aren't burdened. */
   showZplCommands: boolean;
@@ -100,8 +117,14 @@ export interface UiSlice {
   setThirdPartyEnabled: (service: 'labelary', enabled: boolean) => void;
   acknowledgeLabelaryNotice: () => void;
   setCanvasSettings: (settings: Partial<CanvasSettings>) => void;
-  /** Pin/unpin a registry type in the palette favorites. */
-  toggleFavorite: (type: string) => void;
+  /** Append a row for `type` at its default variant (duplicates allowed). */
+  addPaletteRow: (type: string) => void;
+  removePaletteRow: (index: number) => void;
+  /** Move the row with `activeId` to where `overId` sits (drag-reorder). */
+  reorderPaletteRows: (activeId: string, overId: string) => void;
+  setPaletteRowVariant: (index: number, variant: string) => void;
+  setPaletteView: (view: PaletteView) => void;
+  togglePaletteEditing: () => void;
   setShowZplCommands: (show: boolean) => void;
   setSidebarTab: (tab: SidebarTab) => void;
   setBlockDragMode: (mode: BlockDragMode) => void;
@@ -133,7 +156,9 @@ export const createUiSlice: StateCreator<LabelState, [], [], UiSlice> = (set) =>
     viewRotation: 0,
     csvRenderMode: 'preview',
   },
-  paletteFavorites: [],
+  paletteRows: defaultPaletteRows(),
+  paletteView: 'list',
+  paletteEditing: false,
   showZplCommands: false,
   sidebarTab: 'properties',
   blockDragMode: 'frame',
@@ -151,12 +176,32 @@ export const createUiSlice: StateCreator<LabelState, [], [], UiSlice> = (set) =>
   acknowledgeLabelaryNotice: () => set({ labelaryNoticeAcknowledged: true }),
   setCanvasSettings: (settings) =>
     set((state) => ({ canvasSettings: { ...state.canvasSettings, ...settings } })),
-  toggleFavorite: (type) =>
+  addPaletteRow: (type) =>
+    set((state) => {
+      const variant = variantsOfType(type)[0];
+      if (!variant) return {};
+      const id = `${type}-${crypto.randomUUID().slice(0, 8)}`;
+      return { paletteRows: [...state.paletteRows, { id, type, variant }] };
+    }),
+  removePaletteRow: (index) =>
+    set((state) => ({ paletteRows: state.paletteRows.filter((_, i) => i !== index) })),
+  reorderPaletteRows: (activeId, overId) =>
+    set((state) => {
+      const from = state.paletteRows.findIndex((r) => r.id === activeId);
+      const to = state.paletteRows.findIndex((r) => r.id === overId);
+      if (from < 0 || to < 0 || from === to) return {};
+      const rows = state.paletteRows.slice();
+      const [moved] = rows.splice(from, 1);
+      if (!moved) return {};
+      rows.splice(to, 0, moved);
+      return { paletteRows: rows };
+    }),
+  setPaletteRowVariant: (index, variant) =>
     set((state) => ({
-      paletteFavorites: state.paletteFavorites.includes(type)
-        ? state.paletteFavorites.filter((t) => t !== type)
-        : [...state.paletteFavorites, type],
+      paletteRows: state.paletteRows.map((r, i) => (i === index ? { ...r, variant } : r)),
     })),
+  setPaletteView: (view) => set({ paletteView: view }),
+  togglePaletteEditing: () => set((state) => ({ paletteEditing: !state.paletteEditing })),
   setShowZplCommands: (show) => set({ showZplCommands: show }),
   setSidebarTab: (tab) => set({ sidebarTab: tab }),
   setBlockDragMode: (mode) => set({ blockDragMode: mode }),
