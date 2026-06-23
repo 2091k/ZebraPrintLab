@@ -1,119 +1,210 @@
 import { useState } from 'react';
-import { useDraggable } from '@dnd-kit/core';
-import { StarIcon } from '@heroicons/react/16/solid';
-import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
+import { useDraggable, useDndMonitor } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { ChevronDownIcon, MinusIcon, PlusIcon } from '@heroicons/react/16/solid';
 import { PALETTE_GROUPS } from './paletteGroups';
-import { addablesInGroup, resolveAddable, type AddableEntry } from './palettePresets';
+import { addablesInGroup, resolveAddable, type AddableEntry } from '../../registry/palettePresets';
+import { PALETTE_TYPES, variantsOfType } from '../../registry/paletteTypes';
 import { useT } from '../../lib/useT';
 import { useLabelStore } from '../../store/labelStore';
 import { mmToDots } from '../../lib/coordinates';
-import type { ObjectTypeDefinition } from '../../types/ObjectType';
 import { resolveDefaultSizeDots } from '../../lib/resolveDefaultSize';
 import { DragHandleIcon } from '../ui/DragHandleIcon';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { inputCls } from '../ui/formStyles';
-import type { PaletteDragData } from '../../dnd/types';
+import { rowDragId, isRowDragId, ROW_PREFIX, type PaletteDragData } from '../../dnd/types';
+import type { Translations } from '../../locales';
+import type { PaletteRow } from '../../store/slices/uiSlice';
 
-interface PaletteEntryProps {
-  /** Unique within the palette: registry type or virtual entry id. */
-  id: string;
-  /** Registry type to instantiate. Equals `id` for non-virtual entries. */
-  type: string;
-  icon: string;
-  /** Primary ZPL command, shown in the icon slot in power-user mode. */
-  zplCmd?: string;
-  label: string;
-  defaultSize: ObjectTypeDefinition["defaultSize"];
-  propsOverride?: object;
-  isFavorite: boolean;
-  onToggleFavorite: () => void;
-  favoriteLabel: string;
+/** Curated-type name: reuses the registry/group labels; only "Form" is new. */
+function typeLabel(typeId: string, t: Translations): string {
+  switch (typeId) {
+    case 'shape': return t.palette.typeForm;
+    case 'code-1d': return t.palette.groupCode1d;
+    case 'code-2d': return t.palette.groupCode2d;
+    case 'code-postal': return t.palette.groupCodePostal;
+    default: return (t.types as Record<string, string>)[typeId] ?? typeId;
+  }
 }
 
-function PaletteEntry({ id, type, icon, zplCmd, label, defaultSize, propsOverride, isFavorite, onToggleFavorite, favoriteLabel }: PaletteEntryProps) {
-  const addObject = useLabelStore((s) => s.addObject);
-  const showZplCommands = useLabelStore((s) => s.showZplCommands);
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
-    id: `palette-${id}`,
-    data: { type, propsOverride } satisfies PaletteDragData,
-  });
+/** Drop an entry centred on the label (double-click / "no drag" path). */
+function spawnCentered(entry: AddableEntry) {
+  const addObject = useLabelStore.getState().addObject;
+  const { label } = useLabelStore.getState();
+  const size = resolveDefaultSizeDots(entry.defaultSize, label);
+  addObject(
+    entry.type,
+    {
+      x: Math.round(mmToDots(label.widthMm, label.dpmm) / 2 - size.width / 2),
+      y: Math.round(mmToDots(label.heightMm, label.dpmm) / 2 - size.height / 2),
+    },
+    entry.propsOverride,
+  );
+}
 
-  const handleDoubleClick = () => {
-    const { label: labelConfig } = useLabelStore.getState();
-    const size = resolveDefaultSizeDots(defaultSize, labelConfig);
-    addObject(
-      type,
-      {
-        x: Math.round(mmToDots(labelConfig.widthMm, labelConfig.dpmm) / 2 - size.width / 2),
-        y: Math.round(mmToDots(labelConfig.heightMm, labelConfig.dpmm) / 2 - size.height / 2),
-      },
-      propsOverride,
-    );
-  };
+const rowBodyCls =
+  'group flex items-center gap-2 px-1.5 py-1.5 rounded border border-transparent hover:border-border-2 hover:bg-surface-2 cursor-grab active:cursor-grabbing select-none transition-colors';
+const gripCls =
+  '-mr-1 shrink-0 p-0.5 rounded cursor-grab active:cursor-grabbing text-muted opacity-40 group-hover:opacity-70 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent transition-opacity';
 
+function IconSlot({ entry }: { entry: AddableEntry }) {
+  const showZpl = useLabelStore((s) => s.showZplCommands);
+  // Fixed-width slot so toggling glyph vs command badge never shifts the label.
   return (
-    // Pointer-drag listeners live on the whole row so it's grabbable anywhere;
-    // keyboard activation + role=button stay on the grip (setActivatorNodeRef +
-    // attributes) so the row is a plain div, not an interactive element wrapping
-    // the star button. Double-click still spawns.
+    <span className="w-8 shrink-0 flex justify-center">
+      {showZpl && entry.zplCmd ? (
+        <span className="bg-accent-dim text-accent font-mono text-[10px] leading-none rounded px-1 py-0.5">{entry.zplCmd}</span>
+      ) : (
+        <span className="font-mono text-[11px] text-muted group-hover:text-accent transition-colors">{entry.icon}</span>
+      )}
+    </span>
+  );
+}
+
+/** Flat / search entry: plain draggable that spawns on canvas drop (handled by
+ *  LabelCanvas's drag monitor reading the drag data). */
+function FlatEntry({ entry, dragId, cat }: { entry: AddableEntry; dragId: string; cat?: string }) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
+    id: `pal-${dragId}`,
+    data: { type: entry.type, propsOverride: entry.propsOverride } satisfies PaletteDragData,
+  });
+  return (
     <div
       ref={setNodeRef}
       {...listeners}
-      onDoubleClick={handleDoubleClick}
-      // pan-y, not none: lets touch users still scroll the palette list
-      // vertically while a horizontal drag onto the canvas starts a drag.
+      onDoubleClick={() => spawnCentered(entry)}
       style={{ touchAction: 'pan-y' }}
-      className={`
-        group flex items-center gap-2 px-1.5 py-1.5 rounded
-        border border-transparent
-        hover:border-border-2 hover:bg-surface-2
-        cursor-grab active:cursor-grabbing select-none transition-colors
-        ${isDragging ? 'opacity-40' : ''}
-      `}
+      className={`${rowBodyCls} ${isDragging ? 'opacity-40' : ''}`}
     >
-      <button
-        ref={setActivatorNodeRef}
-        type="button"
-        aria-label={label}
-        {...attributes}
-        className="-mr-1 shrink-0 p-0.5 rounded cursor-grab active:cursor-grabbing text-muted opacity-40 group-hover:opacity-70 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent transition-opacity"
-      >
+      <button ref={setActivatorNodeRef} type="button" aria-label={entry.label} {...attributes} className={gripCls}>
         <DragHandleIcon className="w-2 h-3.5" />
       </button>
-      {/* Fixed-width slot so toggling command/glyph never shifts the label. */}
-      <span className="w-8 shrink-0 flex justify-center">
-        {showZplCommands && zplCmd ? (
-          <span className="bg-accent-dim text-accent font-mono text-[10px] leading-none rounded px-1 py-0.5">{zplCmd}</span>
-        ) : (
-          <span className="font-mono text-[11px] text-muted group-hover:text-accent transition-colors">{icon}</span>
-        )}
-      </span>
-      <span className="text-xs text-text truncate">{label}</span>
-      {/* Stop pointerdown (the row's drag activator), click, and dblclick (the
-          row's double-click spawns an object) so a star tap only toggles and a
-          small drag on the star never starts a palette drag. */}
-      <button
-        type="button"
-        aria-label={favoriteLabel}
-        aria-pressed={isFavorite}
-        onPointerDown={(e) => e.stopPropagation()}
-        onDoubleClick={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleFavorite();
-        }}
-        className={`ml-auto shrink-0 p-0.5 rounded transition-colors focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent ${
-          isFavorite
-            ? 'text-accent'
-            : 'text-muted opacity-0 group-hover:opacity-100 hover:text-accent'
-        }`}
-      >
-        {isFavorite ? <StarIcon className="w-3.5 h-3.5" /> : <StarOutlineIcon className="w-3.5 h-3.5" />}
-      </button>
+      <IconSlot entry={entry} />
+      <span className="text-xs text-text truncate">{entry.label}</span>
+      {cat && <span className="ml-auto shrink-0 font-mono text-[9px] text-muted">{cat}</span>}
     </div>
   );
 }
 
+/** List-mode row: a curated {type,variant} instance. In normal mode the grip
+ *  drags onto the canvas to spawn and the chevron picks the variant; in edit
+ *  mode the grip reorders and a remove button appears (see PaletteEditToggle). */
+function ListRow({ row, index, editing }: { row: PaletteRow; index: number; editing: boolean }) {
+  const { type, variant } = row;
+  const t = useT();
+  const setVariant = useLabelStore((s) => s.setPaletteRowVariant);
+  const removeRow = useLabelStore((s) => s.removePaletteRow);
+  const [open, setOpen] = useState(false);
+  const entry = resolveAddable(variant, t);
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+    id: rowDragId(row.id),
+    // Spawn the chosen variant's registry type, not the curated palette type.
+    data: { type: entry?.type ?? type, propsOverride: entry?.propsOverride } satisfies PaletteDragData,
+  });
+  if (!entry) return null;
+  const variants = variantsOfType(type);
+  const showChevron = !editing && variants.length > 1;
+  // Keep the active row in place (only neighbours shift); a pointer-following
+  // transform would overflow the scroll container and add an x-scrollbar.
+  const style = {
+    transform: isDragging || !transform ? undefined : `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={isDragging ? 'opacity-40' : ''}>
+      <div
+        {...listeners}
+        onDoubleClick={editing ? undefined : () => spawnCentered(entry)}
+        style={{ touchAction: 'pan-y' }}
+        className={`${rowBodyCls} ${editing ? 'border-border-2' : ''}`}
+      >
+        <button ref={setActivatorNodeRef} type="button" aria-label={entry.label} {...attributes} className={gripCls}>
+          <DragHandleIcon className="w-2 h-3.5" />
+        </button>
+        <IconSlot entry={entry} />
+        <span className="flex flex-col min-w-0 leading-tight">
+          <span className="text-xs text-text truncate">{entry.label}</span>
+          <span className="font-mono text-[9px] text-muted truncate">{typeLabel(type, t)}</span>
+        </span>
+        {showChevron && (
+          <button
+            type="button"
+            aria-label={t.palette.pickVariant}
+            aria-expanded={open}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+            className="ml-auto shrink-0 p-0.5 rounded text-muted hover:text-text"
+          >
+            <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform ${open ? '' : '-rotate-90'}`} />
+          </button>
+        )}
+        {editing && (
+          <button
+            type="button"
+            aria-label={t.palette.removeRow}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); removeRow(index); }}
+            className="ml-auto shrink-0 flex items-center justify-center w-[18px] h-[18px] rounded-full bg-error text-white hover:opacity-80 transition-opacity"
+          >
+            <MinusIcon className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+      {open && !editing && (
+        <div className="ml-8 mt-0.5 mb-1 flex flex-col gap-0.5 border-l border-border pl-1">
+          {variants.map((v) => {
+            const ve = resolveAddable(v, t);
+            if (!ve) return null;
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => { setVariant(index, v); setOpen(false); }}
+                className={`flex items-center gap-2 px-1.5 py-1 rounded text-left transition-colors ${v === variant ? 'text-accent' : 'text-text hover:bg-surface-2'}`}
+              >
+                <span className="font-mono text-[11px] text-muted w-4 text-center">{ve.icon}</span>
+                <span className="text-xs truncate">{ve.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddTypeMenu() {
+  const t = useT();
+  const addPaletteRow = useLabelStore((s) => s.addPaletteRow);
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 px-2 py-1.5 w-full rounded text-xs font-mono border border-dashed border-border text-muted hover:text-text hover:border-border-2 transition-colors"
+      >
+        <PlusIcon className="w-3 h-3 text-accent" />
+        {t.palette.addType}
+      </button>
+      {open && (
+        <div className="mt-1 flex flex-col gap-0.5 rounded border border-border bg-surface p-1">
+          {PALETTE_TYPES.map((pt) => (
+            <button
+              key={pt.id}
+              type="button"
+              onClick={() => { addPaletteRow(pt.id); setOpen(false); }}
+              className="px-2 py-1 rounded text-left text-xs text-text hover:bg-surface-2 transition-colors"
+            >
+              {typeLabel(pt.id, t)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** Entry-count badge shown beside a group title. */
 function GroupTitle({ label, count }: { label: string; count: number }) {
@@ -128,49 +219,34 @@ function GroupTitle({ label, count }: { label: string; count: number }) {
 export function ObjectPalette() {
   const t = useT();
   const [query, setQuery] = useState('');
-  const favorites = useLabelStore((s) => s.paletteFavorites);
-  const toggleFavorite = useLabelStore((s) => s.toggleFavorite);
+  const rows = useLabelStore((s) => s.paletteRows);
+  const view = useLabelStore((s) => s.paletteView);
+  const editing = useLabelStore((s) => s.paletteEditing);
+  const reorderRows = useLabelStore((s) => s.reorderPaletteRows);
   const q = query.trim().toLowerCase();
-  const favSet = new Set(favorites);
 
-  // Resolve + filter every group once; drop empty groups so search collapses
-  // the list to just the hits (and the no-results branch can fire).
-  const groups = PALETTE_GROUPS.map((group) => ({
+  // Reorder list rows. Only active in edit mode; normal-mode row drags spawn on
+  // canvas (handled by LabelCanvas's monitor) and never reach a sibling row.
+  useDndMonitor({
+    onDragEnd({ active, over }) {
+      if (!editing) return;
+      const a = String(active.id);
+      const o = over ? String(over.id) : '';
+      if (!isRowDragId(a) || !isRowDragId(o) || a === o) return;
+      reorderRows(a.slice(ROW_PREFIX.length), o.slice(ROW_PREFIX.length));
+    },
+  });
+
+  // Flat list across every group (registry types + presets); the basis for both
+  // flat mode and search.
+  const flatGroups = PALETTE_GROUPS.map((group) => ({
     group,
-    entries: addablesInGroup(group.key, t).filter(
-      (e) => !q || e.label.toLowerCase().includes(q),
-    ),
+    entries: addablesInGroup(group.key, t).filter((e) => !q || e.label.toLowerCase().includes(q)),
   })).filter((g) => g.entries.length > 0);
-
-  // Favorites keep their pin order; drop ids that no longer resolve. Favorites
-  // are stored by entry id, so presets (line-diagonal, text-fb, ...) pin too.
-  const favEntries = favorites
-    .map((id) => resolveAddable(id, t))
-    .filter((e): e is AddableEntry => e !== null);
-
-  // `scope` keeps drag ids unique: a favorited entry renders both in the
-  // Favorites section and its own group, so the draggable id is scoped per
-  // render site while the drag data (type + propsOverride) stays identical.
-  const renderEntries = (entries: AddableEntry[], scope: string) =>
-    entries.map((e) => (
-      <PaletteEntry
-        key={`${scope}-${e.id}`}
-        id={`${scope}-${e.id}`}
-        type={e.type}
-        icon={e.icon}
-        zplCmd={e.zplCmd}
-        label={e.label}
-        defaultSize={e.defaultSize}
-        propsOverride={e.propsOverride}
-        isFavorite={favSet.has(e.id)}
-        onToggleFavorite={() => toggleFavorite(e.id)}
-        favoriteLabel={favSet.has(e.id) ? t.palette.unpinFavorite : t.palette.pinFavorite}
-      />
-    ));
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="shrink-0 bg-surface border-b border-border px-2 pt-3 pb-2">
+      <div className="shrink-0 bg-surface border-b border-border px-2 pt-3 pb-2 flex flex-col gap-2">
         <input
           type="search"
           className={inputCls}
@@ -181,46 +257,42 @@ export function ObjectPalette() {
         />
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-3 flex flex-col gap-3">
-        {q && groups.length === 0 && (
-          <p className="text-xs text-muted px-1">
-            {t.palette.noResults.replace('{q}', () => query.trim())}
-          </p>
-        )}
-
-        {/* Favorites pinned on top, only when not searching. */}
-        {!q && (
-          <CollapsibleSection
-            id="palette-favorites"
-            title={<GroupTitle label={t.palette.favorites} count={favEntries.length} />}
-          >
-            {favEntries.length > 0 ? (
-              renderEntries(favEntries, 'favorites')
-            ) : (
-              <p className="text-xs text-muted px-1 py-1">{t.palette.favoritesHint}</p>
-            )}
-          </CollapsibleSection>
-        )}
-
-        {groups.map(({ group, entries }) =>
-          // While searching, render flat always-open groups so every hit is
-          // visible; the collapsible (persisted) groups return when search clears.
-          q ? (
-            <div key={group.key} className="flex flex-col gap-0.5">
-              <p className="font-mono text-[10px] font-medium uppercase tracking-widest text-muted px-1 pb-1">
-                <GroupTitle label={t.palette[group.labelKey]} count={entries.length} />
-              </p>
-              {renderEntries(entries, group.key)}
-            </div>
+      <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-3 pt-2 flex flex-col gap-3">
+        {q ? (
+          flatGroups.length === 0 ? (
+            <p className="text-xs text-muted px-1">{t.palette.noResults.replace('{q}', () => query.trim())}</p>
           ) : (
+            <div className="flex flex-col gap-0.5">
+              {flatGroups.flatMap(({ group, entries }) =>
+                entries.map((e) => (
+                  <FlatEntry key={`${group.key}-${e.id}`} entry={e} dragId={`search-${group.key}-${e.id}`} cat={t.palette[group.labelKey]} />
+                )),
+              )}
+            </div>
+          )
+        ) : view === 'list' ? (
+          <>
+            <SortableContext items={rows.map((r) => rowDragId(r.id))} strategy={verticalListSortingStrategy}>
+              <div className="flex flex-col gap-0.5">
+                {rows.map((r, i) => (
+                  <ListRow key={r.id} row={r} index={i} editing={editing} />
+                ))}
+              </div>
+            </SortableContext>
+            {editing && <AddTypeMenu />}
+          </>
+        ) : (
+          flatGroups.map(({ group, entries }) => (
             <CollapsibleSection
               key={group.key}
               id={`palette-${group.key}`}
               title={<GroupTitle label={t.palette[group.labelKey]} count={entries.length} />}
             >
-              {renderEntries(entries, group.key)}
+              {entries.map((e) => (
+                <FlatEntry key={`${group.key}-${e.id}`} entry={e} dragId={`flat-${group.key}-${e.id}`} />
+              ))}
             </CollapsibleSection>
-          ),
+          ))
         )}
       </div>
     </div>

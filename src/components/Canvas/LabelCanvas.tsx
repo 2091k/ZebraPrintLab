@@ -10,7 +10,7 @@ import {
   useCallback,
 } from "react";
 import { useDroppable, useDndMonitor } from "@dnd-kit/core";
-import type { PaletteDragData } from "../../dnd/types";
+import { CANVAS_DROPPABLE_ID, type PaletteDragData } from "../../dnd/types";
 import { Stage, Layer, Group, Image as KImage, Rect, Transformer } from "react-konva";
 import type Konva from "konva";
 import { useLabelStore, useCurrentObjects, currentObjects, getCurrentObjects, selectPreviewLocksEditor } from "../../store/labelStore";
@@ -37,7 +37,7 @@ import { Ruler, RULER_SIZE } from "./Ruler";
 import { getEntry } from "../../registry";
 import type { LeafObject } from "../../registry";
 import { PALETTE_GROUPS } from "../Palette/paletteGroups";
-import { addablesInGroup, resolveAddable, type AddableEntry } from "../Palette/palettePresets";
+import { addablesInGroup, resolveAddable, type AddableEntry } from "../../registry/palettePresets";
 import { useColorScheme } from "../../lib/useColorScheme";
 import { useT } from "../../lib/useT";
 import { useCanvasPanZoom } from "./hooks/useCanvasPanZoom";
@@ -193,7 +193,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     pages,
   } = useLabelStore();
   const objects = useCurrentObjects();
-  const paletteFavorites = useLabelStore((s) => s.paletteFavorites);
+  const paletteRows = useLabelStore((s) => s.paletteRows);
   const previewMode = useLabelStore((s) => s.previewMode);
   const previewLocks = useLabelStore(selectPreviewLocksEditor);
   const exitPreviewMode = useLabelStore((s) => s.exitPreviewMode);
@@ -1030,15 +1030,15 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
       },
       selectAll: () => selectObjects(objects.map((o) => o.id)),
     };
-    // Add-here mirrors the palette: favorites first (when pinned), then the
+    // Add-here mirrors the palette: the curated quick list first, then the
     // registry groups in palette order, presets included. Empty groups drop out.
     const toAddable = (e: AddableEntry) => ({ id: e.id, type: e.type, label: e.label, propsOverride: e.propsOverride });
-    const favTypes = paletteFavorites
-      .map((id) => resolveAddable(id, t))
+    const quickTypes = paletteRows
+      .map((r) => resolveAddable(r.variant, t))
       .filter((e): e is AddableEntry => e !== null)
       .map(toAddable);
     const addableGroups = [
-      ...(favTypes.length ? [{ id: "favorites", label: t.palette.favorites, types: favTypes }] : []),
+      ...(quickTypes.length ? [{ id: "favorites", label: t.palette.favorites, types: quickTypes }] : []),
       ...PALETTE_GROUPS.map((g) => ({ id: g.key, label: t.palette[g.labelKey], types: addablesInGroup(g.key, t).map(toAddable) })),
     ].filter((g) => g.types.length > 0);
     const sections = buildContextMenu({
@@ -1059,7 +1059,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
 
   useDndMonitor({
     onDragMove(event) {
-      if (previewLocks || event.over?.id !== "canvas") {
+      if (previewLocks || event.over?.id !== CANVAS_DROPPABLE_ID) {
         setGhost(null);
         return;
       }
@@ -1081,7 +1081,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     onDragEnd(event) {
       setGhost(null);
       if (previewLocks) return;
-      if (event.over?.id !== "canvas") return;
+      if (event.over?.id !== CANVAS_DROPPABLE_ID) return;
       const pos = pointerToLabelDots(lastPointerRef.current.x, lastPointerRef.current.y);
       if (!pos) return;
       const dragData = event.active.data.current as PaletteDragData | undefined;
@@ -1094,7 +1094,7 @@ export const LabelCanvas = forwardRef<LabelCanvasHandle, Props>(function LabelCa
     },
   });
 
-  const { setNodeRef: setDropRef } = useDroppable({ id: "canvas" });
+  const { setNodeRef: setDropRef } = useDroppable({ id: CANVAS_DROPPABLE_ID });
 
   const mergedRef = useCallback(
     (el: HTMLDivElement | null) => {

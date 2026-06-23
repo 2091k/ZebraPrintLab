@@ -1,7 +1,7 @@
-import { ObjectRegistry, getEntry } from '../../registry';
-import type { ObjectGroup } from '../../types/LabelObject';
-import type { ObjectTypeDefinition } from '../../types/ObjectType';
-import type { Translations } from '../../locales';
+import { ObjectRegistry, getEntry } from './index';
+import type { ObjectGroup } from '../types/LabelObject';
+import type { ObjectTypeDefinition } from '../types/ObjectType';
+import type { Translations } from '../locales';
 
 /** A palette / context-menu entry that spawns an object. `id` is the stable
  *  identity (registry type, or a preset id like `line-diagonal`); `type` is the
