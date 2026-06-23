@@ -179,7 +179,7 @@ function AddTypeMenu() {
   const addPaletteRow = useLabelStore((s) => s.addPaletteRow);
   const [open, setOpen] = useState(false);
   return (
-    <div className="relative">
+    <div>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
