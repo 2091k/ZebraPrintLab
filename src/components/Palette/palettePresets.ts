@@ -51,7 +51,7 @@ function presetEntry(p: PalettePreset, t: Translations): AddableEntry {
 function registryEntry(type: string, t: Translations): AddableEntry | null {
   const def = getEntry(type);
   if (!def) return null;
-  return { id: type, type, icon: def.icon, zplCmd: def.zplCmd, label: t.types[type as keyof typeof t.types] ?? def.label, defaultSize: def.defaultSize };
+  return { id: type, type, icon: def.icon, zplCmd: def.zplCmd, label: (t.types as Record<string, string>)[type] ?? def.label, defaultSize: def.defaultSize };
 }
 
 /** Resolve an entry by id (registry type or preset id); null if unknown. Used
