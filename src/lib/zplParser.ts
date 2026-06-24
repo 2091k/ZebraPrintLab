@@ -272,13 +272,15 @@ export function parseZPL(
       ? { homeX: s.label.lhX, homeY: s.label.lhY, top: s.label.ltY }
       : undefined;
   // buildBlockOverlay throws on overlapping/out-of-bounds spans (a broken span
-  // invariant). Today that is unreachable, but catching keeps the contract
-  // total: any capture problem drops the overlay rather than crashing import.
+  // invariant). Today that is unreachable; catching keeps the contract total
+  // (any capture problem drops the overlay rather than crashing import) and the
+  // warn surfaces the parser bug should a future change ever make it reachable.
   let overlay: ParsedZPL["overlay"];
   if (opts.captureOverlay && allLinked) {
     try {
       overlay = buildBlockOverlay(zpl, overlaySpans, { regenSafe, frame });
-    } catch {
+    } catch (err) {
+      console.warn("buildBlockOverlay failed, dropping overlay for this block", err);
       overlay = undefined;
     }
   }
