@@ -101,13 +101,17 @@ function commitUniformModuleResize({
   // FT barcode's anchor inversion uses the committed post-resize bar size. For a
   // QR the firmware shift scales with magnification, so pass the committed value
   // (newModules) too, else the inverse uses the old shift and the code jumps.
+  // Pass undefined (not 0) when a dim isn't cached so the downstream nullish
+  // fallback applies instead of being defeated by a 0.
   const cache = getMeasuredSnapshot().get(obj.id);
+  const uprightW = cache?.uprightBarWDots;
+  const uprightH = cache?.uprightBarHDots;
   const model = modelPositionFromRenderedTopLeft(
     obj,
     pxToDots(renderedX - objectsOffsetX, scale, dpmm),
     pxToDots(renderedY - labelOffsetY, scale, dpmm),
-    (cache?.uprightBarWDots ?? 0) * sizeRatio,
-    (cache?.uprightBarHDots ?? 0) * sizeRatio,
+    uprightW !== undefined ? uprightW * sizeRatio : undefined,
+    uprightH !== undefined ? uprightH * sizeRatio : undefined,
     newModules,
   );
   return { x: model.x, y: model.y, props };
