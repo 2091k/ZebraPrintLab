@@ -15,7 +15,7 @@ import { getAllLeaves, isGroup } from "../types/Group";
 import type { LeafObject } from "../registry";
 import { BARCODE_1D_TYPES, STACKED_2D_TYPES, getEntry } from "../registry";
 import type { LabelConfig } from "../types/LabelConfig";
-import { objectRotation, type ZplRotation } from "../registry/rotation";
+import { isAxisSwapped, objectRotation, type ZplRotation } from "../registry/rotation";
 import { blockBoundsDots, tbBoundsDots, zebraLineWidthDots } from "./zebraTextLayout";
 import { resolveDefaultSizeDots } from "./resolveDefaultSize";
 import { QR_FO_Y_OFFSET_DOTS, QR_FT_MODULE_OFFSET } from "./bwipConstants";
@@ -55,7 +55,7 @@ function rotatedFootprint(
   height: number,
   rotation: ZplRotation,
 ): { width: number; height: number } {
-  return rotation === "R" || rotation === "B"
+  return isAxisSwapped(rotation)
     ? { width: height, height: width }
     : { width, height };
 }
