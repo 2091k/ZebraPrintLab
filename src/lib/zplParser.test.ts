@@ -258,6 +258,46 @@ describe('parseZPL — text field position', () => {
   });
 });
 
+describe('parseZPL — ^FT graphic box/line bottom-left anchor', () => {
+  // Spec p.205: a ^FT graphic origin is the bottom-left corner; the model stores
+  // the top-left, so it lifts by the box height. ^FO is the top-left verbatim.
+  it('lifts a ^FT box by its height to the top-left', () => {
+    const { objects } = parseZPL('^XA^FT100,200^GB50,40,3,B,0^FS^XZ', 8);
+    expect(objects[0]?.type).toBe('box');
+    expect(objects[0]?.positionType).toBe('FT');
+    expect(objects[0]?.x).toBe(100);
+    expect(objects[0]?.y).toBe(160); // 200 - 40
+  });
+
+  it('keeps a ^FO box at the top-left', () => {
+    const { objects } = parseZPL('^XA^FO100,200^GB50,40,3,B,0^FS^XZ', 8);
+    expect(objects[0]?.positionType).toBe('FO');
+    expect(objects[0]?.y).toBe(200);
+  });
+
+  it('lifts a ^FT horizontal line by its thickness', () => {
+    const { objects } = parseZPL('^XA^FT100,200^GB80,4,4,B,0^FS^XZ', 8);
+    expect(objects[0]?.type).toBe('line');
+    expect(objects[0]?.positionType).toBe('FT');
+    expect(objects[0]?.y).toBe(196); // 200 - 4 (thickness)
+  });
+
+  it('anchors a right-justified ^FT,1 box at the bottom-right corner', () => {
+    const { objects } = parseZPL('^XA^FT200,200,1^GB50,40,3,B,0^FS^XZ', 8);
+    expect(objects[0]?.fieldJustify).toBe('R');
+    expect(objects[0]?.x).toBe(150); // 200 - 50 (width)
+    expect(objects[0]?.y).toBe(160); // 200 - 40 (height)
+  });
+
+  it('treats z=2 (auto) like left: bottom-left anchor, no R justify', () => {
+    // Only z=1 (right) is modelled; z=2 (auto, bidirectional) narrows to left.
+    const { objects } = parseZPL('^XA^FT200,200,2^GB50,40,3,B,0^FS^XZ', 8);
+    expect(objects[0]?.fieldJustify).toBeUndefined();
+    expect(objects[0]?.x).toBe(200); // left edge, not shifted by width
+    expect(objects[0]?.y).toBe(160); // 200 - 40 (bottom-left lift)
+  });
+});
+
 describe('parseZPL — ^LH label home offset', () => {
   it('adds ^LH offset to all field positions', () => {
     const { objects } = parseZPL('^XA^LH20,10^FO30,40^A0N,30,0^FDText^FS^XZ', 8);
@@ -2058,5 +2098,43 @@ describe('^FN / template variables', () => {
     expect(variables).toHaveLength(0);
     expect(objects[0]?.variableId).toBeUndefined();
     expect(importReport.partial).toContain('^FN');
+  });
+});
+
+// ── ^FT graphic anchor (bottom corner, spec p.205) ───────────────────────────
+
+describe('parseZPL — ^FT graphic anchors lift to model top-left', () => {
+  it('^FT ^GE ellipse: bottom-left lifts by height', () => {
+    const { objects } = parseZPL('^XA^FT50,150^GE100,80,3,B^FS^XZ', 8);
+    expect(objects[0]?.type).toBe('ellipse');
+    expect(objects[0]?.positionType).toBe('FT');
+    expect(objects[0]?.x).toBe(50);
+    expect(objects[0]?.y).toBe(70); // 150 - height 80
+    expect(props(objects[0]).width).toBe(100);
+  });
+
+  it('^FT,1 ^GE ellipse: bottom-right lifts by height and shifts left by width', () => {
+    const { objects } = parseZPL('^XA^FT150,150,1^GE100,80,3,B^FS^XZ', 8);
+    expect(objects[0]?.positionType).toBe('FT');
+    expect(objects[0]?.fieldJustify).toBe('R');
+    expect(objects[0]?.x).toBe(50); // 150 - width 100
+    expect(objects[0]?.y).toBe(70); // 150 - height 80
+  });
+
+  it('^FT ^GC circle: lifts by the diameter', () => {
+    const { objects } = parseZPL('^XA^FT60,160^GC100,3,B^FS^XZ', 8);
+    expect(objects[0]?.type).toBe('ellipse');
+    expect(objects[0]?.positionType).toBe('FT');
+    expect(objects[0]?.x).toBe(60);
+    expect(objects[0]?.y).toBe(60); // 160 - diameter 100
+  });
+
+  it('^FT ^GD diagonal line: lifts the bounding box, recovers the start point', () => {
+    const { objects } = parseZPL('^XA^FT10,110^GD80,60,3,B,L^FS^XZ', 8);
+    expect(objects[0]?.type).toBe('line');
+    expect(objects[0]?.positionType).toBe('FT');
+    expect(objects[0]?.x).toBe(10);
+    expect(objects[0]?.y).toBe(50); // box top = 110 - height 60
+    expect(props(objects[0]).length).toBe(100); // sqrt(80^2 + 60^2)
   });
 });

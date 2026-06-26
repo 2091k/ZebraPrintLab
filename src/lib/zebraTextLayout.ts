@@ -100,6 +100,24 @@ export function blockInterLineExtentDots(args: {
  *  consumers don't redeclare the literal union. */
 export type ZplRotation = "N" | "R" | "I" | "B";
 
+/** Anchor to visual-top-left shift for a rotated single line: the renderer
+ *  rotates the node about obj.x/obj.y, so R/I/B move the AABB off the anchor.
+ *  Takes the already-rotated footprint. Shared by objectBounds (text bbox) and
+ *  the reverse-text ^GB so the box sits on the same footprint the render uses. */
+export function rotatedLineOffset(
+  rotation: ZplRotation,
+  fpWidth: number,
+  fpHeight: number,
+): { x: number; y: number } {
+  switch (rotation) {
+    case "R": return { x: -fpWidth, y: 0 };
+    case "I": return { x: -fpWidth, y: -fpHeight };
+    case "B": return { x: 0, y: -fpHeight };
+    case "N":
+    default: return { x: 0, y: 0 };
+  }
+}
+
 const neg = (v: number) => (v === 0 ? 0 : -v);
 
 /** Display-space start of line `lineIndex` inside a per-Text rotated

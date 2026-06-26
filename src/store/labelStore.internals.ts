@@ -21,7 +21,7 @@ export function isLockBypass(changes: ObjectChanges): boolean {
  *  emits as a leading `^FX`. Pure metadata (lock/visible/name/includeInExport)
  *  keeps the replay valid. The `dirtyTracking` middleware reads this to stamp
  *  `dirty` centrally; mutators no longer set it themselves. */
-export const EMIT_AFFECTING_KEYS = new Set(['x', 'y', 'rotation', 'positionType', 'variableId', 'props', 'comment', 'type']);
+export const EMIT_AFFECTING_KEYS = new Set(['x', 'y', 'rotation', 'positionType', 'fieldJustify', 'variableId', 'props', 'comment', 'type']);
 
 /** Label-config keys that never reach emitted ZPL (design-time editor aids
  *  only). Everything else maps to a config command, so changing it would make

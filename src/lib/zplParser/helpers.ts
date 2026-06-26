@@ -143,6 +143,22 @@ export function makeObj(
   } as unknown as LabelObject;
 }
 
+/** Convert an imported graphic anchor to the model's top-left. `^FT` anchors a
+ *  bottom corner (spec p.205): bottom-left, or bottom-right (z=1) when justify
+ *  is "R". Lift by the height and, for "R", shift left by the width. `^FO` is
+ *  already top-left. Mirrors the generator's {@link graphicAnchor}. */
+export function ftTopLeft(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  positionType: "FO" | "FT",
+  justify: "L" | "R",
+): { x: number; y: number } {
+  if (positionType !== "FT") return { x, y };
+  return { x: justify === "R" ? x - w : x, y: y - h };
+}
+
 /** Derive a Variable name from a `^FX` comment that landed just before
  *  the `^FN`. Strips well-known prefixes (`Field:`, `Variable:`, `Var:`)
  *  so "Field: Customer Name" becomes `Customer_Name`. Returns null when

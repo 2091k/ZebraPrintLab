@@ -13,6 +13,27 @@ export function fieldPos(obj: LabelObjectBase): string {
   return `^${cmd}${obj.x},${obj.y}`;
 }
 
+/** Anchor for a graphic of footprint w x h at top-left (x, y). `^FO` emits the
+ *  top-left verbatim; `^FT` anchors a bottom corner (spec p.205): bottom-left,
+ *  or bottom-right (z=1) when right-justified. Shared by every graphic emitter
+ *  (box/ellipse/image, and the diagonal-line bounding box). */
+export function graphicAnchor(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  positionType: LabelObjectBase["positionType"],
+  justify: "L" | "R" | undefined,
+): string {
+  if (positionType !== "FT") return `^FO${x},${y}`;
+  return justify === "R" ? `^FT${x + w},${y + h},1` : `^FT${x},${y + h}`;
+}
+
+/** {@link graphicAnchor} for an object whose `x`/`y` is the footprint top-left. */
+export function graphicFieldPos(obj: LabelObjectBase, w: number, h: number): string {
+  return graphicAnchor(obj.x, obj.y, w, h, obj.positionType, obj.fieldJustify);
+}
+
 /** Symmetric with parser's ^LR state flip at ^LRN. */
 export function wrapReverse(reverse: boolean | undefined, body: string): string {
   return reverse ? `^LRY${body}^LRN` : body;
@@ -69,8 +90,12 @@ export function resolveFontCmd(
   return `^A0${rotation},${fontHeight},${fontWidth}`;
 }
 
-/** Converts EM top-left model coord to ZPL anchor (cap-top/baseline). */
-export function textFieldPos(obj: TextLikeObjForFieldPos): string {
+/** Numeric ZPL anchor (cap-top/baseline) for a text-like field. */
+export function textZplAnchorCoords(obj: TextLikeObjForFieldPos): {
+  cmd: "FO" | "FT";
+  x: number;
+  y: number;
+} {
   const cmd = obj.positionType === "FT" ? "FT" : "FO";
   const metrics = getTextRenderMetrics(obj as unknown as LabelObject);
   const p = obj.props;
@@ -85,7 +110,13 @@ export function textFieldPos(obj: TextLikeObjForFieldPos): string {
     p.blockWidth ?? 0,
   );
   // ^FO/^FT take integers; firmware would truncate fractional residue anyway.
-  return `^${cmd}${Math.round(a.x)},${Math.round(a.y)}`;
+  return { cmd, x: Math.round(a.x), y: Math.round(a.y) };
+}
+
+/** Converts EM top-left model coord to ZPL anchor (cap-top/baseline). */
+export function textFieldPos(obj: TextLikeObjForFieldPos): string {
+  const a = textZplAnchorCoords(obj);
+  return `^${a.cmd}${a.x},${a.y}`;
 }
 
 /** ^FX has no ^FH escape; strip ^/~ to prevent surrounding-command termination. */

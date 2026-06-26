@@ -16,7 +16,7 @@ import type { LeafObject } from "../registry";
 import { BARCODE_1D_TYPES, STACKED_2D_TYPES, getEntry } from "../registry";
 import type { LabelConfig } from "../types/LabelConfig";
 import { isAxisSwapped, objectRotation, type ZplRotation } from "../registry/rotation";
-import { blockBoundsDots, tbBoundsDots, zebraLineWidthDots } from "./zebraTextLayout";
+import { blockBoundsDots, rotatedLineOffset, tbBoundsDots, zebraLineWidthDots } from "./zebraTextLayout";
 import { resolveDefaultSizeDots } from "./resolveDefaultSize";
 import { QR_FO_Y_OFFSET_DOTS, QR_FT_MODULE_OFFSET } from "./bwipConstants";
 
@@ -68,23 +68,6 @@ function fallbackSizeDots(
 ): { width: number; height: number } {
   const def = getEntry(obj.type)?.defaultSize;
   return def ? resolveDefaultSizeDots(def, label) : { width: 0, height: 0 };
-}
-
-/** Anchor to visual-top-left shift for one rotated line: the renderer rotates
- *  the node about obj.x/obj.y, so R/I/B move the AABB off the anchor. Takes the
- *  already-rotated footprint; mirrors blockBoundsDots. */
-function rotatedLineOffset(
-  rotation: ZplRotation,
-  fpWidth: number,
-  fpHeight: number,
-): { x: number; y: number } {
-  switch (rotation) {
-    case "R": return { x: -fpWidth, y: 0 };
-    case "I": return { x: -fpWidth, y: -fpHeight };
-    case "B": return { x: 0, y: -fpHeight };
-    case "N":
-    default: return { x: 0, y: 0 };
-  }
 }
 
 /** Single-line text/serial footprint estimate from props when no measured

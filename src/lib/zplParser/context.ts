@@ -25,6 +25,10 @@ export interface PendingReverseBg {
   rounding: number;
   reverseFlag: boolean | undefined;
   comment?: string;
+  /** ^FO vs ^FT at the stashed ^GB, so a deferred box commit anchors correctly. */
+  positionType?: "FO" | "FT";
+  /** z-justification at the stashed ^GB ('R' = right corner). */
+  justify?: "L" | "R";
   /** Overlay capture only: source span of the ^GB field, recorded at its ^FS so
    *  the object it later produces (deferred commit, or reverse-collapse merge)
    *  can be linked to its original bytes. */
@@ -120,6 +124,8 @@ export interface FieldState {
   x: number;
   y: number;
   positionIsFT: boolean;
+  /** ^FO/^FT z-justification: 'R' (z=1) anchors graphics at the right corner. */
+  justify: "L" | "R";
   // Type discriminator + pending ^FD payload
   fieldType: string | null;
   pendingFD: string | null;
@@ -276,6 +282,7 @@ export function createParserState(): ParserState {
       x: 0,
       y: 0,
       positionIsFT: false,
+      justify: "L",
       fieldType: null,
       pendingFD: null,
       frActive: false,

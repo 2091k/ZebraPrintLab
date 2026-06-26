@@ -23,6 +23,40 @@ function roundtrip(zpl: string, dpmm = 8) {
   return { first, second, label, regenerated };
 }
 
+// ── ^FT graphic bottom-left anchor round-trip ────────────────────────────────
+
+describe('round-trip — ^FT graphic bottom-left anchor', () => {
+  it('preserves the ^FT box anchor (bottom-left) across the round-trip', () => {
+    const { first, second, regenerated } = roundtrip('^XA^FT100,200^GB50,40,3,B,0^FS^XZ');
+    expect(regenerated).toContain('^FT100,200');
+    expect(first.objects[0]?.y).toBe(160); // model top-left = 200 - 40
+    expect(second.objects[0]?.y).toBe(first.objects[0]?.y);
+    expect(second.objects[0]?.positionType).toBe('FT');
+  });
+
+  it('preserves a ^FT horizontal line anchor across the round-trip', () => {
+    const { first, second, regenerated } = roundtrip('^XA^FT100,200^GB80,4,4,B,0^FS^XZ');
+    expect(regenerated).toContain('^FT100,200');
+    expect(second.objects[0]?.y).toBe(first.objects[0]?.y);
+  });
+
+  it('preserves a right-justified ^FT,1 box anchor across the round-trip', () => {
+    const { first, second, regenerated } = roundtrip('^XA^FT200,200,1^GB50,40,3,B,0^FS^XZ');
+    expect(regenerated).toContain('^FT200,200,1');
+    expect(first.objects[0]?.fieldJustify).toBe('R');
+    expect(second.objects[0]?.x).toBe(first.objects[0]?.x);
+    expect(second.objects[0]?.fieldJustify).toBe('R');
+  });
+
+  it('preserves a ^FT vertical line anchor across the round-trip', () => {
+    const { first, second, regenerated } = roundtrip('^XA^FT100,200^GB4,80,4,B,0^FS^XZ');
+    expect(regenerated).toContain('^FT100,200');
+    expect(first.objects[0]?.type).toBe('line');
+    expect(first.objects[0]?.y).toBe(120); // 200 - 80 (length)
+    expect(second.objects[0]?.y).toBe(first.objects[0]?.y);
+  });
+});
+
 // ── shipping label round-trip ────────────────────────────────────────────────
 
 const SHIPPING_ZPL = `

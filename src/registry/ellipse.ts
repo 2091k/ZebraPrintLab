@@ -1,5 +1,5 @@
 import type { ObjectTypeCore } from '../types/ObjectType';
-import { fieldPos, wrapReverse } from './zplHelpers';
+import { graphicFieldPos, wrapReverse } from './zplHelpers';
 import { commitWidthHeightTransform } from './transformHelpers';
 
 export interface EllipseProps {
@@ -57,6 +57,6 @@ export const ellipse: ObjectTypeCore<EllipseProps> = {
       p.width === p.height
         ? `^GC${p.width},${thick},${p.color}`
         : `^GE${p.width},${p.height},${thick},${p.color}`;
-    return wrapReverse(p.reverse, `${fieldPos(obj)}${cmd}^FS`);
+    return wrapReverse(p.reverse, `${graphicFieldPos(obj, p.width, p.height)}${cmd}^FS`);
   },
 };

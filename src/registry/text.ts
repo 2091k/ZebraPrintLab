@@ -5,7 +5,7 @@ import type { LabelObject } from "../types/Group";
 import { effectiveScale } from "./transformHelpers";
 import { encodeFbContent } from "../lib/fbContent";
 import { encodeTbContent } from "../lib/tbContent";
-import type { ZplRotation } from "../lib/zebraTextLayout";
+import { rotatedLineOffset, type ZplRotation } from "../lib/zebraTextLayout";
 
 /** Text layout mode. 'normal' = plain ^A (no wrap), 'fb' = ^FB field
  *  block (max-lines cap, justify, hanging indent), 'tb' = ^TB text block
@@ -189,7 +189,14 @@ export const text: ObjectTypeCore<TextProps> = {
     // promotion. ZPL promotes the box to `max(w,t) × max(h,t)`; using
     // max here would inflate a 200×30 banner into a 200×200 square.
     const gbThickness = Math.min(gbW, gbH);
-    const gb = `${anchor}^GB${gbW},${gbH},${gbThickness},B,0^FS`;
+    // Place the ^GB on the text's rotated footprint, the same AABB the render's
+    // self-bg uses (rotatedLineOffset around obj.x/obj.y). ^FO = model top-left,
+    // so it overlaps the text for every rotation and for FO/FT alike, without an
+    // anchor-relative shift. The text keeps its own ^FT/^FO baseline anchor.
+    const off = rotatedLineOffset(p.rotation, gbW, gbH);
+    const gbX = Math.round(obj.x + off.x);
+    const gbY = Math.round(obj.y + off.y);
+    const gb = `^FO${gbX},${gbY}^GB${gbW},${gbH},${gbThickness},B,0^FS`;
     return [gb, anchor, fpCmd, fontCmd, blockCmd, "^FR", fd].filter(Boolean).join("");
   },
 };

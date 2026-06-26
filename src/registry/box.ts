@@ -1,5 +1,5 @@
 import type { ObjectTypeCore } from '../types/ObjectType';
-import { fieldPos, wrapReverse } from './zplHelpers';
+import { wrapReverse, graphicFieldPos } from './zplHelpers';
 import { commitWidthHeightTransform } from './transformHelpers';
 
 export interface BoxProps {
@@ -40,7 +40,7 @@ export const box: ObjectTypeCore<BoxProps> = {
       : p.thickness;
     return wrapReverse(
       p.reverse,
-      `${fieldPos(obj)}^GB${p.width},${p.height},${t},${p.color},${p.rounding}^FS`,
+      `${graphicFieldPos(obj, p.width, p.height)}^GB${p.width},${p.height},${t},${p.color},${p.rounding}^FS`,
     );
   },
 };

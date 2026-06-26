@@ -59,13 +59,16 @@ export function createFieldHandlers(
       flushField();
       s.field.x = dots(p[0]) + s.label.lhX;
       s.field.y = dots(p[1]) + s.label.lhY + s.label.ltY;
-      // 3rd param is justification (0/1/2), stored but not actively used.
+      // 3rd param z = justification (0 left, 1 right, 2 auto). Only graphics
+      // honour it (right corner); other fields keep the left default for now.
+      s.field.justify = p[2]?.trim() === "1" ? "R" : "L";
       s.field.positionIsFT = false;
     },
     FT(p) {
       flushField();
       s.field.x = dots(p[0]) + s.label.lhX;
       s.field.y = dots(p[1]) + s.label.lhY + s.label.ltY;
+      s.field.justify = p[2]?.trim() === "1" ? "R" : "L";
       s.field.positionIsFT = true;
     },
 

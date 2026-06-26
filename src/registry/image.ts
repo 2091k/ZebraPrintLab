@@ -1,5 +1,5 @@
 import type { ObjectTypeCore } from '../types/ObjectType';
-import { fieldPos } from './zplHelpers';
+import { graphicFieldPos } from './zplHelpers';
 import { getImage } from '../lib/imageCache';
 import { formatStoragePath } from '../lib/storagePath';
 
@@ -130,20 +130,32 @@ export const image: ObjectTypeCore<ImageProps> = {
 
   toZPL: (obj) => {
     const p = obj.props;
+    const cached = getImage(p.imageId);
+    // ^FT anchors the graphic's bottom-left (spec p.205). A cached image's height
+    // is widthDots scaled by the natural aspect (resize keeps only widthDots in
+    // sync, so heightDots can be stale); placeholders/opaque graphics fall back
+    // to the stored heightDots. ^FO ignores the height.
+    const height = cached
+      ? Math.round(p.widthDots * (cached.height / cached.width))
+      : p.heightDots ?? p.widthDots;
+    // ^GF rows are byte-packed, so the printed width is the next multiple of 8
+    // (what the parser reconstructs as bytesPerRow*8). Right-justified ^FT keys
+    // its x off that width, so pad here or the round-trip drifts by up to 7.
+    const anchorWidth = Math.ceil(p.widthDots / 8) * 8;
+    const anchor = graphicFieldPos(obj, anchorWidth, height);
     // Opaque graphic: re-emit the original ^GF verbatim at the (possibly moved)
     // field position. The bytes were never decoded, so there's nothing to regen.
-    if (p.rawGf) return `${fieldPos(obj)}${p.rawGf}^FS`;
+    if (p.rawGf) return `${anchor}${p.rawGf}^FS`;
     // Recall path: upload happened in the preamble; here we just reference
     // it via ^XG. The `.GRF` extension is implicit on `~DY{path},A,G,…`;
     // Zebra firmware persists the file as `path.GRF` and `^XG` resolves
     // the dot-suffixed form.
     if (p.storedAs) {
-      return `${fieldPos(obj)}^XG${formatStoragePath(p.storedAs, true)},1,1^FS`;
+      return `${anchor}^XG${formatStoragePath(p.storedAs, true)},1,1^FS`;
     }
-    const cached = getImage(p.imageId);
-    if (!cached) return `${fieldPos(obj)}^FD^FS`;
+    if (!cached) return `${anchor}^FD^FS`;
     // Use cached GFA if available, otherwise generate synchronously
     const gfa = p._gfaCache || gfaSync(cached.dataUrl, p.widthDots, p.threshold);
-    return `${fieldPos(obj)}${gfa}^FS`;
+    return `${anchor}${gfa}^FS`;
   },
 };

@@ -6,6 +6,7 @@ import type { LabelConfig } from '../types/LabelConfig';
 import type { GroupObject, LabelObject } from '../types/Group';
 import { defined, props } from '../test/helpers';
 import { NON_EMITTING_CONFIG_KEYS } from '../store/labelStore.internals';
+import { putImage } from '../lib/imageCache';
 
 const BASE_LABEL: LabelConfig = {
   widthMm: 100,
@@ -117,6 +118,35 @@ describe('generateZPL — structure', () => {
     expect(objects[0]?.type).toBe('text');
     expect(props(objects[0]).reverse).toBe(true);
     expect(props(objects[0]).content).toBe('Hi');
+  });
+
+  it.each(['N', 'R', 'I', 'B'])('rotated reverse text round-trips for %s (^GB on the rotated footprint, collapses back)', (rot) => {
+    // The reverse ^GB is placed on the text's rotated model footprint so it
+    // overlaps for every rotation; the parser's collapse re-derives that
+    // footprint, so a rotated reverse text round-trips to ONE object (FO and FT).
+    for (const positionType of ['FO', 'FT'] as const) {
+      const objs = [
+        { id: 'r', type: 'text', x: 60, y: 60, rotation: 0, positionType,
+          props: { content: 'Hi', fontHeight: 30, fontWidth: 0, rotation: rot, reverse: true } },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as any;
+      const { objects } = parseZPL(generateZPL(BASE_LABEL, objs), 8);
+      expect(objects, `${positionType}/${rot}`).toHaveLength(1);
+      expect(objects[0]?.type).toBe('text');
+      expect(props(objects[0]).reverse).toBe(true);
+      expect(props(objects[0]).rotation).toBe(rot);
+    }
+  });
+
+  it('third-party rotated ^GB+^FR at the bare text anchor stays a separate box', () => {
+    // A rotated reverse where the ^GB sits at the same anchor as the ^FR text
+    // genuinely prints beside the text (the box does not overlap rotated text),
+    // so it must NOT collapse into a faked overlap; it stays box + reverse text.
+    const { objects } = parseZPL(
+      '^XA^FT100,200^GB30,80,30,B,0^FS^FT100,200^A0R,30,0^FR^FDHi^FS^XZ',
+      8,
+    );
+    expect(objects.length).toBe(2);
   });
 
   it('omits objects with includeInExport=false', () => {
@@ -1497,5 +1527,88 @@ describe('generateBatchZpl', () => {
     // NS-prefixed + compacted, not the raw row value.
     expect(recall).toContain('^FN1^FD0654321');
     expect(recall).not.toContain('^FN1^FD654321^FS');
+  });
+});
+
+describe('generateZPL — ^FT graphic anchors (bottom corner, spec p.205)', () => {
+  const mk = (type: string, props: object, extra: object = {}) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [{ id: 'g', type, x: 50, y: 70, rotation: 0, positionType: 'FT', props, ...extra }] as any;
+
+  it('ellipse ^GE: ^FT anchors bottom-left (y + height)', () => {
+    const zpl = generateZPL(BASE_LABEL, mk('ellipse',
+      { width: 100, height: 80, thickness: 3, filled: false, color: 'B' }));
+    expect(zpl).toContain('^FT50,150^GE100,80,3,B^FS'); // 70 + 80
+    expect(parseZPL(zpl, 8).objects[0]?.positionType).toBe('FT');
+  });
+
+  it('ellipse ^GE right-justified: ^FT,1 anchors bottom-right', () => {
+    const zpl = generateZPL(BASE_LABEL, mk('ellipse',
+      { width: 100, height: 80, thickness: 3, filled: false, color: 'B' },
+      { fieldJustify: 'R' }));
+    expect(zpl).toContain('^FT150,150,1^GE100,80,3,B^FS'); // 50+100, 70+80
+  });
+
+  it('circle ^GC: ^FT lifts by the diameter', () => {
+    const zpl = generateZPL(BASE_LABEL, mk('ellipse',
+      { width: 100, height: 100, thickness: 3, filled: false, color: 'B', lockAspect: true }));
+    expect(zpl).toContain('^FT50,170^GC100,3,B^FS'); // 70 + 100
+  });
+
+  it('image ^GF/^XG: ^FT lifts by heightDots', () => {
+    const zpl = generateZPL(BASE_LABEL, mk('image',
+      { imageId: '', widthDots: 120, heightDots: 60, threshold: 128,
+        storedAs: { device: 'R', name: 'LOGO', embedInZpl: false } }));
+    expect(zpl).toContain('^FT50,130^XGR:LOGO.GRF,1,1^FS'); // 70 + 60
+  });
+
+  it('diagonal line ^GD: ^FT anchors the bounding box bottom-left', () => {
+    // 3-4-5 at start (50,70): dx 80, dy 60 → box top-left (50,70), h 60.
+    const zpl = generateZPL(BASE_LABEL, mk('line',
+      { angle: Math.round((Math.atan2(60, 80) * 180) / Math.PI), length: 100, thickness: 3, color: 'B' }));
+    expect(zpl).toMatch(/\^FT50,130\^GD80,60,3,B,L\^FS/); // 70 + 60
+  });
+
+  it('round-trips a ^FT ellipse byte-stably through parse → emit', () => {
+    const { objects } = parseZPL('^XA^FT50,150^GE100,80,3,B^FS^XZ', 8);
+    expect(generateZPL(BASE_LABEL, objects)).toContain('^FT50,150^GE100,80,3,B^FS');
+  });
+
+  it('cached image ^FT: anchor height follows the natural aspect, not stale heightDots', () => {
+    // Resize keeps only widthDots in sync; a cached image's true height is
+    // widthDots x natural-aspect. The ^FT anchor must use that, not heightDots.
+    putImage({ id: 'imgA', name: 'a', dataUrl: 'data:,', width: 100, height: 50 });
+    const zpl = generateZPL(BASE_LABEL, mk('image',
+      { imageId: 'imgA', widthDots: 120, heightDots: 999, threshold: 128, _gfaCache: '^GFA1,1,1,00' }));
+    expect(zpl).toContain('^FT50,130'); // 70 + round(120 * 50/100) = 70 + 60
+    expect(zpl).not.toContain('^FT50,1069'); // not 70 + stale 999
+  });
+
+  it('normalizes a ^FT-anchored filled ^GB before the reverse-text collapse', () => {
+    // A known-collapsing reverse text: the generator emits the ^GB at the model
+    // top-left as ^FO. Re-anchor only the box as ^FT (y + height); the parser
+    // must normalize it back to the same top-left so the pair still collapses
+    // (raw ^FT bottom would miss the match by the height).
+    const fo = generateZPL(BASE_LABEL, [{ id: 'r', type: 'text', x: 60, y: 60, rotation: 0,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      props: { content: 'X', fontHeight: 30, fontWidth: 0, rotation: 'N', reverse: true } }] as any);
+    expect(parseZPL(fo, 8).objects).toHaveLength(1); // baseline: FO form collapses
+    const gb = fo.match(/\^FO(\d+),(\d+)\^GB(\d+),(\d+),/)!;
+    const ft = fo.replace(/\^FO\d+,\d+\^GB/, `^FT${gb[1]},${Number(gb[2]) + Number(gb[4])}^GB`);
+    const { objects } = parseZPL(ft, 8);
+    expect(objects).toHaveLength(1);
+    expect(objects[0]?.type).toBe('text');
+    expect(props(objects[0]).reverse).toBe(true);
+  });
+
+  it('cached image right-justified ^FT: anchor x uses the byte-padded ^GF width', () => {
+    // ^GF rows pad to a byte boundary: widthDots 121 prints (and re-parses) as
+    // 128, so the ^FT,1 x must key off 128, not 121, or the round-trip drifts.
+    putImage({ id: 'imgB', name: 'b', dataUrl: 'data:,', width: 121, height: 60 });
+    const zpl = generateZPL(BASE_LABEL, mk('image',
+      { imageId: 'imgB', widthDots: 121, threshold: 128, _gfaCache: '^GFA1,1,1,00' },
+      { fieldJustify: 'R' }));
+    expect(zpl).toContain('^FT178,130,1'); // x 50 + ceil(121/8)*8 = 178; y 70 + 60
+    expect(zpl).not.toContain('^FT171'); // not 50 + raw 121
   });
 });

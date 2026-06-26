@@ -6,7 +6,7 @@ import { loadFontBytesSync } from "../../fontCache";
 import { formatStoragePath, parseStoragePath } from "../../storagePath";
 import { getPosType, pushBrowserLimit, type ParserState } from "../context";
 import { decodeGraphicToImage } from "../decoders/graphic";
-import { dotsFor, int, makeObj, readColor, readRotation } from "../helpers";
+import { dotsFor, ftTopLeft, int, makeObj, readColor, readRotation } from "../helpers";
 import type { Handler } from "../types";
 
 /** Characters of a `^GF`/`~DY` payload retained in browserLimit/skipped
@@ -27,6 +27,8 @@ export interface GraphicsExports {
     rounding: number,
     reverseFlag: boolean | undefined,
     comment: string | undefined,
+    positionType: "FO" | "FT",
+    justify: "L" | "R",
   ) => void;
   /** ^LR | ^FR; returns `undefined` (not `false`) when off. */
   getReverseFlag: () => boolean | undefined;
@@ -46,58 +48,61 @@ export function createGraphicsHandlers(
   const { dots } = dotsFor(s);
 
   const pushGBObject: GraphicsExports["pushGBObject"] = (
-    gx, gy, w, h, t, color, rounding, reverseFlag, comment,
+    gx, gy, w, h, t, color, rounding, reverseFlag, comment, positionType, justify,
   ) => {
+    // ^FT graphic origin is a bottom corner (spec p.205): bottom-left, or
+    // bottom-right when z=1 (justify R). The model stores the top-left, so
+    // lift by the height and, for R, shift left by the width. ^FO is top-left.
+    const topLeftY = positionType === "FT" ? gy - h : gy;
+    const topLeftX = positionType === "FT" && justify === "R" ? gx - w : gx;
+    let obj;
     if (h === t && w > t) {
-      s.result.objects.push(
-        makeObj(
-          "line",
-          gx,
-          gy,
-          { angle: 0, length: w, thickness: t, color, reverse: reverseFlag } satisfies LineProps,
-          undefined,
-          comment,
-        ),
+      obj = makeObj(
+        "line", topLeftX, topLeftY,
+        { angle: 0, length: w, thickness: t, color, reverse: reverseFlag } satisfies LineProps,
+        positionType, comment,
       );
     } else if (w === t && h > t) {
-      s.result.objects.push(
-        makeObj(
-          "line",
-          gx,
-          gy,
-          { angle: 90, length: h, thickness: t, color, reverse: reverseFlag } satisfies LineProps,
-          undefined,
-          comment,
-        ),
+      obj = makeObj(
+        "line", topLeftX, topLeftY,
+        { angle: 90, length: h, thickness: t, color, reverse: reverseFlag } satisfies LineProps,
+        positionType, comment,
       );
     } else {
       const filled = t >= Math.min(w, h);
-      s.result.objects.push(
-        makeObj(
-          "box",
-          gx,
-          gy,
-          {
-            width: w,
-            height: h,
-            thickness: t,
-            filled,
-            color,
-            rounding,
-            reverse: reverseFlag,
-          } satisfies BoxProps,
-          undefined,
-          comment,
-        ),
+      obj = makeObj(
+        "box", topLeftX, topLeftY,
+        { width: w, height: h, thickness: t, filled, color, rounding, reverse: reverseFlag } satisfies BoxProps,
+        positionType, comment,
       );
     }
+    if (justify === "R") obj.fieldJustify = "R";
+    s.result.objects.push(obj);
+  };
+
+  /** Push a graphic of footprint w x h, converting the current ^FO/^FT field
+   *  anchor to the model top-left and stamping fieldJustify. Shared by every
+   *  graphic that anchors a bounding box (ellipse/circle/image). */
+  const pushGraphic = (
+    type: string,
+    w: number,
+    h: number,
+    props: unknown,
+    comment: string | undefined,
+  ) => {
+    const positionType = getPosType(s.field);
+    const justify = s.field.justify;
+    const { x, y } = ftTopLeft(s.field.x, s.field.y, w, h, positionType, justify);
+    const obj = makeObj(type, x, y, props, positionType, comment);
+    if (justify === "R") obj.fieldJustify = "R";
+    s.result.objects.push(obj);
   };
 
   const commitPendingReverseBg = () => {
     if (!s.reverseBg) return;
     const bg = s.reverseBg;
     s.reverseBg = null;
-    pushGBObject(bg.x, bg.y, bg.w, bg.h, bg.t, bg.color, bg.rounding, bg.reverseFlag, bg.comment);
+    pushGBObject(bg.x, bg.y, bg.w, bg.h, bg.t, bg.color, bg.rounding, bg.reverseFlag, bg.comment, bg.positionType ?? "FO", bg.justify ?? "L");
   };
 
   const handlers: Record<string, Handler> = {
@@ -116,13 +121,15 @@ export function createGraphicsHandlers(
       // Stash filled-black non-rounded GBs as reverse-bg candidates for flushField.
       const filled = t >= Math.min(w, h);
       const reverseFlag = getReverseFlag();
+      const positionType = getPosType(s.field);
+      const justify = s.field.justify;
       if (filled && color === "B" && rounding === 0 && !reverseFlag) {
         commitPendingReverseBg();
-        s.reverseBg = { x: s.field.x, y: s.field.y, w, h, t, color, rounding, reverseFlag, comment: gbComment };
+        s.reverseBg = { x: s.field.x, y: s.field.y, w, h, t, color, rounding, reverseFlag, comment: gbComment, positionType, justify };
         return;
       }
       commitPendingReverseBg();
-      pushGBObject(s.field.x, s.field.y, w, h, t, color, rounding, reverseFlag, gbComment);
+      pushGBObject(s.field.x, s.field.y, w, h, t, color, rounding, reverseFlag, gbComment, positionType, justify);
     },
     GD(p) {
       commitPendingReverseBg();
@@ -134,31 +141,37 @@ export function createGraphicsHandlers(
       const gdColor = readColor(p[3]);
       const gdOri = (p[4] ?? "L").toUpperCase();
       const gdLen = Math.round(Math.sqrt(gdW * gdW + gdH * gdH));
-      // Recover start point and angle from bounding-box FO position
+      // ^FT anchors the ^GD bounding box at a bottom corner; lift to the box
+      // top-left before recovering the start point (gdOri is the diagonal
+      // direction, distinct from the z-justify "R").
+      const posType = getPosType(s.field);
+      const justify = s.field.justify;
+      const { x: boxX, y: boxY } = ftTopLeft(s.field.x, s.field.y, gdW, gdH, posType, justify);
+      // Recover start point and angle from the bounding-box top-left.
       // 'L': dx>0,dy>0 → obj.x=boxX, angle=atan2(h,w)
       // 'R': dx<0,dy>0 → obj.x=boxX+w, angle=atan2(h,-w)
-      const gdObjX = gdOri === "R" ? s.field.x + gdW : s.field.x;
+      const gdObjX = gdOri === "R" ? boxX + gdW : boxX;
       const gdAngle = Math.round(
         gdOri === "R"
           ? (Math.atan2(gdH, -gdW) * 180) / Math.PI
           : (Math.atan2(gdH, gdW) * 180) / Math.PI,
       );
-      s.result.objects.push(
-        makeObj(
-          "line",
-          gdObjX,
-          s.field.y,
-          {
-            angle: gdAngle,
-            length: gdLen,
-            thickness: gdT,
-            color: gdColor,
-            reverse: getReverseFlag(),
-          } satisfies LineProps,
-          undefined,
-          takeComment(),
-        ),
+      const gdObj = makeObj(
+        "line",
+        gdObjX,
+        boxY,
+        {
+          angle: gdAngle,
+          length: gdLen,
+          thickness: gdT,
+          color: gdColor,
+          reverse: getReverseFlag(),
+        } satisfies LineProps,
+        posType,
+        takeComment(),
       );
+      if (justify === "R") gdObj.fieldJustify = "R";
+      s.result.objects.push(gdObj);
     },
     GF(_, rest) {
       commitPendingReverseBg();
@@ -213,41 +226,36 @@ export function createGraphicsHandlers(
         // Malformed c (<=0 or under one full row, flooring to a 0-dot sliver)
         // falls back to a square so the placeholder stays grabbable.
         const opaqueHeight = gfFieldCount > 0 ? Math.floor(gfFieldCount / gfBytesPerRow) : 0;
+        const opaqueH = opaqueHeight > 0 ? opaqueHeight : opaqueWidth;
         s.result.partialCmds.add("^GF");
-        s.result.objects.push(
-          makeObj(
-            "image",
-            s.field.x,
-            s.field.y,
-            {
-              imageId: "",
-              widthDots: opaqueWidth,
-              heightDots: opaqueHeight > 0 ? opaqueHeight : opaqueWidth,
-              threshold: 128,
-              rawGf: `^GF${format},${gfParams[0]},${gfParams[1]},${gfParams[2]},${gfRawData}`,
-            } satisfies ImageProps,
-            getPosType(s.field),
-            takeComment(),
-          ),
+        pushGraphic(
+          "image",
+          opaqueWidth,
+          opaqueH,
+          {
+            imageId: "",
+            widthDots: opaqueWidth,
+            heightDots: opaqueH,
+            threshold: 128,
+            rawGf: `^GF${format},${gfParams[0]},${gfParams[1]},${gfParams[2]},${gfRawData}`,
+          } satisfies ImageProps,
+          takeComment(),
         );
         return;
       }
       if (!gfImage.crcOk) s.result.partialCmds.add("^GF");
-      const posType = getPosType(s.field);
-      s.result.objects.push(
-        makeObj(
-          "image",
-          s.field.x,
-          s.field.y,
-          {
-            imageId: gfImage.imageId,
-            widthDots: gfImage.widthDots,
-            threshold: 128,
-            _gfaCache: gfImage.gfaCache,
-          } satisfies ImageProps,
-          posType,
-          takeComment(),
-        ),
+      pushGraphic(
+        "image",
+        gfImage.widthDots,
+        gfImage.heightDots,
+        {
+          imageId: gfImage.imageId,
+          widthDots: gfImage.widthDots,
+          heightDots: gfImage.heightDots,
+          threshold: 128,
+          _gfaCache: gfImage.gfaCache,
+        } satisfies ImageProps,
+        takeComment(),
       );
     },
     GE(p) {
@@ -258,22 +266,19 @@ export function createGraphicsHandlers(
       const t = dots(p[2], 3);
       const color = readColor(p[3]);
       const filled = t >= Math.min(w, h);
-      s.result.objects.push(
-        makeObj(
-          "ellipse",
-          s.field.x,
-          s.field.y,
-          {
-            width: w,
-            height: h,
-            thickness: t,
-            filled,
-            color,
-            reverse: getReverseFlag(),
-          } satisfies EllipseProps,
-          undefined,
-          takeComment(),
-        ),
+      pushGraphic(
+        "ellipse",
+        w,
+        h,
+        {
+          width: w,
+          height: h,
+          thickness: t,
+          filled,
+          color,
+          reverse: getReverseFlag(),
+        } satisfies EllipseProps,
+        takeComment(),
       );
     },
     GC(p) {
@@ -283,23 +288,20 @@ export function createGraphicsHandlers(
       const t = dots(p[1], 3);
       const color = readColor(p[2]);
       const filled = t >= d;
-      s.result.objects.push(
-        makeObj(
-          "ellipse",
-          s.field.x,
-          s.field.y,
-          {
-            width: d,
-            height: d,
-            thickness: t,
-            filled,
-            color,
-            lockAspect: true,
-            reverse: getReverseFlag(),
-          } satisfies EllipseProps,
-          undefined,
-          takeComment(),
-        ),
+      pushGraphic(
+        "ellipse",
+        d,
+        d,
+        {
+          width: d,
+          height: d,
+          thickness: t,
+          filled,
+          color,
+          lockAspect: true,
+          reverse: getReverseFlag(),
+        } satisfies EllipseProps,
+        takeComment(),
       );
     },
 
@@ -322,44 +324,39 @@ export function createGraphicsHandlers(
         return;
       }
       const uploaded = s.fonts.downloadedGraphics.get(formatStoragePath(parsed, true));
-      const posType = getPosType(s.field);
       if (uploaded) {
-        s.result.objects.push(
-          makeObj(
-            "image",
-            s.field.x,
-            s.field.y,
-            {
-              imageId: uploaded.imageId,
-              widthDots: uploaded.widthDots,
-              threshold: 128,
-              _gfaCache: uploaded.gfaCache,
-              storedAs: { ...parsed, embedInZpl: true },
-            } satisfies ImageProps,
-            posType,
-            takeComment(),
-          ),
+        pushGraphic(
+          "image",
+          uploaded.widthDots,
+          uploaded.heightDots,
+          {
+            imageId: uploaded.imageId,
+            widthDots: uploaded.widthDots,
+            heightDots: uploaded.heightDots,
+            threshold: 128,
+            _gfaCache: uploaded.gfaCache,
+            storedAs: { ...parsed, embedInZpl: true },
+          } satisfies ImageProps,
+          takeComment(),
         );
         return;
       }
       // Recall-only: no bytes available, but the ZPL is valid and the
       // printer side is assumed to resolve. Surface as partial so the
-      // import report flags the degraded preview.
+      // import report flags the degraded preview. No real dims; the square
+      // placeholder doubles as the ^FT footprint.
       s.result.partialCmds.add("^XG");
-      s.result.objects.push(
-        makeObj(
-          "image",
-          s.field.x,
-          s.field.y,
-          {
-            imageId: "",
-            widthDots: 200,
-            threshold: 128,
-            storedAs: { ...parsed, embedInZpl: false },
-          } satisfies ImageProps,
-          posType,
-          takeComment(),
-        ),
+      pushGraphic(
+        "image",
+        200,
+        200,
+        {
+          imageId: "",
+          widthDots: 200,
+          threshold: 128,
+          storedAs: { ...parsed, embedInZpl: false },
+        } satisfies ImageProps,
+        takeComment(),
       );
     },
 

@@ -1,5 +1,5 @@
 import type { ObjectTypeCore } from '../types/ObjectType';
-import { wrapReverse } from './zplHelpers';
+import { wrapReverse, graphicAnchor } from './zplHelpers';
 
 export interface LineProps {
   /** Angle in degrees, 0 = rightward horizontal, clockwise positive (screen coords). */
@@ -71,22 +71,32 @@ export const line: ObjectTypeCore<LineProps> = {
 
     // Pure horizontal: angle 180 means the line extends LEFT from (obj.x, obj.y),
     // so the ^GB box must start at (obj.x - l) to overlap the same pixels.
+    // ^FT graphic origin is a bottom corner (spec p.205): lower by the ^GB box
+    // height (band t horizontal, length l vertical) and, when right-justified
+    // (z=1), shift to the right edge (band width l horizontal, t vertical).
+    const right = obj.fieldJustify === 'R';
     if (a === 0 || a === 180) {
       const bx = a === 180 ? obj.x - l : obj.x;
-      const cmd = obj.positionType === 'FT' ? 'FT' : 'FO';
+      const anchor =
+        obj.positionType === 'FT'
+          ? right ? `^FT${bx + l},${obj.y + t},1` : `^FT${bx},${obj.y + t}`
+          : `^FO${bx},${obj.y}`;
       return wrapReverse(
         p.reverse,
-        `^${cmd}${bx},${obj.y}^GB${l},${t},${t},${p.color},0^FS`,
+        `${anchor}^GB${l},${t},${t},${p.color},0^FS`,
       );
     }
     // Pure vertical: angle 270 means the line extends UP from (obj.x, obj.y),
     // so the ^GB box must start at (obj.x, obj.y - l).
     if (a === 90 || a === 270) {
       const by = a === 270 ? obj.y - l : obj.y;
-      const cmd = obj.positionType === 'FT' ? 'FT' : 'FO';
+      const anchor =
+        obj.positionType === 'FT'
+          ? right ? `^FT${obj.x + t},${by + l},1` : `^FT${obj.x},${by + l}`
+          : `^FO${obj.x},${by}`;
       return wrapReverse(
         p.reverse,
-        `^${cmd}${obj.x},${by}^GB${t},${l},${t},${p.color},0^FS`,
+        `${anchor}^GB${t},${l},${t},${p.color},0^FS`,
       );
     }
 
@@ -99,9 +109,12 @@ export const line: ObjectTypeCore<LineProps> = {
     const orientation = dx * dy >= 0 ? 'L' : 'R';
     const boxX = obj.x + (dx < 0 ? Math.round(dx) : 0);
     const boxY = obj.y + (dy < 0 ? Math.round(dy) : 0);
+    // ^FT anchors the ^GD bounding box at a bottom corner (spec p.205); ^FO
+    // emits the box top-left verbatim.
+    const anchor = graphicAnchor(boxX, boxY, w, h, obj.positionType, obj.fieldJustify);
     return wrapReverse(
       p.reverse,
-      `^FO${boxX},${boxY}^GD${w},${h},${t},${p.color},${orientation}^FS`,
+      `${anchor}^GD${w},${h},${t},${p.color},${orientation}^FS`,
     );
   },
 };

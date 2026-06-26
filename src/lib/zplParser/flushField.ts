@@ -10,7 +10,7 @@ import { decodeFbContent } from "../fbContent";
 import { decodeTbContent } from "../tbContent";
 import { dataMatrixFdToGs1Content } from "../gs1";
 import { zplAnchorToModel } from "../labelGeometry/textPositionTransforms";
-import { blockInterLineExtentDots } from "../zebraTextLayout";
+import { blockInterLineExtentDots, rotatedLineOffset } from "../zebraTextLayout";
 import { computeTextRenderMetrics } from "../labelGeometry/textRenderMetrics";
 import type { TextProps } from "../../registry/text";
 import type { Code128Props } from "../../registry/code128";
@@ -34,7 +34,7 @@ import type { MicroPdf417Props } from "../../registry/micropdf417";
 import type { CodablockProps } from "../../registry/codablock";
 import type { Tlc39Props } from "../../registry/tlc39";
 import { upceData6FromFd } from "../../registry/hriFormatters";
-import { decodeFH, makeObj, variableNameFromComment } from "./helpers";
+import { decodeFH, ftTopLeft, makeObj, variableNameFromComment } from "./helpers";
 import { getPosType, type ParserState, REVERSE_BBOX_TOLERANCE_DOTS } from "./context";
 
 /** Cross-family deps flushField borrows from graphics (^GB+^FR) and parseZPL (^FX). */
@@ -227,11 +227,26 @@ export function createFlushField(
               : s.field.textH;
         const expectedW = vertical ? blockBaseH : blockBaseW;
         const expectedH = vertical ? blockBaseW : blockBaseH;
+        // The generator places the reverse ^GB on the text's rotated model
+        // footprint (^FO at modelPos + rotatedLineOffset, the same AABB the
+        // render uses). Match that so our reverse collapses back to one object;
+        // a ^GB elsewhere (third-party reverse that genuinely prints beside the
+        // rotated text) stays a separate box instead of a faked overlap.
+        const fpOff = rotatedLineOffset(s.field.textRot, expectedW, expectedH);
+        const expBoxX = Math.round(modelPos.x + fpOff.x);
+        const expBoxY = Math.round(modelPos.y + fpOff.y);
+        // The stashed ^GB anchor is raw (^FT bottom corner for FT boxes), but
+        // expBoxX/Y are model top-left; normalize before comparing so a hand-
+        // authored ^FT reverse box collapses, not just our ^FO output.
+        const bgTopLeft = s.reverseBg
+          ? ftTopLeft(s.reverseBg.x, s.reverseBg.y, s.reverseBg.w, s.reverseBg.h, s.reverseBg.positionType ?? "FO", s.reverseBg.justify ?? "L")
+          : null;
         const collapse =
           s.reverseBg !== null &&
+          bgTopLeft !== null &&
           s.field.frActive &&
-          s.reverseBg.x === s.field.x &&
-          s.reverseBg.y === s.field.y &&
+          Math.abs(bgTopLeft.x - expBoxX) <= REVERSE_BBOX_TOLERANCE_DOTS &&
+          Math.abs(bgTopLeft.y - expBoxY) <= REVERSE_BBOX_TOLERANCE_DOTS &&
           Math.abs(s.reverseBg.w - expectedW) <= REVERSE_BBOX_TOLERANCE_DOTS &&
           Math.abs(s.reverseBg.h - expectedH) <= REVERSE_BBOX_TOLERANCE_DOTS;
         // Merge any ^FX banner that was attached to the stashed ^GB.
